@@ -60,7 +60,6 @@ class _ToolViewState extends ConsumerState<ToolsView> {
     return generateSection(
       title: appLocalizations.other,
       items: [
-        _DisclaimerItem(),
         if (enableDeveloperMode) _DeveloperItem(),
         _InfoItem(),
       ],
@@ -273,25 +272,6 @@ class _SettingItem extends StatelessWidget {
         title: appLocalizations.application,
         widget: const ApplicationSettingView(),
       ),
-    );
-  }
-}
-
-class _DisclaimerItem extends StatelessWidget {
-  const _DisclaimerItem();
-
-  @override
-  Widget build(BuildContext context) {
-    return ListItem(
-      leading: const Icon(Icons.gavel),
-      title: Text(appLocalizations.disclaimer),
-      onTap: () async {
-        final isDisclaimerAccepted = await globalState.appController
-            .showDisclaimer();
-        if (!isDisclaimerAccepted) {
-          globalState.appController.handleExit();
-        }
-      },
     );
   }
 }

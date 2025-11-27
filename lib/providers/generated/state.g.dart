@@ -2354,7 +2354,7 @@ final class AndroidStateProvider
   }
 }
 
-String _$androidStateHash() => r'9f527fbb00c7e0c177f023e77d2f23458543d72f';
+String _$androidStateHash() => r'bdf7baeb4ed4041233f06f0aede8d4d41489ebd6';
 
 @ProviderFor(Query)
 const queryProvider = QueryFamily._();

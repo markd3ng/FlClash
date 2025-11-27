@@ -74,10 +74,13 @@ Future<T> retry<T>({
   int attempts = 0;
   while (attempts < maxAttempts) {
     final res = await task();
-    if (!retryIf(res) || attempts >= maxAttempts) {
+    attempts++;
+    if (!retryIf(res)) {
       return res;
     }
-    attempts++;
+    if (attempts < maxAttempts) {
+      await Future.delayed(delay);
+    }
   }
   throw 'retry error';
 }

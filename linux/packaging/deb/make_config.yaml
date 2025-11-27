@@ -1,4 +1,4 @@
-display_name: FlClash
+display_name: "FlClash for Dler Cloud"
 package_name: FlClash
 maintainer:
   name: chen08209
@@ -19,8 +19,9 @@ keywords:
   - Clash
   - ClashMeta
   - Proxy
+  - Dler Cloud
 
-generic_name: FlClash
+generic_name: "FlClash for Dler Cloud"
 
 categories:
   - Network

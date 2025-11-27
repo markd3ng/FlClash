@@ -7,6 +7,7 @@ import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/models/models.dart';
+import 'package:fl_clash/services/cloud_api_service.dart';
 import 'package:fl_clash/state.dart';
 import 'package:flutter/cupertino.dart';
 
@@ -58,18 +59,19 @@ class Request {
   }
 
   Future<Map<String, dynamic>?> checkForUpdate() async {
-    final response = await dio.get(
-      'https://api.github.com/repos/$repository/releases/latest',
-      options: Options(responseType: ResponseType.json),
-    );
-    if (response.statusCode != 200) return null;
-    final data = response.data as Map<String, dynamic>;
-    final remoteVersion = data['tag_name'];
-    final version = globalState.packageInfo.version;
-    final hasUpdate =
-        utils.compareVersions(remoteVersion.replaceAll('v', ''), version) > 0;
+    final remoteVersion = await CloudApiService().fetchLatestVersion();
+    if (remoteVersion == null) return null;
+    
+    final packageInfo = globalState.packageInfo;
+    final currentVersion = '${packageInfo.version}+${packageInfo.buildNumber.isEmpty ? '0' : packageInfo.buildNumber}';
+    final hasUpdate = utils.compareVersions(remoteVersion.replaceAll('v', ''), currentVersion) > 0;
+    
     if (!hasUpdate) return null;
-    return data;
+    
+    return {
+      'tag_name': remoteVersion,
+      'body': '',
+    };
   }
 
   final Map<String, IpInfo Function(Map<String, dynamic>)> _ipInfoSources = {

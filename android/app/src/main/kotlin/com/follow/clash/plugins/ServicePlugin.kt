@@ -117,7 +117,6 @@ class ServicePlugin : FlutterPlugin, MethodChannel.MethodCallHandler,
     private fun handleSyncState(call: MethodCall, result: MethodChannel.Result) {
         val data = call.arguments<String>()!!
         val params = Gson().fromJson(data, AppState::class.java)
-        GlobalState.setCrashlytics(params.crashlytics)
         launch {
             Service.updateNotificationParams(
                 NotificationParams(
@@ -126,7 +125,6 @@ class ServicePlugin : FlutterPlugin, MethodChannel.MethodCallHandler,
                     onlyStatisticsProxy = params.onlyStatisticsProxy
                 )
             )
-            Service.setCrashlytics(params.crashlytics)
             result.success("")
         }
     }

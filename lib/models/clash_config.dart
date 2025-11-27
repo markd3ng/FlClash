@@ -101,6 +101,14 @@ const defaultBypassPrivateRouteAddress = [
   'fec0::/10',
 ];
 
+int? _safeParseInt(dynamic value) {
+  if (value == null) return null;
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  if (value is String) return int.tryParse(value);
+  return null;
+}
+
 @freezed
 abstract class ProxyGroup with _$ProxyGroup {
   const factory ProxyGroup({
@@ -108,11 +116,11 @@ abstract class ProxyGroup with _$ProxyGroup {
     @JsonKey(fromJson: GroupType.parseProfileType) required GroupType type,
     List<String>? proxies,
     List<String>? use,
-    int? interval,
+    @JsonKey(fromJson: _safeParseInt) int? interval,
     bool? lazy,
     String? url,
-    int? timeout,
-    @JsonKey(name: 'max-failed-times') int? maxFailedTimes,
+    @JsonKey(fromJson: _safeParseInt) int? timeout,
+    @JsonKey(name: 'max-failed-times', fromJson: _safeParseInt) int? maxFailedTimes,
     String? filter,
     @JsonKey(name: 'expected-filter') String? excludeFilter,
     @JsonKey(name: 'exclude-type') String? excludeType,

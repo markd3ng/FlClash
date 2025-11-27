@@ -1,5 +1,5 @@
 name: fl_clash
-description: A multi-platform proxy client based on ClashMeta, simple and easy to use, open-source and ad-free.
+description: FlClash for Dler Cloud - A multi-platform proxy client, simple and easy to use, open-source and ad-free.
 publish_to: 'none'
 version: 0.8.90+2025100801
 environment:
@@ -71,6 +71,7 @@ dev_dependencies:
   freezed: ^3.2.0
   riverpod_generator: ^3.0.0
   riverpod_lint: ^3.0.0
+  intl_utils: ^2.8.12
 
 flutter:
   uses-material-design: true

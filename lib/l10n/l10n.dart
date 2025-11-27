@@ -89,6 +89,11 @@ class AppLocalizations {
     return Intl.message('Profiles', name: 'profiles', desc: '', args: []);
   }
 
+  /// `Dler Cloud`
+  String get dlerCloud {
+    return Intl.message('Dler Cloud', name: 'dlerCloud', desc: '', args: []);
+  }
+
   /// `Tools`
   String get tools {
     return Intl.message('Tools', name: 'tools', desc: '', args: []);
@@ -472,6 +477,11 @@ class AppLocalizations {
   /// `Update`
   String get update {
     return Intl.message('Update', name: 'update', desc: '', args: []);
+  }
+
+  /// `Refresh`
+  String get refresh {
+    return Intl.message('Refresh', name: 'refresh', desc: '', args: []);
   }
 
   /// `Add`
@@ -2194,26 +2204,6 @@ class AppLocalizations {
     return Intl.message('TUN', name: 'action_tun', desc: '', args: []);
   }
 
-  /// `Disclaimer`
-  String get disclaimer {
-    return Intl.message('Disclaimer', name: 'disclaimer', desc: '', args: []);
-  }
-
-  /// `This software is only used for non-commercial purposes such as learning exchanges and scientific research. It is strictly prohibited to use this software for commercial purposes. Any commercial activity, if any, has nothing to do with this software.`
-  String get disclaimerDesc {
-    return Intl.message(
-      'This software is only used for non-commercial purposes such as learning exchanges and scientific research. It is strictly prohibited to use this software for commercial purposes. Any commercial activity, if any, has nothing to do with this software.',
-      name: 'disclaimerDesc',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Agree`
-  String get agree {
-    return Intl.message('Agree', name: 'agree', desc: '', args: []);
-  }
-
   /// `Hotkey Management`
   String get hotkeyManagement {
     return Intl.message(
@@ -2884,6 +2874,11 @@ class AppLocalizations {
     return Intl.message('Clear Data', name: 'clearData', desc: '', args: []);
   }
 
+  /// `Zoom`
+  String get zoom {
+    return Intl.message('Zoom', name: 'zoom', desc: '', args: []);
+  }
+
   /// `Text Scaling`
   String get textScale {
     return Intl.message('Text Scaling', name: 'textScale', desc: '', args: []);
@@ -3319,46 +3314,6 @@ class AppLocalizations {
     return Intl.message('Core status', name: 'coreStatus', desc: '', args: []);
   }
 
-  /// `Data Collection Notice`
-  String get dataCollectionTip {
-    return Intl.message(
-      'Data Collection Notice',
-      name: 'dataCollectionTip',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `This app uses Firebase Crashlytics to collect crash information to improve app stability.\nThe collected data includes device information and crash details, but does not contain personal sensitive data.\nYou can disable this feature in settings.`
-  String get dataCollectionContent {
-    return Intl.message(
-      'This app uses Firebase Crashlytics to collect crash information to improve app stability.\nThe collected data includes device information and crash details, but does not contain personal sensitive data.\nYou can disable this feature in settings.',
-      name: 'dataCollectionContent',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Crash Analysis`
-  String get crashlytics {
-    return Intl.message(
-      'Crash Analysis',
-      name: 'crashlytics',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `When enabled, automatically uploads crash logs without sensitive information when the app crashes`
-  String get crashlyticsTip {
-    return Intl.message(
-      'When enabled, automatically uploads crash logs without sensitive information when the app crashes',
-      name: 'crashlyticsTip',
-      desc: '',
-      args: [],
-    );
-  }
-
   /// `Append System DNS`
   String get appendSystemDns {
     return Intl.message(
@@ -3377,6 +3332,471 @@ class AppLocalizations {
       desc: '',
       args: [],
     );
+  }
+
+  /// `Login expired`
+  String get loginExpired {
+    return Intl.message(
+      'Login expired',
+      name: 'loginExpired',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Your login has expired, please login again.`
+  String get loginExpiredMessage {
+    return Intl.message(
+      'Your login has expired, please login again.',
+      name: 'loginExpiredMessage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Connection timeout`
+  String get connectionTimeout {
+    return Intl.message(
+      'Connection timeout',
+      name: 'connectionTimeout',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Send timeout`
+  String get sendTimeout {
+    return Intl.message(
+      'Send timeout',
+      name: 'sendTimeout',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Receive timeout`
+  String get receiveTimeout {
+    return Intl.message(
+      'Receive timeout',
+      name: 'receiveTimeout',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `SSL Certificate Error`
+  String get sslError {
+    return Intl.message(
+      'SSL Certificate Error',
+      name: 'sslError',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Request cancelled`
+  String get requestCancelled {
+    return Intl.message(
+      'Request cancelled',
+      name: 'requestCancelled',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `HTTP {statusCode} Error`
+  String httpError(Object statusCode) {
+    return Intl.message(
+      'HTTP $statusCode Error',
+      name: 'httpError',
+      desc: '',
+      args: [statusCode],
+    );
+  }
+
+  /// `Network connection failed`
+  String get networkFail {
+    return Intl.message(
+      'Network connection failed',
+      name: 'networkFail',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `\n\nSuggestion:\n• Check your network connection\n• Check DNS settings (Recommend 119.29.29.29)`
+  String get networkCheckTip {
+    return Intl.message(
+      '\n\nSuggestion:\n• Check your network connection\n• Check DNS settings (Recommend 119.29.29.29)',
+      name: 'networkCheckTip',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Service check failed`
+  String get serviceCheckFailed {
+    return Intl.message(
+      'Service check failed',
+      name: 'serviceCheckFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `API Connected`
+  String get apiAvailable {
+    return Intl.message(
+      'API Connected',
+      name: 'apiAvailable',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Check API`
+  String get checkApi {
+    return Intl.message('Check API', name: 'checkApi', desc: '', args: []);
+  }
+
+  /// `API Unavailable`
+  String get apiUnavailable {
+    return Intl.message(
+      'API Unavailable',
+      name: 'apiUnavailable',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Login Successful`
+  String get loginSuccess {
+    return Intl.message(
+      'Login Successful',
+      name: 'loginSuccess',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Login Failed`
+  String get loginFailed {
+    return Intl.message(
+      'Login Failed',
+      name: 'loginFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Login`
+  String get loginTitle {
+    return Intl.message('Login', name: 'loginTitle', desc: '', args: []);
+  }
+
+  /// `Email & Password`
+  String get emailPassword {
+    return Intl.message(
+      'Email & Password',
+      name: 'emailPassword',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Access Token`
+  String get accessToken {
+    return Intl.message(
+      'Access Token',
+      name: 'accessToken',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Email`
+  String get emailLabel {
+    return Intl.message('Email', name: 'emailLabel', desc: '', args: []);
+  }
+
+  /// `Enter email address`
+  String get emailHint {
+    return Intl.message(
+      'Enter email address',
+      name: 'emailHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Please enter email`
+  String get emailValidation {
+    return Intl.message(
+      'Please enter email',
+      name: 'emailValidation',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Invalid email format`
+  String get emailFormatValidation {
+    return Intl.message(
+      'Invalid email format',
+      name: 'emailFormatValidation',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Password`
+  String get passwordLabel {
+    return Intl.message('Password', name: 'passwordLabel', desc: '', args: []);
+  }
+
+  /// `Enter password`
+  String get passwordHint {
+    return Intl.message(
+      'Enter password',
+      name: 'passwordHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Please enter password`
+  String get passwordValidation {
+    return Intl.message(
+      'Please enter password',
+      name: 'passwordValidation',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Access Token`
+  String get tokenLabel {
+    return Intl.message('Access Token', name: 'tokenLabel', desc: '', args: []);
+  }
+
+  /// `Paste your Access Token`
+  String get tokenHint {
+    return Intl.message(
+      'Paste your Access Token',
+      name: 'tokenHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Please enter Access Token`
+  String get tokenValidation {
+    return Intl.message(
+      'Please enter Access Token',
+      name: 'tokenValidation',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Refresh completed`
+  String get refreshSuccess {
+    return Intl.message(
+      'Refresh completed',
+      name: 'refreshSuccess',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Logout`
+  String get logoutTitle {
+    return Intl.message('Logout', name: 'logoutTitle', desc: '', args: []);
+  }
+
+  /// `Are you sure you want to logout?`
+  String get logoutContent {
+    return Intl.message(
+      'Are you sure you want to logout?',
+      name: 'logoutContent',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Logged out`
+  String get logoutSuccess {
+    return Intl.message(
+      'Logged out',
+      name: 'logoutSuccess',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Dler Cloud`
+  String get loggedOutViewTitle {
+    return Intl.message(
+      'Dler Cloud',
+      name: 'loggedOutViewTitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Login to view account info and manage subscription`
+  String get loggedOutViewDesc {
+    return Intl.message(
+      'Login to view account info and manage subscription',
+      name: 'loggedOutViewDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Expire: {date}`
+  String expireDate(Object date) {
+    return Intl.message(
+      'Expire: $date',
+      name: 'expireDate',
+      desc: '',
+      args: [date],
+    );
+  }
+
+  /// `Today`
+  String get todayUsed {
+    return Intl.message('Today', name: 'todayUsed', desc: '', args: []);
+  }
+
+  /// `Traffic`
+  String get trafficUsed {
+    return Intl.message('Traffic', name: 'trafficUsed', desc: '', args: []);
+  }
+
+  /// `Remaining: {value}`
+  String remaining(Object value) {
+    return Intl.message(
+      'Remaining: $value',
+      name: 'remaining',
+      desc: '',
+      args: [value],
+    );
+  }
+
+  /// `Balance`
+  String get balance {
+    return Intl.message('Balance', name: 'balance', desc: '', args: []);
+  }
+
+  /// `Commission`
+  String get commission {
+    return Intl.message('Commission', name: 'commission', desc: '', args: []);
+  }
+
+  /// `Points`
+  String get points {
+    return Intl.message('Points', name: 'points', desc: '', args: []);
+  }
+
+  /// `Announcement`
+  String get announcement {
+    return Intl.message(
+      'Announcement',
+      name: 'announcement',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Server response error`
+  String get serverError {
+    return Intl.message(
+      'Server response error',
+      name: 'serverError',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Empty server response`
+  String get emptyResponse {
+    return Intl.message(
+      'Empty server response',
+      name: 'emptyResponse',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Unknown error`
+  String get unknownError {
+    return Intl.message(
+      'Unknown error',
+      name: 'unknownError',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Network error`
+  String get networkError {
+    return Intl.message(
+      'Network error',
+      name: 'networkError',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Please check your network connection`
+  String get checkNetworkConnection {
+    return Intl.message(
+      'Please check your network connection',
+      name: 'checkNetworkConnection',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Configuration download failed`
+  String get configDownloadFailed {
+    return Intl.message(
+      'Configuration download failed',
+      name: 'configDownloadFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Warning`
+  String get warning {
+    return Intl.message('Warning', name: 'warning', desc: '', args: []);
+  }
+
+  /// `Login successful but configuration download failed`
+  String get loginSuccessConfigFailed {
+    return Intl.message(
+      'Login successful but configuration download failed',
+      name: 'loginSuccessConfigFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Login expired, please login again`
+  String get tokenExpired {
+    return Intl.message(
+      'Login expired, please login again',
+      name: 'tokenExpired',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Load Failed`
+  String get loadFailed {
+    return Intl.message('Load Failed', name: 'loadFailed', desc: '', args: []);
   }
 }
 

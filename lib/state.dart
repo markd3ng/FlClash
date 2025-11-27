@@ -370,7 +370,6 @@ class GlobalState {
       currentProfileName: config.currentProfile?.label ?? '',
       onlyStatisticsProxy: config.appSetting.onlyStatisticsProxy,
       stopText: appLocalizations.stop,
-      crashlytics: config.appSetting.crashlytics,
     );
   }
 

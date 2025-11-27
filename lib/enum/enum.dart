@@ -328,6 +328,7 @@ enum PageLabel {
   requests,
   resources,
   connections,
+  dlerCloud,
 }
 
 enum RuleAction {

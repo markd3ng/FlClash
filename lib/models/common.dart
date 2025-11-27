@@ -445,7 +445,6 @@ abstract class AndroidState with _$AndroidState {
     required String currentProfileName,
     required String stopText,
     required bool onlyStatisticsProxy,
-    required bool crashlytics,
   }) = _AndroidState;
 
   factory AndroidState.fromJson(Map<String, Object?> json) =>

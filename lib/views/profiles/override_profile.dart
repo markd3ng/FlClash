@@ -59,13 +59,23 @@ class _OverrideProfileViewState extends ConsumerState<OverrideProfileView> {
     );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Future.delayed(Duration(milliseconds: 300), () async {
-        final rawConfig = await globalState.getProfileConfig(widget.profileId);
-        final snippet = ClashConfigSnippet.fromJson(rawConfig);
-        final overrideData = ref.read(
-          getProfileOverrideDataProvider(widget.profileId),
-        );
-        ref.read(profileOverrideStateProvider.notifier).value =
-            ProfileOverrideModel(snippet: snippet, overrideData: overrideData);
+        try {
+          final rawConfig = await globalState.getProfileConfig(widget.profileId);
+          final snippet = ClashConfigSnippet.fromJson(rawConfig);
+          final overrideData = ref.read(
+            getProfileOverrideDataProvider(widget.profileId),
+          );
+          ref.read(profileOverrideStateProvider.notifier).value =
+              ProfileOverrideModel(snippet: snippet, overrideData: overrideData);
+        } catch (e) {
+          if (mounted) {
+            globalState.showMessage(
+              title: appLocalizations.loadFailed,
+              message: TextSpan(text: e.toString()),
+            );
+            Navigator.of(context).pop();
+          }
+        }
       });
     });
   }
@@ -612,9 +622,9 @@ class _AddRuleDialogState extends State<AddRuleDialog> {
   final _subRuleController = TextEditingController();
   bool _noResolve = false;
   bool _src = false;
-  List<DropdownMenuEntry> _targetItems = [];
-  List<DropdownMenuEntry> _ruleProviderItems = [];
-  List<DropdownMenuEntry> _subRuleItems = [];
+  List<DropdownMenuEntry<Object>> _targetItems = [];
+  List<DropdownMenuEntry<Object>> _ruleProviderItems = [];
+  List<DropdownMenuEntry<Object>> _subRuleItems = [];
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -655,13 +665,13 @@ class _AddRuleDialogState extends State<AddRuleDialog> {
     }
     _ruleAction = RuleAction.values.first;
     if (_targetItems.isNotEmpty) {
-      _ruleTargetController.text = _targetItems.first.value;
+      _ruleTargetController.text = _targetItems.first.value.toString();
     }
     if (_ruleProviderItems.isNotEmpty) {
-      _ruleProviderController.text = _ruleProviderItems.first.value;
+      _ruleProviderController.text = _ruleProviderItems.first.value.toString();
     }
     if (_subRuleItems.isNotEmpty) {
-      _subRuleController.text = _subRuleItems.first.value;
+      _subRuleController.text = _subRuleItems.first.value.toString();
     }
   }
 

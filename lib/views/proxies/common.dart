@@ -29,12 +29,12 @@ Future<void> proxyDelayTest(Proxy proxy, [String? testUrl]) async {
     groups: groups,
     selectedMap: selectedMap,
   );
+  if (state.proxyName.isEmpty || state.proxyName == 'DIRECT') {
+    return;
+  }
   final currentTestUrl = state.testUrl.getSafeValue(
     appController.getRealTestUrl(testUrl),
   );
-  if (state.proxyName.isEmpty) {
-    return;
-  }
   appController.setDelay(
     Delay(url: currentTestUrl, name: state.proxyName, value: 0),
   );
@@ -55,13 +55,13 @@ Future<void> delayTest(List<Proxy> proxies, [String? testUrl]) async {
       groups: groups,
       selectedMap: selectedMap,
     );
+    final name = state.proxyName;
+    if (name.isEmpty || name == 'DIRECT') {
+      return;
+    }
     final url = state.testUrl.getSafeValue(
       appController.getRealTestUrl(testUrl),
     );
-    final name = state.proxyName;
-    if (name.isEmpty) {
-      return;
-    }
     appController.setDelay(Delay(url: url, name: name, value: 0));
     appController.setDelay(await coreController.getDelay(url, name));
   }).toList();
