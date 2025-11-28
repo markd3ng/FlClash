@@ -99,7 +99,10 @@ class _ConnectionsViewState extends ConsumerState<ConnectionsView> {
             final chainsStr = conn.chains.join(' ');
             return !SensitiveFilter.containsSensitiveInfo(conn.desc) &&
                    !SensitiveFilter.containsSensitiveInfo(chainsStr) &&
-                   !SensitiveFilter.containsSensitiveInfo(conn.metadata.host);
+                   !SensitiveFilter.containsSensitiveInfo(conn.metadata.host) &&
+                   !SensitiveFilter.containsSensitiveInfo(conn.metadata.destinationIP) &&
+                   !SensitiveFilter.containsSensitiveInfo(conn.metadata.remoteDestination) &&
+                   !SensitiveFilter.containsSensitiveInfo(conn.rulePayload);
           }).toList();
           if (connections.isEmpty) {
             return NullStatus(

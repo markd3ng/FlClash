@@ -118,7 +118,15 @@ class _RequestsViewState extends ConsumerState<RequestsView> {
       body: ValueListenableBuilder<TrackerInfosState>(
         valueListenable: _requestsStateNotifier,
         builder: (context, state, _) {
-          final requests = state.list;
+          final requests = state.list.where((req) {
+            final chainsStr = req.chains.join(' ');
+            return !SensitiveFilter.containsSensitiveInfo(req.desc) &&
+                   !SensitiveFilter.containsSensitiveInfo(chainsStr) &&
+                   !SensitiveFilter.containsSensitiveInfo(req.metadata.host) &&
+                   !SensitiveFilter.containsSensitiveInfo(req.metadata.destinationIP) &&
+                   !SensitiveFilter.containsSensitiveInfo(req.metadata.remoteDestination) &&
+                   !SensitiveFilter.containsSensitiveInfo(req.rulePayload);
+          }).toList();
           if (requests.isEmpty) {
             return NullStatus(
               label: appLocalizations.nullTip(appLocalizations.requests),

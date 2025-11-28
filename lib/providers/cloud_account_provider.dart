@@ -269,12 +269,12 @@ class CloudAccount extends _$CloudAccount {
         if (errorStr.contains('Invalid or expired access_token')) {
           final appLocalizations = AppLocalizations.current;
           await signOut(revokeToken: true);
-          globalState.showMessage(
-            title: appLocalizations.loginExpired,
-            message: TextSpan(text: appLocalizations.tokenExpired),
-          );
-        } else {
-          rethrow;
+        globalState.showMessage(
+          title: appLocalizations.loginExpired,
+          message: TextSpan(text: appLocalizations.tokenExpired),
+        );
+      } else {
+        rethrow;
         }
       }
     }
@@ -415,8 +415,8 @@ class CloudAccount extends _$CloudAccount {
       await _removeProfileConfig();
       
       final prefs = await preferences.sharedPreferencesCompleter.future;
-      await prefs?.remove(_keyCredentials);
-      await prefs?.remove(_keyConfigParams);
+        await prefs?.remove(_keyCredentials);
+        await prefs?.remove(_keyConfigParams);
       await prefs?.remove(_keyProfile);
       await prefs?.remove(_keyNotification);
       await prefs?.setBool(_keyLogoutFlag, true);

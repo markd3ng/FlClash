@@ -132,7 +132,7 @@ extension ProfileExtension on Profile {
       url.isEmpty == true ? ProfileType.file : ProfileType.url;
 
   bool get realAutoUpdate => url.isEmpty == true ? false : autoUpdate;
-  
+
   bool get isDlerCloudProfile {
     final profileLabel = label ?? '';
     final profileUrl = url.toLowerCase();

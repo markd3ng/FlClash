@@ -132,7 +132,7 @@ class _LogsViewState extends ConsumerState<LogsView> {
       searchState: AppBarSearchState(onSearch: _onSearch),
       title: appLocalizations.logs,
       body: ValueListenableBuilder<LogsState>(
-valueListenable: _logsStateNotifier,
+        valueListenable: _logsStateNotifier,
         builder: (context, state, _) {
           final logs = state.list.where((log) => !SensitiveFilter.containsSensitiveInfo(log.payload)).toList();
           if (logs.isEmpty) {

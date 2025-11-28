@@ -88,7 +88,7 @@ class _CloudAccountPageState extends ConsumerState<CloudAccountPage> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: Text(AppLocalizations.current.logoutTitle),
+        title: Text(AppLocalizations.current.logoutTitle),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -108,16 +108,16 @@ class _CloudAccountPageState extends ConsumerState<CloudAccountPage> {
               ),
             ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text(AppLocalizations.current.cancel),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: Text(AppLocalizations.current.confirm),
-            ),
-          ],
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(AppLocalizations.current.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(AppLocalizations.current.confirm),
+          ),
+        ],
         ),
       ),
     );
