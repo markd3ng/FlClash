@@ -1,12 +1,18 @@
 ## v0.8.90
 
-- Fix android tile service
+### ✨ New Features
+- System time verification on startup to prevent proxy service issues
+- Local caching for Dler Cloud user profile and announcements
+- Encrypted storage for Dler Cloud profile files
+- Sensitive information filtering in connection logs and requests
 
-- Support append system DNS
+### 🔧 Improvements
+- Enhanced logout options with Access Token revocation control
+- Customizable optional parameters for Dler Cloud configurations
+- Auto-restore profile after logout and restart
 
-- Fix some issues
-
-- Update changelog
+### 🔒 Security
+- Protect configuration files with AES encryption
 
 ## v0.8.89
 
