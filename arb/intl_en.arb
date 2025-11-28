@@ -483,5 +483,8 @@
   "warning": "Warning",
   "loginSuccessConfigFailed": "Login successful but configuration download failed",
   "tokenExpired": "Login expired, please login again",
-  "loadFailed": "Load Failed"
+  "loadFailed": "Load Failed",
+  "noPlanSubscription": "No plan subscription or plan expired",
+  "accountNoPlan": "Your account has no active subscription. Please purchase a plan before logging in",
+  "configParams": "Optional Parameters"
 }

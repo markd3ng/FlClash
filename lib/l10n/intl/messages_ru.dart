@@ -62,6 +62,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "accessToken": MessageLookupByLibrary.simpleMessage("Токен доступа"),
     "account": MessageLookupByLibrary.simpleMessage("Аккаунт"),
+    "accountNoPlan": MessageLookupByLibrary.simpleMessage(
+      "У вашей учетной записи нет активной подписки. Пожалуйста, приобретите тарифный план перед входом",
+    ),
     "action": MessageLookupByLibrary.simpleMessage("Действие"),
     "action_mode": MessageLookupByLibrary.simpleMessage("Переключить режим"),
     "action_proxy": MessageLookupByLibrary.simpleMessage("Системный прокси"),
@@ -204,6 +207,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "configDownloadFailed": MessageLookupByLibrary.simpleMessage(
       "Не удалось загрузить конфигурацию",
+    ),
+    "configParams": MessageLookupByLibrary.simpleMessage(
+      "Дополнительные параметры",
     ),
     "confirm": MessageLookupByLibrary.simpleMessage("Подтвердить"),
     "connected": MessageLookupByLibrary.simpleMessage("Подключено"),
@@ -544,6 +550,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "noNetwork": MessageLookupByLibrary.simpleMessage("Нет сети"),
     "noNetworkApp": MessageLookupByLibrary.simpleMessage("Приложение без сети"),
+    "noPlanSubscription": MessageLookupByLibrary.simpleMessage(
+      "Нет подписки или срок действия тарифа истек",
+    ),
     "noProxy": MessageLookupByLibrary.simpleMessage("Нет прокси"),
     "noProxyDesc": MessageLookupByLibrary.simpleMessage(
       "Пожалуйста, создайте профиль или добавьте действительный профиль",

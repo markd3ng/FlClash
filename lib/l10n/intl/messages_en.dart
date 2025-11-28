@@ -63,6 +63,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "accessToken": MessageLookupByLibrary.simpleMessage("Access Token"),
     "account": MessageLookupByLibrary.simpleMessage("Account"),
+    "accountNoPlan": MessageLookupByLibrary.simpleMessage(
+      "Your account has no active subscription. Please purchase a plan before logging in",
+    ),
     "action": MessageLookupByLibrary.simpleMessage("Action"),
     "action_mode": MessageLookupByLibrary.simpleMessage("Switch mode"),
     "action_proxy": MessageLookupByLibrary.simpleMessage("System proxy"),
@@ -200,6 +203,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "configDownloadFailed": MessageLookupByLibrary.simpleMessage(
       "Configuration download failed",
     ),
+    "configParams": MessageLookupByLibrary.simpleMessage("Optional Parameters"),
     "confirm": MessageLookupByLibrary.simpleMessage("Confirm"),
     "connected": MessageLookupByLibrary.simpleMessage("Connected"),
     "connecting": MessageLookupByLibrary.simpleMessage("Connecting..."),
@@ -511,6 +515,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "noMoreInfoDesc": MessageLookupByLibrary.simpleMessage("No more info"),
     "noNetwork": MessageLookupByLibrary.simpleMessage("No network"),
     "noNetworkApp": MessageLookupByLibrary.simpleMessage("No network APP"),
+    "noPlanSubscription": MessageLookupByLibrary.simpleMessage(
+      "No plan subscription or plan expired",
+    ),
     "noProxy": MessageLookupByLibrary.simpleMessage("No proxy"),
     "noProxyDesc": MessageLookupByLibrary.simpleMessage(
       "Please create a profile or add a valid profile",

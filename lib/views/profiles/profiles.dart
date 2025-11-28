@@ -335,13 +335,15 @@ class ProfileItem extends StatelessWidget {
                             _handlePushGenProfilePage(context, profile.id);
                           },
                         ),
-                        PopupMenuItemData(
-                          icon: Icons.file_copy_outlined,
-                          label: appLocalizations.exportFile,
-                          onPressed: () {
-                            _handleExportFile(context);
-                          },
-                        ),
+                        if (!(profile.label?.contains('Dler Cloud') ?? false) && 
+                            !(profile.url?.toLowerCase().contains('dler.cloud') ?? false))
+                          PopupMenuItemData(
+                            icon: Icons.file_copy_outlined,
+                            label: appLocalizations.exportFile,
+                            onPressed: () {
+                              _handleExportFile(context);
+                            },
+                          ),
                         PopupMenuItemData(
                           danger: true,
                           icon: Icons.delete_outlined,

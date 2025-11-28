@@ -165,7 +165,7 @@ class CloudApiService {
     required String token,
     Map<String, String>? extraParams,
   }) async {
-    final payload = {'access_token': token};
+    final payload = <String, dynamic>{'access_token': token};
     
     if (extraParams != null && extraParams.isNotEmpty) {
       final paramsStr = extraParams.entries

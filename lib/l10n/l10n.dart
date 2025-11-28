@@ -3798,6 +3798,36 @@ class AppLocalizations {
   String get loadFailed {
     return Intl.message('Load Failed', name: 'loadFailed', desc: '', args: []);
   }
+
+  /// `No plan subscription or plan expired`
+  String get noPlanSubscription {
+    return Intl.message(
+      'No plan subscription or plan expired',
+      name: 'noPlanSubscription',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Your account has no active subscription. Please purchase a plan before logging in`
+  String get accountNoPlan {
+    return Intl.message(
+      'Your account has no active subscription. Please purchase a plan before logging in',
+      name: 'accountNoPlan',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Optional Parameters`
+  String get configParams {
+    return Intl.message(
+      'Optional Parameters',
+      name: 'configParams',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<AppLocalizations> {

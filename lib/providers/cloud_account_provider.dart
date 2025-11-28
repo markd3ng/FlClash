@@ -144,8 +144,31 @@ class CloudAccount extends _$CloudAccount {
       
       state = state.copyWith(credentials: credentials);
       
-      await _refreshData();
-      state = state.setLoading(false);
+      final token = credentials.accessToken;
+      final profile = await _api.fetchUserProfile(token);
+      
+      final params = <String, String>{};
+      if (profile.subscription.isNotEmpty && profile.subscription != 'Pass Iron') {
+        params['type'] = 'love';
+      }
+      
+      if (params.isNotEmpty) {
+        await prefs?.setString(_keyConfigParams, jsonEncode(params));
+      }
+      
+      final (configInfo, notification) = await (
+        _api.fetchConfigUrl(token: token, extraParams: params.isNotEmpty ? params : null),
+        _api.fetchAnnouncement(),
+      ).wait;
+      
+      state = state.copyWith(
+        profile: profile,
+        configInfo: configInfo,
+        latestNotification: notification,
+        isLoading: false,
+      );
+      
+      await _syncProfileConfig();
     } catch (e) {
       final appLocalizations = AppLocalizations.current;
       state = state.copyWith(
@@ -164,9 +187,22 @@ class CloudAccount extends _$CloudAccount {
     
     try {
       final token = state.credentials!.accessToken;
-      final (profile, configInfo, notification) = await (
-        _api.fetchUserProfile(token),
-        _api.fetchConfigUrl(token: token),
+      final prefs = await preferences.sharedPreferencesCompleter.future;
+      
+      final profile = await _api.fetchUserProfile(token);
+      
+      Map<String, String>? savedParams;
+      final savedParamsJson = prefs?.getString(_keyConfigParams);
+      if (savedParamsJson != null && savedParamsJson.isNotEmpty) {
+        try {
+          savedParams = Map<String, String>.from(jsonDecode(savedParamsJson) as Map);
+        } catch (e) {
+          commonPrint.log('Failed to parse saved params: $e', logLevel: LogLevel.warning);
+        }
+      }
+      
+      final (configInfo, notification) = await (
+        _api.fetchConfigUrl(token: token, extraParams: savedParams),
         _api.fetchAnnouncement(),
       ).wait;
       
@@ -180,16 +216,25 @@ class CloudAccount extends _$CloudAccount {
     } catch (error) {
       commonPrint.log('Refresh failed: $error', logLevel: LogLevel.error);
       
-      final errorStr = error.toString();
-      if (errorStr.contains('Invalid or expired access_token')) {
+      if (error is NoPlanException) {
         final appLocalizations = AppLocalizations.current;
         await signOut(deleteCredentials: true);
         globalState.showMessage(
-          title: appLocalizations.loginExpired,
-          message: TextSpan(text: appLocalizations.tokenExpired),
+          title: appLocalizations.noPlanSubscription,
+          message: TextSpan(text: appLocalizations.accountNoPlan),
         );
       } else {
-        rethrow;
+        final errorStr = error.toString();
+        if (errorStr.contains('Invalid or expired access_token')) {
+          final appLocalizations = AppLocalizations.current;
+          await signOut(deleteCredentials: true);
+          globalState.showMessage(
+            title: appLocalizations.loginExpired,
+            message: TextSpan(text: appLocalizations.tokenExpired),
+          );
+        } else {
+          rethrow;
+        }
       }
     }
   }
@@ -210,10 +255,8 @@ class CloudAccount extends _$CloudAccount {
     if (configInfo == null) return;
     
     try {
-      final profiles = globalState.config.profiles;
-      
-      final existingProfile = profiles.cast<Profile?>().firstWhere(
-        (p) => p?.label == _configLabel,
+      final existingProfile = globalState.config.profiles.cast<Profile?>().firstWhere(
+        (p) => p?.label?.contains(_configLabel) ?? false,
         orElse: () => null,
       );
       
@@ -248,15 +291,69 @@ class CloudAccount extends _$CloudAccount {
   }
   
   Future<void> updateConfigParams(Map<String, String> params) async {
-    if (state.configInfo == null) return;
-    
-    state = state.copyWith(
-      configInfo: state.configInfo!.withParams(params),
-    );
+    if (!state.isLoggedIn || state.configInfo == null) return;
     
     final prefs = await preferences.sharedPreferencesCompleter.future;
-    await prefs?.setString(_keyConfigParams, jsonEncode(params));
+    final mergedParams = <String, String>{};
     
+    final savedParamsJson = prefs?.getString(_keyConfigParams);
+    if (savedParamsJson != null && savedParamsJson.isNotEmpty) {
+      try {
+        mergedParams.addAll(Map<String, String>.from(jsonDecode(savedParamsJson) as Map));
+      } catch (_) {}
+    }
+    
+    mergedParams.addAll(params);
+    await prefs?.setString(_keyConfigParams, jsonEncode(mergedParams));
+    
+    final token = state.credentials!.accessToken;
+    final configInfo = await _api.fetchConfigUrl(
+      token: token,
+      extraParams: mergedParams,
+    );
+    
+    state = state.copyWith(configInfo: configInfo);
+    await _syncProfileConfig();
+  }
+  
+  Future<void> removeConfigParam(String key) async {
+    if (!state.isLoggedIn || state.configInfo == null) return;
+    
+    final prefs = await preferences.sharedPreferencesCompleter.future;
+    final savedParamsJson = prefs?.getString(_keyConfigParams);
+    if (savedParamsJson == null || savedParamsJson.isEmpty) return;
+    
+    try {
+      final savedParams = Map<String, String>.from(jsonDecode(savedParamsJson) as Map);
+      savedParams.remove(key);
+      
+      if (savedParams.isNotEmpty) {
+        await prefs?.setString(_keyConfigParams, jsonEncode(savedParams));
+      } else {
+        await prefs?.remove(_keyConfigParams);
+      }
+      
+      final token = state.credentials!.accessToken;
+      final configInfo = await _api.fetchConfigUrl(
+        token: token,
+        extraParams: savedParams.isNotEmpty ? savedParams : null,
+      );
+      
+      state = state.copyWith(configInfo: configInfo);
+      await _syncProfileConfig();
+    } catch (e) {
+      commonPrint.log('Failed to remove param: $e', logLevel: LogLevel.warning);
+    }
+  }
+  
+  Future<void> clearConfigParams() async {
+    if (!state.isLoggedIn || state.configInfo == null) return;
+    
+    final prefs = await preferences.sharedPreferencesCompleter.future;
+    await prefs?.remove(_keyConfigParams);
+    
+    final configInfo = await _api.fetchConfigUrl(token: state.credentials!.accessToken);
+    state = state.copyWith(configInfo: configInfo);
     await _syncProfileConfig();
   }
   
@@ -288,7 +385,7 @@ class CloudAccount extends _$CloudAccount {
     try {
       final profiles = globalState.config.profiles;
       final cloudProfile = profiles.where(
-        (p) => p.label == _configLabel || p.label == state.configInfo?.profileName,
+        (p) => (p.label?.contains(_configLabel) ?? false) || p.label == state.configInfo?.profileName,
       ).toList();
       
       for (final profile in cloudProfile) {

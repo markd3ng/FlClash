@@ -61,6 +61,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "accessToken": MessageLookupByLibrary.simpleMessage("アクセストークン"),
     "account": MessageLookupByLibrary.simpleMessage("アカウント"),
+    "accountNoPlan": MessageLookupByLibrary.simpleMessage(
+      "アカウントにアクティブなプランがありません。ログインする前にプランを購入してください",
+    ),
     "action": MessageLookupByLibrary.simpleMessage("アクション"),
     "action_mode": MessageLookupByLibrary.simpleMessage("モード切替"),
     "action_proxy": MessageLookupByLibrary.simpleMessage("システムプロキシ"),
@@ -154,6 +157,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "configDownloadFailed": MessageLookupByLibrary.simpleMessage(
       "設定のダウンロードに失敗しました",
     ),
+    "configParams": MessageLookupByLibrary.simpleMessage("オプションパラメータ"),
     "confirm": MessageLookupByLibrary.simpleMessage("確認"),
     "connected": MessageLookupByLibrary.simpleMessage("接続済み"),
     "connecting": MessageLookupByLibrary.simpleMessage("接続中..."),
@@ -389,6 +393,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "noMoreInfoDesc": MessageLookupByLibrary.simpleMessage("追加情報なし"),
     "noNetwork": MessageLookupByLibrary.simpleMessage("ネットワークなし"),
     "noNetworkApp": MessageLookupByLibrary.simpleMessage("ネットワークなしアプリ"),
+    "noPlanSubscription": MessageLookupByLibrary.simpleMessage(
+      "アカウントが未購読またはプランの有効期限が切れています",
+    ),
     "noProxy": MessageLookupByLibrary.simpleMessage("プロキシなし"),
     "noProxyDesc": MessageLookupByLibrary.simpleMessage(
       "プロファイルを作成するか、有効なプロファイルを追加してください",

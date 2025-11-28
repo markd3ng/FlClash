@@ -55,8 +55,13 @@ class CloudProfile {
   });
   
   factory CloudProfile.fromApiResponse(Map<String, dynamic> data) {
+    final plan = data['plan'];
+    if (plan == null || (plan is String && plan.trim().isEmpty)) {
+      throw NoPlanException();
+    }
+    
     return CloudProfile(
-      subscription: data['plan'] as String,
+      subscription: plan as String,
       expireTime: data['plan_time'] as String,
       todayUsed: data['today_used'] as String,
       totalUsed: data['used'] as String,
@@ -106,38 +111,18 @@ class CloudProfile {
 class CloudConfigInfo {
   final String downloadUrl;
   final String profileName;
-  final Map<String, String> queryParams;
   
   const CloudConfigInfo({
     required this.downloadUrl,
     required this.profileName,
-    this.queryParams = const {},
   });
   
-  String get fullUrl {
-    if (queryParams.isEmpty) return downloadUrl;
-    
-    final params = queryParams.entries
-        .map((e) => '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}')
-        .join('&');
-    
-    final separator = downloadUrl.contains('?') ? '&' : '?';
-    return '$downloadUrl$separator$params';
-  }
+  String get fullUrl => downloadUrl;
   
   factory CloudConfigInfo.fromApiResponse(Map<String, dynamic> data) {
     return CloudConfigInfo(
       downloadUrl: data['smart'] as String,
       profileName: data['name'] as String,
-      queryParams: {},
-    );
-  }
-  
-  CloudConfigInfo withParams(Map<String, String> params) {
-    return CloudConfigInfo(
-      downloadUrl: downloadUrl,
-      profileName: profileName,
-      queryParams: {...queryParams, ...params},
     );
   }
 }
@@ -180,5 +165,9 @@ class CloudNotification {
         .trim()
         .replaceAll(RegExp(r'\n{3,}'), '\n\n');
   }
+}
+
+class NoPlanException implements Exception {
+  const NoPlanException();
 }
 

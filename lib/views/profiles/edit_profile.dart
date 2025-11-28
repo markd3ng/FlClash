@@ -7,11 +7,13 @@ import 'package:fl_clash/core/controller.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/pages/editor.dart';
+import 'package:fl_clash/providers/cloud_account_provider.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class EditProfileView extends StatefulWidget {
+class EditProfileView extends ConsumerStatefulWidget {
   final Profile profile;
   final BuildContext context;
 
@@ -22,13 +24,14 @@ class EditProfileView extends StatefulWidget {
   });
 
   @override
-  State<EditProfileView> createState() => _EditProfileViewState();
+  ConsumerState<EditProfileView> createState() => _EditProfileViewState();
 }
 
-class _EditProfileViewState extends State<EditProfileView> {
+class _EditProfileViewState extends ConsumerState<EditProfileView> {
   late TextEditingController labelController;
   late TextEditingController urlController;
   late TextEditingController autoUpdateDurationController;
+  late TextEditingController dlerParamsController;
   late bool autoUpdate;
   String? rawText;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
@@ -36,6 +39,12 @@ class _EditProfileViewState extends State<EditProfileView> {
   Uint8List? fileData;
 
   Profile get profile => widget.profile;
+  
+  bool get isDlerCloudProfile {
+    final label = widget.profile.label ?? '';
+    final url = widget.profile.url?.toLowerCase() ?? '';
+    return label.contains('Dler Cloud') || url.contains('dler.cloud');
+  }
 
   @override
   void initState() {
@@ -46,13 +55,46 @@ class _EditProfileViewState extends State<EditProfileView> {
     autoUpdateDurationController = TextEditingController(
       text: widget.profile.autoUpdateDuration.inMinutes.toString(),
     );
+    dlerParamsController = TextEditingController();
+    _loadDlerParams();
     appPath.getProfilePath(widget.profile.id).then((path) async {
       fileInfoNotifier.value = await _getFileInfo(path);
     });
   }
+  
+  Future<void> _loadDlerParams() async {
+    if (!isDlerCloudProfile) return;
+    
+    final prefs = await preferences.sharedPreferencesCompleter.future;
+    final savedParamsJson = prefs?.getString('cloud_service_config_params');
+    
+    if (savedParamsJson != null && savedParamsJson.isNotEmpty) {
+      try {
+        final params = Map<String, String>.from(jsonDecode(savedParamsJson) as Map);
+        dlerParamsController.text = params.entries
+            .map((e) => '&${e.key}=${e.value}')
+            .join('');
+      } catch (_) {}
+    }
+  }
+  
+  @override
+  void dispose() {
+    labelController.dispose();
+    urlController.dispose();
+    autoUpdateDurationController.dispose();
+    dlerParamsController.dispose();
+    fileInfoNotifier.dispose();
+    super.dispose();
+  }
 
   Future<void> _handleConfirm() async {
     if (!_formKey.currentState!.validate()) return;
+    
+    if (isDlerCloudProfile) {
+      await _saveDlerParams();
+    }
+    
     final appController = globalState.appController;
     Profile profile = this.profile.copyWith(
       url: urlController.text,
@@ -86,6 +128,32 @@ class _EditProfileViewState extends State<EditProfileView> {
     }
     if (mounted) {
       Navigator.of(context).pop();
+    }
+  }
+  
+  Future<void> _saveDlerParams() async {
+    final text = dlerParamsController.text.trim();
+    final prefs = await preferences.sharedPreferencesCompleter.future;
+    
+    if (text.isEmpty) {
+      await prefs?.remove('cloud_service_config_params');
+      return;
+    }
+    
+    final params = <String, String>{};
+    for (final pair in text.split('&').where((s) => s.isNotEmpty)) {
+      final parts = pair.split('=');
+      if (parts.length == 2) {
+        final key = parts[0].trim();
+        final value = parts[1].trim();
+        if (key.isNotEmpty && value.isNotEmpty) {
+          params[key] = value;
+        }
+      }
+    }
+    
+    if (params.isNotEmpty) {
+      await prefs?.setString('cloud_service_config_params', jsonEncode(params));
     }
   }
 
@@ -213,28 +281,44 @@ class _EditProfileViewState extends State<EditProfileView> {
         ),
       ),
       if (widget.profile.type == ProfileType.url) ...[
-        ListItem(
-          title: TextFormField(
-            textInputAction: TextInputAction.next,
-            keyboardType: TextInputType.url,
-            controller: urlController,
-            maxLines: 5,
-            minLines: 1,
-            decoration: InputDecoration(
-              border: const OutlineInputBorder(),
-              labelText: appLocalizations.url,
+        if (!isDlerCloudProfile)
+          ListItem(
+            title: TextFormField(
+              textInputAction: TextInputAction.next,
+              keyboardType: TextInputType.url,
+              controller: urlController,
+              maxLines: 5,
+              minLines: 1,
+              decoration: InputDecoration(
+                border: const OutlineInputBorder(),
+                labelText: appLocalizations.url,
+              ),
+              validator: (String? value) {
+                if (value == null || value.isEmpty) {
+                  return appLocalizations.profileUrlNullValidationDesc;
+                }
+                if (!value.isUrl) {
+                  return appLocalizations.profileUrlInvalidValidationDesc;
+                }
+                return null;
+              },
             ),
-            validator: (String? value) {
-              if (value == null || value.isEmpty) {
-                return appLocalizations.profileUrlNullValidationDesc;
-              }
-              if (!value.isUrl) {
-                return appLocalizations.profileUrlInvalidValidationDesc;
-              }
-              return null;
-            },
           ),
-        ),
+        if (isDlerCloudProfile)
+          ListItem(
+            title: TextFormField(
+              textInputAction: TextInputAction.next,
+              controller: dlerParamsController,
+              maxLines: 3,
+              minLines: 1,
+              style: const TextStyle(fontFamily: 'monospace'),
+              decoration: InputDecoration(
+                border: const OutlineInputBorder(),
+                labelText: appLocalizations.configParams,
+                hintText: '&area=hk',
+              ),
+            ),
+          ),
         ListItem.switchItem(
           title: Text(appLocalizations.autoUpdate),
           delegate: SwitchDelegate<bool>(
@@ -281,23 +365,25 @@ class _EditProfileViewState extends State<EditProfileView> {
                       children: [
                         const SizedBox(height: 4),
                         Text(fileInfo.desc),
-                        const SizedBox(height: 8),
-                        Wrap(
-                          runSpacing: 6,
-                          spacing: 12,
-                          children: [
-                            CommonChip(
-                              avatar: const Icon(Icons.edit),
-                              label: appLocalizations.edit,
-                              onPressed: _editProfileFile,
-                            ),
-                            CommonChip(
-                              avatar: const Icon(Icons.upload),
-                              label: appLocalizations.upload,
-                              onPressed: _uploadProfileFile,
-                            ),
-                          ],
-                        ),
+                        if (!isDlerCloudProfile) ...[
+                          const SizedBox(height: 8),
+                          Wrap(
+                            runSpacing: 6,
+                            spacing: 12,
+                            children: [
+                              CommonChip(
+                                avatar: const Icon(Icons.edit),
+                                label: appLocalizations.edit,
+                                onPressed: _editProfileFile,
+                              ),
+                              CommonChip(
+                                avatar: const Icon(Icons.upload),
+                                label: appLocalizations.upload,
+                                onPressed: _uploadProfileFile,
+                              ),
+                            ],
+                          ),
+                        ],
                       ],
                     ),
                   ),

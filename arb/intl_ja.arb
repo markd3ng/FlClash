@@ -483,5 +483,8 @@
   "warning": "警告",
   "loginSuccessConfigFailed": "ログイン成功しましたが、設定のダウンロードに失敗しました",
   "tokenExpired": "ログインの有効期限が切れました。再度ログインしてください",
-  "loadFailed": "読み込みに失敗しました"
+  "loadFailed": "読み込みに失敗しました",
+  "noPlanSubscription": "アカウントが未購読またはプランの有効期限が切れています",
+  "accountNoPlan": "アカウントにアクティブなプランがありません。ログインする前にプランを購入してください",
+  "configParams": "オプションパラメータ"
 }
