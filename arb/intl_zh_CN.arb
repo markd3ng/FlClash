@@ -486,5 +486,6 @@
   "loadFailed": "加载失败",
   "noPlanSubscription": "账户未订阅或套餐已过期",
   "accountNoPlan": "您的账户未订阅任何套餐，请先购买套餐后再登录",
-  "configParams": "可选项参数"
+  "configParams": "可选项参数",
+  "revokeAccessToken": "删除Access Token"
 }

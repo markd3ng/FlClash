@@ -3828,6 +3828,16 @@ class AppLocalizations {
       args: [],
     );
   }
+
+  /// `Revoke Access Token`
+  String get revokeAccessToken {
+    return Intl.message(
+      'Revoke Access Token',
+      name: 'revokeAccessToken',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<AppLocalizations> {

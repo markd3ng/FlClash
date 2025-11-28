@@ -542,6 +542,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "DNS接続がルールに従う（proxy-server-nameserverの設定が必要）",
     ),
     "restartCoreTip": MessageLookupByLibrary.simpleMessage("コアを再起動してもよろしいですか？"),
+    "revokeAccessToken": MessageLookupByLibrary.simpleMessage("アクセストークンを削除"),
     "routeAddress": MessageLookupByLibrary.simpleMessage("ルートアドレス"),
     "routeAddressDesc": MessageLookupByLibrary.simpleMessage("ルートアドレスを設定"),
     "routeMode": MessageLookupByLibrary.simpleMessage("ルートモード"),

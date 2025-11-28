@@ -486,5 +486,6 @@
   "loadFailed": "Load Failed",
   "noPlanSubscription": "No plan subscription or plan expired",
   "accountNoPlan": "Your account has no active subscription. Please purchase a plan before logging in",
-  "configParams": "Optional Parameters"
+  "configParams": "Optional Parameters",
+  "revokeAccessToken": "Revoke Access Token"
 }

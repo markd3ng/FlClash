@@ -83,26 +83,49 @@ class _CloudAccountPageState extends ConsumerState<CloudAccountPage> {
   }
   
   Future<void> _handleLogout() async {
+    bool revokeToken = false;
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(AppLocalizations.current.logoutTitle),
-        content: Text(AppLocalizations.current.logoutContent),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(AppLocalizations.current.cancel),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Text(AppLocalizations.current.logoutTitle),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(AppLocalizations.current.logoutContent),
+              const SizedBox(height: 16),
+              CheckboxListTile(
+                value: revokeToken,
+                onChanged: (value) {
+                  setState(() {
+                    revokeToken = value ?? false;
+                  });
+                },
+                title: Text(AppLocalizations.current.revokeAccessToken),
+                contentPadding: EdgeInsets.zero,
+                controlAffinity: ListTileControlAffinity.leading,
+              ),
+            ],
           ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(AppLocalizations.current.confirm),
-          ),
-        ],
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(AppLocalizations.current.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(AppLocalizations.current.confirm),
+            ),
+          ],
+        ),
       ),
     );
     
     if (confirmed == true) {
-      await ref.read(cloudAccountProvider.notifier).signOut();
+      await ref.read(cloudAccountProvider.notifier).signOut(
+        revokeToken: revokeToken,
+      );
       if (mounted) {
         globalState.showNotifier(AppLocalizations.current.logoutSuccess);
       }

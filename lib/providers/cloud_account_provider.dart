@@ -95,7 +95,7 @@ class CloudAccount extends _$CloudAccount {
       }
     } catch (e) {
       commonPrint.log('Auto restore failed: $e', logLevel: LogLevel.warning);
-      await signOut(deleteCredentials: false);
+      await signOut(revokeToken: false);
     }
   }
   
@@ -218,7 +218,7 @@ class CloudAccount extends _$CloudAccount {
       
       if (error is NoPlanException) {
         final appLocalizations = AppLocalizations.current;
-        await signOut(deleteCredentials: true);
+        await signOut(revokeToken: true);
         globalState.showMessage(
           title: appLocalizations.noPlanSubscription,
           message: TextSpan(text: appLocalizations.accountNoPlan),
@@ -227,7 +227,7 @@ class CloudAccount extends _$CloudAccount {
         final errorStr = error.toString();
         if (errorStr.contains('Invalid or expired access_token')) {
           final appLocalizations = AppLocalizations.current;
-          await signOut(deleteCredentials: true);
+          await signOut(revokeToken: true);
           globalState.showMessage(
             title: appLocalizations.loginExpired,
             message: TextSpan(text: appLocalizations.tokenExpired),
@@ -245,6 +245,14 @@ class CloudAccount extends _$CloudAccount {
     state = state.setLoading(true);
     try {
       await _refreshData();
+      
+      final hasDlerCloudProfile = globalState.config.profiles.any(
+        (p) => p.label?.contains(_configLabel) ?? false,
+      );
+      
+      if (!hasDlerCloudProfile && state.configInfo != null) {
+        await _syncProfileConfig();
+      }
     } finally {
       state = state.setLoading(false);
     }
@@ -357,21 +365,17 @@ class CloudAccount extends _$CloudAccount {
     await _syncProfileConfig();
   }
   
-  Future<void> signOut({bool deleteCredentials = true}) async {
+  Future<void> signOut({bool revokeToken = false}) async {
     try {
-      if (state.credentials != null) {
+      if (revokeToken && state.credentials != null) {
         await _api.logout(state.credentials!.accessToken);
       }
       
       await _removeProfileConfig();
       
       final prefs = await preferences.sharedPreferencesCompleter.future;
-      
-      if (deleteCredentials) {
-        await prefs?.remove(_keyCredentials);
-        await prefs?.remove(_keyConfigParams);
-      }
-      
+      await prefs?.remove(_keyCredentials);
+      await prefs?.remove(_keyConfigParams);
       await prefs?.setBool(_keyLogoutFlag, true);
       
       state = const CloudAccountState();

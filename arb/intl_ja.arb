@@ -486,5 +486,6 @@
   "loadFailed": "読み込みに失敗しました",
   "noPlanSubscription": "アカウントが未購読またはプランの有効期限が切れています",
   "accountNoPlan": "アカウントにアクティブなプランがありません。ログインする前にプランを購入してください",
-  "configParams": "オプションパラメータ"
+  "configParams": "オプションパラメータ",
+  "revokeAccessToken": "アクセストークンを削除"
 }
