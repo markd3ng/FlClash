@@ -221,9 +221,34 @@ class CoreController {
     return Delay.fromJson(json.decode(data));
   }
 
-  Future<Map<String, dynamic>> getConfig(String id) async {
+  Future<Map<String, dynamic>> getConfig(String id, {Profile? profile}) async {
     final profilePath = await appPath.getProfilePath(id);
-    final res = await _interface.getConfig(profilePath);
+    String pathToUse = profilePath;
+    
+    if (profile?.isDlerCloudProfile == true) {
+      final file = File(profilePath);
+      if (await file.exists()) {
+        final encryptedBytes = await file.readAsBytes();
+        try {
+          final decryptedBytes = ProfileCrypto.decrypt(encryptedBytes);
+          final tempPath = await appPath.validateFilePath;
+          final tempFile = File(tempPath);
+          await tempFile.writeAsBytes(decryptedBytes);
+          pathToUse = tempPath;
+        } catch (e) {
+          commonPrint.log('Decryption failed, using original file: $e', logLevel: LogLevel.warning);
+        }
+      }
+    }
+    
+    final res = await _interface.getConfig(pathToUse);
+    
+    if (pathToUse != profilePath) {
+      try {
+        await File(pathToUse).delete();
+      } catch (_) {}
+    }
+    
     if (res.isSuccess) {
       return res.data;
     } else {

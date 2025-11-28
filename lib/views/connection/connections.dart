@@ -95,7 +95,12 @@ class _ConnectionsViewState extends ConsumerState<ConnectionsView> {
       body: ValueListenableBuilder<TrackerInfosState>(
         valueListenable: _connectionsStateNotifier,
         builder: (context, state, _) {
-          final connections = state.list;
+          final connections = state.list.where((conn) {
+            final chainsStr = conn.chains.join(' ');
+            return !SensitiveFilter.containsSensitiveInfo(conn.desc) &&
+                   !SensitiveFilter.containsSensitiveInfo(chainsStr) &&
+                   !SensitiveFilter.containsSensitiveInfo(conn.metadata.host);
+          }).toList();
           if (connections.isEmpty) {
             return NullStatus(
               label: appLocalizations.nullTip(appLocalizations.connections),

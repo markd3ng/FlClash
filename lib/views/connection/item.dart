@@ -56,6 +56,7 @@ class TrackerInfoItem extends ConsumerWidget {
             state.findProcessMode == FindProcessMode.always && system.isAndroid,
       ),
     );
+    
     final title = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -242,7 +243,10 @@ class TrackerInfoDetailView extends StatelessWidget {
       alignment: WrapAlignment.end,
       children: [
         for (final chain in trackerInfo.chains)
-          CommonChip(label: chain, onPressed: () {}),
+          CommonChip(
+            label: chain,
+            onPressed: () {},
+          ),
       ],
     );
     return ListItem(

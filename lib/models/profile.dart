@@ -132,6 +132,12 @@ extension ProfileExtension on Profile {
       url.isEmpty == true ? ProfileType.file : ProfileType.url;
 
   bool get realAutoUpdate => url.isEmpty == true ? false : autoUpdate;
+  
+  bool get isDlerCloudProfile {
+    final profileLabel = label ?? '';
+    final profileUrl = url.toLowerCase();
+    return profileLabel.contains('Dler Cloud') || profileUrl.contains('dler.cloud');
+  }
 
   Future<void> checkAndUpdate() async {
     final isExists = await check();
@@ -178,7 +184,21 @@ extension ProfileExtension on Profile {
       throw message;
     }
     final file = await getFile();
-    await file.writeAsBytes(bytes);
+    final dataToSave = isDlerCloudProfile ? ProfileCrypto.encrypt(bytes) : bytes;
+    await file.writeAsBytes(dataToSave);
     return copyWith(lastUpdateDate: DateTime.now());
+  }
+  
+  Future<Uint8List> readDecryptedBytes() async {
+    final file = await getFile();
+    final bytes = await file.readAsBytes();
+    if (isDlerCloudProfile) {
+      try {
+        return ProfileCrypto.decrypt(bytes);
+      } catch (e) {
+        return bytes;
+      }
+    }
+    return bytes;
   }
 }
