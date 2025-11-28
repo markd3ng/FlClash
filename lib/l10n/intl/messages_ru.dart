@@ -822,6 +822,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "systemProxyDesc": MessageLookupByLibrary.simpleMessage(
       "Прикрепить HTTP-прокси к VpnService",
     ),
+    "systemTimeError": MessageLookupByLibrary.simpleMessage(
+      "Ошибка системного времени",
+    ),
+    "systemTimeErrorDesc": MessageLookupByLibrary.simpleMessage(
+      "Обнаружено расхождение между системным и сетевым временем, что может привести к недоступности прокси-сервиса. Пожалуйста, проверьте и настройте системное время",
+    ),
     "tab": MessageLookupByLibrary.simpleMessage("Вкладка"),
     "tabAnimation": MessageLookupByLibrary.simpleMessage("Анимация вкладок"),
     "tabAnimationDesc": MessageLookupByLibrary.simpleMessage(

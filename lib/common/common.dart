@@ -37,6 +37,7 @@ export 'sensitive_filter.dart';
 export 'string.dart';
 export 'system.dart';
 export 'text.dart';
+export 'time_check.dart';
 export 'tray.dart';
 export 'utils.dart';
 export 'window.dart';

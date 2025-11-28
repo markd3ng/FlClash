@@ -775,6 +775,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "systemProxyDesc": MessageLookupByLibrary.simpleMessage(
       "Attach HTTP proxy to VpnService",
     ),
+    "systemTimeError": MessageLookupByLibrary.simpleMessage(
+      "System Time Error",
+    ),
+    "systemTimeErrorDesc": MessageLookupByLibrary.simpleMessage(
+      "System time differs from network time, which may cause proxy service unavailability. Please check and adjust your system time",
+    ),
     "tab": MessageLookupByLibrary.simpleMessage("Tab"),
     "tabAnimation": MessageLookupByLibrary.simpleMessage("Tab animation"),
     "tabAnimationDesc": MessageLookupByLibrary.simpleMessage(

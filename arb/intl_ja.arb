@@ -487,5 +487,7 @@
   "noPlanSubscription": "アカウントが未購読またはプランの有効期限が切れています",
   "accountNoPlan": "アカウントにアクティブなプランがありません。ログインする前にプランを購入してください",
   "configParams": "オプションパラメータ",
-  "revokeAccessToken": "アクセストークンを削除"
+  "revokeAccessToken": "アクセストークンを削除",
+  "systemTimeError": "システム時刻エラー",
+  "systemTimeErrorDesc": "システム時刻とネットワーク時刻に誤差があることが検出されました。プロキシサービスが利用できなくなる可能性があります。システム時刻を確認して調整してください"
 }

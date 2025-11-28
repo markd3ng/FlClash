@@ -61,6 +61,8 @@ class CloudAccount extends _$CloudAccount {
   static const _keyCredentials = '${_prefixKey}credentials';
   static const _keyConfigParams = '${_prefixKey}config_params';
   static const _keyLogoutFlag = '${_prefixKey}logout_flag';
+  static const _keyProfile = '${_prefixKey}profile';
+  static const _keyNotification = '${_prefixKey}notification';
   static const _configLabel = 'Dler Cloud';
   
   final _api = CloudApiService();
@@ -90,7 +92,36 @@ class CloudAccount extends _$CloudAccount {
       );
       
       if (!credentials.isExpired) {
-        state = state.copyWith(credentials: credentials);
+        CloudProfile? cachedProfile;
+        CloudNotification? cachedNotification;
+        
+        final profileJson = prefs?.getString(_keyProfile);
+        if (profileJson != null) {
+          try {
+            cachedProfile = CloudProfile.fromApiResponse(
+              Map<String, dynamic>.from(jsonDecode(profileJson) as Map),
+            );
+          } catch (e) {
+            commonPrint.log('Failed to parse cached profile: $e', logLevel: LogLevel.warning);
+          }
+        }
+        
+        final notificationJson = prefs?.getString(_keyNotification);
+        if (notificationJson != null) {
+          try {
+            cachedNotification = CloudNotification.fromApiResponse(
+              Map<String, dynamic>.from(jsonDecode(notificationJson) as Map),
+            );
+          } catch (e) {
+            commonPrint.log('Failed to parse cached notification: $e', logLevel: LogLevel.warning);
+          }
+        }
+        
+        state = state.copyWith(
+          credentials: credentials,
+          profile: cachedProfile,
+          latestNotification: cachedNotification,
+        );
         await _refreshData();
       }
     } catch (e) {
@@ -161,6 +192,11 @@ class CloudAccount extends _$CloudAccount {
         _api.fetchAnnouncement(),
       ).wait;
       
+      await prefs?.setString(_keyProfile, jsonEncode(profile.toMap()));
+      if (notification != null) {
+        await prefs?.setString(_keyNotification, jsonEncode(notification.toMap()));
+      }
+      
       state = state.copyWith(
         profile: profile,
         configInfo: configInfo,
@@ -205,6 +241,11 @@ class CloudAccount extends _$CloudAccount {
         _api.fetchConfigUrl(token: token, extraParams: savedParams),
         _api.fetchAnnouncement(),
       ).wait;
+      
+      await prefs?.setString(_keyProfile, jsonEncode(profile.toMap()));
+      if (notification != null) {
+        await prefs?.setString(_keyNotification, jsonEncode(notification.toMap()));
+      }
       
       state = state.copyWith(
         profile: profile,
@@ -376,6 +417,8 @@ class CloudAccount extends _$CloudAccount {
       final prefs = await preferences.sharedPreferencesCompleter.future;
       await prefs?.remove(_keyCredentials);
       await prefs?.remove(_keyConfigParams);
+      await prefs?.remove(_keyProfile);
+      await prefs?.remove(_keyNotification);
       await prefs?.setBool(_keyLogoutFlag, true);
       
       state = const CloudAccountState();

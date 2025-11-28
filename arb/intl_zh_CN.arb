@@ -487,5 +487,7 @@
   "noPlanSubscription": "账户未订阅或套餐已过期",
   "accountNoPlan": "您的账户未订阅任何套餐，请先购买套餐后再登录",
   "configParams": "可选项参数",
-  "revokeAccessToken": "删除Access Token"
+  "revokeAccessToken": "删除Access Token",
+  "systemTimeError": "系统时间异常",
+  "systemTimeErrorDesc": "检测到系统时间与网络时间存在一定误差，可能会导致代理服务不可用，请检查并调整系统时间"
 }

@@ -521,6 +521,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "systemFont": MessageLookupByLibrary.simpleMessage("系统字体"),
     "systemProxy": MessageLookupByLibrary.simpleMessage("系统代理"),
     "systemProxyDesc": MessageLookupByLibrary.simpleMessage("设置系统代理"),
+    "systemTimeError": MessageLookupByLibrary.simpleMessage("系统时间异常"),
+    "systemTimeErrorDesc": MessageLookupByLibrary.simpleMessage(
+      "检测到系统时间与网络时间存在一定误差，可能会导致代理服务不可用，请检查并调整系统时间",
+    ),
     "tab": MessageLookupByLibrary.simpleMessage("标签页"),
     "tabAnimation": MessageLookupByLibrary.simpleMessage("选项卡动画"),
     "tabAnimationDesc": MessageLookupByLibrary.simpleMessage("仅在移动视图中有效"),

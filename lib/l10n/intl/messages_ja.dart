@@ -601,6 +601,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "systemProxyDesc": MessageLookupByLibrary.simpleMessage(
       "HTTPプロキシをVpnServiceに接続",
     ),
+    "systemTimeError": MessageLookupByLibrary.simpleMessage("システム時刻エラー"),
+    "systemTimeErrorDesc": MessageLookupByLibrary.simpleMessage(
+      "システム時刻とネットワーク時刻に誤差があることが検出されました。プロキシサービスが利用できなくなる可能性があります。システム時刻を確認して調整してください",
+    ),
     "tab": MessageLookupByLibrary.simpleMessage("タブ"),
     "tabAnimation": MessageLookupByLibrary.simpleMessage("タブアニメーション"),
     "tabAnimationDesc": MessageLookupByLibrary.simpleMessage("モバイル表示でのみ有効"),

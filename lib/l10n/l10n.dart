@@ -3838,6 +3838,26 @@ class AppLocalizations {
       args: [],
     );
   }
+
+  /// `System Time Error`
+  String get systemTimeError {
+    return Intl.message(
+      'System Time Error',
+      name: 'systemTimeError',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `System time differs from network time, which may cause proxy service unavailability. Please check and adjust your system time`
+  String get systemTimeErrorDesc {
+    return Intl.message(
+      'System time differs from network time, which may cause proxy service unavailability. Please check and adjust your system time',
+      name: 'systemTimeErrorDesc',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<AppLocalizations> {

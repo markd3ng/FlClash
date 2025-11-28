@@ -54,6 +54,18 @@ class CloudProfile {
     required this.points,
   });
   
+  Map<String, dynamic> toMap() => {
+    'plan': subscription,
+    'plan_time': expireTime,
+    'today_used': todayUsed,
+    'used': totalUsed,
+    'unused': remaining,
+    'traffic': totalTraffic,
+    'money': balance,
+    'aff_money': commission,
+    'integral': points,
+  };
+  
   factory CloudProfile.fromApiResponse(Map<String, dynamic> data) {
     final plan = data['plan'];
     if (plan == null || (plan is String && plan.trim().isEmpty)) {
@@ -137,6 +149,11 @@ class CloudNotification {
     required this.publishTime,
     this.isPinned = false,
   });
+  
+  Map<String, dynamic> toMap() => {
+    'content': message,
+    'date': publishTime.toIso8601String(),
+  };
   
   factory CloudNotification.fromApiResponse(Map<String, dynamic> data) {
     return CloudNotification(

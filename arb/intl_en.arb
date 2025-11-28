@@ -487,5 +487,7 @@
   "noPlanSubscription": "No plan subscription or plan expired",
   "accountNoPlan": "Your account has no active subscription. Please purchase a plan before logging in",
   "configParams": "Optional Parameters",
-  "revokeAccessToken": "Revoke Access Token"
+  "revokeAccessToken": "Revoke Access Token",
+  "systemTimeError": "System Time Error",
+  "systemTimeErrorDesc": "System time differs from network time, which may cause proxy service unavailability. Please check and adjust your system time"
 }
