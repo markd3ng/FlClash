@@ -3,6 +3,7 @@ import 'package:fl_clash/l10n/l10n.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/widgets/card.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class CloudProfileCard extends StatelessWidget {
   final CloudProfile profile;
@@ -22,16 +23,22 @@ class CloudProfileCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: context.colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    Icons.account_circle,
-                    color: context.colorScheme.onPrimaryContainer,
-                    size: 32,
+                InkWell(
+                  onTap: () {
+                    launchUrl(Uri.parse('https://dlercloud.com/user'));
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: context.colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.account_circle,
+                      color: context.colorScheme.onPrimaryContainer,
+                      size: 32,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 16),

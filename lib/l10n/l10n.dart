@@ -479,11 +479,6 @@ class AppLocalizations {
     return Intl.message('Update', name: 'update', desc: '', args: []);
   }
 
-  /// `Refresh`
-  String get refresh {
-    return Intl.message('Refresh', name: 'refresh', desc: '', args: []);
-  }
-
   /// `Add`
   String get add {
     return Intl.message('Add', name: 'add', desc: '', args: []);
@@ -2204,6 +2199,26 @@ class AppLocalizations {
     return Intl.message('TUN', name: 'action_tun', desc: '', args: []);
   }
 
+  /// `Disclaimer`
+  String get disclaimer {
+    return Intl.message('Disclaimer', name: 'disclaimer', desc: '', args: []);
+  }
+
+  /// `This software is only used for non-commercial purposes such as learning exchanges and scientific research. It is strictly prohibited to use this software for commercial purposes. Any commercial activity, if any, has nothing to do with this software.`
+  String get disclaimerDesc {
+    return Intl.message(
+      'This software is only used for non-commercial purposes such as learning exchanges and scientific research. It is strictly prohibited to use this software for commercial purposes. Any commercial activity, if any, has nothing to do with this software.',
+      name: 'disclaimerDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Agree`
+  String get agree {
+    return Intl.message('Agree', name: 'agree', desc: '', args: []);
+  }
+
   /// `Hotkey Management`
   String get hotkeyManagement {
     return Intl.message(
@@ -2609,6 +2624,26 @@ class AppLocalizations {
     );
   }
 
+  /// `Advanced configuration`
+  String get advancedConfig {
+    return Intl.message(
+      'Advanced configuration',
+      name: 'advancedConfig',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Provide diverse configuration options`
+  String get advancedConfigDesc {
+    return Intl.message(
+      'Provide diverse configuration options',
+      name: 'advancedConfigDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `{count} items have been selected`
   String selectedCountTitle(Object count) {
     return Intl.message(
@@ -2874,11 +2909,6 @@ class AppLocalizations {
     return Intl.message('Clear Data', name: 'clearData', desc: '', args: []);
   }
 
-  /// `Zoom`
-  String get zoom {
-    return Intl.message('Zoom', name: 'zoom', desc: '', args: []);
-  }
-
   /// `Text Scaling`
   String get textScale {
     return Intl.message('Text Scaling', name: 'textScale', desc: '', args: []);
@@ -3009,10 +3039,10 @@ class AppLocalizations {
     );
   }
 
-  /// `No {label} at the moment`
+  /// `No {label} yet`
   String nullTip(Object label) {
     return Intl.message(
-      'No $label at the moment',
+      'No $label yet',
       name: 'nullTip',
       desc: '',
       args: [label],
@@ -3314,6 +3344,46 @@ class AppLocalizations {
     return Intl.message('Core status', name: 'coreStatus', desc: '', args: []);
   }
 
+  /// `Data Collection Notice`
+  String get dataCollectionTip {
+    return Intl.message(
+      'Data Collection Notice',
+      name: 'dataCollectionTip',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `This app uses Firebase Crashlytics to collect crash information to improve app stability.\nThe collected data includes device information and crash details, but does not contain personal sensitive data.\nYou can disable this feature in settings.`
+  String get dataCollectionContent {
+    return Intl.message(
+      'This app uses Firebase Crashlytics to collect crash information to improve app stability.\nThe collected data includes device information and crash details, but does not contain personal sensitive data.\nYou can disable this feature in settings.',
+      name: 'dataCollectionContent',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Crash Analysis`
+  String get crashlytics {
+    return Intl.message(
+      'Crash Analysis',
+      name: 'crashlytics',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `When enabled, automatically uploads crash logs without sensitive information when the app crashes`
+  String get crashlyticsTip {
+    return Intl.message(
+      'When enabled, automatically uploads crash logs without sensitive information when the app crashes',
+      name: 'crashlyticsTip',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Append System DNS`
   String get appendSystemDns {
     return Intl.message(
@@ -3334,10 +3404,10 @@ class AppLocalizations {
     );
   }
 
-  /// `Login expired`
+  /// `Login Expired`
   String get loginExpired {
     return Intl.message(
-      'Login expired',
+      'Login Expired',
       name: 'loginExpired',
       desc: '',
       args: [],
@@ -3354,30 +3424,30 @@ class AppLocalizations {
     );
   }
 
-  /// `Connection timeout`
+  /// `Connection Timeout`
   String get connectionTimeout {
     return Intl.message(
-      'Connection timeout',
+      'Connection Timeout',
       name: 'connectionTimeout',
       desc: '',
       args: [],
     );
   }
 
-  /// `Send timeout`
+  /// `Send Timeout`
   String get sendTimeout {
     return Intl.message(
-      'Send timeout',
+      'Send Timeout',
       name: 'sendTimeout',
       desc: '',
       args: [],
     );
   }
 
-  /// `Receive timeout`
+  /// `Receive Timeout`
   String get receiveTimeout {
     return Intl.message(
-      'Receive timeout',
+      'Receive Timeout',
       name: 'receiveTimeout',
       desc: '',
       args: [],
@@ -3394,10 +3464,10 @@ class AppLocalizations {
     );
   }
 
-  /// `Request cancelled`
+  /// `Request Cancelled`
   String get requestCancelled {
     return Intl.message(
-      'Request cancelled',
+      'Request Cancelled',
       name: 'requestCancelled',
       desc: '',
       args: [],
@@ -3414,30 +3484,30 @@ class AppLocalizations {
     );
   }
 
-  /// `Network connection failed`
+  /// `Network Connection Failed`
   String get networkFail {
     return Intl.message(
-      'Network connection failed',
+      'Network Connection Failed',
       name: 'networkFail',
       desc: '',
       args: [],
     );
   }
 
-  /// `\n\nSuggestion:\n• Check your network connection\n• Check DNS settings (Recommend 119.29.29.29)`
+  /// `\n\nSuggestions:\n• Check network connection\n• DNS settings (recommend 119.29.29.29)`
   String get networkCheckTip {
     return Intl.message(
-      '\n\nSuggestion:\n• Check your network connection\n• Check DNS settings (Recommend 119.29.29.29)',
+      '\n\nSuggestions:\n• Check network connection\n• DNS settings (recommend 119.29.29.29)',
       name: 'networkCheckTip',
       desc: '',
       args: [],
     );
   }
 
-  /// `Service check failed`
+  /// `Service Check Failed`
   String get serviceCheckFailed {
     return Intl.message(
-      'Service check failed',
+      'Service Check Failed',
       name: 'serviceCheckFailed',
       desc: '',
       args: [],
@@ -3599,10 +3669,10 @@ class AppLocalizations {
     );
   }
 
-  /// `Refresh completed`
+  /// `Refresh Complete`
   String get refreshSuccess {
     return Intl.message(
-      'Refresh completed',
+      'Refresh Complete',
       name: 'refreshSuccess',
       desc: '',
       args: [],
@@ -3624,10 +3694,10 @@ class AppLocalizations {
     );
   }
 
-  /// `Logged out`
+  /// `Logged Out`
   String get logoutSuccess {
     return Intl.message(
-      'Logged out',
+      'Logged Out',
       name: 'logoutSuccess',
       desc: '',
       args: [],
@@ -3644,34 +3714,44 @@ class AppLocalizations {
     );
   }
 
-  /// `Login to view account info and manage subscription`
+  /// `Login to view account info and manage subscriptions`
   String get loggedOutViewDesc {
     return Intl.message(
-      'Login to view account info and manage subscription',
+      'Login to view account info and manage subscriptions',
       name: 'loggedOutViewDesc',
       desc: '',
       args: [],
     );
   }
 
-  /// `Expire: {date}`
+  /// `Expires: {date}`
   String expireDate(Object date) {
     return Intl.message(
-      'Expire: $date',
+      'Expires: $date',
       name: 'expireDate',
       desc: '',
       args: [date],
     );
   }
 
-  /// `Today`
+  /// `Today's Usage`
   String get todayUsed {
-    return Intl.message('Today', name: 'todayUsed', desc: '', args: []);
+    return Intl.message(
+      'Today\'s Usage',
+      name: 'todayUsed',
+      desc: '',
+      args: [],
+    );
   }
 
-  /// `Traffic`
+  /// `Traffic Used`
   String get trafficUsed {
-    return Intl.message('Traffic', name: 'trafficUsed', desc: '', args: []);
+    return Intl.message(
+      'Traffic Used',
+      name: 'trafficUsed',
+      desc: '',
+      args: [],
+    );
   }
 
   /// `Remaining: {value}`
@@ -3709,60 +3789,60 @@ class AppLocalizations {
     );
   }
 
-  /// `Server response error`
+  /// `Server Response Error`
   String get serverError {
     return Intl.message(
-      'Server response error',
+      'Server Response Error',
       name: 'serverError',
       desc: '',
       args: [],
     );
   }
 
-  /// `Empty server response`
+  /// `Empty Response from Server`
   String get emptyResponse {
     return Intl.message(
-      'Empty server response',
+      'Empty Response from Server',
       name: 'emptyResponse',
       desc: '',
       args: [],
     );
   }
 
-  /// `Unknown error`
+  /// `Unknown Error`
   String get unknownError {
     return Intl.message(
-      'Unknown error',
+      'Unknown Error',
       name: 'unknownError',
       desc: '',
       args: [],
     );
   }
 
-  /// `Network error`
+  /// `Network Error`
   String get networkError {
     return Intl.message(
-      'Network error',
+      'Network Error',
       name: 'networkError',
       desc: '',
       args: [],
     );
   }
 
-  /// `Please check your network connection`
+  /// `Please check network connection`
   String get checkNetworkConnection {
     return Intl.message(
-      'Please check your network connection',
+      'Please check network connection',
       name: 'checkNetworkConnection',
       desc: '',
       args: [],
     );
   }
 
-  /// `Configuration download failed`
+  /// `Config Download Failed`
   String get configDownloadFailed {
     return Intl.message(
-      'Configuration download failed',
+      'Config Download Failed',
       name: 'configDownloadFailed',
       desc: '',
       args: [],
@@ -3774,10 +3854,10 @@ class AppLocalizations {
     return Intl.message('Warning', name: 'warning', desc: '', args: []);
   }
 
-  /// `Login successful but configuration download failed`
+  /// `Login successful but config download failed`
   String get loginSuccessConfigFailed {
     return Intl.message(
-      'Login successful but configuration download failed',
+      'Login successful but config download failed',
       name: 'loginSuccessConfigFailed',
       desc: '',
       args: [],
@@ -3799,20 +3879,20 @@ class AppLocalizations {
     return Intl.message('Load Failed', name: 'loadFailed', desc: '', args: []);
   }
 
-  /// `No plan subscription or plan expired`
+  /// `No active subscription or plan expired`
   String get noPlanSubscription {
     return Intl.message(
-      'No plan subscription or plan expired',
+      'No active subscription or plan expired',
       name: 'noPlanSubscription',
       desc: '',
       args: [],
     );
   }
 
-  /// `Your account has no active subscription. Please purchase a plan before logging in`
+  /// `Your account has no active subscription, please purchase a plan first`
   String get accountNoPlan {
     return Intl.message(
-      'Your account has no active subscription. Please purchase a plan before logging in',
+      'Your account has no active subscription, please purchase a plan first',
       name: 'accountNoPlan',
       desc: '',
       args: [],
@@ -3849,14 +3929,254 @@ class AppLocalizations {
     );
   }
 
-  /// `System time differs from network time, which may cause proxy service unavailability. Please check and adjust your system time`
+  /// `System time differs from network time, which may cause proxy service unavailable. Please check and adjust system time`
   String get systemTimeErrorDesc {
     return Intl.message(
-      'System time differs from network time, which may cause proxy service unavailability. Please check and adjust your system time',
+      'System time differs from network time, which may cause proxy service unavailable. Please check and adjust system time',
       name: 'systemTimeErrorDesc',
       desc: '',
       args: [],
     );
+  }
+
+  /// `Edit rule`
+  String get editRule {
+    return Intl.message('Edit rule', name: 'editRule', desc: '', args: []);
+  }
+
+  /// `Override mode`
+  String get overrideMode {
+    return Intl.message(
+      'Override mode',
+      name: 'overrideMode',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Standard mode, override basic configuration, provide simple rule addition capability`
+  String get standardModeDesc {
+    return Intl.message(
+      'Standard mode, override basic configuration, provide simple rule addition capability',
+      name: 'standardModeDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Script mode, use external extension scripts, provide one-click override configuration capability`
+  String get scriptModeDesc {
+    return Intl.message(
+      'Script mode, use external extension scripts, provide one-click override configuration capability',
+      name: 'scriptModeDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Added rules`
+  String get addedRules {
+    return Intl.message('Added rules', name: 'addedRules', desc: '', args: []);
+  }
+
+  /// `Control global added rules`
+  String get controlGlobalAddedRules {
+    return Intl.message(
+      'Control global added rules',
+      name: 'controlGlobalAddedRules',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Override script`
+  String get overrideScript {
+    return Intl.message(
+      'Override script',
+      name: 'overrideScript',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Go to configure script`
+  String get goToConfigureScript {
+    return Intl.message(
+      'Go to configure script',
+      name: 'goToConfigureScript',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Edit global rules`
+  String get editGlobalRules {
+    return Intl.message(
+      'Edit global rules',
+      name: 'editGlobalRules',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `External fetch`
+  String get externalFetch {
+    return Intl.message(
+      'External fetch',
+      name: 'externalFetch',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Are you sure you want to force crash the core?`
+  String get confirmForceCrashCore {
+    return Intl.message(
+      'Are you sure you want to force crash the core?',
+      name: 'confirmForceCrashCore',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Are you sure you want to clear all data?`
+  String get confirmClearAllData {
+    return Intl.message(
+      'Are you sure you want to clear all data?',
+      name: 'confirmClearAllData',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Load test`
+  String get loadTest {
+    return Intl.message('Load test', name: 'loadTest', desc: '', args: []);
+  }
+
+  /// `{count, plural, =1{1 year ago} other{{count} years ago}}`
+  String yearsAgo(num count) {
+    return Intl.plural(
+      count,
+      one: '1 year ago',
+      other: '$count years ago',
+      name: 'yearsAgo',
+      desc: '',
+      args: [count],
+    );
+  }
+
+  /// `{count, plural, =1{1 month ago} other{{count} months ago}}`
+  String monthsAgo(num count) {
+    return Intl.plural(
+      count,
+      one: '1 month ago',
+      other: '$count months ago',
+      name: 'monthsAgo',
+      desc: '',
+      args: [count],
+    );
+  }
+
+  /// `{count, plural, =1{1 day ago} other{{count} days ago}}`
+  String daysAgo(num count) {
+    return Intl.plural(
+      count,
+      one: '1 day ago',
+      other: '$count days ago',
+      name: 'daysAgo',
+      desc: '',
+      args: [count],
+    );
+  }
+
+  /// `{count, plural, =1{1 hour ago} other{{count} hours ago}}`
+  String hoursAgo(num count) {
+    return Intl.plural(
+      count,
+      one: '1 hour ago',
+      other: '$count hours ago',
+      name: 'hoursAgo',
+      desc: '',
+      args: [count],
+    );
+  }
+
+  /// `{count, plural, =1{1 minute ago} other{{count} minutes ago}}`
+  String minutesAgo(num count) {
+    return Intl.plural(
+      count,
+      one: '1 minute ago',
+      other: '$count minutes ago',
+      name: 'minutesAgo',
+      desc: '',
+      args: [count],
+    );
+  }
+
+  /// `Just now`
+  String get justNow {
+    return Intl.message('Just now', name: 'justNow', desc: '', args: []);
+  }
+
+  /// `Don't remind again`
+  String get noLongerRemind {
+    return Intl.message(
+      'Don\'t remind again',
+      name: 'noLongerRemind',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Access Control Settings`
+  String get accessControlSettings {
+    return Intl.message(
+      'Access Control Settings',
+      name: 'accessControlSettings',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Turn On`
+  String get turnOn {
+    return Intl.message('Turn On', name: 'turnOn', desc: '', args: []);
+  }
+
+  /// `Turn Off`
+  String get turnOff {
+    return Intl.message('Turn Off', name: 'turnOff', desc: '', args: []);
+  }
+
+  /// `Core configuration change detected`
+  String get coreConfigChangeDetected {
+    return Intl.message(
+      'Core configuration change detected',
+      name: 'coreConfigChangeDetected',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Reload`
+  String get reload {
+    return Intl.message('Reload', name: 'reload', desc: '', args: []);
+  }
+
+  /// `VPN configuration change detected`
+  String get vpnConfigChangeDetected {
+    return Intl.message(
+      'VPN configuration change detected',
+      name: 'vpnConfigChangeDetected',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Restart`
+  String get restart {
+    return Intl.message('Restart', name: 'restart', desc: '', args: []);
   }
 }
 

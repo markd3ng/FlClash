@@ -150,7 +150,7 @@ class _CloudAccountPageState extends ConsumerState<CloudAccountPage> {
                   )
                 : const Icon(Icons.refresh),
             onPressed: accountState.isLoading ? null : _handleRefresh,
-            tooltip: AppLocalizations.current.refresh,
+            tooltip: AppLocalizations.current.sync,
           ),
           IconButton(
             icon: const Icon(Icons.logout),

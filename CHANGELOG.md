@@ -1,3 +1,31 @@
+## v0.8.91
+
+- Fix windows tun issues
+
+- - Merge upstream commit 9271d59
+
+- - Optimize CI/CD release notes generation
+
+- - Add empty state SVG icons
+
+- - Optimize overwrite functionality
+
+- - Improve performance with Isolate file writes
+
+- - Enhance Dler Cloud profile security and UI
+
+- - Add avatar click to open user center
+
+- - Optimize profile menu for Dler Cloud configs
+
+- - Fix disclaimer and refresh i18n issues
+
+- - Rollback Go dependencies to stable versions
+
+- - Fix dependency conflicts
+
+- - Remove telegram notification step
+
 ## v0.8.90
 
 ### ✨ New Features
