@@ -499,42 +499,39 @@ class AppController {
         cancelText: isUser ? null : appLocalizations.noLongerRemind,
       );
       if (res == true) {
-        launchUrl(Uri.parse('https://github.com/$repository/releases/latest'));
+        String downloadUrl;
+        if (system.isWindows) {
+          downloadUrl = 'https://dl.dler.io/flclash-windows-amd64.exe';
+        } else if (system.isMacOS) {
+          final isArm = Abi.current() == Abi.macosArm64;
+          final arch = isArm ? 'arm64' : 'amd64';
+          downloadUrl = 'https://dl.dler.io/flclash-macos-$arch.dmg';
+        } else if (system.isAndroid) {
+          final abi = Abi.current();
+          String arch;
+          if (abi == Abi.androidArm64) {
+            arch = 'arm64-v8a';
+          } else if (abi == Abi.androidArm) {
+            arch = 'armeabi-v7a';
+          } else if (abi == Abi.androidX64) {
+            arch = 'x86_64';
+          } else {
+            arch = 'arm64-v8a';
+          }
+          downloadUrl = 'https://dl.dler.io/flclash-android-$arch.apk';
+        } else if (Platform.isLinux) {
+          final isArm = Abi.current() == Abi.linuxArm64;
+          final arch = isArm ? 'arm64' : 'amd64';
+          downloadUrl = 'https://dl.dler.io/flclash-linux-$arch.deb';
+        } else {
+          downloadUrl = 'https://dl.dler.io';
+        }
+        launchUrl(Uri.parse(downloadUrl));
       } else if (!isUser && res == false) {
         _ref
             .read(appSettingProvider.notifier)
             .update((state) => state.copyWith(autoCheckUpdate: false));
       }
-      
-      String downloadUrl;
-      if (system.isWindows) {
-        downloadUrl = 'https://dl.dler.io/flclash-windows-amd64.exe';
-      } else if (system.isMacOS) {
-        final isArm = Abi.current() == Abi.macosArm64;
-        final arch = isArm ? 'arm64' : 'amd64';
-        downloadUrl = 'https://dl.dler.io/flclash-macos-$arch.dmg';
-      } else if (system.isAndroid) {
-        final abi = Abi.current();
-        String arch;
-        if (abi == Abi.androidArm64) {
-          arch = 'arm64-v8a';
-        } else if (abi == Abi.androidArm) {
-          arch = 'armeabi-v7a';
-        } else if (abi == Abi.androidX64) {
-          arch = 'x86_64';
-        } else {
-          arch = 'arm64-v8a';
-        }
-        downloadUrl = 'https://dl.dler.io/flclash-android-$arch.apk';
-      } else if (Platform.isLinux) {
-        final isArm = Abi.current() == Abi.linuxArm64;
-        final arch = isArm ? 'arm64' : 'amd64';
-        downloadUrl = 'https://dl.dler.io/flclash-linux-$arch.deb';
-      } else {
-        downloadUrl = 'https://dl.dler.io';
-      }
-      
-      launchUrl(Uri.parse(downloadUrl));
     } else if (isUser) {
       globalState.showMessage(
         title: appLocalizations.checkUpdate,
@@ -585,25 +582,10 @@ class AppController {
     } else {
       window?.hide();
     }
-    await _checkSystemTime();
     await _connectCore();
     await _initCore();
     await _initStatus();
     _ref.read(initProvider.notifier).value = true;
-  }
-
-  Future<void> _checkSystemTime() async {
-    try {
-      final isTimeCorrect = await TimeCheck.checkSystemTime();
-      if (!isTimeCorrect && context.mounted) {
-        globalState.showMessage(
-          title: appLocalizations.systemTimeError,
-          message: TextSpan(text: appLocalizations.systemTimeErrorDesc),
-        );
-      }
-    } catch (e) {
-      commonPrint.log('Time check failed: $e', logLevel: LogLevel.warning);
-    }
   }
 
   Future<void> _connectCore() async {

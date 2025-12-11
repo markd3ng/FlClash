@@ -67,7 +67,7 @@ class Request {
     
     if (!hasUpdate) return null;
     
-    return {
+    return <String, dynamic>{
       'tag_name': remoteVersion,
       'body': '',
     };
