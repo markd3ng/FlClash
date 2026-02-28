@@ -224,7 +224,7 @@ class CoreController {
     final profilePath = await appPath.getProfilePath(id);
     String pathToUse = profilePath;
     
-    if (profile?.isDlerCloudProfile == true) {
+    if (profile?.isoixCloudProfile == true) {
       final file = File(profilePath);
       if (await file.exists()) {
         final encryptedBytes = await file.readAsBytes();

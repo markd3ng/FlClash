@@ -328,7 +328,7 @@ enum PageLabel {
   requests,
   resources,
   connections,
-  dlerCloud,
+  oixCloud,
 }
 
 enum RuleAction {

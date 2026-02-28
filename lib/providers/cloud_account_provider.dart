@@ -63,7 +63,7 @@ class CloudAccount extends _$CloudAccount {
   static const _keyLogoutFlag = '${_prefixKey}logout_flag';
   static const _keyProfile = '${_prefixKey}profile';
   static const _keyNotification = '${_prefixKey}notification';
-  static const _configLabel = 'Dler Cloud';
+  static const _configLabel = 'oixCloud';
   
   final _api = CloudApiService();
   bool _isInitialized = false;
@@ -287,11 +287,11 @@ class CloudAccount extends _$CloudAccount {
     try {
       await _refreshData();
       
-      final hasDlerCloudProfile = globalState.config.profiles.any(
+      final hasoixCloudProfile = globalState.config.profiles.any(
         (p) => p.label?.contains(_configLabel) ?? false,
       );
       
-      if (!hasDlerCloudProfile && state.configInfo != null) {
+      if (!hasoixCloudProfile && state.configInfo != null) {
         await _syncProfileConfig();
       }
     } finally {

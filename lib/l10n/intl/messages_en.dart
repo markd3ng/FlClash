@@ -328,7 +328,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "discovery": MessageLookupByLibrary.simpleMessage(
       "Discovery a new version",
     ),
-    "dlerCloud": MessageLookupByLibrary.simpleMessage("Dler Cloud"),
+    "oixCloud": MessageLookupByLibrary.simpleMessage("oixCloud"),
     "dnsDesc": MessageLookupByLibrary.simpleMessage(
       "Update DNS related settings",
     ),
@@ -503,7 +503,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "loggedOutViewDesc": MessageLookupByLibrary.simpleMessage(
       "Login to view account info and manage subscriptions",
     ),
-    "loggedOutViewTitle": MessageLookupByLibrary.simpleMessage("Dler Cloud"),
+    "loggedOutViewTitle": MessageLookupByLibrary.simpleMessage("oixCloud"),
     "loginExpired": MessageLookupByLibrary.simpleMessage("Login Expired"),
     "loginExpiredMessage": MessageLookupByLibrary.simpleMessage(
       "Your login has expired, please login again.",

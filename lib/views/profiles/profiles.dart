@@ -335,8 +335,8 @@ class ProfileItem extends StatelessWidget {
                             _handleShowEditExtendPage(context);
                           },
                         ),
-                        if (!(profile.label?.contains('Dler Cloud') ?? false) && 
-                            !(profile.url?.toLowerCase().contains('dler.cloud') ?? false))
+                        if (!(profile.label?.contains('oixCloud') ?? false) && 
+                            !(profile.url?.toLowerCase().contains('oics.net') ?? false))
                           PopupMenuItemData(
                             icon: Icons.visibility_outlined,
                             label: appLocalizations.preview,
@@ -353,8 +353,8 @@ class ProfileItem extends StatelessWidget {
                             },
                           ),
                         ],
-                        if ((profile.label?.contains('Dler Cloud') ?? false) || 
-                            (profile.url?.toLowerCase().contains('dler.cloud') ?? false))
+                        if ((profile.label?.contains('oixCloud') ?? false) || 
+                            (profile.url?.toLowerCase().contains('oics.net') ?? false))
                           PopupMenuItemData(
                             icon: Icons.extension_outlined,
                             label: appLocalizations.override,

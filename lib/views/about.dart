@@ -32,16 +32,16 @@ class AboutView extends StatelessWidget {
           },
         ),
         ListItem(
-          title: const Text('Dler Cloud 官网'),
+          title: const Text('官方网站'),
           onTap: () {
-            globalState.openUrl('https://dlercloud.com');
+            globalState.openUrl('https://oixcloud.com');
           },
           trailing: const Icon(Icons.launch),
         ),
         ListItem(
-          title: const Text('Dler Cloud (备用地址)'),
+          title: const Text('官方网站(备用)'),
           onTap: () {
-            globalState.openUrl('https://dler.pro');
+            globalState.openUrl('https://todesk.io');
           },
           trailing: const Icon(Icons.launch),
         ),

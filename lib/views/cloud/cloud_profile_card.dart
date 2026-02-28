@@ -25,7 +25,7 @@ class CloudProfileCard extends StatelessWidget {
               children: [
                 InkWell(
                   onTap: () {
-                    launchUrl(Uri.parse('https://dlercloud.com/user'));
+                    launchUrl(Uri.parse('https://oixcloud.com/user'));
                   },
                   borderRadius: BorderRadius.circular(12),
                   child: Container(

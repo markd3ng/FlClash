@@ -89,9 +89,9 @@ class AppLocalizations {
     return Intl.message('Profiles', name: 'profiles', desc: '', args: []);
   }
 
-  /// `Dler Cloud`
-  String get dlerCloud {
-    return Intl.message('Dler Cloud', name: 'dlerCloud', desc: '', args: []);
+  /// `oixCloud`
+  String get oixCloud {
+    return Intl.message('oixCloud', name: 'oixCloud', desc: '', args: []);
   }
 
   /// `Tools`
@@ -3704,10 +3704,10 @@ class AppLocalizations {
     );
   }
 
-  /// `Dler Cloud`
+  /// `oixCloud`
   String get loggedOutViewTitle {
     return Intl.message(
-      'Dler Cloud',
+      'oixCloud',
       name: 'loggedOutViewTitle',
       desc: '',
       args: [],

@@ -166,10 +166,10 @@ extension ProfileExtension on Profile {
 
   bool get realAutoUpdate => url.isEmpty == true ? false : autoUpdate;
 
-  bool get isDlerCloudProfile {
+  bool get isoixCloudProfile {
     final profileLabel = label ?? '';
     final profileUrl = url.toLowerCase();
-    return profileLabel.contains('Dler Cloud') || profileUrl.contains('dler.cloud');
+    return profileLabel.contains('oixCloud') || profileUrl.contains('oics.net');
   }
 
   Future<void> checkAndUpdate() async {
@@ -217,7 +217,7 @@ extension ProfileExtension on Profile {
       throw message;
     }
     final file = await getFile();
-    final dataToSave = isDlerCloudProfile ? ProfileCrypto.encrypt(bytes) : bytes;
+    final dataToSave = isoixCloudProfile ? ProfileCrypto.encrypt(bytes) : bytes;
     await Isolate.run(() async {
       return await file.writeAsBytes(dataToSave);
     });
@@ -227,7 +227,7 @@ extension ProfileExtension on Profile {
   Future<Uint8List> readDecryptedBytes() async {
     final file = await getFile();
     final bytes = await file.readAsBytes();
-    if (isDlerCloudProfile) {
+    if (isoixCloudProfile) {
       try {
         return ProfileCrypto.decrypt(bytes);
       } catch (e) {

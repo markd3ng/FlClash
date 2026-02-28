@@ -40,10 +40,10 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
 
   Profile get profile => widget.profile;
   
-  bool get isDlerCloudProfile {
+  bool get isoixCloudProfile {
     final label = widget.profile.label ?? '';
     final url = widget.profile.url?.toLowerCase() ?? '';
-    return label.contains('Dler Cloud') || url.contains('dler.cloud');
+    return label.contains('oixCloud') || url.contains('oics.net');
   }
 
   @override
@@ -63,7 +63,7 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
   }
   
   Future<void> _loadDlerParams() async {
-    if (!isDlerCloudProfile) return;
+    if (!isoixCloudProfile) return;
     
     final prefs = await preferences.sharedPreferencesCompleter.future;
     final savedParamsJson = prefs?.getString('cloud_service_config_params');
@@ -91,7 +91,7 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
   Future<void> _handleConfirm() async {
     if (!_formKey.currentState!.validate()) return;
     
-    if (isDlerCloudProfile) {
+    if (isoixCloudProfile) {
       await _saveDlerParams();
     }
     
@@ -281,7 +281,7 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
         ),
       ),
       if (widget.profile.type == ProfileType.url) ...[
-        if (!isDlerCloudProfile)
+        if (!isoixCloudProfile)
           ListItem(
             title: TextFormField(
               textInputAction: TextInputAction.next,
@@ -304,7 +304,7 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
               },
             ),
           ),
-        if (isDlerCloudProfile)
+        if (isoixCloudProfile)
           ListItem(
             title: TextFormField(
               textInputAction: TextInputAction.next,
@@ -365,7 +365,7 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
                       children: [
                         const SizedBox(height: 4),
                         Text(fileInfo.desc),
-                        if (!isDlerCloudProfile) ...[
+                        if (!isoixCloudProfile) ...[
                           const SizedBox(height: 8),
                           Wrap(
                             runSpacing: 6,

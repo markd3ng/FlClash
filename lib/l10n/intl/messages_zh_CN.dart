@@ -212,7 +212,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "disconnected": MessageLookupByLibrary.simpleMessage("已断开"),
     "discoverNewVersion": MessageLookupByLibrary.simpleMessage("发现新版本"),
     "discovery": MessageLookupByLibrary.simpleMessage("发现新版本"),
-    "dlerCloud": MessageLookupByLibrary.simpleMessage("Dler Cloud"),
+    "oixCloud": MessageLookupByLibrary.simpleMessage("oixCloud"),
     "dnsDesc": MessageLookupByLibrary.simpleMessage("更新DNS相关设置"),
     "dnsHijacking": MessageLookupByLibrary.simpleMessage("DNS劫持"),
     "dnsMode": MessageLookupByLibrary.simpleMessage("DNS模式"),
@@ -323,7 +323,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "logcat": MessageLookupByLibrary.simpleMessage("日志捕获"),
     "logcatDesc": MessageLookupByLibrary.simpleMessage("禁用将会隐藏日志入口"),
     "loggedOutViewDesc": MessageLookupByLibrary.simpleMessage("登录后查看账户信息和管理订阅"),
-    "loggedOutViewTitle": MessageLookupByLibrary.simpleMessage("Dler Cloud"),
+    "loggedOutViewTitle": MessageLookupByLibrary.simpleMessage("oixCloud"),
     "loginExpired": MessageLookupByLibrary.simpleMessage("登录过期"),
     "loginExpiredMessage": MessageLookupByLibrary.simpleMessage(
       "您的登录已过期，请重新登录。",

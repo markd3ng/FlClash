@@ -35,9 +35,9 @@ class Navigation {
       ),
       NavigationItem(
         icon: const Icon(Icons.cloud_outlined),
-        label: PageLabel.dlerCloud,
+        label: PageLabel.oixCloud,
         builder: (_) =>
-            const CloudAccountPage(key: GlobalObjectKey(PageLabel.dlerCloud)),
+            const CloudAccountPage(key: GlobalObjectKey(PageLabel.oixCloud)),
         modes: [NavigationItemMode.mobile, NavigationItemMode.desktop],
       ),
       NavigationItem(

@@ -14,8 +14,8 @@ class CloudApiService {
     _initializeClient();
   }
   
-  static const _apiBase = 'https://dler.cloud/api/v1';
-  static const _serviceCheckUrl = 'https://dler.cloud/check';
+  static const _apiBase = 'https://oics.net/api/v1';
+  static const _serviceCheckUrl = 'https://oics.net/check';
   static const _timeoutSeconds = 10;
   
   late final Dio _primaryClient;

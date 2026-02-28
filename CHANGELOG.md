@@ -12,11 +12,11 @@
 
 - - Improve performance with Isolate file writes
 
-- - Enhance Dler Cloud profile security and UI
+- - Enhance oixCloud profile security and UI
 
 - - Add avatar click to open user center
 
-- - Optimize profile menu for Dler Cloud configs
+- - Optimize profile menu for oixCloud configs
 
 - - Fix disclaimer and refresh i18n issues
 
@@ -30,13 +30,13 @@
 
 ### ✨ New Features
 - System time verification on startup to prevent proxy service issues
-- Local caching for Dler Cloud user profile and announcements
-- Encrypted storage for Dler Cloud profile files
+- Local caching for oixCloud user profile and announcements
+- Encrypted storage for oixCloud profile files
 - Sensitive information filtering in connection logs and requests
 
 ### 🔧 Improvements
 - Enhanced logout options with Access Token revocation control
-- Customizable optional parameters for Dler Cloud configurations
+- Customizable optional parameters for oixCloud configurations
 - Auto-restore profile after logout and restart
 
 ### 🔒 Security

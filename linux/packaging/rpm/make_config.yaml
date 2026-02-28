@@ -1,4 +1,4 @@
-display_name: "FlClash for Dler Cloud"
+display_name: "FlClash for oixCloud"
 
 packager: chen08209
 packagerEmail: chen08209@gmail.com
@@ -15,9 +15,9 @@ keywords:
   - Clash
   - ClashMeta
   - Proxy
-  - Dler Cloud
+  - oixCloud
 
-generic_name: "FlClash for Dler Cloud"
+generic_name: "FlClash for oixCloud"
 
 group: Applications/Internet
 

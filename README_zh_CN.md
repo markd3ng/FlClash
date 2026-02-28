@@ -4,13 +4,13 @@
 
 </div>
 
-## FlClash for Dler Cloud
+## FlClash for oixCloud
 
 [![Downloads](https://img.shields.io/github/downloads/pickrui/FlClash/total?style=flat-square&logo=github)](https://github.com/pickrui/FlClash/releases/)[![Last Version](https://img.shields.io/github/release/pickrui/FlClash/all.svg?style=flat-square)](https://github.com/pickrui/FlClash/releases/)[![License](https://img.shields.io/github/license/pickrui/FlClash?style=flat-square)](LICENSE)
 
 [![Channel](https://img.shields.io/badge/Telegram-Channel-blue?style=flat-square&logo=telegram)](https://t.me/FlClash)
 
-集成 Dler Cloud 的多平台代理客户端，基于 ClashMeta，简单易用，开源无广告。
+集成 oixCloud 的多平台代理客户端，基于 ClashMeta，简单易用，开源无广告。
 
 on Desktop:
 <p style="text-align: center;">

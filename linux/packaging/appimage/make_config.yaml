@@ -1,4 +1,4 @@
-display_name: "FlClash for Dler Cloud"
+display_name: "FlClash for oixCloud"
 
 icon: ./assets/images/icon.png
 
@@ -7,9 +7,9 @@ keywords:
   - Clash
   - ClashMeta
   - Proxy
-  - Dler Cloud
+  - oixCloud
 
-generic_name: "FlClash for Dler Cloud"
+generic_name: "FlClash for oixCloud"
 
 categories:
   - Network

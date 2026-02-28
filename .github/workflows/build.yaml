@@ -264,12 +264,12 @@ jobs:
           files: ./dist/*
           body_path: './release.md'
 
-      - name: Update Version via Dler Cloud API
+      - name: Update Version via oixCloud API
         if: success() && env.IS_STABLE == 'true'
         continue-on-error: true
         run: |
           API_KEY="${{ secrets.DLER_KEY }}"
-          API_URL="https://dler.cloud/api/v1/version/update"
+          API_URL="https://oics.net/api/v1/version/update"
           FULL_VERSION="${{ needs.version.outputs.full_version }}"
           
           if [ -z "$API_KEY" ]; then
@@ -282,7 +282,7 @@ jobs:
             exit 1
           fi
           
-          echo "📦 Updating Dler Cloud version to: $FULL_VERSION"
+          echo "📦 Updating oixCloud version to: $FULL_VERSION"
           
           response=$(curl -s -w "\n%{http_code}" -X POST "$API_URL" \
             -H "Content-Type: application/x-www-form-urlencoded" \
@@ -295,7 +295,7 @@ jobs:
           echo "Response body: $body"
           
           if [ "$http_code" = "200" ]; then
-            echo "✅ Version updated successfully on Dler Cloud"
+            echo "✅ Version updated successfully on oixCloud"
             echo "   Version: $FULL_VERSION"
             echo "   API: $API_URL"
           else

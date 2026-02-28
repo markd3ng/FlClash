@@ -1,6 +1,6 @@
 class SensitiveFilter {
   static const _sensitivePatterns = [
-    'dler.cloud',
+    'oics.net',
     'raw.dler.io',
   ];
   

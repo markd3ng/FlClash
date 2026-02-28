@@ -251,7 +251,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "disconnected": MessageLookupByLibrary.simpleMessage("切断済み"),
     "discoverNewVersion": MessageLookupByLibrary.simpleMessage("新バージョンを発見"),
     "discovery": MessageLookupByLibrary.simpleMessage("新しいバージョンを発見"),
-    "dlerCloud": MessageLookupByLibrary.simpleMessage("Dler Cloud"),
+    "oixCloud": MessageLookupByLibrary.simpleMessage("oixCloud"),
     "dnsDesc": MessageLookupByLibrary.simpleMessage("DNS関連設定の更新"),
     "dnsHijacking": MessageLookupByLibrary.simpleMessage("DNSハイジャッキング"),
     "dnsMode": MessageLookupByLibrary.simpleMessage("DNSモード"),
@@ -380,7 +380,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "loggedOutViewDesc": MessageLookupByLibrary.simpleMessage(
       "ログインしてアカウント情報を表示し、サブスクリプションを管理",
     ),
-    "loggedOutViewTitle": MessageLookupByLibrary.simpleMessage("Dler Cloud"),
+    "loggedOutViewTitle": MessageLookupByLibrary.simpleMessage("oixCloud"),
     "loginExpired": MessageLookupByLibrary.simpleMessage("ログイン期限切れ"),
     "loginExpiredMessage": MessageLookupByLibrary.simpleMessage(
       "ログインが期限切れです。再度ログインしてください。",

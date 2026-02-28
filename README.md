@@ -4,13 +4,13 @@
 
 </div>
 
-## FlClash for Dler Cloud
+## FlClash for oixCloud
 
 [![Downloads](https://img.shields.io/github/downloads/pickrui/FlClash/total?style=flat-square&logo=github)](https://github.com/pickrui/FlClash/releases/)[![Last Version](https://img.shields.io/github/release/pickrui/FlClash/all.svg?style=flat-square)](https://github.com/pickrui/FlClash/releases/)[![License](https://img.shields.io/github/license/pickrui/FlClash?style=flat-square)](LICENSE)
 
 [![Channel](https://img.shields.io/badge/Telegram-Channel-blue?style=flat-square&logo=telegram)](https://t.me/FlClash)
 
-A multi-platform proxy client with Dler Cloud integration, based on ClashMeta, simple and easy to use, open-source and ad-free.
+A multi-platform proxy client with oixCloud integration, based on ClashMeta, simple and easy to use, open-source and ad-free.
 
 on Desktop:
 <p style="text-align: center;">
