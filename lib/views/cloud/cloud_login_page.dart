@@ -200,8 +200,14 @@ class _CloudLoginPageState extends ConsumerState<CloudLoginPage> {
         hintText: AppLocalizations.current.tokenHint,
         prefixIcon: const Icon(Icons.vpn_key),
         border: const OutlineInputBorder(),
+        isDense: true,
       ),
-      maxLines: 4,
+      style: context.textTheme.bodySmall?.copyWith(
+        fontFamily: 'monospace',
+        letterSpacing: 0.5,
+      ),
+      minLines: 3,
+      maxLines: 6,
       textInputAction: TextInputAction.done,
       onFieldSubmitted: (_) => _handleLogin(),
       validator: (value) {

@@ -40,11 +40,7 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
 
   Profile get profile => widget.profile;
   
-  bool get isoixCloudProfile {
-    final label = widget.profile.label ?? '';
-    final url = widget.profile.url?.toLowerCase() ?? '';
-    return label.contains('oixCloud') || url.contains('oics.net');
-  }
+  bool get isoixCloudProfile => widget.profile.isoixCloudProfile;
 
   @override
   void initState() {

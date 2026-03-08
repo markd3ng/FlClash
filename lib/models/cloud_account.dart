@@ -9,7 +9,6 @@ class CloudCredentials {
   
   bool get isExpired {
     if (tokenExpire == null) return false;
-    
     try {
       final expireDate = DateTime.parse(tokenExpire!.replaceAll(' ', 'T'));
       return DateTime.now().isAfter(expireDate);
@@ -69,7 +68,7 @@ class CloudProfile {
   factory CloudProfile.fromApiResponse(Map<String, dynamic> data) {
     final plan = data['plan'];
     if (plan == null || (plan is String && plan.trim().isEmpty)) {
-      throw NoPlanException();
+      throw const NoPlanException();
     }
     
     return CloudProfile(
@@ -96,27 +95,23 @@ class CloudProfile {
     }
   }
 
+  static final _trafficRegex = RegExp(r'([\d.]+)\s*([KMGT]?i?B)', caseSensitive: false);
+  
+  static const _trafficMultipliers = {
+    'B': 1.0,
+    'KB': 1024.0, 'KIB': 1024.0,
+    'MB': 1024.0 * 1024, 'MIB': 1024.0 * 1024,
+    'GB': 1024.0 * 1024 * 1024, 'GIB': 1024.0 * 1024 * 1024,
+    'TB': 1024.0 * 1024 * 1024 * 1024, 'TIB': 1024.0 * 1024 * 1024 * 1024,
+  };
+
   static double _parseTraffic(String traffic) {
-    final regex = RegExp(r'([\d.]+)\s*([KMGT]i?B)', caseSensitive: false);
-    final match = regex.firstMatch(traffic);
+    final match = _trafficRegex.firstMatch(traffic);
     if (match == null) return 0.0;
     
     final value = double.tryParse(match.group(1) ?? '0') ?? 0.0;
     final unit = (match.group(2) ?? 'B').toUpperCase();
-    
-    const multipliers = {
-      'B': 1.0,
-      'KB': 1024.0,
-      'KIB': 1024.0,
-      'MB': 1024.0 * 1024,
-      'MIB': 1024.0 * 1024,
-      'GB': 1024.0 * 1024 * 1024,
-      'GIB': 1024.0 * 1024 * 1024,
-      'TB': 1024.0 * 1024 * 1024 * 1024,
-      'TIB': 1024.0 * 1024 * 1024 * 1024,
-    };
-    
-    return value * (multipliers[unit] ?? 1.0);
+    return value * (_trafficMultipliers[unit] ?? 1.0);
   }
 }
 
@@ -129,8 +124,6 @@ class CloudConfigInfo {
     required this.profileName,
   });
   
-  String get fullUrl => downloadUrl;
-  
   factory CloudConfigInfo.fromApiResponse(Map<String, dynamic> data) {
     return CloudConfigInfo(
       downloadUrl: data['smart'] as String,
@@ -142,12 +135,10 @@ class CloudConfigInfo {
 class CloudNotification {
   final String message;
   final DateTime publishTime;
-  final bool isPinned;
   
   const CloudNotification({
     required this.message,
     required this.publishTime,
-    this.isPinned = false,
   });
   
   Map<String, dynamic> toMap() => {
@@ -158,29 +149,31 @@ class CloudNotification {
   factory CloudNotification.fromApiResponse(Map<String, dynamic> data) {
     return CloudNotification(
       message: data['content'] as String? ?? '',
-      publishTime: _parsePublishTime(data['date'] as String?),
-      isPinned: false,
+      publishTime: _parseDate(data['date'] as String?),
     );
   }
   
-  static DateTime _parsePublishTime(String? dateStr) {
+  static DateTime _parseDate(String? dateStr) {
     if (dateStr == null || dateStr.isEmpty) return DateTime.now();
-    try {
-      return DateTime.parse(dateStr);
-    } catch (_) {
-      return DateTime.now();
-    }
+    return DateTime.tryParse(dateStr) ?? DateTime.now();
   }
+
+  static final _htmlTagRegex = RegExp(r'<[^>]+>');
+  static final _pOpenRegex = RegExp(r'<p[^>]*>');
+  static final _brRegex = RegExp(r'<br\s*/?>');
+  static final _hrRegex = RegExp(r'<hr\s*/?>');
+  static final _multiNewlineRegex = RegExp(r'\n{3,}');
+  static final _separator = '\n${'─' * 40}\n';
 
   String get cleanMessage {
     return message
-        .replaceAll(RegExp(r'<p[^>]*>'), '\n')
-        .replaceAll(RegExp(r'</p>'), '\n')
-        .replaceAll(RegExp(r'<br\s*/?>'), '\n')
-        .replaceAll(RegExp(r'<hr\s*/?>'), '\n${'─' * 40}\n')
-        .replaceAll(RegExp(r'<[^>]+>'), '')
+        .replaceAll(_pOpenRegex, '\n')
+        .replaceAll('</p>', '\n')
+        .replaceAll(_brRegex, '\n')
+        .replaceAll(_hrRegex, _separator)
+        .replaceAll(_htmlTagRegex, '')
         .trim()
-        .replaceAll(RegExp(r'\n{3,}'), '\n\n');
+        .replaceAll(_multiNewlineRegex, '\n\n');
   }
 }
 

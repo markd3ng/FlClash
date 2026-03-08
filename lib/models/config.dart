@@ -133,6 +133,12 @@ abstract class WindowProps with _$WindowProps {
       json == null ? const WindowProps() : _$WindowPropsFromJson(json);
 }
 
+extension WindowPropsExt on WindowProps {
+  Size get _rawSize => Size(width, height);
+
+  Size get size => _rawSize.isEmpty ? const Size(680, 580) : _rawSize;
+}
+
 @freezed
 abstract class VpnProps with _$VpnProps {
   const factory VpnProps({

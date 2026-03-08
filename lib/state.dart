@@ -643,8 +643,7 @@ class GlobalState {
   }
 
   Future<Map<String, dynamic>> getProfileConfig(String profileId) async {
-    final profile = config.profiles.getProfile(profileId);
-    final configMap = await coreController.getConfig(profileId, profile: profile);
+    final configMap = await coreController.getConfig(profileId);
     configMap['rules'] = configMap['rule'];
     configMap.remove('rule');
     return configMap;

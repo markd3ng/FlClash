@@ -217,23 +217,9 @@ extension ProfileExtension on Profile {
       throw message;
     }
     final file = await getFile();
-    final dataToSave = isoixCloudProfile ? ProfileCrypto.encrypt(bytes) : bytes;
     await Isolate.run(() async {
-      return await file.writeAsBytes(dataToSave);
+      return await file.writeAsBytes(bytes);
     });
     return copyWith(lastUpdateDate: DateTime.now());
-  }
-  
-  Future<Uint8List> readDecryptedBytes() async {
-    final file = await getFile();
-    final bytes = await file.readAsBytes();
-    if (isoixCloudProfile) {
-      try {
-        return ProfileCrypto.decrypt(bytes);
-      } catch (e) {
-        return bytes;
-      }
-    }
-    return bytes;
   }
 }

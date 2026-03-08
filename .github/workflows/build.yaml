@@ -50,6 +50,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     strategy:
+      fail-fast: false
       matrix:
         include:
           - platform: android
@@ -110,6 +111,17 @@ jobs:
           echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/local.properties
           echo "storePassword=${{ secrets.STORE_PASSWORD }}" >> android/local.properties
           echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/local.properties
+
+      - name: Pre-cache Android JitPack Dependencies
+        if: startsWith(matrix.platform,'android')
+        run: |
+          GROUP_PATH="com/github/fast-development/android-js-runtimes/fastdev-jsruntimes-quickjs/0.3.5"
+          LOCAL_DIR="$HOME/.m2/repository/$GROUP_PATH"
+          mkdir -p "$LOCAL_DIR"
+          BASE_URL="https://jitpack.io/$GROUP_PATH/fastdev-jsruntimes-quickjs-0.3.5"
+          curl -fsSL --retry 5 --retry-delay 3 "$BASE_URL.aar" -o "$LOCAL_DIR/fastdev-jsruntimes-quickjs-0.3.5.aar"
+          curl -fsSL --retry 5 --retry-delay 3 "$BASE_URL.pom" -o "$LOCAL_DIR/fastdev-jsruntimes-quickjs-0.3.5.pom" || \
+            printf '<?xml version="1.0"?><project><modelVersion>4.0.0</modelVersion><groupId>com.github.fast-development.android-js-runtimes</groupId><artifactId>fastdev-jsruntimes-quickjs</artifactId><version>0.3.5</version><packaging>aar</packaging></project>' > "$LOCAL_DIR/fastdev-jsruntimes-quickjs-0.3.5.pom"
 
       - name: Setup Go
         uses: actions/setup-go@v5

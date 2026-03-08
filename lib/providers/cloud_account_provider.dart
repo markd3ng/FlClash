@@ -30,7 +30,6 @@ class CloudAccountState {
   });
   
   bool get isLoggedIn => credentials != null && !credentials!.isExpired;
-  bool get hasValidProfile => profile != null;
   
   CloudAccountState copyWith({
     CloudCredentials? credentials,
@@ -49,8 +48,6 @@ class CloudAccountState {
       error: error,
     );
   }
-  
-  CloudAccountState clearError() => copyWith(error: null);
   
   CloudAccountState setLoading(bool loading) => copyWith(isLoading: loading, error: null);
 }
@@ -74,6 +71,62 @@ class CloudAccount extends _$CloudAccount {
     return const CloudAccountState();
   }
   
+  T? _decodeCached<T>(String? json, T Function(Map<String, dynamic>) factory) {
+    if (json == null) return null;
+    try {
+      return factory(Map<String, dynamic>.from(jsonDecode(json) as Map));
+    } catch (e) {
+      commonPrint.log('Failed to parse cached data: $e', logLevel: LogLevel.warning);
+      return null;
+    }
+  }
+  
+  Future<Map<String, String>?> _loadSavedParams() async {
+    final prefs = await preferences.sharedPreferencesCompleter.future;
+    final json = prefs?.getString(_keyConfigParams);
+    if (json == null || json.isEmpty) return null;
+    try {
+      return Map<String, String>.from(jsonDecode(json) as Map);
+    } catch (e) {
+      commonPrint.log('Failed to parse saved params: $e', logLevel: LogLevel.warning);
+      return null;
+    }
+  }
+  
+  Future<void> _persistCloudData({
+    required CloudProfile profile,
+    CloudNotification? notification,
+  }) async {
+    final prefs = await preferences.sharedPreferencesCompleter.future;
+    await prefs?.setString(_keyProfile, jsonEncode(profile.toMap()));
+    if (notification != null) {
+      await prefs?.setString(_keyNotification, jsonEncode(notification.toMap()));
+    }
+  }
+  
+  Future<({CloudProfile profile, CloudConfigInfo configInfo, CloudNotification? notification})>
+      _fetchCloudData(String token, {Map<String, String>? extraParams}) async {
+    final profile = await _api.fetchUserProfile(token);
+    final (configInfo, notification) = await (
+      _api.fetchConfigUrl(token: token, extraParams: extraParams),
+      _api.fetchAnnouncement(),
+    ).wait;
+    return (profile: profile, configInfo: configInfo, notification: notification);
+  }
+  
+  bool _isTokenExpiredError(Object error) {
+    final s = error.toString();
+    return s.contains('Invalid or expired access_token') ||
+        (s.contains('expired') && s.contains('token'));
+  }
+  
+  Profile? _findCloudProfile() {
+    return globalState.config.profiles.cast<Profile?>().firstWhere(
+      (p) => p?.label?.contains(_configLabel) ?? false,
+      orElse: () => null,
+    );
+  }
+  
   Future<void> _autoRestore() async {
     if (_isInitialized) return;
     _isInitialized = true;
@@ -81,52 +134,24 @@ class CloudAccount extends _$CloudAccount {
     try {
       final prefs = await preferences.sharedPreferencesCompleter.future;
       
-      final wasLoggedOut = prefs?.getBool(_keyLogoutFlag) ?? false;
-      if (wasLoggedOut) return;
+      if (prefs?.getBool(_keyLogoutFlag) ?? false) return;
       
-      final credentialsMap = prefs?.getString(_keyCredentials);
-      if (credentialsMap == null) return;
+      final credentialsJson = prefs?.getString(_keyCredentials);
+      if (credentialsJson == null) return;
       
       final credentials = CloudCredentials.fromMap(
-        Map<String, dynamic>.from(jsonDecode(credentialsMap) as Map),
+        Map<String, dynamic>.from(jsonDecode(credentialsJson) as Map),
       );
+      if (credentials.isExpired) return;
       
-      if (!credentials.isExpired) {
-        CloudProfile? cachedProfile;
-        CloudNotification? cachedNotification;
-        
-        final profileJson = prefs?.getString(_keyProfile);
-        if (profileJson != null) {
-          try {
-            cachedProfile = CloudProfile.fromApiResponse(
-              Map<String, dynamic>.from(jsonDecode(profileJson) as Map),
-            );
-          } catch (e) {
-            commonPrint.log('Failed to parse cached profile: $e', logLevel: LogLevel.warning);
-          }
-        }
-        
-        final notificationJson = prefs?.getString(_keyNotification);
-        if (notificationJson != null) {
-          try {
-            cachedNotification = CloudNotification.fromApiResponse(
-              Map<String, dynamic>.from(jsonDecode(notificationJson) as Map),
-            );
-          } catch (e) {
-            commonPrint.log('Failed to parse cached notification: $e', logLevel: LogLevel.warning);
-          }
-        }
-        
-        state = state.copyWith(
-          credentials: credentials,
-          profile: cachedProfile,
-          latestNotification: cachedNotification,
-        );
-        await _refreshData();
-      }
+      state = state.copyWith(
+        credentials: credentials,
+        profile: _decodeCached(prefs?.getString(_keyProfile), CloudProfile.fromApiResponse),
+        latestNotification: _decodeCached(prefs?.getString(_keyNotification), CloudNotification.fromApiResponse),
+      );
+      await _refreshData();
     } catch (e) {
       commonPrint.log('Auto restore failed: $e', logLevel: LogLevel.warning);
-      await signOut(revokeToken: false);
     }
   }
   
@@ -134,35 +159,20 @@ class CloudAccount extends _$CloudAccount {
     required String email,
     required String password,
   }) async {
-    state = state.setLoading(true);
-    
-    try {
-      final credentials = await _api.loginWithPassword(
-        email: email,
-        password: password,
-      );
-      
-      await _handleLoginSuccess(credentials);
-    } catch (error) {
-      state = state.copyWith(
-        isLoading: false,
-        error: error.toString(),
-      );
-      rethrow;
-    }
+    await _signIn(() => _api.loginWithPassword(email: email, password: password));
   }
   
   Future<void> signInWithToken(String token) async {
+    await _signIn(() => _api.loginWithToken(token));
+  }
+  
+  Future<void> _signIn(Future<CloudCredentials> Function() authenticate) async {
     state = state.setLoading(true);
-    
     try {
-      final credentials = await _api.loginWithToken(token);
+      final credentials = await authenticate();
       await _handleLoginSuccess(credentials);
     } catch (error) {
-      state = state.copyWith(
-        isLoading: false,
-        error: error.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: error.toString());
       rethrow;
     }
   }
@@ -182,38 +192,33 @@ class CloudAccount extends _$CloudAccount {
       if (profile.subscription.isNotEmpty && profile.subscription != 'Pass Iron') {
         params['type'] = 'love';
       }
-      
       if (params.isNotEmpty) {
         await prefs?.setString(_keyConfigParams, jsonEncode(params));
       }
       
-      final (configInfo, notification) = await (
-        _api.fetchConfigUrl(token: token, extraParams: params.isNotEmpty ? params : null),
-        _api.fetchAnnouncement(),
-      ).wait;
-      
-      await prefs?.setString(_keyProfile, jsonEncode(profile.toMap()));
-      if (notification != null) {
-        await prefs?.setString(_keyNotification, jsonEncode(notification.toMap()));
-      }
+      final data = await _fetchCloudData(
+        token,
+        extraParams: params.isNotEmpty ? params : null,
+      );
+      await _persistCloudData(profile: data.profile, notification: data.notification);
       
       state = state.copyWith(
-        profile: profile,
-        configInfo: configInfo,
-        latestNotification: notification,
+        profile: data.profile,
+        configInfo: data.configInfo,
+        latestNotification: data.notification,
         isLoading: false,
       );
       
       await _syncProfileConfig();
     } catch (e) {
-      final appLocalizations = AppLocalizations.current;
+      final l10n = AppLocalizations.current;
       state = state.copyWith(
         isLoading: false,
-        error: '${appLocalizations.configDownloadFailed}: ${e.toString()}',
+        error: '${l10n.configDownloadFailed}: $e',
       );
       globalState.showMessage(
-        title: appLocalizations.warning,
-        message: TextSpan(text: '${appLocalizations.loginSuccessConfigFailed}：\n${e.toString()}'),
+        title: l10n.warning,
+        message: TextSpan(text: '${l10n.loginSuccessConfigFailed}：\n$e'),
       );
     }
   }
@@ -223,34 +228,15 @@ class CloudAccount extends _$CloudAccount {
     
     try {
       final token = state.credentials!.accessToken;
-      final prefs = await preferences.sharedPreferencesCompleter.future;
+      final savedParams = await _loadSavedParams();
       
-      final profile = await _api.fetchUserProfile(token);
-      
-      Map<String, String>? savedParams;
-      final savedParamsJson = prefs?.getString(_keyConfigParams);
-      if (savedParamsJson != null && savedParamsJson.isNotEmpty) {
-        try {
-          savedParams = Map<String, String>.from(jsonDecode(savedParamsJson) as Map);
-        } catch (e) {
-          commonPrint.log('Failed to parse saved params: $e', logLevel: LogLevel.warning);
-        }
-      }
-      
-      final (configInfo, notification) = await (
-        _api.fetchConfigUrl(token: token, extraParams: savedParams),
-        _api.fetchAnnouncement(),
-      ).wait;
-      
-      await prefs?.setString(_keyProfile, jsonEncode(profile.toMap()));
-      if (notification != null) {
-        await prefs?.setString(_keyNotification, jsonEncode(notification.toMap()));
-      }
+      final data = await _fetchCloudData(token, extraParams: savedParams);
+      await _persistCloudData(profile: data.profile, notification: data.notification);
       
       state = state.copyWith(
-        profile: profile,
-        configInfo: configInfo,
-        latestNotification: notification,
+        profile: data.profile,
+        configInfo: data.configInfo,
+        latestNotification: data.notification,
       );
       
       await _syncProfileConfig();
@@ -258,24 +244,21 @@ class CloudAccount extends _$CloudAccount {
       commonPrint.log('Refresh failed: $error', logLevel: LogLevel.error);
       
       if (error is NoPlanException) {
-        final appLocalizations = AppLocalizations.current;
+        final l10n = AppLocalizations.current;
         await signOut(revokeToken: true);
         globalState.showMessage(
-          title: appLocalizations.noPlanSubscription,
-          message: TextSpan(text: appLocalizations.accountNoPlan),
+          title: l10n.noPlanSubscription,
+          message: TextSpan(text: l10n.accountNoPlan),
         );
-      } else {
-        final errorStr = error.toString();
-        if (errorStr.contains('Invalid or expired access_token')) {
-          final appLocalizations = AppLocalizations.current;
-          await signOut(revokeToken: true);
+      } else if (_isTokenExpiredError(error)) {
+        final l10n = AppLocalizations.current;
+        await signOut(revokeToken: true);
         globalState.showMessage(
-          title: appLocalizations.loginExpired,
-          message: TextSpan(text: appLocalizations.tokenExpired),
+          title: l10n.loginExpired,
+          message: TextSpan(text: l10n.tokenExpired),
         );
       } else {
-        rethrow;
-        }
+        commonPrint.log('Non-auth refresh error, keeping session: $error', logLevel: LogLevel.warning);
       }
     }
   }
@@ -287,11 +270,7 @@ class CloudAccount extends _$CloudAccount {
     try {
       await _refreshData();
       
-      final hasoixCloudProfile = globalState.config.profiles.any(
-        (p) => p.label?.contains(_configLabel) ?? false,
-      );
-      
-      if (!hasoixCloudProfile && state.configInfo != null) {
+      if (_findCloudProfile() == null && state.configInfo != null) {
         await _syncProfileConfig();
       }
     } finally {
@@ -304,19 +283,10 @@ class CloudAccount extends _$CloudAccount {
     if (configInfo == null) return;
     
     try {
-      final existingProfile = globalState.config.profiles.cast<Profile?>().firstWhere(
-        (p) => p?.label?.contains(_configLabel) ?? false,
-        orElse: () => null,
-      );
+      final existing = _findCloudProfile();
       
-      final profile = (existingProfile ?? Profile(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        label: _configLabel,
-        url: configInfo.fullUrl,
-        autoUpdate: true,
-        autoUpdateDuration: const Duration(hours: 24),
-      )).copyWith(
-        url: configInfo.fullUrl,
+      final profile = (existing ?? Profile.normal()).copyWith(
+        url: configInfo.downloadUrl,
         label: _configLabel,
         autoUpdate: true,
         autoUpdateDuration: const Duration(hours: 24),
@@ -339,57 +309,39 @@ class CloudAccount extends _$CloudAccount {
     }
   }
   
+  Future<void> _saveParamsAndSync(Map<String, String>? params) async {
+    final prefs = await preferences.sharedPreferencesCompleter.future;
+    if (params != null && params.isNotEmpty) {
+      await prefs?.setString(_keyConfigParams, jsonEncode(params));
+    } else {
+      await prefs?.remove(_keyConfigParams);
+    }
+    
+    final configInfo = await _api.fetchConfigUrl(
+      token: state.credentials!.accessToken,
+      extraParams: params?.isNotEmpty == true ? params : null,
+    );
+    state = state.copyWith(configInfo: configInfo);
+    await _syncProfileConfig();
+  }
+  
   Future<void> updateConfigParams(Map<String, String> params) async {
     if (!state.isLoggedIn || state.configInfo == null) return;
     
-    final prefs = await preferences.sharedPreferencesCompleter.future;
-    final mergedParams = <String, String>{};
-    
-    final savedParamsJson = prefs?.getString(_keyConfigParams);
-    if (savedParamsJson != null && savedParamsJson.isNotEmpty) {
-      try {
-        mergedParams.addAll(Map<String, String>.from(jsonDecode(savedParamsJson) as Map));
-      } catch (_) {}
-    }
-    
+    final mergedParams = (await _loadSavedParams()) ?? <String, String>{};
     mergedParams.addAll(params);
-    await prefs?.setString(_keyConfigParams, jsonEncode(mergedParams));
-    
-    final token = state.credentials!.accessToken;
-    final configInfo = await _api.fetchConfigUrl(
-      token: token,
-      extraParams: mergedParams,
-    );
-    
-    state = state.copyWith(configInfo: configInfo);
-    await _syncProfileConfig();
+    await _saveParamsAndSync(mergedParams);
   }
   
   Future<void> removeConfigParam(String key) async {
     if (!state.isLoggedIn || state.configInfo == null) return;
     
-    final prefs = await preferences.sharedPreferencesCompleter.future;
-    final savedParamsJson = prefs?.getString(_keyConfigParams);
-    if (savedParamsJson == null || savedParamsJson.isEmpty) return;
-    
     try {
-      final savedParams = Map<String, String>.from(jsonDecode(savedParamsJson) as Map);
+      final savedParams = await _loadSavedParams();
+      if (savedParams == null) return;
+      
       savedParams.remove(key);
-      
-      if (savedParams.isNotEmpty) {
-        await prefs?.setString(_keyConfigParams, jsonEncode(savedParams));
-      } else {
-        await prefs?.remove(_keyConfigParams);
-      }
-      
-      final token = state.credentials!.accessToken;
-      final configInfo = await _api.fetchConfigUrl(
-        token: token,
-        extraParams: savedParams.isNotEmpty ? savedParams : null,
-      );
-      
-      state = state.copyWith(configInfo: configInfo);
-      await _syncProfileConfig();
+      await _saveParamsAndSync(savedParams);
     } catch (e) {
       commonPrint.log('Failed to remove param: $e', logLevel: LogLevel.warning);
     }
@@ -397,13 +349,7 @@ class CloudAccount extends _$CloudAccount {
   
   Future<void> clearConfigParams() async {
     if (!state.isLoggedIn || state.configInfo == null) return;
-    
-    final prefs = await preferences.sharedPreferencesCompleter.future;
-    await prefs?.remove(_keyConfigParams);
-    
-    final configInfo = await _api.fetchConfigUrl(token: state.credentials!.accessToken);
-    state = state.copyWith(configInfo: configInfo);
-    await _syncProfileConfig();
+    await _saveParamsAndSync(null);
   }
   
   Future<void> signOut({bool revokeToken = false}) async {
@@ -411,31 +357,33 @@ class CloudAccount extends _$CloudAccount {
       if (revokeToken && state.credentials != null) {
         await _api.logout(state.credentials!.accessToken);
       }
-      
       await _removeProfileConfig();
       
       final prefs = await preferences.sharedPreferencesCompleter.future;
-        await prefs?.remove(_keyCredentials);
-        await prefs?.remove(_keyConfigParams);
-      await prefs?.remove(_keyProfile);
-      await prefs?.remove(_keyNotification);
-      await prefs?.setBool(_keyLogoutFlag, true);
-      
-      state = const CloudAccountState();
+      await Future.wait([
+        if (prefs != null) ...[
+          prefs.remove(_keyCredentials),
+          prefs.remove(_keyConfigParams),
+          prefs.remove(_keyProfile),
+          prefs.remove(_keyNotification),
+          prefs.setBool(_keyLogoutFlag, true),
+        ],
+      ]);
     } catch (error) {
       commonPrint.log('Sign out error: $error', logLevel: LogLevel.warning);
+    } finally {
       state = const CloudAccountState();
     }
   }
   
   Future<void> _removeProfileConfig() async {
     try {
-      final profiles = globalState.config.profiles;
-      final cloudProfile = profiles.where(
-        (p) => (p.label?.contains(_configLabel) ?? false) || p.label == state.configInfo?.profileName,
-      ).toList();
+      final cloudProfiles = globalState.config.profiles.where(
+        (p) => (p.label?.contains(_configLabel) ?? false) ||
+               p.label == state.configInfo?.profileName,
+      );
       
-      for (final profile in cloudProfile) {
+      for (final profile in cloudProfiles) {
         await globalState.appController.deleteProfile(profile.id);
       }
     } catch (error) {

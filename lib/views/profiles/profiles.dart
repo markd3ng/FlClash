@@ -335,8 +335,7 @@ class ProfileItem extends StatelessWidget {
                             _handleShowEditExtendPage(context);
                           },
                         ),
-                        if (!(profile.label?.contains('oixCloud') ?? false) && 
-                            !(profile.url?.toLowerCase().contains('oics.net') ?? false))
+                        if (!profile.isoixCloudProfile)
                           PopupMenuItemData(
                             icon: Icons.visibility_outlined,
                             label: appLocalizations.preview,
@@ -353,8 +352,7 @@ class ProfileItem extends StatelessWidget {
                             },
                           ),
                         ],
-                        if ((profile.label?.contains('oixCloud') ?? false) || 
-                            (profile.url?.toLowerCase().contains('oics.net') ?? false))
+                        if (profile.isoixCloudProfile)
                           PopupMenuItemData(
                             icon: Icons.extension_outlined,
                             label: appLocalizations.override,

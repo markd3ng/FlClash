@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:fl_clash/common/common.dart';
+import 'package:fl_clash/models/config.dart';
 import 'package:fl_clash/state.dart';
 import 'package:flutter/material.dart';
 import 'package:screen_retriever/screen_retriever.dart';
@@ -20,7 +21,7 @@ class Window {
     }
     await windowManager.ensureInitialized();
     WindowOptions windowOptions = WindowOptions(
-      size: Size(props.width, props.height),
+      size: props.size,
       minimumSize: const Size(380, 400),
     );
     if (!system.isMacOS || version > 10) {
@@ -29,8 +30,8 @@ class Window {
     if (!system.isMacOS) {
       final left = props.left ?? 0;
       final top = props.top ?? 0;
-      final right = left + props.width;
-      final bottom = top + props.height;
+      final right = left + props.size.width;
+      final bottom = top + props.size.height;
       if (left == 0 && top == 0) {
         await windowManager.setAlignment(Alignment.center);
       } else {
