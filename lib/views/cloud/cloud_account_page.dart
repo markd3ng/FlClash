@@ -300,7 +300,25 @@ class _CloudAccountPageState extends ConsumerState<CloudAccountPage> {
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          if (state.profile != null) CloudProfileCard(profile: state.profile!),
+          if (state.profile != null) ...[
+            CloudProfileCard(profile: state.profile!),
+            const SizedBox(height: 16),
+            if (state.profile!.level >= 2)
+              CommonCard(
+                child: SwitchListTile(
+                  title: const Text('海外网络环境'),
+                  value: state.configParams?.containsKey('lv') == true &&
+                      state.configParams!['lv'] == '1',
+                  onChanged: state.isLoading
+                      ? null
+                      : (value) async {
+                          await ref
+                              .read(cloudAccountProvider.notifier)
+                              .setOverseasOption(value);
+                        },
+                ),
+              ),
+          ],
           const SizedBox(height: 16),
           if (state.latestNotification != null)
             _buildNotificationCard(state.latestNotification!),
