@@ -63,7 +63,11 @@ class CoreController {
     await initGeo();
     final homeDirPath = await appPath.homeDirPath;
     return await _interface.init(
-      InitParams(homeDir: homeDirPath, version: version),
+      InitParams(
+        homeDir: homeDirPath, 
+        version: version,
+        profileKey: secrets.PROFILE_KEY,
+      ),
     );
   }
 
@@ -73,18 +77,18 @@ class CoreController {
 
   FutureOr<bool> get isInit => _interface.isInit;
 
-  Future<String> validateConfig(String data) async {
+  Future<String> validateConfig(String data, {bool isOixCloud = false}) async {
     final path = await appPath.validateFilePath;
     await globalState.genValidateFile(path, data);
-    final res = await _interface.validateConfig(path);
+    final res = await _interface.validateConfig(path, isOixCloud);
     await File(path).delete();
     return res;
   }
 
-  Future<String> validateConfigFormBytes(Uint8List bytes) async {
+  Future<String> validateConfigFormBytes(Uint8List bytes, {bool isOixCloud = false}) async {
     final path = await appPath.validateFilePath;
     await globalState.genValidateFileFormBytes(path, bytes);
-    final res = await _interface.validateConfig(path);
+    final res = await _interface.validateConfig(path, isOixCloud);
     await File(path).delete();
     return res;
   }
@@ -220,9 +224,9 @@ class CoreController {
     return Delay.fromJson(json.decode(data));
   }
 
-  Future<Map<String, dynamic>> getConfig(String id) async {
+  Future<Map<String, dynamic>> getConfig(String id, {bool isOixCloud = false}) async {
     final profilePath = await appPath.getProfilePath(id);
-    final res = await _interface.getConfig(profilePath);
+    final res = await _interface.getConfig(profilePath, isOixCloud);
     if (res.isSuccess) {
       return res.data;
     } else {

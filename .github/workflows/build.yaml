@@ -161,6 +161,7 @@ jobs:
           FLUTTER_BUILD_NUMBER: ${{ needs.version.outputs.build_number }}
           OIX_API_DOMAIN: ${{ secrets.OIX_API_DOMAIN }}
           API_MANAGED_ROUTER: ${{ secrets.API_MANAGED_ROUTER }}
+          PROFILE_KEY: ${{ secrets.PROFILE_KEY }}
         run: |
           set -e
           echo "Building with version: $FLUTTER_VERSION_NUMBER+$FLUTTER_BUILD_NUMBER"

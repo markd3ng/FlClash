@@ -2,18 +2,20 @@ package main
 
 import (
 	"encoding/json"
+	"net/netip"
+	"time"
+
 	"github.com/metacubex/mihomo/adapter/provider"
 	P "github.com/metacubex/mihomo/component/process"
 	"github.com/metacubex/mihomo/constant"
 	"github.com/metacubex/mihomo/log"
 	"github.com/metacubex/mihomo/tunnel"
-	"net/netip"
-	"time"
 )
 
 type InitParams struct {
-	HomeDir string `json:"home-dir"`
-	Version int    `json:"version"`
+	HomeDir    string `json:"home-dir"`
+	Version    int    `json:"version"`
+	ProfileKey string `json:"profile-key"`
 }
 
 type SetupParams struct {

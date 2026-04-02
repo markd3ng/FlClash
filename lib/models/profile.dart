@@ -214,7 +214,7 @@ extension ProfileExtension on Profile {
   }
 
   Future<Profile> saveFile(Uint8List bytes) async {
-    final message = await coreController.validateConfigFormBytes(bytes);
+    final message = await coreController.validateConfigFormBytes(bytes, isOixCloud: isoixCloudProfile);
     if (message.isNotEmpty) {
       throw message;
     }

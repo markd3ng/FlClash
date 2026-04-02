@@ -643,7 +643,10 @@ class GlobalState {
   }
 
   Future<Map<String, dynamic>> getProfileConfig(String profileId) async {
-    final configMap = await coreController.getConfig(profileId);
+    final profile = config.profiles.getProfile(profileId);
+    final isOixCloud = profile?.isoixCloudProfile ?? false;
+
+    final configMap = await coreController.getConfig(profileId, isOixCloud: isOixCloud);
     configMap['rules'] = configMap['rule'];
     configMap.remove('rule');
     return configMap;

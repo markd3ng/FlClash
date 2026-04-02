@@ -172,7 +172,7 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
 
   Future<void> _handleSaveEdit(BuildContext context, String data) async {
     final message = await globalState.appController.safeRun<String>(() async {
-      final message = await coreController.validateConfig(data);
+      final message = await coreController.validateConfig(data, isOixCloud: isoixCloudProfile);
       return message;
     }, silence: false);
     if (message?.isNotEmpty == true) {

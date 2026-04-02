@@ -3,6 +3,9 @@ package main
 import (
 	b "bytes"
 	"context"
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"os"
@@ -36,6 +39,7 @@ var (
 	isRunning     = false
 	runLock       sync.Mutex
 	mBatch, _     = batch.New[bool](context.Background(), batch.WithConcurrencyNum[bool](50))
+	ProfileKey    string // Automatically injected by github actions
 )
 
 type ExternalProviders []ExternalProvider
@@ -144,6 +148,37 @@ func stopListeners() {
 	listener.StopListener()
 }
 
+func decryptConfig(data []byte) ([]byte, error) {
+	if len(data) < 4+1+12+16 {
+		return data, nil
+	}
+	if string(data[:4]) != "FLEN" || data[4] != 0x02 || ProfileKey == "" {
+		return data, nil
+	}
+
+	h := sha256.New()
+	h.Write([]byte(ProfileKey))
+	key := h.Sum(nil)
+
+	iv := data[5 : 5+12]
+	ciphertext := data[5+12:]
+
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return data, err
+	}
+	aesgcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return data, err
+	}
+
+	plaintext, err := aesgcm.Open(nil, iv, ciphertext, nil)
+	if err != nil {
+		return data, err
+	}
+	return plaintext, nil
+}
+
 func patchSelectGroup(mapping map[string]string) {
 	for name, proxy := range tunnel.ProxiesWithProviders() {
 		outbound, ok := proxy.(*adapter.Proxy)
@@ -172,7 +207,7 @@ func defaultSetupParams() *SetupParams {
 	}
 }
 
-func readFile(path string) ([]byte, error) {
+func readFile(path string, isOixCloud bool) ([]byte, error) {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return nil, err
 	}
@@ -181,6 +216,9 @@ func readFile(path string) ([]byte, error) {
 		return nil, err
 	}
 
+	if isOixCloud {
+		data, _ = decryptConfig(data)
+	}
 	return data, err
 }
 
@@ -243,7 +281,7 @@ func updateConfig(params *UpdateParams) {
 }
 
 func parseWithPath(path string) (*config.Config, error) {
-	buf, err := readFile(path)
+	buf, err := readFile(path, false)
 	if err != nil {
 		return nil, err
 	}
@@ -265,7 +303,14 @@ func setupConfig(params *SetupParams) error {
 	defer runLock.Unlock()
 	var err error
 	constant.DefaultTestURL = params.TestURL
-	currentConfig, err = executor.ParseWithPath(filepath.Join(constant.Path.HomeDir(), "config.yaml"))
+
+	configPath := filepath.Join(constant.Path.HomeDir(), "config.yaml")
+	if configBytes, readErr := readFile(configPath, false); readErr == nil {
+		currentConfig, err = executor.ParseWithBytes(configBytes)
+	} else {
+		currentConfig, err = executor.ParseWithPath(configPath)
+	}
+
 	if err != nil {
 		currentConfig, _ = config.ParseRawConfig(config.DefaultRawConfig())
 	}

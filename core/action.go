@@ -53,8 +53,18 @@ func handleAction(action *Action, result ActionResult) {
 		result.success(handleShutdown())
 		return
 	case validateConfigMethod:
-		path := action.Data.(string)
-		result.success(handleValidateConfig(path))
+		var path string
+		isOixCloud := false
+		switch d := action.Data.(type) {
+		case string:
+			path = d
+		case map[string]interface{}:
+			path = d["path"].(string)
+			if val, ok := d["isOixCloud"].(bool); ok {
+				isOixCloud = val
+			}
+		}
+		result.success(handleValidateConfig(path, isOixCloud))
 		return
 	case updateConfigMethod:
 		data := []byte(action.Data.(string))
@@ -101,8 +111,18 @@ func handleAction(action *Action, result ActionResult) {
 		result.success(handleResetConnections())
 		return
 	case getConfigMethod:
-		path := action.Data.(string)
-		config, err := handleGetConfig(path)
+		var path string
+		isOixCloud := false
+		switch d := action.Data.(type) {
+		case string:
+			path = d
+		case map[string]interface{}:
+			path = d["path"].(string)
+			if val, ok := d["isOixCloud"].(bool); ok {
+				isOixCloud = val
+			}
+		}
+		config, err := handleGetConfig(path, isOixCloud)
 		if err != nil {
 			result.error(err)
 			return

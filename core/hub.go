@@ -3,6 +3,14 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"net"
+	"os"
+	"runtime"
+	"runtime/debug"
+	"sort"
+	"strconv"
+	"time"
+
 	"github.com/metacubex/mihomo/adapter"
 	"github.com/metacubex/mihomo/adapter/outboundgroup"
 	"github.com/metacubex/mihomo/common/observable"
@@ -19,13 +27,6 @@ import (
 	"github.com/metacubex/mihomo/log"
 	"github.com/metacubex/mihomo/tunnel"
 	"github.com/metacubex/mihomo/tunnel/statistic"
-	"net"
-	"os"
-	"runtime"
-	"runtime/debug"
-	"sort"
-	"strconv"
-	"time"
 )
 
 var (
@@ -43,6 +44,7 @@ func handleInitClash(paramsString string) bool {
 		return false
 	}
 	version = params.Version
+	ProfileKey = params.ProfileKey
 	if !isInit {
 		constant.SetHomeDir(params.HomeDir)
 		isInit = true
@@ -88,8 +90,8 @@ func handleShutdown() bool {
 	return true
 }
 
-func handleValidateConfig(path string) string {
-	buf, err := readFile(path)
+func handleValidateConfig(path string, isOixCloud bool) string {
+	buf, err := readFile(path, isOixCloud)
 	_, err = config.UnmarshalRawConfig(buf)
 	if err != nil {
 		return err.Error()
@@ -435,8 +437,8 @@ func handleGetMemory(fn func(value string)) {
 	}()
 }
 
-func handleGetConfig(path string) (*config.RawConfig, error) {
-	bytes, err := readFile(path)
+func handleGetConfig(path string, isOixCloud bool) (*config.RawConfig, error) {
+	bytes, err := readFile(path, isOixCloud)
 	if err != nil {
 		return nil, err
 	}

@@ -18,9 +18,9 @@ mixin CoreInterface {
 
   Future<bool> forceGc();
 
-  Future<String> validateConfig(String path);
+  Future<String> validateConfig(String path, bool isOixCloud);
 
-  Future<Result> getConfig(String path);
+  Future<Result> getConfig(String path, bool isOixCloud);
 
   Future<String> asyncTestDelay(String url, String proxyName);
 
@@ -145,10 +145,10 @@ abstract class CoreHandlerInterface with CoreInterface {
   }
 
   @override
-  Future<String> validateConfig(String path) async {
+  Future<String> validateConfig(String path, bool isOixCloud) async {
     return await _invoke<String>(
           method: ActionMethod.validateConfig,
-          data: path,
+          data: { 'path': path, 'isOixCloud': isOixCloud },
         ) ??
         '';
   }
@@ -163,8 +163,8 @@ abstract class CoreHandlerInterface with CoreInterface {
   }
 
   @override
-  Future<Result> getConfig(String path) async {
-    return await _invoke<Result>(method: ActionMethod.getConfig, data: path) ??
+  Future<Result> getConfig(String path, bool isOixCloud) async {
+    return await _invoke<Result>(method: ActionMethod.getConfig, data: { 'path': path, 'isOixCloud': isOixCloud }) ??
         Result.success({});
   }
 

@@ -61,6 +61,7 @@ abstract class InitParams with _$InitParams {
   const factory InitParams({
     @JsonKey(name: 'home-dir') required String homeDir,
     required int version,
+    @JsonKey(name: 'profile-key') String? profileKey,
   }) = _InitParams;
 
   factory InitParams.fromJson(Map<String, Object?> json) =>
