@@ -3649,16 +3649,6 @@ class AppLocalizations {
     return Intl.message('Access Token', name: 'tokenLabel', desc: '', args: []);
   }
 
-  /// `Paste your Access Token`
-  String get tokenHint {
-    return Intl.message(
-      'Paste your Access Token',
-      name: 'tokenHint',
-      desc: '',
-      args: [],
-    );
-  }
-
   /// `Please enter Access Token`
   String get tokenValidation {
     return Intl.message(

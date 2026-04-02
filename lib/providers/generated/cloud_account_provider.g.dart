@@ -41,7 +41,7 @@ final class CloudAccountProvider
   }
 }
 
-String _$cloudAccountHash() => r'f395f0128512f228fad5fe19ff6bfe53249f4dd6';
+String _$cloudAccountHash() => r'566b9fccf688219e59a7c560e89aaa3587ee0ac9';
 
 abstract class _$CloudAccount extends $Notifier<CloudAccountState> {
   CloudAccountState build();

@@ -1,6 +1,8 @@
+import 'package:fl_clash/common/common.dart';
+
 class SensitiveFilter {
   static const _sensitivePatterns = [
-    'oics.net',
+    secrets.OIX_API_DOMAIN,
     'raw.dler.io',
   ];
   

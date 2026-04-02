@@ -7,7 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class CloudLoginPage extends ConsumerStatefulWidget {
   const CloudLoginPage({super.key});
-  
+
   @override
   ConsumerState<CloudLoginPage> createState() => _CloudLoginPageState();
 }
@@ -17,10 +17,10 @@ class _CloudLoginPageState extends ConsumerState<CloudLoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _tokenController = TextEditingController();
-  
-  var _loginMode = _LoginMode.emailPassword;
+
+  var _loginMode = _LoginMode.token;
   var _obscurePassword = true;
-  
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -28,12 +28,12 @@ class _CloudLoginPageState extends ConsumerState<CloudLoginPage> {
     _tokenController.dispose();
     super.dispose();
   }
-  
+
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     final notifier = ref.read(cloudAccountProvider.notifier);
-    
+
     try {
       switch (_loginMode) {
         case _LoginMode.emailPassword:
@@ -42,12 +42,12 @@ class _CloudLoginPageState extends ConsumerState<CloudLoginPage> {
             password: _passwordController.text,
           );
           break;
-          
+
         case _LoginMode.token:
           await notifier.signInWithToken(_tokenController.text.trim());
           break;
       }
-      
+
       if (mounted) {
         Navigator.of(context).pop();
         globalState.showNotifier(AppLocalizations.current.loginSuccess);
@@ -61,12 +61,12 @@ class _CloudLoginPageState extends ConsumerState<CloudLoginPage> {
       }
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
     final accountState = ref.watch(cloudAccountProvider);
     final isLoading = accountState.isLoading;
-    
+
     return Dialog(
       child: Container(
         width: 450,
@@ -83,21 +83,23 @@ class _CloudLoginPageState extends ConsumerState<CloudLoginPage> {
             const SizedBox(height: 24),
             SegmentedButton<_LoginMode>(
               selected: {_loginMode},
-              onSelectionChanged: isLoading ? null : (selection) {
-                setState(() {
-                  _loginMode = selection.first;
-                });
-              },
+              onSelectionChanged: isLoading
+                  ? null
+                  : (selection) {
+                      setState(() {
+                        _loginMode = selection.first;
+                      });
+                    },
               segments: [
-                ButtonSegment(
-                  value: _LoginMode.emailPassword,
-                  label: Text(AppLocalizations.current.emailPassword),
-                  icon: const Icon(Icons.mail_outline),
-                ),
                 ButtonSegment(
                   value: _LoginMode.token,
                   label: Text(AppLocalizations.current.accessToken),
                   icon: const Icon(Icons.key),
+                ),
+                ButtonSegment(
+                  value: _LoginMode.emailPassword,
+                  label: Text(AppLocalizations.current.emailPassword),
+                  icon: const Icon(Icons.mail_outline),
                 ),
               ],
             ),
@@ -113,7 +115,9 @@ class _CloudLoginPageState extends ConsumerState<CloudLoginPage> {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 TextButton(
-                  onPressed: isLoading ? null : () => Navigator.of(context).pop(),
+                  onPressed: isLoading
+                      ? null
+                      : () => Navigator.of(context).pop(),
                   child: Text(AppLocalizations.current.cancel),
                 ),
                 const SizedBox(width: 12),
@@ -134,7 +138,7 @@ class _CloudLoginPageState extends ConsumerState<CloudLoginPage> {
       ),
     );
   }
-  
+
   Widget _buildEmailPasswordForm(bool isLoading) {
     return Column(
       children: [
@@ -169,7 +173,9 @@ class _CloudLoginPageState extends ConsumerState<CloudLoginPage> {
             prefixIcon: const Icon(Icons.lock_outline),
             border: const OutlineInputBorder(),
             suffixIcon: IconButton(
-              icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
+              icon: Icon(
+                _obscurePassword ? Icons.visibility_off : Icons.visibility,
+              ),
               onPressed: () {
                 setState(() {
                   _obscurePassword = !_obscurePassword;
@@ -190,24 +196,20 @@ class _CloudLoginPageState extends ConsumerState<CloudLoginPage> {
       ],
     );
   }
-  
+
   Widget _buildTokenForm(bool isLoading) {
     return TextFormField(
       controller: _tokenController,
       enabled: !isLoading,
       decoration: InputDecoration(
         labelText: AppLocalizations.current.tokenLabel,
-        hintText: AppLocalizations.current.tokenHint,
-        prefixIcon: const Icon(Icons.vpn_key),
+        alignLabelWithHint: true,
         border: const OutlineInputBorder(),
-        isDense: true,
+        contentPadding: const EdgeInsets.all(16),
       ),
-      style: context.textTheme.bodySmall?.copyWith(
-        fontFamily: 'monospace',
-        letterSpacing: 0.5,
-      ),
-      minLines: 3,
-      maxLines: 6,
+      style: context.textTheme.bodyMedium?.copyWith(fontFamily: 'monospace'),
+      minLines: 5,
+      maxLines: 10,
       textInputAction: TextInputAction.done,
       onFieldSubmitted: (_) => _handleLogin(),
       validator: (value) {
@@ -220,7 +222,4 @@ class _CloudLoginPageState extends ConsumerState<CloudLoginPage> {
   }
 }
 
-enum _LoginMode {
-  emailPassword,
-  token,
-}
+enum _LoginMode { emailPassword, token }

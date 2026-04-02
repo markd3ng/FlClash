@@ -465,7 +465,6 @@
   "passwordHint": "Enter password",
   "passwordValidation": "Please enter password",
   "tokenLabel": "Access Token",
-  "tokenHint": "Paste your Access Token",
   "tokenValidation": "Please enter Access Token",
   "refreshSuccess": "Refresh Complete",
   "logoutTitle": "Logout",

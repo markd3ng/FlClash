@@ -337,7 +337,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "discovery": MessageLookupByLibrary.simpleMessage(
       "Обнаружена новая версия",
     ),
-    "oixCloud": MessageLookupByLibrary.simpleMessage("oixCloud"),
     "dnsDesc": MessageLookupByLibrary.simpleMessage(
       "Обновление настроек, связанных с DNS",
     ),
@@ -632,6 +631,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "nullTip": m11,
     "numberTip": m12,
+    "oixCloud": MessageLookupByLibrary.simpleMessage("oixCloud"),
     "oneColumn": MessageLookupByLibrary.simpleMessage("Один столбец"),
     "onlyIcon": MessageLookupByLibrary.simpleMessage("Только иконка"),
     "onlyOtherApps": MessageLookupByLibrary.simpleMessage(
@@ -931,9 +931,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "toggle": MessageLookupByLibrary.simpleMessage("Переключить"),
     "tokenExpired": MessageLookupByLibrary.simpleMessage(
       "Срок входа истек, пожалуйста, войдите снова",
-    ),
-    "tokenHint": MessageLookupByLibrary.simpleMessage(
-      "Вставьте ваш токен доступа",
     ),
     "tokenLabel": MessageLookupByLibrary.simpleMessage("Токен доступа"),
     "tokenValidation": MessageLookupByLibrary.simpleMessage(

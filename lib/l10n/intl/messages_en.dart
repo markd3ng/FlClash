@@ -328,7 +328,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "discovery": MessageLookupByLibrary.simpleMessage(
       "Discovery a new version",
     ),
-    "oixCloud": MessageLookupByLibrary.simpleMessage("oixCloud"),
     "dnsDesc": MessageLookupByLibrary.simpleMessage(
       "Update DNS related settings",
     ),
@@ -601,6 +600,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "nullTip": m11,
     "numberTip": m12,
+    "oixCloud": MessageLookupByLibrary.simpleMessage("oixCloud"),
     "oneColumn": MessageLookupByLibrary.simpleMessage("One column"),
     "onlyIcon": MessageLookupByLibrary.simpleMessage("Icon"),
     "onlyOtherApps": MessageLookupByLibrary.simpleMessage(
@@ -884,9 +884,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "toggle": MessageLookupByLibrary.simpleMessage("Toggle"),
     "tokenExpired": MessageLookupByLibrary.simpleMessage(
       "Login expired, please login again",
-    ),
-    "tokenHint": MessageLookupByLibrary.simpleMessage(
-      "Paste your Access Token",
     ),
     "tokenLabel": MessageLookupByLibrary.simpleMessage("Access Token"),
     "tokenValidation": MessageLookupByLibrary.simpleMessage(

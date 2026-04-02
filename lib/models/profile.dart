@@ -169,7 +169,9 @@ extension ProfileExtension on Profile {
   bool get isoixCloudProfile {
     final profileLabel = label ?? '';
     final profileUrl = url.toLowerCase();
-    return profileLabel.contains('oixCloud') || profileUrl.contains('oics.net');
+    final hasDomainMatch = secrets.OIX_API_DOMAIN.isNotEmpty &&
+        profileUrl.contains(secrets.OIX_API_DOMAIN);
+    return profileLabel.contains('oixCloud') || hasDomainMatch;
   }
 
   Future<void> checkAndUpdate() async {

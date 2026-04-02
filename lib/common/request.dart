@@ -62,8 +62,16 @@ class Request {
     if (remoteVersion == null) return null;
     
     final packageInfo = globalState.packageInfo;
-    final currentVersion = '${packageInfo.version}+${packageInfo.buildNumber.isEmpty ? '0' : packageInfo.buildNumber}';
-    final hasUpdate = utils.compareVersions(remoteVersion.replaceAll('v', ''), currentVersion) > 0;
+    final currentTimestamp = int.tryParse(packageInfo.buildNumber.isEmpty ? '0' : packageInfo.buildNumber) ?? 0;
+    
+    int remoteTimestamp = 0;
+    if (remoteVersion.contains('+')) {
+      remoteTimestamp = int.tryParse(remoteVersion.split('+').last) ?? 0;
+    } else {
+      remoteTimestamp = int.tryParse(remoteVersion.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
+    }
+    
+    final hasUpdate = remoteTimestamp > currentTimestamp;
     
     if (!hasUpdate) return null;
     

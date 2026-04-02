@@ -159,6 +159,8 @@ jobs:
         env:
           FLUTTER_VERSION_NUMBER: ${{ needs.version.outputs.version_number }}
           FLUTTER_BUILD_NUMBER: ${{ needs.version.outputs.build_number }}
+          OIX_API_DOMAIN: ${{ secrets.OIX_API_DOMAIN }}
+          API_MANAGED_ROUTER: ${{ secrets.API_MANAGED_ROUTER }}
         run: |
           set -e
           echo "Building with version: $FLUTTER_VERSION_NUMBER+$FLUTTER_BUILD_NUMBER"
@@ -250,7 +252,7 @@ jobs:
       - name: Generate release.md
         run: |
           tags=($(git tag --merged HEAD --sort=-creatordate))
-          preTag=$(curl -s "https://api.github.com/repos/chen08209/FlClash/releases/latest" | grep -Po '"tag_name": "\K.*?(?=")' || echo "")
+          preTag=$(curl -s "https://api.github.com/repos/pickrui/FlClash/releases/latest" | grep -Po '"tag_name": "\K.*?(?=")' || echo "")
           out="release.md" > "$out"
           for i in "${!tags[@]}"; do
             curr="${tags[i]}"

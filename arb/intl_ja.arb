@@ -466,7 +466,6 @@
   "passwordHint": "パスワードを入力",
   "passwordValidation": "パスワードを入力してください",
   "tokenLabel": "アクセストークン",
-  "tokenHint": "アクセストークンを貼り付け",
   "tokenValidation": "アクセストークンを入力してください",
   "refreshSuccess": "更新完了",
   "logoutTitle": "ログアウト",

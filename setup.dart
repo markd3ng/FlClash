@@ -421,10 +421,17 @@ class BuildCommand extends Command {
     
     // Use custom artifact name template to exclude version number and -setup suffix
     const artifactNameTemplate = '{{name}}-{{platform}}{{#description}}-{{description}}{{/description}}.{{ext}}';
+    final oixApiDomain = Platform.environment['OIX_API_DOMAIN'];
+    final apiManagedRouter = Platform.environment['API_MANAGED_ROUTER'];
+    
+    var dartDefines = '--build-dart-define=APP_ENV=$env';
+    if (oixApiDomain != null && oixApiDomain.isNotEmpty) dartDefines += ' --build-dart-define=OIX_API_DOMAIN=$oixApiDomain';
+    if (apiManagedRouter != null && apiManagedRouter.isNotEmpty) dartDefines += ' --build-dart-define=API_MANAGED_ROUTER=$apiManagedRouter';
+
     await Build.exec(
       name: name,
       Build.getExecutable(
-        'flutter_distributor package --skip-clean --platform ${target.name} --targets $targets --artifact-name $artifactNameTemplate --flutter-build-args=verbose$args --build-dart-define=APP_ENV=$env',
+        'flutter_distributor package --skip-clean --platform ${target.name} --targets $targets --artifact-name $artifactNameTemplate --flutter-build-args=verbose$args $dartDefines',
       ),
     );
   }
@@ -441,10 +448,17 @@ class BuildCommand extends Command {
       await _updatePubspecVersion(versionNumber, buildNumber);
     }
     
+    final oixApiDomain = Platform.environment['OIX_API_DOMAIN'];
+    final apiManagedRouter = Platform.environment['API_MANAGED_ROUTER'];
+    
+    var dartDefines = '--dart-define=APP_ENV=$env';
+    if (oixApiDomain != null && oixApiDomain.isNotEmpty) dartDefines += ' --dart-define=OIX_API_DOMAIN=$oixApiDomain';
+    if (apiManagedRouter != null && apiManagedRouter.isNotEmpty) dartDefines += ' --dart-define=API_MANAGED_ROUTER=$apiManagedRouter';
+
     await Build.exec(
       name: name,
       Build.getExecutable(
-        'flutter build apk --target-platform $targetPlatform --dart-define=APP_ENV=$env',
+        'flutter build apk --target-platform $targetPlatform $dartDefines',
       ),
     );
     

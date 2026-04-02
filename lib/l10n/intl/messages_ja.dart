@@ -251,7 +251,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "disconnected": MessageLookupByLibrary.simpleMessage("切断済み"),
     "discoverNewVersion": MessageLookupByLibrary.simpleMessage("新バージョンを発見"),
     "discovery": MessageLookupByLibrary.simpleMessage("新しいバージョンを発見"),
-    "oixCloud": MessageLookupByLibrary.simpleMessage("oixCloud"),
     "dnsDesc": MessageLookupByLibrary.simpleMessage("DNS関連設定の更新"),
     "dnsHijacking": MessageLookupByLibrary.simpleMessage("DNSハイジャッキング"),
     "dnsMode": MessageLookupByLibrary.simpleMessage("DNSモード"),
@@ -460,6 +459,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "nullTip": m11,
     "numberTip": m12,
+    "oixCloud": MessageLookupByLibrary.simpleMessage("oixCloud"),
     "oneColumn": MessageLookupByLibrary.simpleMessage("1列"),
     "onlyIcon": MessageLookupByLibrary.simpleMessage("アイコンのみ"),
     "onlyOtherApps": MessageLookupByLibrary.simpleMessage("サードパーティアプリのみ"),
@@ -682,7 +682,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "tokenExpired": MessageLookupByLibrary.simpleMessage(
       "ログインが期限切れです。再度ログインしてください",
     ),
-    "tokenHint": MessageLookupByLibrary.simpleMessage("アクセストークンを貼り付け"),
     "tokenLabel": MessageLookupByLibrary.simpleMessage("アクセストークン"),
     "tokenValidation": MessageLookupByLibrary.simpleMessage(
       "アクセストークンを入力してください",

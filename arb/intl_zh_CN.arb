@@ -460,7 +460,6 @@
   "passwordHint": "请输入密码",
   "passwordValidation": "请输入密码",
   "tokenLabel": "Access Token",
-  "tokenHint": "请粘贴您的 Access Token",
   "tokenValidation": "请输入 Access Token",
   "refreshSuccess": "刷新完成",
   "logoutTitle": "退出登录",

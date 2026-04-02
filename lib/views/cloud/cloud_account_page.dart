@@ -1,7 +1,8 @@
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/l10n/l10n.dart';
 import 'package:fl_clash/models/models.dart';
-import 'package:fl_clash/providers/cloud_account_provider.dart';
+import 'package:fl_clash/enum/enum.dart';
+import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/services/cloud_api_service.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/widgets/widgets.dart';
@@ -14,7 +15,7 @@ import 'cloud_profile_card.dart';
 
 class CloudAccountPage extends ConsumerStatefulWidget {
   const CloudAccountPage({super.key});
-  
+
   @override
   ConsumerState<CloudAccountPage> createState() => _CloudAccountPageState();
 }
@@ -23,7 +24,7 @@ class _CloudAccountPageState extends ConsumerState<CloudAccountPage> {
   var _serviceStatus = _ServiceStatus.unknown;
   var _isCheckingService = false;
   var _hasAutoChecked = false;
-  
+
   @override
   void initState() {
     super.initState();
@@ -34,23 +35,25 @@ class _CloudAccountPageState extends ConsumerState<CloudAccountPage> {
       }
     });
   }
-  
+
   Future<void> _checkServiceStatus() async {
     if (_isCheckingService) return;
-    
+
     setState(() {
       _isCheckingService = true;
       _serviceStatus = _ServiceStatus.checking;
     });
-    
+
     try {
       final error = await CloudApiService().checkServiceHealth();
       if (mounted) {
         setState(() {
-          _serviceStatus = error == null ? _ServiceStatus.available : _ServiceStatus.unavailable;
+          _serviceStatus = error == null
+              ? _ServiceStatus.available
+              : _ServiceStatus.unavailable;
           _isCheckingService = false;
         });
-        
+
         if (error != null) {
           globalState.showMessage(
             title: AppLocalizations.current.serviceCheckFailed,
@@ -67,28 +70,25 @@ class _CloudAccountPageState extends ConsumerState<CloudAccountPage> {
       }
     }
   }
-  
+
   Future<void> _handleRefresh() async {
     await ref.read(cloudAccountProvider.notifier).refreshProfile();
     if (mounted) {
       globalState.showNotifier(AppLocalizations.current.refreshSuccess);
     }
   }
-  
+
   void _showLoginDialog() {
-    showDialog(
-      context: context,
-      builder: (_) => const CloudLoginPage(),
-    );
+    showDialog(context: context, builder: (_) => const CloudLoginPage());
   }
-  
+
   Future<void> _handleLogout() async {
     bool revokeToken = false;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-        title: Text(AppLocalizations.current.logoutTitle),
+          title: Text(AppLocalizations.current.logoutTitle),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -108,34 +108,40 @@ class _CloudAccountPageState extends ConsumerState<CloudAccountPage> {
               ),
             ],
           ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(AppLocalizations.current.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(AppLocalizations.current.confirm),
-          ),
-        ],
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(AppLocalizations.current.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(AppLocalizations.current.confirm),
+            ),
+          ],
         ),
       ),
     );
-    
+
     if (confirmed == true) {
-      await ref.read(cloudAccountProvider.notifier).signOut(
-        revokeToken: revokeToken,
-      );
+      await ref
+          .read(cloudAccountProvider.notifier)
+          .signOut(revokeToken: revokeToken);
       if (mounted) {
         globalState.showNotifier(AppLocalizations.current.logoutSuccess);
       }
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
+    ref.listen(currentPageLabelProvider, (prev, next) {
+      if (prev != next && next == PageLabel.oixCloud) {
+        ref.read(cloudAccountProvider.notifier).refreshInfo();
+      }
+    });
+
     final accountState = ref.watch(cloudAccountProvider);
-    
+
     return CommonScaffold(
       title: AppLocalizations.current.loggedOutViewTitle,
       actions: [
@@ -164,7 +170,7 @@ class _CloudAccountPageState extends ConsumerState<CloudAccountPage> {
           : _buildNotLoggedInView(),
     );
   }
-  
+
   Widget _buildServiceStatusButton() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -186,7 +192,8 @@ class _CloudAccountPageState extends ConsumerState<CloudAccountPage> {
                     backgroundColor: Colors.greenAccent,
                     foregroundColor: switch (Theme.brightnessOf(context)) {
                       Brightness.light => context.colorScheme.onSurfaceVariant,
-                      Brightness.dark => context.colorScheme.onPrimaryFixedVariant,
+                      Brightness.dark =>
+                        context.colorScheme.onPrimaryFixedVariant,
                     },
                   ),
                   onPressed: _checkServiceStatus,
@@ -208,8 +215,11 @@ class _CloudAccountPageState extends ConsumerState<CloudAccountPage> {
                       _ServiceStatus.checking => null,
                       _ServiceStatus.unavailable => context.colorScheme.onError,
                       _ServiceStatus.unknown => null,
-                      _ServiceStatus.available => switch (Theme.brightnessOf(context)) {
-                        Brightness.light => context.colorScheme.onSurfaceVariant,
+                      _ServiceStatus.available => switch (Theme.brightnessOf(
+                        context,
+                      )) {
+                        Brightness.light =>
+                          context.colorScheme.onSurfaceVariant,
                         Brightness.dark => null,
                       },
                     },
@@ -226,15 +236,24 @@ class _CloudAccountPageState extends ConsumerState<CloudAccountPage> {
                           backgroundColor: Colors.transparent,
                         ),
                       ),
-                      _ServiceStatus.available => const Icon(Icons.check_sharp, weight: 900),
-                      _ServiceStatus.unavailable => const Icon(Icons.error_outline, weight: 900),
+                      _ServiceStatus.available => const Icon(
+                        Icons.check_sharp,
+                        weight: 900,
+                      ),
+                      _ServiceStatus.unavailable => const Icon(
+                        Icons.error_outline,
+                        weight: 900,
+                      ),
                       _ServiceStatus.unknown => const SizedBox.shrink(),
                     },
                   ),
                   label: Text(switch (_serviceStatus) {
-                    _ServiceStatus.checking => AppLocalizations.current.checking,
-                    _ServiceStatus.available => AppLocalizations.current.apiAvailable,
-                    _ServiceStatus.unavailable => AppLocalizations.current.apiUnavailable,
+                    _ServiceStatus.checking =>
+                      AppLocalizations.current.checking,
+                    _ServiceStatus.available =>
+                      AppLocalizations.current.apiAvailable,
+                    _ServiceStatus.unavailable =>
+                      AppLocalizations.current.apiUnavailable,
                     _ServiceStatus.unknown => AppLocalizations.current.checkApi,
                   }),
                 ),
@@ -242,7 +261,7 @@ class _CloudAccountPageState extends ConsumerState<CloudAccountPage> {
       ),
     );
   }
-  
+
   Widget _buildNotLoggedInView() {
     return Center(
       child: Column(
@@ -275,7 +294,7 @@ class _CloudAccountPageState extends ConsumerState<CloudAccountPage> {
       ),
     );
   }
-  
+
   Widget _buildLoggedInView(CloudAccountState state) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -289,7 +308,7 @@ class _CloudAccountPageState extends ConsumerState<CloudAccountPage> {
       ),
     );
   }
-  
+
   Widget _buildNotificationCard(CloudNotification notification) {
     return CommonCard(
       child: Padding(

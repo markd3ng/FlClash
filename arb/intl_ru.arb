@@ -466,7 +466,6 @@
   "passwordHint": "Введите пароль",
   "passwordValidation": "Пожалуйста, введите пароль",
   "tokenLabel": "Токен доступа",
-  "tokenHint": "Вставьте ваш токен доступа",
   "tokenValidation": "Пожалуйста, введите токен доступа",
   "refreshSuccess": "Обновление завершено",
   "logoutTitle": "Выход",

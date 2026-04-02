@@ -31,7 +31,7 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
   late TextEditingController labelController;
   late TextEditingController urlController;
   late TextEditingController autoUpdateDurationController;
-  late TextEditingController dlerParamsController;
+  late TextEditingController oixParamsController;
   late bool autoUpdate;
   String? rawText;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
@@ -51,14 +51,14 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
     autoUpdateDurationController = TextEditingController(
       text: widget.profile.autoUpdateDuration.inMinutes.toString(),
     );
-    dlerParamsController = TextEditingController();
-    _loadDlerParams();
+    oixParamsController = TextEditingController();
+    _loadoixParams();
     appPath.getProfilePath(widget.profile.id).then((path) async {
       fileInfoNotifier.value = await _getFileInfo(path);
     });
   }
   
-  Future<void> _loadDlerParams() async {
+  Future<void> _loadoixParams() async {
     if (!isoixCloudProfile) return;
     
     final prefs = await preferences.sharedPreferencesCompleter.future;
@@ -67,7 +67,7 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
     if (savedParamsJson != null && savedParamsJson.isNotEmpty) {
       try {
         final params = Map<String, String>.from(jsonDecode(savedParamsJson) as Map);
-        dlerParamsController.text = params.entries
+        oixParamsController.text = params.entries
             .map((e) => '&${e.key}=${e.value}')
             .join('');
       } catch (_) {}
@@ -79,7 +79,7 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
     labelController.dispose();
     urlController.dispose();
     autoUpdateDurationController.dispose();
-    dlerParamsController.dispose();
+    oixParamsController.dispose();
     fileInfoNotifier.dispose();
     super.dispose();
   }
@@ -128,7 +128,7 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
   }
   
   Future<void> _saveDlerParams() async {
-    final text = dlerParamsController.text.trim();
+    final text = oixParamsController.text.trim();
     final prefs = await preferences.sharedPreferencesCompleter.future;
     
     if (text.isEmpty) {
@@ -304,7 +304,7 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
           ListItem(
             title: TextFormField(
               textInputAction: TextInputAction.next,
-              controller: dlerParamsController,
+              controller: oixParamsController,
               maxLines: 3,
               minLines: 1,
               style: const TextStyle(fontFamily: 'monospace'),
