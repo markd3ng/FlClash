@@ -68,6 +68,7 @@ class CloudAccount extends _$CloudAccount {
 
   final _api = CloudApiService();
   bool _isInitialized = false;
+  DateTime? _lastRefreshTime;
 
   @override
   CloudAccountState build() {
@@ -323,8 +324,14 @@ class CloudAccount extends _$CloudAccount {
     }
   }
 
-  Future<void> refreshProfile() async {
+  Future<void> refreshProfile({bool force = false}) async {
     if (!state.isLoggedIn || state.isLoading) return;
+
+    if (!force && _lastRefreshTime != null) {
+      if (DateTime.now().difference(_lastRefreshTime!) < const Duration(minutes: 30)) {
+        return;
+      }
+    }
 
     state = state.setLoading(true);
     try {
@@ -333,6 +340,7 @@ class CloudAccount extends _$CloudAccount {
       if (_findCloudProfile() == null && state.configInfo != null) {
         await _syncProfileConfig();
       }
+      _lastRefreshTime = DateTime.now();
     } finally {
       state = state.setLoading(false);
     }

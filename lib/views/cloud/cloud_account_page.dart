@@ -72,7 +72,7 @@ class _CloudAccountPageState extends ConsumerState<CloudAccountPage> {
   }
 
   Future<void> _handleRefresh() async {
-    await ref.read(cloudAccountProvider.notifier).refreshProfile();
+    await ref.read(cloudAccountProvider.notifier).refreshProfile(force: true);
     if (mounted) {
       globalState.showNotifier(AppLocalizations.current.refreshSuccess);
     }
