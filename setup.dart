@@ -422,13 +422,11 @@ class BuildCommand extends Command {
     // Use custom artifact name template to exclude version number and -setup suffix
     const artifactNameTemplate = '{{name}}-{{platform}}{{#description}}-{{description}}{{/description}}.{{ext}}';
     final oixApiDomain = Platform.environment['OIX_API_DOMAIN']?.trim();
-    final oixApiIp = Platform.environment['OIX_API_IP']?.trim();
     final apiManagedRouter = Platform.environment['API_MANAGED_ROUTER']?.trim();
     final profileKey = Platform.environment['PROFILE_KEY']?.trim();
     
     var dartDefines = '--build-dart-define=APP_ENV=$env';
     if (oixApiDomain != null && oixApiDomain.isNotEmpty) dartDefines += ' --build-dart-define=OIX_API_DOMAIN=$oixApiDomain';
-    if (oixApiIp != null && oixApiIp.isNotEmpty) dartDefines += ' --build-dart-define=OIX_API_IP=$oixApiIp';
     if (apiManagedRouter != null && apiManagedRouter.isNotEmpty) dartDefines += ' --build-dart-define=API_MANAGED_ROUTER=$apiManagedRouter';
     if (profileKey != null && profileKey.isNotEmpty) dartDefines += ' --build-dart-define=PROFILE_KEY=$profileKey';
 
@@ -453,13 +451,11 @@ class BuildCommand extends Command {
     }
     
     final oixApiDomain = Platform.environment['OIX_API_DOMAIN']?.trim();
-    final oixApiIp = Platform.environment['OIX_API_IP']?.trim();
     final apiManagedRouter = Platform.environment['API_MANAGED_ROUTER']?.trim();
     final profileKey = Platform.environment['PROFILE_KEY']?.trim();
     
     var dartDefines = '--dart-define=APP_ENV=$env';
     if (oixApiDomain != null && oixApiDomain.isNotEmpty) dartDefines += ' --dart-define=OIX_API_DOMAIN=$oixApiDomain';
-    if (oixApiIp != null && oixApiIp.isNotEmpty) dartDefines += ' --dart-define=OIX_API_IP=$oixApiIp';
     if (apiManagedRouter != null && apiManagedRouter.isNotEmpty) dartDefines += ' --dart-define=API_MANAGED_ROUTER=$apiManagedRouter';
     if (profileKey != null && profileKey.isNotEmpty) dartDefines += ' --dart-define=PROFILE_KEY=$profileKey';
 

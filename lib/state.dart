@@ -520,9 +520,6 @@ class GlobalState {
       for (final host in realPatchConfig.hosts.entries) {
         rawConfig['hosts'][host.key] = host.value.splitByMultipleSeparators;
       }
-      if (isOixCloudProfile && secrets.OIX_API_DOMAIN.isNotEmpty && secrets.OIX_API_IP.isNotEmpty) {
-        rawConfig['hosts'][secrets.OIX_API_DOMAIN] = [secrets.OIX_API_IP];
-      }
       if (rawConfig['dns'] == null) {
         rawConfig['dns'] = {};
       }
