@@ -74,17 +74,38 @@ class Request {
   Future<Map<String, dynamic>?> checkForUpdate() async {
     try {
       final response = await dio.get(
-        'https://api.github.com/repos/$repository/releases/latest',
+        'https://${secrets.OIX_API_DOMAIN}/api/v1/version/get',
         options: Options(responseType: ResponseType.json),
       );
       if (response.statusCode != 200) return null;
-      final data = response.data as Map<String, dynamic>;
-      final remoteVersion = data['tag_name'];
-      final version = globalState.packageInfo.version;
-      final hasUpdate =
-          utils.compareVersions(remoteVersion.replaceAll('v', ''), version) > 0;
+      final data = response.data as Map<String, dynamic>?;
+      if (data == null || (data['ret'] as int?) != 200) return null;
+      
+      final versionData = data['data'];
+      final String? remoteVersion = versionData is Map<String, dynamic>
+          ? versionData['version'] as String?
+          : versionData as String?;
+          
+      if (remoteVersion == null) return null;
+      
+      final packageInfo = globalState.packageInfo;
+      final currentTimestamp = int.tryParse(packageInfo.buildNumber.isEmpty ? '0' : packageInfo.buildNumber) ?? 0;
+      
+      int remoteTimestamp = 0;
+      if (remoteVersion.contains('+')) {
+        remoteTimestamp = int.tryParse(remoteVersion.split('+').last) ?? 0;
+      } else {
+        remoteTimestamp = int.tryParse(remoteVersion.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
+      }
+      
+      final hasUpdate = remoteTimestamp > currentTimestamp;
+      
       if (!hasUpdate) return null;
-      return data;
+      
+      return <String, dynamic>{
+        'tag_name': remoteVersion,
+        'body': '',
+      };
     } catch (e) {
       commonPrint.log('checkForUpdate failed', logLevel: LogLevel.warning);
       return null;

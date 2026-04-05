@@ -5,7 +5,7 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class NotificationParams(
-    val title: String = "FlClash",
+    val title: String = "FlClash for oixCloud",
     val stopText: String = "STOP",
     val onlyStatisticsProxy: Boolean = false,
 ) : Parcelable
