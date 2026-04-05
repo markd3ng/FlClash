@@ -307,7 +307,9 @@ class _CloudAccountPageState extends ConsumerState<CloudAccountPage> {
               CommonCard(
                 child: SwitchListTile(
                   title: const Text('海外网络环境'),
-                  value: state.configParams?.containsKey('lv') == true &&
+                  subtitle: const Text('如果您当前位于中国大陆以外地区，请开启此选项'),
+                  value:
+                      state.configParams?.containsKey('lv') == true &&
                       state.configParams!['lv'] == '1',
                   onChanged: state.isLoading
                       ? null

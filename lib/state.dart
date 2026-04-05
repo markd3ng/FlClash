@@ -16,6 +16,8 @@ import 'package:fl_clash/widgets/dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_js/flutter_js.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
 import 'package:material_color_utilities/palettes/core_palette.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path/path.dart';
@@ -133,10 +135,14 @@ class GlobalState {
     config =
         await preferences.getConfig() ?? Config(themeProps: defaultThemeProps);
     await globalState.migrateOldData(config);
-    await AppLocalizations.load(
-      utils.getLocaleForString(config.appSetting.locale) ??
-          WidgetsBinding.instance.platformDispatcher.locale,
-    );
+    final locale = utils.getLocaleForString(config.appSetting.locale) ??
+        WidgetsBinding.instance.platformDispatcher.locale;
+    final name = (locale.countryCode?.isEmpty ?? false)
+        ? locale.languageCode
+        : locale.toString();
+    final localeName = Intl.canonicalizedLocale(name);
+    await initializeDateFormatting(localeName);
+    await AppLocalizations.load(locale);
   }
 
   String get ua => config.patchClashConfig.globalUa ?? packageInfo.ua;
@@ -427,6 +433,8 @@ class GlobalState {
       rawConfig = await handleEvaluate(scriptContent!, rawConfig);
     }
     final directory = await appPath.profilesPath;
+    final isOixCloudProfile = config.profiles.getProfile(profileId)?.isoixCloudProfile ?? false;
+
     String getProvidersFilePathInner(String type, String url) {
       return join(directory, 'providers', profileId, type, url.toMd5());
     }
@@ -511,6 +519,9 @@ class GlobalState {
       }
       for (final host in realPatchConfig.hosts.entries) {
         rawConfig['hosts'][host.key] = host.value.splitByMultipleSeparators;
+      }
+      if (isOixCloudProfile && secrets.OIX_API_DOMAIN.isNotEmpty && secrets.OIX_API_IP.isNotEmpty) {
+        rawConfig['hosts'][secrets.OIX_API_DOMAIN] = [secrets.OIX_API_IP];
       }
       if (rawConfig['dns'] == null) {
         rawConfig['dns'] = {};

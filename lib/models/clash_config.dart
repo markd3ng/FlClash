@@ -13,6 +13,15 @@ const defaultTun = Tun();
 const defaultDns = Dns();
 const defaultGeoXUrl = GeoXUrl();
 
+const _ghProxyBase = 'https://ghproxy.net/https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/release';
+
+const ghProxyGeoXUrl = GeoXUrl(
+  mmdb: '$_ghProxyBase/geoip.metadb',
+  asn: '$_ghProxyBase/GeoLite2-ASN.mmdb',
+  geoip: '$_ghProxyBase/geoip.dat',
+  geosite: '$_ghProxyBase/geosite.dat',
+);
+
 const defaultMixedPort = 7890;
 const defaultKeepAliveInterval = 30;
 
@@ -282,25 +291,15 @@ abstract class Dns with _$Dns {
   }
 }
 
+const _fastlyBase = 'https://fastly.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release';
+
 @freezed
 abstract class GeoXUrl with _$GeoXUrl {
   const factory GeoXUrl({
-    @Default(
-      'https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geoip.metadb',
-    )
-    String mmdb,
-    @Default(
-      'https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/GeoLite2-ASN.mmdb',
-    )
-    String asn,
-    @Default(
-      'https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geoip.dat',
-    )
-    String geoip,
-    @Default(
-      'https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geosite.dat',
-    )
-    String geosite,
+    @Default('$_fastlyBase/geoip.metadb') String mmdb,
+    @Default('$_fastlyBase/GeoLite2-ASN.mmdb') String asn,
+    @Default('$_fastlyBase/geoip.dat') String geoip,
+    @Default('$_fastlyBase/geosite.dat') String geosite,
   }) = _GeoXUrl;
 
   factory GeoXUrl.fromJson(Map<String, Object?> json) =>

@@ -37,6 +37,31 @@ class ResourcesView extends StatelessWidget {
 
     return CommonScaffold(
       title: appLocalizations.resources,
+      actions: [
+        Consumer(
+          builder: (context, ref, _) {
+            return PopupMenuButton<GeoXUrl>(
+              icon: const Icon(Icons.swap_horiz),
+              tooltip: 'Switch Source',
+              onSelected: (GeoXUrl value) {
+                ref.read(patchClashConfigProvider.notifier).updateState((state) {
+                  return state.copyWith(geoXUrl: value);
+                });
+              },
+              itemBuilder: (BuildContext context) => <PopupMenuEntry<GeoXUrl>>[
+                const PopupMenuItem<GeoXUrl>(
+                  value: defaultGeoXUrl,
+                  child: Text('fastly.jsdelivr.net'),
+                ),
+                const PopupMenuItem<GeoXUrl>(
+                  value: ghProxyGeoXUrl,
+                  child: Text('ghproxy.net'),
+                ),
+              ],
+            );
+          }
+        ),
+      ],
       body: ListView.separated(
         itemBuilder: (_, index) {
           final geoItem = geoItems[index];
