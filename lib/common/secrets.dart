@@ -3,8 +3,6 @@ class secrets {
   static const String OIX_API_DOMAIN =
       _oixApiDomain.isEmpty ? 'oics.net' : _oixApiDomain;
 
-  static const String OIX_API_IP = String.fromEnvironment('OIX_API_IP');
-
   static const String _apiManagedRouter = String.fromEnvironment(
     'API_MANAGED_ROUTER',
   );
