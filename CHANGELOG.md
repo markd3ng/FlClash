@@ -1,3 +1,7 @@
+## v0.8.91
+
+- Optimize compilation
+
 ## v0.8.92
 
 - Add sqlite store
