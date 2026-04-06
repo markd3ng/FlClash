@@ -370,9 +370,13 @@ class BuildCommand extends Command {
       .toList();
 
   Future<void> _buildEnvFile(String env, {String? coreSha256}) async {
-    final data = {
+    final data = <String, dynamic>{
       'APP_ENV': env,
       if (coreSha256 != null) 'CORE_SHA256': coreSha256,
+      if (Platform.environment.containsKey('OIX_API_DOMAIN'))
+        'OIX_API_DOMAIN': Platform.environment['OIX_API_DOMAIN'],
+      if (Platform.environment.containsKey('API_MANAGED_ROUTER'))
+        'API_MANAGED_ROUTER': Platform.environment['API_MANAGED_ROUTER'],
     };
     final envFile = File(join(current, 'env.json'))..create();
     await envFile.writeAsString(json.encode(data));

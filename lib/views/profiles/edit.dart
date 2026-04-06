@@ -11,8 +11,10 @@ import 'package:fl_clash/pages/editor.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fl_clash/providers/providers.dart';
 
-class EditProfileView extends StatefulWidget {
+class EditProfileView extends ConsumerStatefulWidget {
   final Profile profile;
   final BuildContext context;
 
@@ -23,10 +25,10 @@ class EditProfileView extends StatefulWidget {
   });
 
   @override
-  State<EditProfileView> createState() => _EditProfileViewState();
+  ConsumerState<EditProfileView> createState() => _EditProfileViewState();
 }
 
-class _EditProfileViewState extends State<EditProfileView> {
+class _EditProfileViewState extends ConsumerState<EditProfileView> {
   late final TextEditingController _labelController;
   late final TextEditingController _urlController;
   late final TextEditingController _autoUpdateDurationController;
@@ -35,17 +37,30 @@ class _EditProfileViewState extends State<EditProfileView> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final _fileInfoNotifier = ValueNotifier<FileInfo?>(null);
   Uint8List? _fileData;
+  TextEditingController? _cloudParamsController;
 
   @override
   void initState() {
     super.initState();
     _labelController = TextEditingController(text: widget.profile.label);
     _urlController = TextEditingController(text: widget.profile.url);
+    if (widget.profile.isOixCloud) {
+      _cloudParamsController = TextEditingController();
+      _loadCloudParams();
+    }
     _autoUpdate = widget.profile.autoUpdate;
     _autoUpdateDurationController = TextEditingController(
       text: widget.profile.autoUpdateDuration.inMinutes.toString(),
     );
     _updateFileInfo();
+  }
+
+  Future<void> _loadCloudParams() async {
+    final params = await ref.read(cloudAccountProvider.notifier).getSavedParams();
+    if (params != null && params.isNotEmpty && mounted) {
+      final queryStr = params.entries.map((e) => '${e.key}=${e.value}').join('&');
+      _cloudParamsController?.text = '&$queryStr';
+    }
   }
 
   Future<void> _updateFileInfo() async {
@@ -63,6 +78,7 @@ class _EditProfileViewState extends State<EditProfileView> {
 
   Future<void> _handleConfirm() async {
     if (!_formKey.currentState!.validate()) return;
+
     var profile = widget.profile.copyWith(
       url: _urlController.text,
       label: _labelController.text,
@@ -71,6 +87,32 @@ class _EditProfileViewState extends State<EditProfileView> {
         minutes: int.parse(_autoUpdateDurationController.text),
       ),
     );
+
+    if (widget.profile.isOixCloud && _cloudParamsController != null) {
+      appController.putProfile(profile);
+      final text = _cloudParamsController!.text;
+      final uri = Uri(query: text.startsWith('&') ? text.substring(1) : text);
+      final params = uri.queryParameters;
+      final cloudNotifier = ref.read(cloudAccountProvider.notifier);
+      final updatingNotifier = ref.read(isUpdatingProvider(profile.updatingKey).notifier);
+
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+
+      appController.loadingRun(() async {
+        try {
+          updatingNotifier.value = true;
+          await Future.delayed(commonDuration);
+          await cloudNotifier.saveParamsAndSync(params);
+        } finally {
+          updatingNotifier.value = false;
+        }
+      }, tag: LoadingTag.profiles);
+
+      return;
+    }
+
     final hasUpdate = widget.profile.url != profile.url;
     if (_fileData != null) {
       if (profile.type == ProfileType.url && _autoUpdate) {
@@ -203,6 +245,7 @@ class _EditProfileViewState extends State<EditProfileView> {
     _urlController.dispose();
     _fileInfoNotifier.dispose();
     _autoUpdateDurationController.dispose();
+    _cloudParamsController?.dispose();
     super.dispose();
     appController.autoApplyProfile();
   }
@@ -227,6 +270,17 @@ class _EditProfileViewState extends State<EditProfileView> {
           },
         ),
       ),
+      if (widget.profile.isOixCloud)
+        ListItem(
+          title: TextFormField(
+            textInputAction: TextInputAction.next,
+            controller: _cloudParamsController,
+            decoration: InputDecoration(
+              border: const OutlineInputBorder(),
+              labelText: appLocalizations.optionalParameters,
+            ),
+          ),
+        ),
       if (widget.profile.type == ProfileType.url && !widget.profile.isOixCloud) ...[
         ListItem(
           title: TextFormField(

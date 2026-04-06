@@ -133,8 +133,6 @@ object Service {
         }
     }
 
-    }
-
     private suspend fun awaitIResultInterface(
         block: (IResultInterface) -> Unit
     ): Long = suspendCancellableCoroutine { continuation ->

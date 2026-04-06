@@ -597,6 +597,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "onlyStatisticsProxyDesc": MessageLookupByLibrary.simpleMessage(
       "When turned on, only statistics proxy traffic",
     ),
+    "optionalParameters": MessageLookupByLibrary.simpleMessage(
+      "Optional Parameters",
+    ),
     "options": MessageLookupByLibrary.simpleMessage("Options"),
     "other": MessageLookupByLibrary.simpleMessage("Other"),
     "otherContributors": MessageLookupByLibrary.simpleMessage(
@@ -619,6 +622,12 @@ class MessageLookup extends MessageLookupByLibrary {
       "Override the original rule",
     ),
     "overrideScript": MessageLookupByLibrary.simpleMessage("Override script"),
+    "overseasNetwork": MessageLookupByLibrary.simpleMessage(
+      "Overseas Network Environment",
+    ),
+    "overseasNetworkDesc": MessageLookupByLibrary.simpleMessage(
+      "Enable for users accessing from outside China",
+    ),
     "overwriteTypeCustom": MessageLookupByLibrary.simpleMessage("Custom"),
     "overwriteTypeCustomDesc": MessageLookupByLibrary.simpleMessage(
       "Custom mode, fully customize proxy groups and rules",

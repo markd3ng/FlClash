@@ -277,3 +277,44 @@ jobs:
         with:
           files: ./dist/*
           body_path: './release.md'
+
+      - name: Update Version via oixCloud API
+        if: success() && env.IS_STABLE == 'true'
+        continue-on-error: true
+        run: |
+          API_KEY="${{ secrets.DLER_KEY }}"
+          API_URL="https://${{ secrets.OIX_API_DOMAIN }}/api/v1/version/update"
+          FULL_VERSION="${{ needs.version.outputs.full_version }}"
+          
+          if [ -z "$API_KEY" ]; then
+            echo "⚠️  Skipping version update: DLER_KEY secret not configured"
+            exit 0
+          fi
+          
+          if [ -z "$FULL_VERSION" ]; then
+            echo "❌ Error: Version number not available"
+            exit 1
+          fi
+          
+          echo "📦 Updating oixCloud version to: $FULL_VERSION"
+          
+          response=$(curl -s -w "\n%{http_code}" -X POST "$API_URL" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            --data-urlencode "key=$API_KEY" \
+            --data-urlencode "version=$FULL_VERSION")
+          
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
+          
+          echo "Response body: $body"
+          
+          if [ "$http_code" = "200" ]; then
+            echo "✅ Version updated successfully on oixCloud"
+            echo "   Version: $FULL_VERSION"
+            echo "   API: $API_URL"
+          else
+            echo "❌ Failed to update version"
+            echo "   HTTP Status: $http_code"
+            echo "   Response: $body"
+            exit 1
+          fi

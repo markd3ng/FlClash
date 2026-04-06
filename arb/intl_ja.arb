@@ -524,5 +524,9 @@
   "noPlanSubscription": "有効なサブスクリプションがないか、プランの有効期限が切れています",
   "accountNoPlan": "アカウントに有効なサブスクリプションがありません。まずプランを購入してください",
   "loginExpired": "ログイン期限切れ",
-  "tokenExpired": "ログインが期限切れです。再度ログインしてください"
+  "tokenExpired": "ログインが期限切れです。再度ログインしてください",
+  "optionalParameters": "オプションパラメータ"
+,
+  "overseasNetwork": "海外ネットワーク環境",
+  "overseasNetworkDesc": "中国外からアクセスするユーザーのために有効にする"
 }

@@ -1,10 +1,11 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:fl_clash/common/common.dart';
+import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/l10n/l10n.dart';
 import 'package:fl_clash/models/cloud_account.dart';
-import 'package:fl_clash/state.dart';
 import 'package:fl_clash/controller.dart';
 
 class CloudApiService {
@@ -13,15 +14,18 @@ class CloudApiService {
 
   CloudApiService._internal() {
     _initializeClients();
+    _loadCachedConfig();
   }
 
   static const _apiBase = 'https://${secrets.OIX_API_DOMAIN}/api/v1';
   static const _serviceCheckUrl = 'https://${secrets.OIX_API_DOMAIN}/check';
   static const _timeoutSeconds = 10;
   static const _endpoints = _ApiEndpoints();
+  static const _configCacheKey = 'cloud_config_cache';
 
   late final Dio _primaryClient;
   late final Dio _fallbackClient;
+  CloudConfigInfo? _cachedConfigInfo;
 
   BaseOptions get _baseOptions => BaseOptions(
     baseUrl: _apiBase,
@@ -41,6 +45,40 @@ class CloudApiService {
           return client;
         },
       );
+  }
+
+  void _loadCachedConfig() {
+    try {
+      preferences.sharedPreferencesCompleter.future.then((prefs) {
+        if (prefs != null) {
+          final cached = prefs.getString(_configCacheKey);
+          if (cached != null && cached.isNotEmpty) {
+            final jsonData = jsonDecode(cached) as Map<String, dynamic>;
+            _cachedConfigInfo = CloudConfigInfo.fromApiResponse(jsonData);
+          }
+        }
+      }).onError((error, stackTrace) {
+        commonPrint.log('Failed to load cached config', logLevel: LogLevel.warning);
+      });
+    } catch (e) {
+      commonPrint.log('Failed to load cached config: $e', logLevel: LogLevel.warning);
+    }
+  }
+
+  Future<void> _saveCachedConfig(CloudConfigInfo config) async {
+    try {
+      _cachedConfigInfo = config;
+      final prefs = await preferences.sharedPreferencesCompleter.future;
+      if (prefs != null) {
+        final jsonData = {
+          'smart': config.downloadUrl,
+          'name': config.profileName,
+        };
+        await prefs.setString(_configCacheKey, jsonEncode(jsonData));
+      }
+    } catch (e) {
+      commonPrint.log('Failed to save cached config: $e', logLevel: LogLevel.warning);
+    }
   }
 
   bool _isNetworkIssue(DioException error) {
@@ -182,11 +220,26 @@ class CloudApiService {
           '&${extraParams.entries.map((e) => '${e.key}=${e.value}').join('&')}';
     }
 
-    final response = await _request(
-      endpoint: _endpoints.managedConfig,
-      payload: payload,
-    );
-    return CloudConfigInfo.fromApiResponse(response);
+    try {
+      final response = await _request(
+        endpoint: _endpoints.managedConfig,
+        payload: payload,
+      );
+      final configInfo = CloudConfigInfo.fromApiResponse(response);
+      // 保存到缓存
+      await _saveCachedConfig(configInfo);
+      return configInfo;
+    } catch (e) {
+      // 如果请求失败，尝试使用缓存
+      if (_cachedConfigInfo != null) {
+        commonPrint.log(
+          'Using cached config due to network error: $e',
+          logLevel: LogLevel.warning,
+        );
+        return _cachedConfigInfo!;
+      }
+      rethrow;
+    }
   }
 
   Future<CloudNotification?> fetchAnnouncement() async {

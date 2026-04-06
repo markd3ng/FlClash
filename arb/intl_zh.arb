@@ -528,5 +528,5 @@
   "optionalParameters": "可选项参数"
 ,
   "overseasNetwork": "海外网络环境",
-  "overseasNetworkDesc": "如果您当前位于中国大陆以外地区，请开启此选项"
+  "overseasNetworkDesc": "为从中国境外访问的用户启用"
 }

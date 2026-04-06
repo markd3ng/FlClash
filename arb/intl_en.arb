@@ -523,5 +523,11 @@
   "noPlanSubscription": "No active subscription or plan expired",
   "accountNoPlan": "Your account has no active subscription, please purchase a plan first",
   "loginExpired": "Login Expired",
-  "tokenExpired": "Login expired, please login again"
+  "tokenExpired": "Login expired, please login again",
+  "optionalParameters": "Optional Parameters",
+  "overseasNetwork": "Overseas Network Environment",
+  "overseasNetworkDesc": "Enable for users accessing from outside China"
+,
+  "overseasNetwork": "Overseas Network Environment",
+  "overseasNetworkDesc": "Enable for users accessing from outside China"
 }

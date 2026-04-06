@@ -28,7 +28,7 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m2(label) => "Вы уверены, что хотите удалить текущий ${label}?";
 
-  static String m3(label) => "Детали {}";
+  static String m3(label) => "Детали ${label}";
 
   static String m4(label) => "${label} не может быть пустым";
 
@@ -626,6 +626,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "onlyStatisticsProxyDesc": MessageLookupByLibrary.simpleMessage(
       "При включении будет учитываться только трафик прокси",
     ),
+    "optionalParameters": MessageLookupByLibrary.simpleMessage(
+      "Дополнительные параметры",
+    ),
     "options": MessageLookupByLibrary.simpleMessage("Опции"),
     "other": MessageLookupByLibrary.simpleMessage("Другое"),
     "otherContributors": MessageLookupByLibrary.simpleMessage(
@@ -653,6 +656,12 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "overrideScript": MessageLookupByLibrary.simpleMessage(
       "Скрипт переопределения",
+    ),
+    "overseasNetwork": MessageLookupByLibrary.simpleMessage(
+      "Зарубежная сетевая среда",
+    ),
+    "overseasNetworkDesc": MessageLookupByLibrary.simpleMessage(
+      "Включить для пользователей, обращающихся из-за пределов Китая",
     ),
     "overwriteTypeCustom": MessageLookupByLibrary.simpleMessage(
       "Пользовательский",

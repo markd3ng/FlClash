@@ -24,6 +24,7 @@ class _CloudAccountPageState extends ConsumerState<CloudAccountPage> {
   var _serviceStatus = _ServiceStatus.unknown;
   var _isCheckingService = false;
   var _hasAutoChecked = false;
+  var _isOverseasSaving = false;
 
   @override
   void initState() {
@@ -75,6 +76,29 @@ class _CloudAccountPageState extends ConsumerState<CloudAccountPage> {
     await ref.read(cloudAccountProvider.notifier).refreshProfile(force: true);
     if (mounted) {
       globalState.showNotifier(AppLocalizations.current.refreshSuccess);
+    }
+  }
+
+  Future<void> _handleOverseasNetworkChanged(bool value) async {
+    if (_isOverseasSaving) return;
+    
+    setState(() {
+      _isOverseasSaving = true;
+    });
+
+    try {
+      final notifier = ref.read(cloudAccountProvider.notifier);
+      if (value) {
+        await notifier.saveAndEnableOverseasNetwork();
+      } else {
+        await notifier.disableOverseasNetwork();
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isOverseasSaving = false;
+        });
+      }
     }
   }
 
@@ -301,6 +325,80 @@ class _CloudAccountPageState extends ConsumerState<CloudAccountPage> {
       child: Column(
         children: [
           if (state.profile != null) CloudProfileCard(profile: state.profile!),
+          const SizedBox(height: 16),
+          if (state.profile != null)
+            Consumer(
+              builder: (_, ref, _) {
+                final subscription = state.profile?.subscription;
+                final shouldShowOverseas = subscription != null &&
+                    subscription.isNotEmpty &&
+                    subscription != 'Pass Iron' &&
+                    subscription != 'null';
+
+                if (!shouldShowOverseas) {
+                  return const SizedBox.shrink();
+                }
+
+                return FutureBuilder<Map<String, String>?>(
+                  future: ref
+                      .read(cloudAccountProvider.notifier)
+                      .getSavedParams(),
+                  builder: (context, snapshot) {
+                    final params = snapshot.data;
+                    final isOverseasEnabled =
+                        params != null && params['lv'] == '1' && params.length == 1;
+
+                    return AnimatedOpacity(
+                      opacity: _isOverseasSaving ? 0.7 : 1.0,
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOutCubic,
+                      child: CommonCard(
+                        child: ListTile(
+                          title: Text(AppLocalizations.current.overseasNetwork),
+                          subtitle: Text(
+                            AppLocalizations.current.overseasNetworkDesc,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: context.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          trailing: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 300),
+                            transitionBuilder: (child, animation) {
+                              return ScaleTransition(
+                                scale: animation,
+                                child: child,
+                              );
+                            },
+                            child: _isOverseasSaving
+                                ? SizedBox(
+                                    key: const ValueKey('loading'),
+                                    width: 56,
+                                    child: Center(
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2.5,
+                                        valueColor: AlwaysStoppedAnimation<Color>(
+                                          context.colorScheme.primary,
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                : SizedBox(
+                                    key: const ValueKey('switch'),
+                                    width: 56,
+                                    child: Switch(
+                                      value: isOverseasEnabled,
+                                      onChanged: _handleOverseasNetworkChanged,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
           const SizedBox(height: 16),
           if (state.latestNotification != null)
             _buildNotificationCard(state.latestNotification!),

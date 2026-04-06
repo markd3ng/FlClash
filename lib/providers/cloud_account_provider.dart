@@ -9,7 +9,6 @@ import 'package:fl_clash/state.dart';
 import 'package:fl_clash/providers/database.dart';
 import 'package:fl_clash/controller.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'generated/cloud_account_provider.g.dart';
@@ -63,6 +62,7 @@ class CloudAccount extends _$CloudAccount {
   static const _prefixKey = 'cloud_service_';
   static const _keyCredentials = '${_prefixKey}credentials';
   static const _keyConfigParams = '${_prefixKey}config_params';
+  static const _keyBackupConfigParams = '${_prefixKey}backup_config_params';
   static const _keyLogoutFlag = '${_prefixKey}logout_flag';
   static const _keyProfile = '${_prefixKey}profile';
   static const _keyNotification = '${_prefixKey}notification';
@@ -89,7 +89,7 @@ class CloudAccount extends _$CloudAccount {
     }
   }
   
-  Future<Map<String, String>?> _loadSavedParams() async {
+  Future<Map<String, String>?> getSavedParams() async {
     final prefs = await preferences.sharedPreferencesCompleter.future;
     final json = prefs?.getString(_keyConfigParams);
     if (json == null || json.isEmpty) return null;
@@ -196,7 +196,7 @@ class CloudAccount extends _$CloudAccount {
       final token = credentials.accessToken;
       final profile = await _api.fetchUserProfile(token);
       
-      final savedParams = await _loadSavedParams();
+      final savedParams = await getSavedParams();
       final hasSavedParams = prefs?.containsKey(_keyConfigParams) ?? false;
       
       Map<String, String>? extraParams = savedParams;
@@ -255,7 +255,7 @@ class CloudAccount extends _$CloudAccount {
     
     try {
       final token = state.credentials!.accessToken;
-      final savedParams = await _loadSavedParams();
+      final savedParams = await getSavedParams();
       
       final data = await _fetchCloudData(token, extraParams: savedParams);
       await _persistCloudData(profile: data.profile, notification: data.notification);
@@ -357,7 +357,7 @@ class CloudAccount extends _$CloudAccount {
     }
   }
   
-  Future<void> _saveParamsAndSync(Map<String, String>? params) async {
+  Future<void> saveParamsAndSync(Map<String, String>? params) async {
     final prefs = await preferences.sharedPreferencesCompleter.future;
     if (params != null) {
       await prefs?.setString(_keyConfigParams, jsonEncode(params));
@@ -376,20 +376,20 @@ class CloudAccount extends _$CloudAccount {
   Future<void> updateConfigParams(Map<String, String> params) async {
     if (!state.isLoggedIn || state.configInfo == null) return;
     
-    final mergedParams = (await _loadSavedParams()) ?? <String, String>{};
+    final mergedParams = (await getSavedParams()) ?? <String, String>{};
     mergedParams.addAll(params);
-    await _saveParamsAndSync(mergedParams);
+    await saveParamsAndSync(mergedParams);
   }
   
   Future<void> removeConfigParam(String key) async {
     if (!state.isLoggedIn || state.configInfo == null) return;
     
     try {
-      final savedParams = await _loadSavedParams();
+      final savedParams = await getSavedParams();
       if (savedParams == null) return;
       
       savedParams.remove(key);
-      await _saveParamsAndSync(savedParams);
+      await saveParamsAndSync(savedParams);
     } catch (e) {
       commonPrint.log('Failed to remove param: $e', logLevel: LogLevel.warning);
     }
@@ -397,12 +397,55 @@ class CloudAccount extends _$CloudAccount {
   
   Future<void> clearConfigParams() async {
     if (!state.isLoggedIn || state.configInfo == null) return;
-    await _saveParamsAndSync(null);
+    await saveParamsAndSync(null);
   }
   
   Future<void> setConfigParams(Map<String, String> params) async {
     if (!state.isLoggedIn || state.configInfo == null) return;
-    await _saveParamsAndSync(params);
+    await saveParamsAndSync(params);
+  }
+  
+  Future<void> saveAndEnableOverseasNetwork() async {
+    if (!state.isLoggedIn || state.configInfo == null) return;
+    
+    final prefs = await preferences.sharedPreferencesCompleter.future;
+    try {
+      // 备份当前参数
+      final currentParams = await getSavedParams();
+      if (currentParams != null) {
+        await prefs?.setString(_keyBackupConfigParams, jsonEncode(currentParams));
+      }
+      
+      // 清空参数，只保留海外网络标记
+      await saveParamsAndSync({'lv': '1'});
+    } catch (e) {
+      commonPrint.log('Failed to enable overseas network: $e', logLevel: LogLevel.warning);
+    }
+  }
+  
+  Future<void> disableOverseasNetwork() async {
+    if (!state.isLoggedIn || state.configInfo == null) return;
+    
+    final prefs = await preferences.sharedPreferencesCompleter.future;
+    try {
+      // 恢复备份的参数
+      final backupJson = prefs?.getString(_keyBackupConfigParams);
+      if (backupJson != null && backupJson.isNotEmpty) {
+        try {
+          final backupParams = Map<String, String>.from(jsonDecode(backupJson) as Map);
+          await saveParamsAndSync(backupParams);
+        } catch (e) {
+          commonPrint.log('Failed to parse backup params: $e', logLevel: LogLevel.warning);
+          // 如果备份参数损坏，则清空所有参数
+          await saveParamsAndSync(null);
+        }
+      } else {
+        // 没有备份参数，清空所有参数
+        await saveParamsAndSync(null);
+      }
+    } catch (e) {
+      commonPrint.log('Failed to disable overseas network: $e', logLevel: LogLevel.warning);
+    }
   }
   
   Future<void> signOut({bool revokeToken = false}) async {
@@ -417,6 +460,7 @@ class CloudAccount extends _$CloudAccount {
         if (prefs != null) ...[
           prefs.remove(_keyCredentials),
           prefs.remove(_keyConfigParams),
+          prefs.remove(_keyBackupConfigParams),
           prefs.remove(_keyProfile),
           prefs.remove(_keyNotification),
           prefs.setBool(_keyLogoutFlag, true),

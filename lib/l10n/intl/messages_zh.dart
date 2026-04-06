@@ -1,5 +1,5 @@
 // DO NOT EDIT. This is code generated via package:intl/generate_localized.dart
-// This is a library that provides messages for a zh_CN locale. All the
+// This is a library that provides messages for a zh locale. All the
 // messages from the main program should be duplicated here with the same
 // function name.
 
@@ -18,7 +18,7 @@ final messages = new MessageLookup();
 typedef String MessageIfAbsent(String messageStr, List<dynamic> args);
 
 class MessageLookup extends MessageLookupByLibrary {
-  String get localeName => 'zh_CN';
+  String get localeName => 'zh';
 
   static String m0(count) => "${count} 天前";
 
@@ -413,7 +413,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "overrideScript": MessageLookupByLibrary.simpleMessage("覆写脚本"),
     "overseasNetwork": MessageLookupByLibrary.simpleMessage("海外网络环境"),
     "overseasNetworkDesc": MessageLookupByLibrary.simpleMessage(
-      "如果您当前位于中国大陆以外地区，请开启此选项",
+      "为从中国境外访问的用户启用",
     ),
     "overwriteTypeCustom": MessageLookupByLibrary.simpleMessage("自定义"),
     "overwriteTypeCustomDesc": MessageLookupByLibrary.simpleMessage(

@@ -4163,6 +4163,36 @@ class AppLocalizations {
       args: [],
     );
   }
+
+  /// `Optional Parameters`
+  String get optionalParameters {
+    return Intl.message(
+      'Optional Parameters',
+      name: 'optionalParameters',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Overseas Network Environment`
+  String get overseasNetwork {
+    return Intl.message(
+      'Overseas Network Environment',
+      name: 'overseasNetwork',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Enable for users accessing from outside China`
+  String get overseasNetworkDesc {
+    return Intl.message(
+      'Enable for users accessing from outside China',
+      name: 'overseasNetworkDesc',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<AppLocalizations> {
@@ -4173,6 +4203,7 @@ class AppLocalizationDelegate extends LocalizationsDelegate<AppLocalizations> {
       Locale.fromSubtags(languageCode: 'en'),
       Locale.fromSubtags(languageCode: 'ja'),
       Locale.fromSubtags(languageCode: 'ru'),
+      Locale.fromSubtags(languageCode: 'zh'),
       Locale.fromSubtags(languageCode: 'zh', countryCode: 'CN'),
     ];
   }
