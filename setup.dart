@@ -313,24 +313,6 @@ class Build {
       Build.getExecutable('dart pub global activate -s path $distributorDir'),
     );
   }
-
-  static void copyFile(String sourceFilePath, String destinationFilePath) {
-    final sourceFile = File(sourceFilePath);
-    if (!sourceFile.existsSync()) {
-      throw 'SourceFilePath not exists';
-    }
-    final destinationFile = File(destinationFilePath);
-    final destinationDirectory = destinationFile.parent;
-    if (!destinationDirectory.existsSync()) {
-      destinationDirectory.createSync(recursive: true);
-    }
-    try {
-      sourceFile.copySync(destinationFilePath);
-      print('File copied successfully!');
-    } catch (e) {
-      print('Failed to copy file: $e');
-    }
-  }
 }
 
 class BuildCommand extends Command {
@@ -372,12 +354,10 @@ class BuildCommand extends Command {
   Future<void> _buildEnvFile(String env, {String? coreSha256}) async {
     final data = <String, dynamic>{
       'APP_ENV': env,
-      if (coreSha256 != null) 'CORE_SHA256': coreSha256,
-      if (Platform.environment.containsKey('OIX_API_DOMAIN'))
-        'OIX_API_DOMAIN': Platform.environment['OIX_API_DOMAIN'],
-      if (Platform.environment.containsKey('API_MANAGED_ROUTER'))
-        'API_MANAGED_ROUTER': Platform.environment['API_MANAGED_ROUTER'],
-    };
+      'CORE_SHA256': coreSha256,
+      'OIX_API_DOMAIN': Platform.environment['OIX_API_DOMAIN'],
+      'API_MANAGED_ROUTER': Platform.environment['API_MANAGED_ROUTER'],
+    }..removeWhere((key, value) => value == null);
     final envFile = File(join(current, 'env.json'))..create();
     await envFile.writeAsString(json.encode(data));
   }
@@ -422,22 +402,41 @@ class BuildCommand extends Command {
     required String env,
   }) async {
     await Build.getDistributor();
+
+    // Get version from environment variables if available
+    final versionNumber = Platform.environment['FLUTTER_VERSION_NUMBER'];
+    final buildNumber = Platform.environment['FLUTTER_BUILD_NUMBER'];
+
+    // Update pubspec.yaml with version from environment if available
+    if (versionNumber != null && buildNumber != null) {
+      await _updatePubspecVersion(versionNumber, buildNumber);
+    }
+
     await Build.exec(
       name: name,
       Build.getExecutable(
-        'flutter_distributor package --skip-clean --platform ${target.name} --targets $targets --flutter-build-args=verbose,dart-define-from-file=env.json$args',
+        'flutter_distributor package --artifact-name flclash-{{platform}}{{#description}}-{{description}}{{/description}}{{#is_installer}}-setup{{/is_installer}}.{{ext}} --skip-clean --platform ${target.name} --targets $targets --flutter-build-args=verbose,dart-define-from-file=env.json$args',
       ),
     );
   }
 
-  Future<String?> get systemArch async {
-    if (Platform.isWindows) {
-      return Platform.environment['PROCESSOR_ARCHITECTURE'];
-    } else if (Platform.isLinux || Platform.isMacOS) {
-      final result = await Process.run('uname', ['-m']);
-      return result.stdout.toString().trim();
+  Future<void> _updatePubspecVersion(String version, String buildNumber) async {
+    final pubspecPath = join(current, 'pubspec.yaml');
+    final pubspecFile = File(pubspecPath);
+
+    if (!await pubspecFile.exists()) {
+      print('Warning: pubspec.yaml not found');
+      return;
     }
-    return null;
+
+    final content = await pubspecFile.readAsString();
+    final updatedContent = content.replaceFirst(
+      RegExp(r'^version:\s*.*$', multiLine: true),
+      'version: $version+$buildNumber',
+    );
+
+    await pubspecFile.writeAsString(updatedContent);
+    print('Updated version to: $version+$buildNumber');
   }
 
   @override
@@ -446,10 +445,9 @@ class BuildCommand extends Command {
     final String out = argResults?['out'] ?? (target.same ? 'app' : 'core');
     final archName = argResults?['arch'];
     final env = argResults?['env'] ?? 'pre';
-    final currentArches = arches
+    final arch = arches
         .where((element) => element.name == archName)
-        .toList();
-    final arch = currentArches.isEmpty ? null : currentArches.first;
+        .firstOrNull;
 
     if (arch == null && target != Target.android) {
       throw 'Invalid arch parameter';

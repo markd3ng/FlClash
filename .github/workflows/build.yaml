@@ -112,6 +112,10 @@ jobs:
           echo "storePassword=${{ secrets.STORE_PASSWORD }}" >> android/local.properties
           echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/local.properties
 
+      - name: Setup Gradle
+        if: startsWith(matrix.platform,'android')
+        uses: gradle/actions/setup-gradle@v3
+
       - name: Pre-cache Android JitPack Dependencies
         if: startsWith(matrix.platform,'android')
         run: |
@@ -131,24 +135,35 @@ jobs:
             core/go.sum
 
       - name: Setup Flutter
-        if: ${{ !(startsWith(matrix.os, 'windows-11-arm') || startsWith(matrix.os, 'ubuntu-24.04-arm')) }}
         uses: subosito/flutter-action@v2
         with:
-          channel: stable
+          channel: ${{ (startsWith(matrix.os, 'windows-11-arm') || startsWith(matrix.os, 'ubuntu-24.04-arm')) && 'master' || 'stable' }}
           flutter-version: 3.35.7
           cache: true
-      - name: Setup Flutter With Other
-        if: startsWith(matrix.os, 'windows-11-arm') || startsWith(matrix.os, 'ubuntu-24.04-arm')
-        uses: subosito/flutter-action@v2
+
+      - name: Cache Pub
+        uses: actions/cache@v4
         with:
-          channel: master
-          flutter-version: 3.35.7
-          cache: true
+          path: |
+            ~/.pub-cache
+            ~/.local/share/pub-cache
+            ~/AppData/Local/Pub/Cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-
 
       - name: Get Flutter Dependency
         run: |
           flutter --version
           flutter pub get
+
+      - name: Cache Build Runner
+        uses: actions/cache@v4
+        with:
+          path: .dart_tool/build
+          key: ${{ runner.os }}-build-runner-${{ hashFiles('**/pubspec.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-build-runner-
 
       - name: Generate Code
         run: dart run build_runner build --delete-conflicting-outputs
