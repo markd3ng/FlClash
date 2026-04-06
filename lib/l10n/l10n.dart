@@ -3264,46 +3264,6 @@ class AppLocalizations {
     return Intl.message('Core status', name: 'coreStatus', desc: '', args: []);
   }
 
-  /// `Data Collection Notice`
-  String get dataCollectionTip {
-    return Intl.message(
-      'Data Collection Notice',
-      name: 'dataCollectionTip',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `This app uses Firebase Crashlytics to collect crash information to improve app stability.\nThe collected data includes device information and crash details, but does not contain personal sensitive data.\nYou can disable this feature in settings.`
-  String get dataCollectionContent {
-    return Intl.message(
-      'This app uses Firebase Crashlytics to collect crash information to improve app stability.\nThe collected data includes device information and crash details, but does not contain personal sensitive data.\nYou can disable this feature in settings.',
-      name: 'dataCollectionContent',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Crash Analysis`
-  String get crashlytics {
-    return Intl.message(
-      'Crash Analysis',
-      name: 'crashlytics',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `When enabled, automatically uploads crash logs without sensitive information when the app crashes`
-  String get crashlyticsTip {
-    return Intl.message(
-      'When enabled, automatically uploads crash logs without sensitive information when the app crashes',
-      name: 'crashlyticsTip',
-      desc: '',
-      args: [],
-    );
-  }
-
   /// `Append System DNS`
   String get appendSystemDns {
     return Intl.message(
@@ -3747,6 +3707,461 @@ class AppLocalizations {
   /// `Delay Test`
   String get delayTest {
     return Intl.message('Delay Test', name: 'delayTest', desc: '', args: []);
+  }
+
+  /// `oixCloud`
+  String get oixCloud {
+    return Intl.message('oixCloud', name: 'oixCloud', desc: '', args: []);
+  }
+
+  /// `Service Check Failed`
+  String get serviceCheckFailed {
+    return Intl.message(
+      'Service Check Failed',
+      name: 'serviceCheckFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Refresh Complete`
+  String get refreshSuccess {
+    return Intl.message(
+      'Refresh Complete',
+      name: 'refreshSuccess',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Logged Out`
+  String get logoutSuccess {
+    return Intl.message(
+      'Logged Out',
+      name: 'logoutSuccess',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Logout`
+  String get logoutTitle {
+    return Intl.message('Logout', name: 'logoutTitle', desc: '', args: []);
+  }
+
+  /// `Are you sure you want to logout?`
+  String get logoutContent {
+    return Intl.message(
+      'Are you sure you want to logout?',
+      name: 'logoutContent',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Revoke Access Token`
+  String get revokeAccessToken {
+    return Intl.message(
+      'Revoke Access Token',
+      name: 'revokeAccessToken',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `oixCloud`
+  String get loggedOutViewTitle {
+    return Intl.message(
+      'oixCloud',
+      name: 'loggedOutViewTitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Login to view account info and manage subscriptions`
+  String get loggedOutViewDesc {
+    return Intl.message(
+      'Login to view account info and manage subscriptions',
+      name: 'loggedOutViewDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `API Connected`
+  String get apiAvailable {
+    return Intl.message(
+      'API Connected',
+      name: 'apiAvailable',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `API Unavailable`
+  String get apiUnavailable {
+    return Intl.message(
+      'API Unavailable',
+      name: 'apiUnavailable',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Check API`
+  String get checkApi {
+    return Intl.message('Check API', name: 'checkApi', desc: '', args: []);
+  }
+
+  /// `Login`
+  String get loginTitle {
+    return Intl.message('Login', name: 'loginTitle', desc: '', args: []);
+  }
+
+  /// `Login Successful`
+  String get loginSuccess {
+    return Intl.message(
+      'Login Successful',
+      name: 'loginSuccess',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Login Failed`
+  String get loginFailed {
+    return Intl.message(
+      'Login Failed',
+      name: 'loginFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Announcement`
+  String get announcement {
+    return Intl.message(
+      'Announcement',
+      name: 'announcement',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Access Token`
+  String get accessToken {
+    return Intl.message(
+      'Access Token',
+      name: 'accessToken',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Email & Password`
+  String get emailPassword {
+    return Intl.message(
+      'Email & Password',
+      name: 'emailPassword',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Email`
+  String get emailLabel {
+    return Intl.message('Email', name: 'emailLabel', desc: '', args: []);
+  }
+
+  /// `Enter email address`
+  String get emailHint {
+    return Intl.message(
+      'Enter email address',
+      name: 'emailHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Password`
+  String get passwordLabel {
+    return Intl.message('Password', name: 'passwordLabel', desc: '', args: []);
+  }
+
+  /// `Enter password`
+  String get passwordHint {
+    return Intl.message(
+      'Enter password',
+      name: 'passwordHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Access Token`
+  String get tokenLabel {
+    return Intl.message('Access Token', name: 'tokenLabel', desc: '', args: []);
+  }
+
+  /// `Today's Usage`
+  String get todayUsed {
+    return Intl.message(
+      'Today\'s Usage',
+      name: 'todayUsed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Traffic Used`
+  String get trafficUsed {
+    return Intl.message(
+      'Traffic Used',
+      name: 'trafficUsed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Remaining: {value}`
+  String remaining(Object value) {
+    return Intl.message(
+      'Remaining: $value',
+      name: 'remaining',
+      desc: '',
+      args: [value],
+    );
+  }
+
+  /// `Expires: {date}`
+  String expireDate(Object date) {
+    return Intl.message(
+      'Expires: $date',
+      name: 'expireDate',
+      desc: '',
+      args: [date],
+    );
+  }
+
+  /// `Balance`
+  String get balance {
+    return Intl.message('Balance', name: 'balance', desc: '', args: []);
+  }
+
+  /// `Commission`
+  String get commission {
+    return Intl.message('Commission', name: 'commission', desc: '', args: []);
+  }
+
+  /// `Points`
+  String get points {
+    return Intl.message('Points', name: 'points', desc: '', args: []);
+  }
+
+  /// `Please enter email`
+  String get emailValidation {
+    return Intl.message(
+      'Please enter email',
+      name: 'emailValidation',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Invalid email format`
+  String get emailFormatValidation {
+    return Intl.message(
+      'Invalid email format',
+      name: 'emailFormatValidation',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Please enter password`
+  String get passwordValidation {
+    return Intl.message(
+      'Please enter password',
+      name: 'passwordValidation',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Please enter Access Token`
+  String get tokenValidation {
+    return Intl.message(
+      'Please enter Access Token',
+      name: 'tokenValidation',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Server Response Error`
+  String get serverError {
+    return Intl.message(
+      'Server Response Error',
+      name: 'serverError',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Empty Response from Server`
+  String get emptyResponse {
+    return Intl.message(
+      'Empty Response from Server',
+      name: 'emptyResponse',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Unknown Error`
+  String get unknownError {
+    return Intl.message(
+      'Unknown Error',
+      name: 'unknownError',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Connection Timeout`
+  String get connectionTimeout {
+    return Intl.message(
+      'Connection Timeout',
+      name: 'connectionTimeout',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Send Timeout`
+  String get sendTimeout {
+    return Intl.message(
+      'Send Timeout',
+      name: 'sendTimeout',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Receive Timeout`
+  String get receiveTimeout {
+    return Intl.message(
+      'Receive Timeout',
+      name: 'receiveTimeout',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `SSL Certificate Error`
+  String get sslError {
+    return Intl.message(
+      'SSL Certificate Error',
+      name: 'sslError',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Request Cancelled`
+  String get requestCancelled {
+    return Intl.message(
+      'Request Cancelled',
+      name: 'requestCancelled',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Network Error`
+  String get networkError {
+    return Intl.message(
+      'Network Error',
+      name: 'networkError',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Please check network connection`
+  String get checkNetworkConnection {
+    return Intl.message(
+      'Please check network connection',
+      name: 'checkNetworkConnection',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Config Download Failed`
+  String get configDownloadFailed {
+    return Intl.message(
+      'Config Download Failed',
+      name: 'configDownloadFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Warning`
+  String get warning {
+    return Intl.message('Warning', name: 'warning', desc: '', args: []);
+  }
+
+  /// `Login successful but config download failed`
+  String get loginSuccessConfigFailed {
+    return Intl.message(
+      'Login successful but config download failed',
+      name: 'loginSuccessConfigFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No active subscription or plan expired`
+  String get noPlanSubscription {
+    return Intl.message(
+      'No active subscription or plan expired',
+      name: 'noPlanSubscription',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Your account has no active subscription, please purchase a plan first`
+  String get accountNoPlan {
+    return Intl.message(
+      'Your account has no active subscription, please purchase a plan first',
+      name: 'accountNoPlan',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Login Expired`
+  String get loginExpired {
+    return Intl.message(
+      'Login Expired',
+      name: 'loginExpired',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Login expired, please login again`
+  String get tokenExpired {
+    return Intl.message(
+      'Login expired, please login again',
+      name: 'tokenExpired',
+      desc: '',
+      args: [],
+    );
   }
 }
 

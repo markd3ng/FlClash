@@ -325,6 +325,7 @@ enum PageLabel {
   dashboard,
   proxies,
   profiles,
+  oixCloud,
   tools,
   logs,
   requests,

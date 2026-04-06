@@ -12,3 +12,6 @@ export 'profiles/profiles.dart';
 export 'proxies/proxies.dart';
 export 'resources.dart';
 export 'tools.dart';
+export 'cloud/cloud_account_page.dart';
+export 'cloud/cloud_login_page.dart';
+export 'cloud/cloud_profile_card.dart';

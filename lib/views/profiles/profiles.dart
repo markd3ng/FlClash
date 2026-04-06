@@ -298,13 +298,14 @@ class ProfileItem extends StatelessWidget {
                                 _handleShowEditExtendPage(context);
                               },
                             ),
-                            PopupMenuItemData(
-                              icon: Icons.visibility_outlined,
-                              label: appLocalizations.preview,
-                              onPressed: () {
-                                _handlePreview(context);
-                              },
-                            ),
+                            if (!profile.isOixCloud)
+                              PopupMenuItemData(
+                                icon: Icons.visibility_outlined,
+                                label: appLocalizations.preview,
+                                onPressed: () {
+                                  _handlePreview(context);
+                                },
+                              ),
                             if (profile.type == ProfileType.url) ...[
                               PopupMenuItemData(
                                 icon: Icons.sync_alt_sharp,
@@ -314,51 +315,63 @@ class ProfileItem extends StatelessWidget {
                                 },
                               ),
                             ],
-                            PopupMenuItemData(
-                              icon: Icons.emergency_outlined,
-                              label: appLocalizations.more,
-                              subItems: [
-                                PopupMenuItemData(
-                                  icon: Icons.extension_outlined,
-                                  label: appLocalizations.override,
-                                  onPressed: () {
-                                    _handlePushGenProfilePage(
-                                      context,
-                                      profile.id,
-                                    );
-                                  },
-                                ),
-                                // PopupMenuItemData(
-                                //   icon: Icons.extension_outlined,
-                                //   label: appLocalizations.override + "1",
-                                //   onPressed: () {
-                                //     final overrideProfileView = OverrideProfileView(
-                                //       profileId: profile.id,
-                                //     );
-                                //     BaseNavigator.push(
-                                //       context,
-                                //       overrideProfileView,
-                                //     );
-                                //   },
-                                // ),
-                                if (profile.type == ProfileType.url) ...[
+                            if (profile.isOixCloud)
+                              PopupMenuItemData(
+                                icon: Icons.extension_outlined,
+                                label: appLocalizations.override,
+                                onPressed: () {
+                                  _handlePushGenProfilePage(
+                                    context,
+                                    profile.id,
+                                  );
+                                },
+                              )
+                            else
+                              PopupMenuItemData(
+                                icon: Icons.emergency_outlined,
+                                label: appLocalizations.more,
+                                subItems: [
                                   PopupMenuItemData(
-                                    icon: Icons.copy,
-                                    label: appLocalizations.copyLink,
+                                    icon: Icons.extension_outlined,
+                                    label: appLocalizations.override,
                                     onPressed: () {
-                                      _handleCopyLink(context);
+                                      _handlePushGenProfilePage(
+                                        context,
+                                        profile.id,
+                                      );
+                                    },
+                                  ),
+                                  // PopupMenuItemData(
+                                  //   icon: Icons.extension_outlined,
+                                  //   label: appLocalizations.override + "1",
+                                  //   onPressed: () {
+                                  //     final overrideProfileView = OverrideProfileView(
+                                  //       profileId: profile.id,
+                                  //     );
+                                  //     BaseNavigator.push(
+                                  //       context,
+                                  //       overrideProfileView,
+                                  //     );
+                                  //   },
+                                  // ),
+                                  if (profile.type == ProfileType.url) ...[
+                                    PopupMenuItemData(
+                                      icon: Icons.copy,
+                                      label: appLocalizations.copyLink,
+                                      onPressed: () {
+                                        _handleCopyLink(context);
+                                      },
+                                    ),
+                                  ],
+                                  PopupMenuItemData(
+                                    icon: Icons.file_copy_outlined,
+                                    label: appLocalizations.exportFile,
+                                    onPressed: () {
+                                      _handleExportFile(context);
                                     },
                                   ),
                                 ],
-                                PopupMenuItemData(
-                                  icon: Icons.file_copy_outlined,
-                                  label: appLocalizations.exportFile,
-                                  onPressed: () {
-                                    _handleExportFile(context);
-                                  },
-                                ),
-                              ],
-                            ),
+                              ),
                             PopupMenuItemData(
                               danger: true,
                               icon: Icons.delete_outlined,

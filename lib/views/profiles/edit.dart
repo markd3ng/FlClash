@@ -214,6 +214,7 @@ class _EditProfileViewState extends State<EditProfileView> {
         title: TextFormField(
           textInputAction: TextInputAction.next,
           controller: _labelController,
+          readOnly: widget.profile.isOixCloud,
           decoration: InputDecoration(
             border: const OutlineInputBorder(),
             labelText: appLocalizations.name,
@@ -226,7 +227,7 @@ class _EditProfileViewState extends State<EditProfileView> {
           },
         ),
       ),
-      if (widget.profile.type == ProfileType.url) ...[
+      if (widget.profile.type == ProfileType.url && !widget.profile.isOixCloud) ...[
         ListItem(
           title: TextFormField(
             textInputAction: TextInputAction.next,
@@ -281,43 +282,44 @@ class _EditProfileViewState extends State<EditProfileView> {
             ),
           ),
       ],
-      ValueListenableBuilder<FileInfo?>(
-        valueListenable: _fileInfoNotifier,
-        builder: (_, fileInfo, _) {
-          return FadeThroughBox(
-            alignment: Alignment.centerLeft,
-            child: fileInfo == null
-                ? Container()
-                : ListItem(
-                    title: Text(appLocalizations.profile),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 4),
-                        Text(fileInfo.desc),
-                        const SizedBox(height: 8),
-                        Wrap(
-                          runSpacing: 6,
-                          spacing: 12,
-                          children: [
-                            CommonChip(
-                              avatar: const Icon(Icons.edit),
-                              label: appLocalizations.edit,
-                              onPressed: _editProfileFile,
-                            ),
-                            CommonChip(
-                              avatar: const Icon(Icons.upload),
-                              label: appLocalizations.upload,
-                              onPressed: _uploadProfileFile,
-                            ),
-                          ],
-                        ),
-                      ],
+      if (!widget.profile.isOixCloud)
+        ValueListenableBuilder<FileInfo?>(
+          valueListenable: _fileInfoNotifier,
+          builder: (_, fileInfo, _) {
+            return FadeThroughBox(
+              alignment: Alignment.centerLeft,
+              child: fileInfo == null
+                  ? Container()
+                  : ListItem(
+                      title: Text(appLocalizations.profile),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 4),
+                          Text(fileInfo.desc),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            runSpacing: 6,
+                            spacing: 12,
+                            children: [
+                              CommonChip(
+                                avatar: const Icon(Icons.edit),
+                                label: appLocalizations.edit,
+                                onPressed: _editProfileFile,
+                              ),
+                              CommonChip(
+                                avatar: const Icon(Icons.upload),
+                                label: appLocalizations.upload,
+                                onPressed: _uploadProfileFile,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-          );
-        },
-      ),
+            );
+          },
+        ),
     ];
     return CommonPopScope(
       onPop: (context) {

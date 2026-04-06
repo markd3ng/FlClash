@@ -151,7 +151,7 @@ extension ProfilesExt on List<Profile> {
       (element) => element.id == profile.id,
     );
     final updateProfile = profile.copyWith(
-      label: _getLabel(profile.label, profile.id),
+      label: profile.isOixCloud ? profile.label : _getLabel(profile.label, profile.id),
     );
     if (index == -1) {
       profilesTemp.add(updateProfile);
@@ -173,6 +173,14 @@ extension ProfileExtension on Profile {
   String get fileName => '$id.yaml';
 
   String get updatingKey => 'profile_$id';
+
+  bool get isOixCloud {
+    final profileLabel = label ?? '';
+    final profileUrl = url.toLowerCase();
+    final hasDomainMatch = secrets.OIX_API_DOMAIN.isNotEmpty &&
+        profileUrl.contains(secrets.OIX_API_DOMAIN);
+    return profileLabel.contains('oixCloud') || hasDomainMatch;
+  }
 
   Future<Profile?> checkAndUpdateAndCopy() async {
     final mFile = await _getFile(false);
