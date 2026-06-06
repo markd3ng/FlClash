@@ -5,6 +5,35 @@ import 'package:flutter/foundation.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/controller.dart';
 
+class FlClashTemporaryTls {
+  const FlClashTemporaryTls._();
+
+  static int _badCertificateDepth = 0;
+
+  static bool get allowBadCertificate => _badCertificateDepth > 0;
+
+  static Future<T> runWithBadCertificateAllowed<T>(
+    Future<T> Function() action,
+  ) async {
+    _badCertificateDepth++;
+    try {
+      return await action();
+    } finally {
+      _badCertificateDepth--;
+    }
+  }
+
+  static bool isCertificateVerifyFailed(Object error) {
+    final message = error.toString().toLowerCase();
+    return message.contains('certificate_verify_failed') ||
+        message.contains('handshakeexception') ||
+        message.contains('handshake error') ||
+        message.contains('bad certificate') ||
+        message.contains('invalid certificate') ||
+        message.contains('unable to get local issuer certificate');
+  }
+}
+
 IOHttpClientAdapter createFlClashHttpClientAdapter({
   required String Function(Uri uri) findProxy,
   bool Function()? allowBadCertificate,
@@ -89,14 +118,16 @@ class FlClashHttpOverrides extends HttpOverrides {
   @override
   HttpClient createHttpClient(SecurityContext? context) {
     final client = super.createHttpClient(context);
-    client.badCertificateCallback = (_, _, _) => kDebugMode;
+    bool allowBadCertificateCallback() =>
+        FlClashTemporaryTls.allowBadCertificate || kDebugMode;
+    client.badCertificateCallback = (_, _, _) => allowBadCertificateCallback();
     client.connectionFactory = (uri, proxyHost, proxyPort) {
       return FlClashHostOverrides.connect(
         uri,
         proxyHost,
         proxyPort,
         context: context,
-        onBadCertificate: (_) => kDebugMode,
+        onBadCertificate: (_) => allowBadCertificateCallback(),
       );
     };
     client.findProxy = handleFindProxy;

@@ -6,6 +6,7 @@ import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/state.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/painting.dart';
 
 // -- Constants --
 const int _defaultConnectTimeoutMs = 10000;
@@ -38,7 +39,9 @@ const _allowInsecureTls = bool.fromEnvironment(
 HttpClientAdapter _createDirectApiAdapter() {
   return createFlClashHttpClientAdapter(
     findProxy: (_) => 'DIRECT',
-    allowBadCertificate: () => kDebugMode && _allowInsecureTls,
+    allowBadCertificate: () =>
+        FlClashTemporaryTls.allowBadCertificate ||
+        (kDebugMode && _allowInsecureTls),
   );
 }
 
@@ -78,7 +81,14 @@ class CloudApiException implements Exception {
 
   const CloudApiException(this.message);
 
+  static bool isHandledUnauthorized(Object error) {
+    return error is CloudApiUnauthorizedHandledException;
+  }
+
   static bool isUnauthorized(Object error) {
+    if (isHandledUnauthorized(error)) {
+      return false;
+    }
     final message = clean(error).toLowerCase();
     return message == 'unauthorized' ||
         message.contains('unauthorized') ||
@@ -90,6 +100,10 @@ class CloudApiException implements Exception {
       return _cleanMessage(error.message);
     }
     return _cleanMessage(error.toString());
+  }
+
+  static bool isCertificateVerifyFailed(Object error) {
+    return FlClashTemporaryTls.isCertificateVerifyFailed(clean(error));
   }
 
   static String _cleanMessage(String value) {
@@ -118,6 +132,13 @@ class CloudApiException implements Exception {
 
   @override
   String toString() => clean(this);
+}
+
+class CloudApiUnauthorizedHandledException implements Exception {
+  const CloudApiUnauthorizedHandledException();
+
+  @override
+  String toString() => 'Unauthorized';
 }
 
 class CloudApiService {
@@ -198,6 +219,28 @@ class CloudApiService {
 
   static final CloudApiService _instance = CloudApiService._();
   factory CloudApiService() => _instance;
+
+  bool get temporarilyAllowInsecureTls =>
+      FlClashTemporaryTls.allowBadCertificate;
+
+  Future<T> runWithInsecureTls<T>(Future<T> Function() action) async {
+    return FlClashTemporaryTls.runWithBadCertificateAllowed(action);
+  }
+
+  Future<bool> confirmInsecureTlsRetry(Object error) async {
+    if (temporarilyAllowInsecureTls ||
+        !CloudApiException.isCertificateVerifyFailed(error)) {
+      return false;
+    }
+
+    final allow = await globalState.showMessage(
+      title: appLocalizations.invalidCertificateTitle,
+      message: TextSpan(text: appLocalizations.invalidCertificateContent),
+      confirmText: appLocalizations.allowTemporarily,
+      cancelText: appLocalizations.cancel,
+    );
+    return allow == true;
+  }
 
   static String? normalizeToken(String? token) {
     if (token == null) return null;

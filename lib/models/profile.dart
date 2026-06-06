@@ -541,6 +541,9 @@ extension ProfileExtension on Profile {
         if (_isUnauthorizedError(e)) {
           rethrow;
         }
+        if (FlClashTemporaryTls.isCertificateVerifyFailed(e)) {
+          rethrow;
+        }
         if (await hasLocalConfigSnapshot()) {
           commonPrint.log(
             'oixCloud config update failed, keeping local snapshot: $e',

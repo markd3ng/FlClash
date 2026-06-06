@@ -8,7 +8,9 @@ import 'package:fl_clash/core/core.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/plugins/app.dart';
 import 'package:fl_clash/providers/providers.dart';
+import 'package:fl_clash/services/cloud_api_service.dart';
 import 'package:fl_clash/state.dart';
+import 'package:fl_clash/views/cloud/cloud_login_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
@@ -24,6 +26,7 @@ class AppController {
   late final WidgetRef _ref;
   bool isAttach = false;
   bool _isUpdateDownloading = false;
+  bool _isCloudLoginDialogShowing = false;
 
   static AppController? _instance;
 
@@ -438,14 +441,41 @@ extension ProfilesControllerExt on AppController {
         _ref.read(isUpdatingProvider(profile.updatingKey).notifier).value =
             true;
       }
-      final newProfile = await profile.update();
-      _ref.read(profilesProvider.notifier).put(newProfile);
+      final newProfile = await _updateProfileWithCertificateRetry(profile);
       if (applyIfCurrent && profile.id == _ref.read(currentProfileIdProvider)) {
         applyProfileDebounce(silence: true);
       }
       return newProfile;
     } finally {
       _ref.read(isUpdatingProvider(profile.updatingKey).notifier).value = false;
+    }
+  }
+
+  Future<Profile> _updateProfileWithCertificateRetry(Profile profile) {
+    return _runWithCertificateRetry(() async {
+      final newProfile = await profile.update();
+      _ref.read(profilesProvider.notifier).put(newProfile);
+      return newProfile;
+    }, handleCloudUnauthorized: profile.isoixCloudProfile);
+  }
+
+  Future<T> _runWithCertificateRetry<T>(
+    Future<T> Function() action, {
+    bool handleCloudUnauthorized = false,
+  }) async {
+    try {
+      return await action();
+    } catch (error) {
+      if (handleCloudUnauthorized && CloudApiException.isUnauthorized(error)) {
+        await _ref.read(cloudAccountProvider.notifier).handleUnauthorized();
+        throw const CloudApiUnauthorizedHandledException();
+      }
+      final cloudApiService = CloudApiService();
+      final shouldRetry = await cloudApiService.confirmInsecureTlsRetry(error);
+      if (!shouldRetry) {
+        rethrow;
+      }
+      return cloudApiService.runWithInsecureTls(action);
     }
   }
 
@@ -477,7 +507,10 @@ extension ProfilesControllerExt on AppController {
     }
     toProfiles();
     final profile = await loadingRun(tag: LoadingTag.profiles, () async {
-      return await Profile.normal(url: url).update();
+      return await _runWithCertificateRetry(
+        () => Profile.normal(url: url).update(),
+        handleCloudUnauthorized: isOixCloudProfileUrl(url),
+      );
     }, title: appLocalizations.addProfile);
     if (profile != null) {
       putProfile(profile);
@@ -770,9 +803,7 @@ extension SetupControllerExt on AppController {
   }
 
   Future<Profile> _refreshOixCloudProfile(Profile profile) async {
-    final updatedProfile = await profile.update();
-    _ref.read(profilesProvider.notifier).put(updatedProfile);
-    return updatedProfile;
+    return _updateProfileWithCertificateRetry(profile);
   }
 
   Future<bool> needSetup() async {
@@ -999,7 +1030,9 @@ extension SetupControllerExt on AppController {
   Future<void> _setupConfig([VoidCallback? preloadInvoke]) async {
     commonPrint.log('setup ===>');
     var profile = _ref.read(currentProfileProvider);
-    final nextProfile = await profile?.checkAndUpdateAndCopy();
+    final nextProfile = await _checkAndUpdateProfileWithCertificateRetry(
+      profile,
+    );
     if (nextProfile != null) {
       profile = nextProfile;
       _ref.read(profilesProvider.notifier).put(nextProfile);
@@ -1081,6 +1114,18 @@ extension CoreControllerExt on AppController {
       return;
     }
     _ref.read(coreStatusProvider.notifier).value = CoreStatus.connected;
+  }
+
+  Future<Profile?> _checkAndUpdateProfileWithCertificateRetry(
+    Profile? profile,
+  ) {
+    if (profile == null) {
+      return Future.value();
+    }
+    return _runWithCertificateRetry(
+      profile.checkAndUpdateAndCopy,
+      handleCloudUnauthorized: profile.isoixCloudProfile,
+    );
   }
 
   Future<Result<bool>> _requestAdmin(bool enableTun) async {
@@ -1401,6 +1446,26 @@ extension CommonControllerExt on AppController {
     toPage(PageLabel.profiles);
   }
 
+  Future<void> openCloudLogin({bool navigateToCloud = true}) async {
+    if (_isCloudLoginDialogShowing) {
+      return;
+    }
+    _isCloudLoginDialogShowing = true;
+    try {
+      if (navigateToCloud) {
+        toPage(PageLabel.oixCloud);
+      }
+      await Future<void>.delayed(Duration.zero);
+      final context = globalState.navigatorKey.currentContext;
+      if (context == null || !context.mounted) {
+        return;
+      }
+      await showCloudLoginPage(context);
+    } finally {
+      _isCloudLoginDialogShowing = false;
+    }
+  }
+
   void updateStart() {
     updateStatus(!_ref.read(isStartProvider));
   }
@@ -1483,6 +1548,9 @@ extension CommonControllerExt on AppController {
       return res;
     } catch (e, s) {
       commonPrint.log('$title ===> $e, $s', logLevel: LogLevel.warning);
+      if (CloudApiException.isHandledUnauthorized(e)) {
+        return null;
+      }
       if (silence) {
         globalState.showNotifier(e.toString());
       } else {

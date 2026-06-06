@@ -124,6 +124,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "allowLanDesc": MessageLookupByLibrary.simpleMessage(
       "Allow access proxy through the LAN",
     ),
+    "allowTemporarily": MessageLookupByLibrary.simpleMessage(
+      "Allow Temporarily",
+    ),
     "announcement": MessageLookupByLibrary.simpleMessage("Announcement"),
     "apiAvailable": MessageLookupByLibrary.simpleMessage(
       "API service is operational",
@@ -453,6 +456,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "intranetIP": MessageLookupByLibrary.simpleMessage("Intranet IP"),
     "invalidBackupFile": MessageLookupByLibrary.simpleMessage(
       "Invalid backup file",
+    ),
+    "invalidCertificateContent": MessageLookupByLibrary.simpleMessage(
+      "The server certificate could not be verified. If you trust this network and server, you can skip verification for this retry only.",
+    ),
+    "invalidCertificateTitle": MessageLookupByLibrary.simpleMessage(
+      "Certificate Verification Failed",
     ),
     "ipcidr": MessageLookupByLibrary.simpleMessage("Ipcidr"),
     "ipv6Desc": MessageLookupByLibrary.simpleMessage(

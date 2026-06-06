@@ -1,9 +1,17 @@
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/l10n/l10n.dart';
 import 'package:fl_clash/providers/providers.dart';
+import 'package:fl_clash/services/cloud_api_service.dart';
 import 'package:fl_clash/state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+Future<T?> showCloudLoginPage<T>(BuildContext context) {
+  return showDialog<T>(
+    context: context,
+    builder: (_) => const CloudLoginPage(),
+  );
+}
 
 class CloudLoginPage extends ConsumerStatefulWidget {
   const CloudLoginPage({super.key});
@@ -38,32 +46,30 @@ class _CloudLoginPageState extends ConsumerState<CloudLoginPage> {
 
     setState(() => _isSubmitting = true);
 
-    final notifier = ref.read(cloudAccountProvider.notifier);
     final navigator = Navigator.of(context);
 
     try {
-      switch (_loginMode) {
-        case _LoginMode.emailPassword:
-          await notifier.signInWithPassword(
-            email: _emailController.text.trim(),
-            password: _passwordController.text,
-          );
-          break;
-        case _LoginMode.token:
-          await notifier.signInWithToken(_tokenController.text.trim());
-          break;
-      }
-
+      await _submitLogin();
       if (mounted) {
         // If existingProfiles.isEmpty, addProfileFormURL might have already popped.
         // We only pop if we're still effectively able to pop.
         navigator.popUntil((route) => route.isFirst);
       }
     } catch (error) {
-      globalState.showMessage(
-        title: AppLocalizations.current.loginFailed,
-        message: TextSpan(text: error.toString()),
-      );
+      final retry = await CloudApiService().confirmInsecureTlsRetry(error);
+      if (!retry) {
+        _showLoginError(error);
+        return;
+      }
+
+      try {
+        await CloudApiService().runWithInsecureTls(_submitLogin);
+        if (mounted) {
+          navigator.popUntil((route) => route.isFirst);
+        }
+      } catch (retryError) {
+        _showLoginError(retryError);
+      }
     } finally {
       if (mounted) {
         setState(() => _isSubmitting = false);
@@ -71,6 +77,26 @@ class _CloudLoginPageState extends ConsumerState<CloudLoginPage> {
         _isSubmitting = false;
       }
     }
+  }
+
+  Future<void> _submitLogin() {
+    final notifier = ref.read(cloudAccountProvider.notifier);
+    switch (_loginMode) {
+      case _LoginMode.emailPassword:
+        return notifier.signInWithPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        );
+      case _LoginMode.token:
+        return notifier.signInWithToken(_tokenController.text.trim());
+    }
+  }
+
+  void _showLoginError(Object error) {
+    globalState.showMessage(
+      title: AppLocalizations.current.loginFailed,
+      message: TextSpan(text: error.toString()),
+    );
   }
 
   @override
@@ -177,8 +203,7 @@ class _CloudLoginPageState extends ConsumerState<CloudLoginPage> {
               ),
               onPressed: isLoading
                   ? null
-                  : () =>
-                  setState(() => _obscurePassword = !_obscurePassword),
+                  : () => setState(() => _obscurePassword = !_obscurePassword),
             ),
           ),
           validator: (v) => v?.isEmpty == true

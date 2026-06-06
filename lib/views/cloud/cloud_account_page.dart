@@ -1,5 +1,6 @@
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/common/common.dart';
+import 'package:fl_clash/controller.dart';
 import 'package:fl_clash/l10n/l10n.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/providers/providers.dart';
@@ -11,7 +12,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'cloud_login_page.dart';
 import 'cloud_profile_card.dart';
 
 class CloudAccountPage extends ConsumerStatefulWidget {
@@ -271,12 +271,8 @@ class _CloudAccountPageState extends ConsumerState<CloudAccountPage> {
           ),
           const SizedBox(height: 32),
           FilledButton.icon(
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (_) => const CloudLoginPage(),
-              );
-            },
+            onPressed: () =>
+                appController.openCloudLogin(navigateToCloud: false),
             icon: const Icon(Icons.login),
             label: Text(AppLocalizations.current.loginTitle),
           ),

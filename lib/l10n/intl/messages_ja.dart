@@ -97,6 +97,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "allowLan": MessageLookupByLibrary.simpleMessage("LANを許可"),
     "allowLanDesc": MessageLookupByLibrary.simpleMessage("LAN経由でのプロキシアクセスを許可"),
+    "allowTemporarily": MessageLookupByLibrary.simpleMessage("一時的に許可"),
     "announcement": MessageLookupByLibrary.simpleMessage("お知らせ"),
     "apiAvailable": MessageLookupByLibrary.simpleMessage("APIサービスは正常です"),
     "apiUnavailable": MessageLookupByLibrary.simpleMessage("API利用不可"),
@@ -341,6 +342,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "interval": MessageLookupByLibrary.simpleMessage("インターバル"),
     "intranetIP": MessageLookupByLibrary.simpleMessage("イントラネットIP"),
     "invalidBackupFile": MessageLookupByLibrary.simpleMessage("無効なバックアップファイル"),
+    "invalidCertificateContent": MessageLookupByLibrary.simpleMessage(
+      "サーバー証明書を検証できません。現在のネットワークとサーバーを信頼できる場合のみ、この再試行だけ検証をスキップできます。",
+    ),
+    "invalidCertificateTitle": MessageLookupByLibrary.simpleMessage(
+      "証明書の検証に失敗しました",
+    ),
     "ipcidr": MessageLookupByLibrary.simpleMessage("IPCIDR"),
     "ipv6Desc": MessageLookupByLibrary.simpleMessage("有効化するとIPv6トラフィックを受信可能"),
     "ipv6InboundDesc": MessageLookupByLibrary.simpleMessage("IPv6インバウンドを許可"),

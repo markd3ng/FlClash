@@ -4049,6 +4049,36 @@ class AppLocalizations {
     );
   }
 
+  /// `Certificate Verification Failed`
+  String get invalidCertificateTitle {
+    return Intl.message(
+      'Certificate Verification Failed',
+      name: 'invalidCertificateTitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The server certificate could not be verified. If you trust this network and server, you can skip verification for this retry only.`
+  String get invalidCertificateContent {
+    return Intl.message(
+      'The server certificate could not be verified. If you trust this network and server, you can skip verification for this retry only.',
+      name: 'invalidCertificateContent',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Allow Temporarily`
+  String get allowTemporarily {
+    return Intl.message(
+      'Allow Temporarily',
+      name: 'allowTemporarily',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Email & Password`
   String get emailPassword {
     return Intl.message(

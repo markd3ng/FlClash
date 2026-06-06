@@ -121,6 +121,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "allowLanDesc": MessageLookupByLibrary.simpleMessage(
       "Разрешить доступ к прокси через локальную сеть",
     ),
+    "allowTemporarily": MessageLookupByLibrary.simpleMessage(
+      "Временно разрешить",
+    ),
     "announcement": MessageLookupByLibrary.simpleMessage("Объявление"),
     "apiAvailable": MessageLookupByLibrary.simpleMessage(
       "API-сервис работает нормально",
@@ -476,6 +479,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "intranetIP": MessageLookupByLibrary.simpleMessage("Внутренний IP"),
     "invalidBackupFile": MessageLookupByLibrary.simpleMessage(
       "Неверный файл резервной копии",
+    ),
+    "invalidCertificateContent": MessageLookupByLibrary.simpleMessage(
+      "Не удалось проверить сертификат сервера. Если вы доверяете этой сети и серверу, можно пропустить проверку только для этой попытки.",
+    ),
+    "invalidCertificateTitle": MessageLookupByLibrary.simpleMessage(
+      "Ошибка проверки сертификата",
     ),
     "ipcidr": MessageLookupByLibrary.simpleMessage("IPCIDR"),
     "ipv6Desc": MessageLookupByLibrary.simpleMessage(

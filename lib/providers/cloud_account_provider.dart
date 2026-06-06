@@ -20,6 +20,7 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
   Future<void>? _initFuture;
   Future<void>? _signInFuture;
   Future<void>? _managedProfileFuture;
+  Future<void>? _unauthorizedFuture;
 
   String _requireNormalizedToken(String token) {
     final normalizedToken = CloudApiService.normalizeToken(token);
@@ -332,11 +333,17 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
         latestNotification: userInfo.announcement ?? state.latestNotification,
       );
     } catch (e) {
+      if (CloudApiException.isHandledUnauthorized(e)) {
+        return;
+      }
       final unauthorized = CloudApiException.isUnauthorized(e);
-      if (unauthorized) await _clearStoredToken();
+      if (unauthorized) {
+        await handleUnauthorized();
+        return;
+      }
       state = state.copyWith(
         isRefreshing: false,
-        isLoggedIn: unauthorized ? false : state.isLoggedIn,
+        isLoggedIn: state.isLoggedIn,
         error: CloudApiException.clean(e),
       );
     }
@@ -395,6 +402,13 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
           await _syncExistingManagedProfile(existing);
         }
       } catch (e) {
+        if (CloudApiException.isHandledUnauthorized(e)) {
+          return;
+        }
+        if (CloudApiException.isUnauthorized(e)) {
+          await handleUnauthorized();
+          return;
+        }
         state = state.copyWith(error: CloudApiException.clean(e));
       } finally {
         state = state.copyWith(isSyncing: false);
@@ -418,6 +432,13 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
           showSuccessMessage: true,
         );
       } catch (e) {
+        if (CloudApiException.isHandledUnauthorized(e)) {
+          return;
+        }
+        if (CloudApiException.isUnauthorized(e)) {
+          await handleUnauthorized();
+          return;
+        }
         globalState.showNotifier(CloudApiException.clean(e));
       }
     });
@@ -477,12 +498,30 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
   }
 
   Future<void> signOut() async {
+    _lastRefreshTime = null;
     await _clearStoredToken();
     await _clearCache();
 
     oixCloudConfigCache.clear();
     state = const CloudAccountState();
     await _clearManagedProfiles();
+  }
+
+  Future<void> handleUnauthorized() {
+    final inFlight = _unauthorizedFuture;
+    if (inFlight != null) {
+      return inFlight;
+    }
+
+    final future = () async {
+      await signOut();
+      await appController.openCloudLogin();
+    }();
+
+    _unauthorizedFuture = future.whenComplete(() {
+      _unauthorizedFuture = null;
+    });
+    return _unauthorizedFuture!;
   }
 }
 

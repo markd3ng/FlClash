@@ -22,12 +22,14 @@ class Request {
     _apiDirectDio = Dio(BaseOptions(headers: {'User-Agent': browserUa}));
     _apiDirectDio.httpClientAdapter = createFlClashHttpClientAdapter(
       findProxy: (_) => 'DIRECT',
-      allowBadCertificate: () => kDebugMode,
+      allowBadCertificate: () =>
+          FlClashTemporaryTls.allowBadCertificate || kDebugMode,
     );
     _clashDio = Dio();
     _clashDio.httpClientAdapter = createFlClashHttpClientAdapter(
       findProxy: FlClashHttpOverrides.handleFindProxy,
-      allowBadCertificate: () => kDebugMode,
+      allowBadCertificate: () =>
+          FlClashTemporaryTls.allowBadCertificate || kDebugMode,
       userAgent: () => appController.ua,
     );
   }
@@ -94,6 +96,12 @@ class Request {
     } catch (e) {
       commonPrint.log('getFileResponseForUrl error ${e.toString()}');
       if (e is DioException) {
+        if (FlClashTemporaryTls.isCertificateVerifyFailed(e)) {
+          rethrow;
+        }
+        if (e.response?.statusCode == HttpStatus.unauthorized) {
+          throw 'Unauthorized';
+        }
         if (e.type == DioExceptionType.unknown) {
           throw appLocalizations.unknownNetworkError;
         } else if (e.type == DioExceptionType.badResponse) {

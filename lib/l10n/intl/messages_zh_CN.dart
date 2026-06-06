@@ -93,6 +93,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "allowBypassDesc": MessageLookupByLibrary.simpleMessage("开启后部分应用可绕过VPN"),
     "allowLan": MessageLookupByLibrary.simpleMessage("局域网代理"),
     "allowLanDesc": MessageLookupByLibrary.simpleMessage("允许通过局域网访问代理"),
+    "allowTemporarily": MessageLookupByLibrary.simpleMessage("临时允许"),
     "announcement": MessageLookupByLibrary.simpleMessage("公告"),
     "apiAvailable": MessageLookupByLibrary.simpleMessage("API 服务正常"),
     "apiUnavailable": MessageLookupByLibrary.simpleMessage("API 异常"),
@@ -303,6 +304,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "interval": MessageLookupByLibrary.simpleMessage("间隔"),
     "intranetIP": MessageLookupByLibrary.simpleMessage("内网 IP"),
     "invalidBackupFile": MessageLookupByLibrary.simpleMessage("无效备份文件"),
+    "invalidCertificateContent": MessageLookupByLibrary.simpleMessage(
+      "无法验证服务器证书。若你信任当前网络和服务器，可仅本次重试跳过验证。",
+    ),
+    "invalidCertificateTitle": MessageLookupByLibrary.simpleMessage("证书校验失败"),
     "ipcidr": MessageLookupByLibrary.simpleMessage("IP/掩码"),
     "ipv6Desc": MessageLookupByLibrary.simpleMessage("开启后将可以接收IPv6流量"),
     "ipv6InboundDesc": MessageLookupByLibrary.simpleMessage("允许IPv6入站"),
