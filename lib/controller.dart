@@ -950,6 +950,7 @@ extension SetupControllerExt on AppController {
     }
     String? scriptContent;
     final List<Rule> addedRules = [];
+    final proxyChains = List<ProxyChain>.from(setupState.proxyChains);
     if (setupState.overwriteType == OverwriteType.script) {
       scriptContent = await setupState.script?.content;
     } else {
@@ -972,6 +973,8 @@ extension SetupControllerExt on AppController {
         overrideDns: overrideDns,
         appendSystemDns: appendSystemDns,
         addedRules: addedRules,
+        proxyChains: proxyChains,
+        profileProxies: setupState.profileProxies,
         defaultUA: defaultUA,
       ),
     );

@@ -140,6 +140,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "checkUpdateError": MessageLookupByLibrary.simpleMessage("当前应用已经是最新版了"),
     "checking": MessageLookupByLibrary.simpleMessage("检测中..."),
     "clearData": MessageLookupByLibrary.simpleMessage("清除数据"),
+    "clearProxyChain": MessageLookupByLibrary.simpleMessage("删除链式配置"),
     "clipboardExport": MessageLookupByLibrary.simpleMessage("导出剪贴板"),
     "clipboardImport": MessageLookupByLibrary.simpleMessage("剪贴板导入"),
     "color": MessageLookupByLibrary.simpleMessage("颜色"),
@@ -468,7 +469,28 @@ class MessageLookup extends MessageLookupByLibrary {
     "providers": MessageLookupByLibrary.simpleMessage("提供者"),
     "proxies": MessageLookupByLibrary.simpleMessage("代理"),
     "proxiesSetting": MessageLookupByLibrary.simpleMessage("代理设置"),
-    "proxyChains": MessageLookupByLibrary.simpleMessage("代理链"),
+    "proxyChainConfig": MessageLookupByLibrary.simpleMessage("代理链配置"),
+    "proxyChainCustomNodes": MessageLookupByLibrary.simpleMessage("自定义节点"),
+    "proxyChainEntry": MessageLookupByLibrary.simpleMessage("入口"),
+    "proxyChainExit": MessageLookupByLibrary.simpleMessage("出口"),
+    "proxyChainInstruction": MessageLookupByLibrary.simpleMessage(
+      "顺序点击节点或输入节点添加到代理链中",
+    ),
+    "proxyChainMinimumNodes": MessageLookupByLibrary.simpleMessage(
+      "链式代理至少需要 2 个节点",
+    ),
+    "proxyChainMinimumNodesHint": MessageLookupByLibrary.simpleMessage(
+      "链式代理至少需要 2 个节点，请再添加一个节点。",
+    ),
+    "proxyChainOtherNodes": MessageLookupByLibrary.simpleMessage("其他节点"),
+    "proxyChainProviderNodes": MessageLookupByLibrary.simpleMessage("提供者节点"),
+    "proxyChainSavedAndApplied": MessageLookupByLibrary.simpleMessage(
+      "链式代理已保存并应用",
+    ),
+    "proxyChainWarning": MessageLookupByLibrary.simpleMessage(
+      "链式代理会显著降低网速。如果您没有明确的业务需求，或不了解此项配置，请保持关闭",
+    ),
+    "proxyChains": MessageLookupByLibrary.simpleMessage("链式代理"),
     "proxyGroup": MessageLookupByLibrary.simpleMessage("代理组"),
     "proxyNameserver": MessageLookupByLibrary.simpleMessage("代理域名服务器"),
     "proxyNameserverDesc": MessageLookupByLibrary.simpleMessage("用于解析代理节点的域名"),

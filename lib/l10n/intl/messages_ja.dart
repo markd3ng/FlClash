@@ -152,6 +152,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "checkUpdateError": MessageLookupByLibrary.simpleMessage("アプリは最新版です"),
     "checking": MessageLookupByLibrary.simpleMessage("確認中..."),
     "clearData": MessageLookupByLibrary.simpleMessage("データを消去"),
+    "clearProxyChain": MessageLookupByLibrary.simpleMessage("チェーン設定を削除"),
     "clipboardExport": MessageLookupByLibrary.simpleMessage("クリップボードにエクスポート"),
     "clipboardImport": MessageLookupByLibrary.simpleMessage("クリップボードからインポート"),
     "color": MessageLookupByLibrary.simpleMessage("カラー"),
@@ -536,6 +537,29 @@ class MessageLookup extends MessageLookupByLibrary {
     "providers": MessageLookupByLibrary.simpleMessage("プロバイダー"),
     "proxies": MessageLookupByLibrary.simpleMessage("プロキシ"),
     "proxiesSetting": MessageLookupByLibrary.simpleMessage("プロキシ設定"),
+    "proxyChainConfig": MessageLookupByLibrary.simpleMessage("プロキシチェーン設定"),
+    "proxyChainCustomNodes": MessageLookupByLibrary.simpleMessage("カスタムノード"),
+    "proxyChainEntry": MessageLookupByLibrary.simpleMessage("入口"),
+    "proxyChainExit": MessageLookupByLibrary.simpleMessage("出口"),
+    "proxyChainInstruction": MessageLookupByLibrary.simpleMessage(
+      "候補をクリックするかノードを入力して、順番にプロキシチェーンへ追加します",
+    ),
+    "proxyChainMinimumNodes": MessageLookupByLibrary.simpleMessage(
+      "プロキシチェーンには少なくとも 2 つのノードが必要です",
+    ),
+    "proxyChainMinimumNodesHint": MessageLookupByLibrary.simpleMessage(
+      "プロキシチェーンには少なくとも 2 つのノードが必要です。もう 1 つ追加してください。",
+    ),
+    "proxyChainOtherNodes": MessageLookupByLibrary.simpleMessage("その他のノード"),
+    "proxyChainProviderNodes": MessageLookupByLibrary.simpleMessage(
+      "プロバイダーノード",
+    ),
+    "proxyChainSavedAndApplied": MessageLookupByLibrary.simpleMessage(
+      "プロキシチェーンを保存して適用しました",
+    ),
+    "proxyChainWarning": MessageLookupByLibrary.simpleMessage(
+      "プロキシチェーンは通信速度を大きく低下させる可能性があります。明確な用途がない場合は無効のままにしてください。",
+    ),
     "proxyChains": MessageLookupByLibrary.simpleMessage("プロキシチェーン"),
     "proxyGroup": MessageLookupByLibrary.simpleMessage("プロキシグループ"),
     "proxyNameserver": MessageLookupByLibrary.simpleMessage("プロキシネームサーバー"),

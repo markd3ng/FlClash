@@ -30,6 +30,13 @@ class Profiles extends Table {
 
   TextColumn get unfoldSet => text().map(const StringSetConverter())();
 
+  TextColumn get proxyChains =>
+      text().map(const ProxyChainListConverter()).withDefault(Constant('[]'))();
+
+  TextColumn get profileProxies => text()
+      .map(const ProfileProxyListConverter())
+      .withDefault(Constant('[]'))();
+
   IntColumn get order => integer().nullable()();
 
   @override
@@ -127,6 +134,53 @@ class StringSetConverter extends TypeConverter<Set<String>, String> {
   }
 }
 
+List<T> _jsonListFromSql<T>(
+  String fromDb,
+  T Function(Map<String, Object?> item) fromJson,
+) {
+  final value = json.decode(fromDb);
+  if (value is! List) {
+    return [];
+  }
+  return value
+      .whereType<Map>()
+      .map((item) => fromJson(Map<String, Object?>.from(item)))
+      .toList();
+}
+
+String _jsonListToSql<T>(List<T> value, Object? Function(T item) toJson) {
+  return json.encode(value.map(toJson).toList());
+}
+
+class ProxyChainListConverter extends TypeConverter<List<ProxyChain>, String> {
+  const ProxyChainListConverter();
+
+  @override
+  List<ProxyChain> fromSql(String fromDb) {
+    return _jsonListFromSql(fromDb, ProxyChain.fromJson);
+  }
+
+  @override
+  String toSql(List<ProxyChain> value) {
+    return _jsonListToSql(value, (item) => item.toJson());
+  }
+}
+
+class ProfileProxyListConverter
+    extends TypeConverter<List<ProfileProxy>, String> {
+  const ProfileProxyListConverter();
+
+  @override
+  List<ProfileProxy> fromSql(String fromDb) {
+    return _jsonListFromSql(fromDb, ProfileProxy.fromJson);
+  }
+
+  @override
+  String toSql(List<ProfileProxy> value) {
+    return _jsonListToSql(value, (item) => item.toJson());
+  }
+}
+
 extension RawProfilExt on RawProfile {
   Profile toProfile() {
     return Profile(
@@ -141,6 +195,8 @@ extension RawProfilExt on RawProfile {
       selectedMap: selectedMap,
       unfoldSet: unfoldSet,
       overwriteType: overwriteType,
+      proxyChains: proxyChains,
+      profileProxies: profileProxies,
       scriptId: scriptId,
       order: order,
     );
@@ -161,6 +217,8 @@ extension ProfilesCompanionExt on Profile {
       selectedMap: selectedMap,
       unfoldSet: unfoldSet,
       overwriteType: overwriteType,
+      proxyChains: Value(proxyChains),
+      profileProxies: Value(profileProxies),
       scriptId: Value(scriptId),
       order: Value(order ?? this.order),
     );

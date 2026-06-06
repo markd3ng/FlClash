@@ -3,6 +3,7 @@
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/controller.dart';
 import 'package:fl_clash/enum/enum.dart';
+import 'package:fl_clash/features/overwrite/proxy_chain.dart';
 import 'package:fl_clash/features/overwrite/rule.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/database.dart';
@@ -33,7 +34,11 @@ class _OverwriteViewState extends ConsumerState<OverwriteView> {
     return CommonScaffold(
       title: appLocalizations.override,
       body: CustomScrollView(
-        slivers: [_Title(widget.profileId), _Content(widget.profileId)],
+        slivers: [
+          _Title(widget.profileId),
+          ProfileProxyChainsContent(profileId: widget.profileId),
+          _Content(widget.profileId),
+        ],
       ),
     );
   }

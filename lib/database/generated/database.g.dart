@@ -131,6 +131,26 @@ class $ProfilesTable extends Profiles
         type: DriftSqlType.string,
         requiredDuringInsert: true,
       ).withConverter<Set<String>>($ProfilesTable.$converterunfoldSet);
+  @override
+  late final GeneratedColumnWithTypeConverter<List<ProxyChain>, String>
+  proxyChains = GeneratedColumn<String>(
+    'proxy_chains',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: Constant('[]'),
+  ).withConverter<List<ProxyChain>>($ProfilesTable.$converterproxyChains);
+  @override
+  late final GeneratedColumnWithTypeConverter<List<ProfileProxy>, String>
+  profileProxies = GeneratedColumn<String>(
+    'profile_proxies',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: Constant('[]'),
+  ).withConverter<List<ProfileProxy>>($ProfilesTable.$converterprofileProxies);
   static const VerificationMeta _orderMeta = const VerificationMeta('order');
   @override
   late final GeneratedColumn<int> order = GeneratedColumn<int>(
@@ -154,6 +174,8 @@ class $ProfilesTable extends Profiles
     autoUpdate,
     selectedMap,
     unfoldSet,
+    proxyChains,
+    profileProxies,
     order,
   ];
   @override
@@ -301,6 +323,18 @@ class $ProfilesTable extends Profiles
           data['${effectivePrefix}unfold_set'],
         )!,
       ),
+      proxyChains: $ProfilesTable.$converterproxyChains.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}proxy_chains'],
+        )!,
+      ),
+      profileProxies: $ProfilesTable.$converterprofileProxies.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}profile_proxies'],
+        )!,
+      ),
       order: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}order'],
@@ -323,6 +357,10 @@ class $ProfilesTable extends Profiles
       const StringMapConverter();
   static TypeConverter<Set<String>, String> $converterunfoldSet =
       const StringSetConverter();
+  static TypeConverter<List<ProxyChain>, String> $converterproxyChains =
+      const ProxyChainListConverter();
+  static TypeConverter<List<ProfileProxy>, String> $converterprofileProxies =
+      const ProfileProxyListConverter();
 }
 
 class RawProfile extends DataClass implements Insertable<RawProfile> {
@@ -338,6 +376,8 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
   final bool autoUpdate;
   final Map<String, String> selectedMap;
   final Set<String> unfoldSet;
+  final List<ProxyChain> proxyChains;
+  final List<ProfileProxy> profileProxies;
   final int? order;
   const RawProfile({
     required this.id,
@@ -352,6 +392,8 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
     required this.autoUpdate,
     required this.selectedMap,
     required this.unfoldSet,
+    required this.proxyChains,
+    required this.profileProxies,
     this.order,
   });
   @override
@@ -393,6 +435,16 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
         $ProfilesTable.$converterunfoldSet.toSql(unfoldSet),
       );
     }
+    {
+      map['proxy_chains'] = Variable<String>(
+        $ProfilesTable.$converterproxyChains.toSql(proxyChains),
+      );
+    }
+    {
+      map['profile_proxies'] = Variable<String>(
+        $ProfilesTable.$converterprofileProxies.toSql(profileProxies),
+      );
+    }
     if (!nullToAbsent || order != null) {
       map['order'] = Variable<int>(order);
     }
@@ -421,6 +473,8 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
       autoUpdate: Value(autoUpdate),
       selectedMap: Value(selectedMap),
       unfoldSet: Value(unfoldSet),
+      proxyChains: Value(proxyChains),
+      profileProxies: Value(profileProxies),
       order: order == null && nullToAbsent
           ? const Value.absent()
           : Value(order),
@@ -453,6 +507,10 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
         json['selectedMap'],
       ),
       unfoldSet: serializer.fromJson<Set<String>>(json['unfoldSet']),
+      proxyChains: serializer.fromJson<List<ProxyChain>>(json['proxyChains']),
+      profileProxies: serializer.fromJson<List<ProfileProxy>>(
+        json['profileProxies'],
+      ),
       order: serializer.fromJson<int?>(json['order']),
     );
   }
@@ -478,6 +536,8 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
       'autoUpdate': serializer.toJson<bool>(autoUpdate),
       'selectedMap': serializer.toJson<Map<String, String>>(selectedMap),
       'unfoldSet': serializer.toJson<Set<String>>(unfoldSet),
+      'proxyChains': serializer.toJson<List<ProxyChain>>(proxyChains),
+      'profileProxies': serializer.toJson<List<ProfileProxy>>(profileProxies),
       'order': serializer.toJson<int?>(order),
     };
   }
@@ -495,6 +555,8 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
     bool? autoUpdate,
     Map<String, String>? selectedMap,
     Set<String>? unfoldSet,
+    List<ProxyChain>? proxyChains,
+    List<ProfileProxy>? profileProxies,
     Value<int?> order = const Value.absent(),
   }) => RawProfile(
     id: id ?? this.id,
@@ -516,6 +578,8 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
     autoUpdate: autoUpdate ?? this.autoUpdate,
     selectedMap: selectedMap ?? this.selectedMap,
     unfoldSet: unfoldSet ?? this.unfoldSet,
+    proxyChains: proxyChains ?? this.proxyChains,
+    profileProxies: profileProxies ?? this.profileProxies,
     order: order.present ? order.value : this.order,
   );
   RawProfile copyWithCompanion(ProfilesCompanion data) {
@@ -546,6 +610,12 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
           ? data.selectedMap.value
           : this.selectedMap,
       unfoldSet: data.unfoldSet.present ? data.unfoldSet.value : this.unfoldSet,
+      proxyChains: data.proxyChains.present
+          ? data.proxyChains.value
+          : this.proxyChains,
+      profileProxies: data.profileProxies.present
+          ? data.profileProxies.value
+          : this.profileProxies,
       order: data.order.present ? data.order.value : this.order,
     );
   }
@@ -565,6 +635,8 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
           ..write('autoUpdate: $autoUpdate, ')
           ..write('selectedMap: $selectedMap, ')
           ..write('unfoldSet: $unfoldSet, ')
+          ..write('proxyChains: $proxyChains, ')
+          ..write('profileProxies: $profileProxies, ')
           ..write('order: $order')
           ..write(')'))
         .toString();
@@ -584,6 +656,8 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
     autoUpdate,
     selectedMap,
     unfoldSet,
+    proxyChains,
+    profileProxies,
     order,
   );
   @override
@@ -602,6 +676,8 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
           other.autoUpdate == this.autoUpdate &&
           other.selectedMap == this.selectedMap &&
           other.unfoldSet == this.unfoldSet &&
+          other.proxyChains == this.proxyChains &&
+          other.profileProxies == this.profileProxies &&
           other.order == this.order);
 }
 
@@ -618,6 +694,8 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
   final Value<bool> autoUpdate;
   final Value<Map<String, String>> selectedMap;
   final Value<Set<String>> unfoldSet;
+  final Value<List<ProxyChain>> proxyChains;
+  final Value<List<ProfileProxy>> profileProxies;
   final Value<int?> order;
   const ProfilesCompanion({
     this.id = const Value.absent(),
@@ -632,6 +710,8 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
     this.autoUpdate = const Value.absent(),
     this.selectedMap = const Value.absent(),
     this.unfoldSet = const Value.absent(),
+    this.proxyChains = const Value.absent(),
+    this.profileProxies = const Value.absent(),
     this.order = const Value.absent(),
   });
   ProfilesCompanion.insert({
@@ -647,6 +727,8 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
     required bool autoUpdate,
     required Map<String, String> selectedMap,
     required Set<String> unfoldSet,
+    this.proxyChains = const Value.absent(),
+    this.profileProxies = const Value.absent(),
     this.order = const Value.absent(),
   }) : label = Value(label),
        url = Value(url),
@@ -668,6 +750,8 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
     Expression<bool>? autoUpdate,
     Expression<String>? selectedMap,
     Expression<String>? unfoldSet,
+    Expression<String>? proxyChains,
+    Expression<String>? profileProxies,
     Expression<int>? order,
   }) {
     return RawValuesInsertable({
@@ -684,6 +768,8 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
       if (autoUpdate != null) 'auto_update': autoUpdate,
       if (selectedMap != null) 'selected_map': selectedMap,
       if (unfoldSet != null) 'unfold_set': unfoldSet,
+      if (proxyChains != null) 'proxy_chains': proxyChains,
+      if (profileProxies != null) 'profile_proxies': profileProxies,
       if (order != null) 'order': order,
     });
   }
@@ -701,6 +787,8 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
     Value<bool>? autoUpdate,
     Value<Map<String, String>>? selectedMap,
     Value<Set<String>>? unfoldSet,
+    Value<List<ProxyChain>>? proxyChains,
+    Value<List<ProfileProxy>>? profileProxies,
     Value<int?>? order,
   }) {
     return ProfilesCompanion(
@@ -717,6 +805,8 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
       autoUpdate: autoUpdate ?? this.autoUpdate,
       selectedMap: selectedMap ?? this.selectedMap,
       unfoldSet: unfoldSet ?? this.unfoldSet,
+      proxyChains: proxyChains ?? this.proxyChains,
+      profileProxies: profileProxies ?? this.profileProxies,
       order: order ?? this.order,
     );
   }
@@ -770,6 +860,16 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
         $ProfilesTable.$converterunfoldSet.toSql(unfoldSet.value),
       );
     }
+    if (proxyChains.present) {
+      map['proxy_chains'] = Variable<String>(
+        $ProfilesTable.$converterproxyChains.toSql(proxyChains.value),
+      );
+    }
+    if (profileProxies.present) {
+      map['profile_proxies'] = Variable<String>(
+        $ProfilesTable.$converterprofileProxies.toSql(profileProxies.value),
+      );
+    }
     if (order.present) {
       map['order'] = Variable<int>(order.value);
     }
@@ -791,6 +891,8 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
           ..write('autoUpdate: $autoUpdate, ')
           ..write('selectedMap: $selectedMap, ')
           ..write('unfoldSet: $unfoldSet, ')
+          ..write('proxyChains: $proxyChains, ')
+          ..write('profileProxies: $profileProxies, ')
           ..write('order: $order')
           ..write(')'))
         .toString();
@@ -1656,6 +1758,8 @@ typedef $$ProfilesTableCreateCompanionBuilder =
       required bool autoUpdate,
       required Map<String, String> selectedMap,
       required Set<String> unfoldSet,
+      Value<List<ProxyChain>> proxyChains,
+      Value<List<ProfileProxy>> profileProxies,
       Value<int?> order,
     });
 typedef $$ProfilesTableUpdateCompanionBuilder =
@@ -1672,6 +1776,8 @@ typedef $$ProfilesTableUpdateCompanionBuilder =
       Value<bool> autoUpdate,
       Value<Map<String, String>> selectedMap,
       Value<Set<String>> unfoldSet,
+      Value<List<ProxyChain>> proxyChains,
+      Value<List<ProfileProxy>> profileProxies,
       Value<int?> order,
     });
 
@@ -1780,6 +1886,18 @@ class $$ProfilesTableFilterComposer
     builder: (column) => ColumnWithTypeConverterFilters(column),
   );
 
+  ColumnWithTypeConverterFilters<List<ProxyChain>, List<ProxyChain>, String>
+  get proxyChains => $composableBuilder(
+    column: $table.proxyChains,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<List<ProfileProxy>, List<ProfileProxy>, String>
+  get profileProxies => $composableBuilder(
+    column: $table.profileProxies,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
   ColumnFilters<int> get order => $composableBuilder(
     column: $table.order,
     builder: (column) => ColumnFilters(column),
@@ -1880,6 +1998,16 @@ class $$ProfilesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get proxyChains => $composableBuilder(
+    column: $table.proxyChains,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get profileProxies => $composableBuilder(
+    column: $table.profileProxies,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get order => $composableBuilder(
     column: $table.order,
     builder: (column) => ColumnOrderings(column),
@@ -1947,6 +2075,18 @@ class $$ProfilesTableAnnotationComposer
 
   GeneratedColumnWithTypeConverter<Set<String>, String> get unfoldSet =>
       $composableBuilder(column: $table.unfoldSet, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<List<ProxyChain>, String> get proxyChains =>
+      $composableBuilder(
+        column: $table.proxyChains,
+        builder: (column) => column,
+      );
+
+  GeneratedColumnWithTypeConverter<List<ProfileProxy>, String>
+  get profileProxies => $composableBuilder(
+    column: $table.profileProxies,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get order =>
       $composableBuilder(column: $table.order, builder: (column) => column);
@@ -2018,6 +2158,8 @@ class $$ProfilesTableTableManager
                 Value<bool> autoUpdate = const Value.absent(),
                 Value<Map<String, String>> selectedMap = const Value.absent(),
                 Value<Set<String>> unfoldSet = const Value.absent(),
+                Value<List<ProxyChain>> proxyChains = const Value.absent(),
+                Value<List<ProfileProxy>> profileProxies = const Value.absent(),
                 Value<int?> order = const Value.absent(),
               }) => ProfilesCompanion(
                 id: id,
@@ -2032,6 +2174,8 @@ class $$ProfilesTableTableManager
                 autoUpdate: autoUpdate,
                 selectedMap: selectedMap,
                 unfoldSet: unfoldSet,
+                proxyChains: proxyChains,
+                profileProxies: profileProxies,
                 order: order,
               ),
           createCompanionCallback:
@@ -2049,6 +2193,8 @@ class $$ProfilesTableTableManager
                 required bool autoUpdate,
                 required Map<String, String> selectedMap,
                 required Set<String> unfoldSet,
+                Value<List<ProxyChain>> proxyChains = const Value.absent(),
+                Value<List<ProfileProxy>> profileProxies = const Value.absent(),
                 Value<int?> order = const Value.absent(),
               }) => ProfilesCompanion.insert(
                 id: id,
@@ -2063,6 +2209,8 @@ class $$ProfilesTableTableManager
                 autoUpdate: autoUpdate,
                 selectedMap: selectedMap,
                 unfoldSet: unfoldSet,
+                proxyChains: proxyChains,
+                profileProxies: profileProxies,
                 order: order,
               ),
           withReferenceMapper: (p0) => p0

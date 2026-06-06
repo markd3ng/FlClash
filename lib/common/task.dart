@@ -91,6 +91,8 @@ Future<Map<String, dynamic>> _makeRealProfileTask(
   final profileId = data.profileId;
   final overrideDns = data.overrideDns;
   final addedRules = data.addedRules;
+  final proxyChains = data.proxyChains;
+  final profileProxies = data.profileProxies;
   final appendSystemDns = data.appendSystemDns;
   final defaultUA = data.defaultUA;
   String getProvidersFilePathInner(String type, String url) {
@@ -178,6 +180,8 @@ Future<Map<String, dynamic>> _makeRealProfileTask(
     }
   }
   rawConfig['profile']['store-selected'] = false;
+  _applyProfileProxies(rawConfig, profileProxies);
+  _applyProxyChains(rawConfig, proxyChains);
   rawConfig['geox-url'] = realPatchConfig.geoXUrl.toJson();
   rawConfig['global-ua'] = realPatchConfig.globalUa ?? defaultUA;
   if (rawConfig['hosts'] == null) {
@@ -260,6 +264,73 @@ Future<Map<String, dynamic>> _makeRealProfileTask(
   }
   rawConfig['rules'] = rules;
   return Map<String, dynamic>.from(rawConfig);
+}
+
+void _applyProfileProxies(Map rawConfig, List<ProfileProxy> profileProxies) {
+  final customProxies = profileProxies
+      .where((profileProxy) => profileProxy.isValid)
+      .map((profileProxy) => profileProxy.normalizedProxy)
+      .toList();
+  if (customProxies.isEmpty) {
+    return;
+  }
+  final customNames = customProxies
+      .map((proxy) => proxy['name'])
+      .whereType<String>()
+      .toSet();
+  final proxies = rawConfig['proxies'];
+  final nextProxies = <Map>[];
+  if (proxies is List) {
+    for (final proxy in proxies.whereType<Map>()) {
+      final name = proxy['name'];
+      if (name is String && customNames.contains(name)) {
+        continue;
+      }
+      nextProxies.add(proxy);
+    }
+  }
+  rawConfig['proxies'] = [...customProxies, ...nextProxies];
+}
+
+void _applyProxyChains(Map rawConfig, List<ProxyChain> proxyChains) {
+  if (proxyChains.isEmpty) {
+    return;
+  }
+  final proxies = rawConfig['proxies'];
+  final proxyMap = <String, Map>{};
+  if (proxies is List) {
+    for (final proxy in proxies.whereType<Map>()) {
+      final name = proxy['name'];
+      if (name is String && name.isNotEmpty) {
+        proxyMap[name] = proxy;
+      }
+    }
+  }
+  final providerMap = rawConfig['proxy-providers'];
+  final providerNames = providerMap is Map
+      ? providerMap.keys.whereType<String>().toSet()
+      : <String>{};
+  final knownProxyNames = {...proxyMap.keys, ...providerNames};
+  for (final chain in proxyChains.where((chain) => chain.isValid)) {
+    final chainProxies = chain.normalizedProxies;
+    for (var i = 0; i < chainProxies.length - 1; i++) {
+      final proxyName = chainProxies[i];
+      final dialerProxy = chainProxies[i + 1];
+      if (!knownProxyNames.contains(proxyName) ||
+          !knownProxyNames.contains(dialerProxy)) {
+        continue;
+      }
+      final proxy = proxyMap[proxyName];
+      if (proxy != null) {
+        proxy['dialer-proxy'] = dialerProxy;
+        continue;
+      }
+      final provider = providerMap is Map ? providerMap[proxyName] : null;
+      if (provider is Map) {
+        provider['dialer-proxy'] = dialerProxy;
+      }
+    }
+  }
 }
 
 Future<List<String>> shakingProfileTask(

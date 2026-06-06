@@ -212,6 +212,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "checking": MessageLookupByLibrary.simpleMessage("Проверка..."),
     "clearData": MessageLookupByLibrary.simpleMessage("Очистить данные"),
+    "clearProxyChain": MessageLookupByLibrary.simpleMessage(
+      "Удалить настройку цепочки",
+    ),
     "clipboardExport": MessageLookupByLibrary.simpleMessage(
       "Экспорт в буфер обмена",
     ),
@@ -734,6 +737,33 @@ class MessageLookup extends MessageLookupByLibrary {
     "providers": MessageLookupByLibrary.simpleMessage("Провайдеры"),
     "proxies": MessageLookupByLibrary.simpleMessage("Прокси"),
     "proxiesSetting": MessageLookupByLibrary.simpleMessage("Настройка прокси"),
+    "proxyChainConfig": MessageLookupByLibrary.simpleMessage(
+      "Настройка цепочки прокси",
+    ),
+    "proxyChainCustomNodes": MessageLookupByLibrary.simpleMessage(
+      "Пользовательские узлы",
+    ),
+    "proxyChainEntry": MessageLookupByLibrary.simpleMessage("Вход"),
+    "proxyChainExit": MessageLookupByLibrary.simpleMessage("Выход"),
+    "proxyChainInstruction": MessageLookupByLibrary.simpleMessage(
+      "Нажимайте на кандидаты или вводите узлы по порядку, чтобы добавить их в цепочку",
+    ),
+    "proxyChainMinimumNodes": MessageLookupByLibrary.simpleMessage(
+      "Для цепочки прокси нужно минимум 2 узла",
+    ),
+    "proxyChainMinimumNodesHint": MessageLookupByLibrary.simpleMessage(
+      "Для цепочки прокси нужно минимум 2 узла. Добавьте еще один узел.",
+    ),
+    "proxyChainOtherNodes": MessageLookupByLibrary.simpleMessage("Другие узлы"),
+    "proxyChainProviderNodes": MessageLookupByLibrary.simpleMessage(
+      "Узлы провайдеров",
+    ),
+    "proxyChainSavedAndApplied": MessageLookupByLibrary.simpleMessage(
+      "Цепочка прокси сохранена и применена",
+    ),
+    "proxyChainWarning": MessageLookupByLibrary.simpleMessage(
+      "Цепочка прокси может заметно снизить скорость сети. Оставьте ее выключенной, если она явно не нужна.",
+    ),
     "proxyChains": MessageLookupByLibrary.simpleMessage("Цепочки прокси"),
     "proxyGroup": MessageLookupByLibrary.simpleMessage("Группа прокси"),
     "proxyNameserver": MessageLookupByLibrary.simpleMessage(

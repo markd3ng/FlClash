@@ -683,6 +683,8 @@ Future<SetupState> setupState(Ref ref, int? profileId) async {
   final scriptId = profile?.scriptId;
   final profileLastUpdateDate = profile?.lastUpdateDate?.millisecondsSinceEpoch;
   final overwriteType = profile?.overwriteType ?? OverwriteType.standard;
+  final proxyChains = profile?.proxyChains ?? [];
+  final profileProxies = profile?.profileProxies ?? [];
   final dns = ref.watch(patchClashConfigProvider.select((state) => state.dns));
   final script = await ref.watch(scriptProvider(scriptId).future);
   final overrideDns = ref.watch(overrideDnsProvider);
@@ -694,6 +696,8 @@ Future<SetupState> setupState(Ref ref, int? profileId) async {
     profileLastUpdateDate: profileLastUpdateDate,
     overwriteType: overwriteType,
     addedRules: addedRules,
+    proxyChains: proxyChains,
+    profileProxies: profileProxies,
     script: script,
     overrideDns: overrideDns,
     dns: dns,

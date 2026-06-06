@@ -211,6 +211,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "checking": MessageLookupByLibrary.simpleMessage("Checking..."),
     "clearData": MessageLookupByLibrary.simpleMessage("Clear Data"),
+    "clearProxyChain": MessageLookupByLibrary.simpleMessage(
+      "Clear chain config",
+    ),
     "clipboardExport": MessageLookupByLibrary.simpleMessage("Export clipboard"),
     "clipboardImport": MessageLookupByLibrary.simpleMessage("Clipboard import"),
     "color": MessageLookupByLibrary.simpleMessage("Color"),
@@ -695,6 +698,33 @@ class MessageLookup extends MessageLookupByLibrary {
     "providers": MessageLookupByLibrary.simpleMessage("Providers"),
     "proxies": MessageLookupByLibrary.simpleMessage("Proxies"),
     "proxiesSetting": MessageLookupByLibrary.simpleMessage("Proxies setting"),
+    "proxyChainConfig": MessageLookupByLibrary.simpleMessage(
+      "Proxy chain config",
+    ),
+    "proxyChainCustomNodes": MessageLookupByLibrary.simpleMessage(
+      "Custom nodes",
+    ),
+    "proxyChainEntry": MessageLookupByLibrary.simpleMessage("Entry"),
+    "proxyChainExit": MessageLookupByLibrary.simpleMessage("Exit"),
+    "proxyChainInstruction": MessageLookupByLibrary.simpleMessage(
+      "Click candidates or input nodes in order to add them to the proxy chain",
+    ),
+    "proxyChainMinimumNodes": MessageLookupByLibrary.simpleMessage(
+      "Proxy chains require at least 2 nodes",
+    ),
+    "proxyChainMinimumNodesHint": MessageLookupByLibrary.simpleMessage(
+      "Proxy chains require at least 2 nodes. Add one more node.",
+    ),
+    "proxyChainOtherNodes": MessageLookupByLibrary.simpleMessage("Other nodes"),
+    "proxyChainProviderNodes": MessageLookupByLibrary.simpleMessage(
+      "Provider nodes",
+    ),
+    "proxyChainSavedAndApplied": MessageLookupByLibrary.simpleMessage(
+      "Proxy chain saved and applied",
+    ),
+    "proxyChainWarning": MessageLookupByLibrary.simpleMessage(
+      "Proxy chaining can significantly reduce network speed. Keep it disabled unless you clearly need it.",
+    ),
     "proxyChains": MessageLookupByLibrary.simpleMessage("Proxy chains"),
     "proxyGroup": MessageLookupByLibrary.simpleMessage("Proxy group"),
     "proxyNameserver": MessageLookupByLibrary.simpleMessage("Proxy nameserver"),

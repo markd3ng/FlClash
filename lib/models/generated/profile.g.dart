@@ -22,6 +22,39 @@ Map<String, dynamic> _$SubscriptionInfoToJson(_SubscriptionInfo instance) =>
       'expire': instance.expire,
     };
 
+_ProxyChain _$ProxyChainFromJson(Map<String, dynamic> json) => _ProxyChain(
+  id: (json['id'] as num).toInt(),
+  enable: json['enable'] as bool? ?? true,
+  name: json['name'] as String? ?? '',
+  proxies:
+      (json['proxies'] as List<dynamic>?)?.map((e) => e as String).toList() ??
+      const [],
+);
+
+Map<String, dynamic> _$ProxyChainToJson(_ProxyChain instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'enable': instance.enable,
+      'name': instance.name,
+      'proxies': instance.proxies,
+    };
+
+_ProfileProxy _$ProfileProxyFromJson(Map<String, dynamic> json) =>
+    _ProfileProxy(
+      id: (json['id'] as num).toInt(),
+      enable: json['enable'] as bool? ?? true,
+      uri: json['uri'] as String? ?? '',
+      proxy: json['proxy'] as Map<String, dynamic>? ?? const {},
+    );
+
+Map<String, dynamic> _$ProfileProxyToJson(_ProfileProxy instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'enable': instance.enable,
+      'uri': instance.uri,
+      'proxy': instance.proxy,
+    };
+
 _Profile _$ProfileFromJson(Map<String, dynamic> json) => _Profile(
   id: (json['id'] as num).toInt(),
   label: json['label'] as String? ?? '',
@@ -50,6 +83,16 @@ _Profile _$ProfileFromJson(Map<String, dynamic> json) => _Profile(
   overwriteType:
       $enumDecodeNullable(_$OverwriteTypeEnumMap, json['overwriteType']) ??
       OverwriteType.standard,
+  proxyChains:
+      (json['proxyChains'] as List<dynamic>?)
+          ?.map((e) => ProxyChain.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const [],
+  profileProxies:
+      (json['profileProxies'] as List<dynamic>?)
+          ?.map((e) => ProfileProxy.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const [],
   scriptId: (json['scriptId'] as num?)?.toInt(),
   order: (json['order'] as num?)?.toInt(),
 );
@@ -66,6 +109,8 @@ Map<String, dynamic> _$ProfileToJson(_Profile instance) => <String, dynamic>{
   'selectedMap': instance.selectedMap,
   'unfoldSet': instance.unfoldSet.toList(),
   'overwriteType': _$OverwriteTypeEnumMap[instance.overwriteType]!,
+  'proxyChains': instance.proxyChains,
+  'profileProxies': instance.profileProxies,
   'scriptId': instance.scriptId,
   'order': instance.order,
 };

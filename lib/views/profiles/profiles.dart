@@ -5,6 +5,7 @@ import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/pages/editor.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
+import 'package:fl_clash/features/overwrite/proxy_chain.dart';
 import 'package:fl_clash/views/profiles/overwrite.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/material.dart';
@@ -267,6 +268,10 @@ class ProfileItem extends StatelessWidget {
     BaseNavigator.push(context, OverwriteView(profileId: id));
   }
 
+  void _handlePushProxyChainsPage(BuildContext context, int id) {
+    BaseNavigator.push(context, ProfileProxyChainsView(profileId: id));
+  }
+
   @override
   Widget build(BuildContext context) {
     return CommonCard(
@@ -321,6 +326,13 @@ class ProfileItem extends StatelessWidget {
                                 },
                               ),
                             ],
+                            PopupMenuItemData(
+                              icon: Icons.account_tree_outlined,
+                              label: appLocalizations.proxyChains,
+                              onPressed: () {
+                                _handlePushProxyChainsPage(context, profile.id);
+                              },
+                            ),
                             if (profile.isoixCloudProfile)
                               PopupMenuItemData(
                                 icon: Icons.extension_outlined,

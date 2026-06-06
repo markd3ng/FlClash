@@ -346,6 +346,8 @@ abstract class MakeRealProfileState with _$MakeRealProfileState {
     required bool overrideDns,
     required bool appendSystemDns,
     required List<Rule> addedRules,
+    required List<ProxyChain> proxyChains,
+    required List<ProfileProxy> profileProxies,
     required String defaultUA,
   }) = _MakeRealProfileState;
 }
@@ -368,6 +370,8 @@ abstract class SetupState with _$SetupState {
     required int? profileLastUpdateDate,
     required OverwriteType overwriteType,
     required List<Rule> addedRules,
+    required List<ProxyChain> proxyChains,
+    required List<ProfileProxy> profileProxies,
     required Script? script,
     required bool overrideDns,
     required Dns dns,
@@ -385,12 +389,21 @@ extension SetupStateExt on SetupState {
     if (profileLastUpdateDate != lastSetupState.profileLastUpdateDate) {
       return true;
     }
+    if (!proxyChainListEquality.equals(
+      proxyChains,
+      lastSetupState.proxyChains,
+    )) {
+      return true;
+    }
+    if (!profileProxyListEquality.equals(
+      profileProxies,
+      lastSetupState.profileProxies,
+    )) {
+      return true;
+    }
     final scriptIsChange = script != lastSetupState.script;
     if (overwriteType != lastSetupState.overwriteType) {
-      if (!ruleListEquality.equals(addedRules, lastSetupState.addedRules) ||
-          scriptIsChange) {
-        return true;
-      }
+      return true;
     } else {
       if (overwriteType == OverwriteType.script) {
         if (scriptIsChange) {

@@ -120,6 +120,183 @@ abstract class SubscriptionInfo with _$SubscriptionInfo {
 }
 
 @freezed
+abstract class ProxyChain with _$ProxyChain {
+  const factory ProxyChain({
+    required int id,
+    @Default(true) bool enable,
+    @Default('') String name,
+    @Default([]) List<String> proxies,
+  }) = _ProxyChain;
+
+  factory ProxyChain.create({
+    String name = '',
+    List<String> proxies = const [],
+  }) {
+    return ProxyChain(id: snowflake.id, name: name, proxies: proxies);
+  }
+
+  factory ProxyChain.fromJson(Map<String, Object?> json) =>
+      _$ProxyChainFromJson(json);
+}
+
+@freezed
+abstract class ProfileProxy with _$ProfileProxy {
+  const factory ProfileProxy({
+    required int id,
+    @Default(true) bool enable,
+    @Default('') String uri,
+    @Default({}) Map<String, Object?> proxy,
+  }) = _ProfileProxy;
+
+  factory ProfileProxy.create({
+    required String uri,
+    required Map<String, Object?> proxy,
+  }) {
+    return ProfileProxy(id: snowflake.id, uri: uri, proxy: proxy);
+  }
+
+  factory ProfileProxy.fromJson(Map<String, Object?> json) =>
+      _$ProfileProxyFromJson(json);
+}
+
+List<String> normalizeProxyChainProxies(Iterable<String> proxies) {
+  return proxies
+      .map((proxy) => proxy.trim())
+      .where((proxy) => proxy.isNotEmpty)
+      .toList();
+}
+
+Map<String, Object?> normalizeProfileProxyMap(Map<String, Object?> proxy) {
+  final nextProxy = <String, Object?>{};
+  for (final entry in proxy.entries) {
+    final key = entry.key.trim();
+    if (key.isEmpty) {
+      continue;
+    }
+    final value = _normalizeProfileProxyValue(entry.value);
+    if (value != null) {
+      nextProxy[key] = value;
+    }
+  }
+  return nextProxy;
+}
+
+Object? _normalizeProfileProxyValue(Object? value) {
+  if (value == null) {
+    return null;
+  }
+  if (value is String) {
+    final nextValue = value.trim();
+    return nextValue.isEmpty ? null : nextValue;
+  }
+  if (value is Map) {
+    final nextMap = <String, Object?>{};
+    for (final entry in value.entries) {
+      final key = entry.key?.toString().trim() ?? '';
+      if (key.isEmpty) {
+        continue;
+      }
+      final nextValue = _normalizeProfileProxyValue(entry.value);
+      if (nextValue != null) {
+        nextMap[key] = nextValue;
+      }
+    }
+    return nextMap.isEmpty ? null : nextMap;
+  }
+  if (value is Iterable) {
+    final nextList = value
+        .map(_normalizeProfileProxyValue)
+        .whereType<Object>()
+        .toList();
+    return nextList.isEmpty ? null : nextList;
+  }
+  return value;
+}
+
+extension ProfileProxyExt on ProfileProxy {
+  String get name {
+    final proxyMap = this.proxy;
+    final name = proxyMap['name'];
+    return name is String ? name.trim() : '';
+  }
+
+  String get type {
+    final proxyMap = this.proxy;
+    final type = proxyMap['type'];
+    return type is String ? type.trim() : '';
+  }
+
+  bool get isValid => enable && name.isNotEmpty && type.isNotEmpty;
+
+  Map<String, Object?> get normalizedProxy {
+    final nextProxy = Map<String, Object?>.from(this.proxy);
+    nextProxy['name'] = name;
+    nextProxy['type'] = type;
+    return normalizeProfileProxyMap(nextProxy);
+  }
+}
+
+extension ProfileProxiesExt on List<ProfileProxy> {
+  List<ProfileProxy> copyAndPut(ProfileProxy profileProxy) {
+    final nextList = List<ProfileProxy>.from(this);
+    final index = nextList.indexWhere((item) => item.id == profileProxy.id);
+    if (index == -1) {
+      nextList.insert(0, profileProxy);
+    } else {
+      nextList[index] = profileProxy;
+    }
+    return nextList;
+  }
+}
+
+extension ProxyChainExt on ProxyChain {
+  List<String> get normalizedProxies => normalizeProxyChainProxies(proxies);
+
+  bool get hasDuplicateProxy {
+    final proxies = normalizedProxies;
+    return proxies.toSet().length != proxies.length;
+  }
+
+  bool get isValid =>
+      enable && normalizedProxies.length >= 2 && !hasDuplicateProxy;
+
+  String get label {
+    if (name.trim().isNotEmpty) {
+      return name.trim();
+    }
+    final proxies = normalizedProxies;
+    if (proxies.isNotEmpty) {
+      return proxies.join(' -> ');
+    }
+    return id.toString();
+  }
+}
+
+extension ProxyChainsExt on List<ProxyChain> {
+  List<ProxyChain> copyAndPut(ProxyChain proxyChain) {
+    final nextList = List<ProxyChain>.from(this);
+    final index = nextList.indexWhere((item) => item.id == proxyChain.id);
+    if (index == -1) {
+      nextList.insert(0, proxyChain);
+    } else {
+      nextList[index] = proxyChain;
+    }
+    return nextList;
+  }
+
+  List<ProxyChain> copyAndReorder(int oldIndex, int newIndex) {
+    var insertIndex = newIndex;
+    if (oldIndex < insertIndex) {
+      insertIndex -= 1;
+    }
+    final nextList = List<ProxyChain>.from(this);
+    final proxyChain = nextList.removeAt(oldIndex);
+    nextList.insert(insertIndex, proxyChain);
+    return nextList;
+  }
+}
+
+@freezed
 abstract class Profile with _$Profile {
   const factory Profile({
     required int id,
@@ -133,6 +310,8 @@ abstract class Profile with _$Profile {
     @Default({}) Map<String, String> selectedMap,
     @Default({}) Set<String> unfoldSet,
     @Default(OverwriteType.standard) OverwriteType overwriteType,
+    @Default([]) List<ProxyChain> proxyChains,
+    @Default([]) List<ProfileProxy> profileProxies,
     int? scriptId,
     int? order,
   }) = _Profile;

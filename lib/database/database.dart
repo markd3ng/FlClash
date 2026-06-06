@@ -22,7 +22,19 @@ class Database extends _$Database {
   Database([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration {
+    return MigrationStrategy(
+      onUpgrade: (m, from, to) async {
+        if (from < 2) {
+          await m.addColumn(profiles, profiles.proxyChains);
+          await m.addColumn(profiles, profiles.profileProxies);
+        }
+      },
+    );
+  }
 
   static LazyDatabase _openConnection() {
     return LazyDatabase(() async {

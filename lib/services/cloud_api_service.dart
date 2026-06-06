@@ -13,7 +13,19 @@ const int _defaultReceiveTimeoutMs = 15000;
 const int _httpOk = 200;
 const int _httpServerError = 500;
 
-String _apiV1BaseUrl(String domain) => 'https://$domain/api/v1';
+String _apiRootUrl(String domain) {
+  final normalizedDomain = domain.trim();
+  if (normalizedDomain.isEmpty) {
+    throw ArgumentError.value(
+      domain,
+      'domain',
+      'API_DOMAIN or SPARE_API_DOMAIN must be configured',
+    );
+  }
+  return 'https://$normalizedDomain';
+}
+
+String _apiV1BaseUrl(String domain) => '${_apiRootUrl(domain)}/api/v1';
 
 // Allows accepting bad TLS certs in local dev. Off by default in debug too;
 // requires an explicit `--dart-define=ALLOW_INSECURE_TLS=true` to enable so
@@ -225,7 +237,7 @@ class CloudApiService {
   Future<void> checkServiceHealth() async {
     try {
       final res = await _dio.get(
-        'https://${Secrets.preferredApiDomain}/check',
+        '${_apiRootUrl(Secrets.preferredApiDomain)}/check',
         options: Options(extra: {'skipAuth': true}),
       );
       if (res.statusCode != _httpOk) {
@@ -573,9 +585,9 @@ class RetryInterceptor extends Interceptor {
   ) {
     final uri = requestOptions.uri.replace(host: domain);
     return requestOptions.copyWith(
-      baseUrl: '',
-      path: uri.toString(),
-      queryParameters: const {},
+      baseUrl: uri.origin,
+      path: uri.path,
+      queryParameters: Map<String, dynamic>.from(uri.queryParameters),
       data: _cloneRequestData(requestOptions.data),
       extra: extra,
     );
