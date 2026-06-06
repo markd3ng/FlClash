@@ -1208,11 +1208,22 @@ extension CoreControllerExt on AppController {
           break;
         case AuthorizeCode.error:
           enableTun = false;
+          _setPatchTunEnable(false);
           break;
       }
     }
     _ref.read(realTunEnableProvider.notifier).value = enableTun;
     return Result.success(enableTun);
+  }
+
+  void _setPatchTunEnable(bool enable) {
+    final patchConfig = _ref.read(patchClashConfigProvider);
+    if (patchConfig.tun.enable == enable) {
+      return;
+    }
+    _ref
+        .read(patchClashConfigProvider.notifier)
+        .update((state) => state.copyWith.tun(enable: enable));
   }
 
   Future<void> restartCore([bool start = false]) async {
