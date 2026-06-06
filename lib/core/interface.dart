@@ -84,6 +84,16 @@ abstract class CoreHandlerInterface with CoreInterface {
 
   FutureOr<bool> destroy();
 
+  String _describeInvokeData(dynamic data) {
+    return switch (data) {
+      null => 'null',
+      String value => 'String(${value.length})',
+      List value => 'List(${value.length})',
+      Map value => 'Map(${value.length})',
+      _ => data.runtimeType.toString(),
+    };
+  }
+
   Future<T?> _invoke<T>({
     required ActionMethod method,
     dynamic data,
@@ -99,7 +109,9 @@ abstract class CoreHandlerInterface with CoreInterface {
       return null;
     }
     if (kDebugMode && watchExecution) {
-      commonPrint.log('Invoke ${method.name} ${DateTime.now()} $data');
+      commonPrint.log(
+        'Invoke ${method.name} ${DateTime.now()} ${_describeInvokeData(data)}',
+      );
     }
 
     return await utils.handleWatch(

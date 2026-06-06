@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:fl_clash/common/common.dart';
@@ -9,7 +10,6 @@ import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/state.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 
 class Request {
   late final Dio dio;
@@ -22,14 +22,12 @@ class Request {
     _apiDirectDio = Dio(BaseOptions(headers: {'User-Agent': browserUa}));
     _apiDirectDio.httpClientAdapter = createFlClashHttpClientAdapter(
       findProxy: (_) => 'DIRECT',
-      allowBadCertificate: () =>
-          FlClashTemporaryTls.allowBadCertificate || kDebugMode,
+      allowBadCertificate: () => FlClashTemporaryTls.allowBadCertificate,
     );
     _clashDio = Dio();
     _clashDio.httpClientAdapter = createFlClashHttpClientAdapter(
       findProxy: FlClashHttpOverrides.handleFindProxy,
-      allowBadCertificate: () =>
-          FlClashTemporaryTls.allowBadCertificate || kDebugMode,
+      allowBadCertificate: () => FlClashTemporaryTls.allowBadCertificate,
       userAgent: () => appController.ua,
     );
   }

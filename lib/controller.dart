@@ -21,9 +21,14 @@ import 'database/database.dart';
 import 'models/models.dart';
 import 'providers/database.dart';
 
+const _persistentLogFileName = 'app.log';
+const _persistentLogMaxBytes = 1024 * 1024;
+const _persistentLogKeepBytes = 768 * 1024;
+
 class AppController {
   late final BuildContext _context;
   late final WidgetRef _ref;
+  Future<void> _logFileWrite = Future.value();
   bool isAttach = false;
   bool _isUpdateDownloading = false;
   bool _isCloudLoginDialogShowing = false;
@@ -52,6 +57,13 @@ extension InitControllerExt on AppController {
         'exception: ${details.exception} stack: ${details.stack}',
         logLevel: LogLevel.warning,
       );
+    };
+    WidgetsBinding.instance.platformDispatcher.onError = (error, stack) {
+      commonPrint.log(
+        'platform exception: $error stack: $stack',
+        logLevel: LogLevel.error,
+      );
+      return false;
     };
     updateTray();
     autoCheckUpdate();
@@ -465,18 +477,34 @@ extension ProfilesControllerExt on AppController {
   }) async {
     try {
       return await action();
-    } catch (error) {
-      if (handleCloudUnauthorized && CloudApiException.isUnauthorized(error)) {
-        await _ref.read(cloudAccountProvider.notifier).handleUnauthorized();
-        throw const CloudApiUnauthorizedHandledException();
-      }
+    } catch (error, stackTrace) {
+      await _throwHandledCloudUnauthorized(error, handleCloudUnauthorized);
       final cloudApiService = CloudApiService();
       final shouldRetry = await cloudApiService.confirmInsecureTlsRetry(error);
       if (!shouldRetry) {
-        rethrow;
+        Error.throwWithStackTrace(error, stackTrace);
       }
-      return cloudApiService.runWithInsecureTls(action);
+      try {
+        return await cloudApiService.runWithInsecureTls(action);
+      } catch (retryError, retryStackTrace) {
+        await _throwHandledCloudUnauthorized(
+          retryError,
+          handleCloudUnauthorized,
+        );
+        Error.throwWithStackTrace(retryError, retryStackTrace);
+      }
     }
+  }
+
+  Future<void> _throwHandledCloudUnauthorized(
+    Object error,
+    bool handleCloudUnauthorized,
+  ) async {
+    if (!handleCloudUnauthorized || !CloudApiException.isUnauthorized(error)) {
+      return;
+    }
+    await _ref.read(cloudAccountProvider.notifier).handleUnauthorized();
+    throw const CloudApiUnauthorizedHandledException();
   }
 
   Future<void> requestStartCore() async {
@@ -578,8 +606,11 @@ extension ProfilesControllerExt on AppController {
 }
 
 extension LogsControllerExt on AppController {
-  void addLog(Log log) {
+  void addLog(Log log, {bool persist = true}) {
     _ref.read(logsProvider).add(log);
+    if (persist) {
+      writePersistentLog(log);
+    }
   }
 
   Future<bool> exportLogs() async {
@@ -590,6 +621,42 @@ extension LogsControllerExt on AppController {
     bool res = false;
     res = await picker.saveFileWithPath(utils.logFile, tempFilePath) != null;
     return res;
+  }
+
+  void writePersistentLog(Log log) {
+    _logFileWrite = _logFileWrite
+        .then((_) => _appendPersistentLog(log))
+        .catchError((_) {});
+  }
+
+  Future<void> _appendPersistentLog(Log log) async {
+    final homeDirPath = await appPath.homeDirPath;
+    final logsDir = Directory(p.join(homeDirPath, 'logs'));
+    await logsDir.create(recursive: true);
+    final file = File(p.join(logsDir.path, _persistentLogFileName));
+    await _rotatePersistentLog(file);
+    await file.writeAsString(
+      '${log.dateTime} [${log.logLevel.name.toUpperCase()}] ${log.payload}\n',
+      mode: FileMode.append,
+    );
+  }
+
+  Future<void> _rotatePersistentLog(File file) async {
+    if (!await file.exists()) {
+      return;
+    }
+    final length = await file.length();
+    if (length <= _persistentLogMaxBytes) {
+      return;
+    }
+    final bytes = await file.readAsBytes();
+    final keepStart = bytes.length > _persistentLogKeepBytes
+        ? bytes.length - _persistentLogKeepBytes
+        : 0;
+    final lineStart = bytes.indexOf(10, keepStart);
+    await file.writeAsBytes(
+      bytes.sublist(lineStart == -1 ? keepStart : lineStart + 1),
+    );
   }
 }
 
@@ -1547,10 +1614,10 @@ extension CommonControllerExt on AppController {
       final res = await futureFunction();
       return res;
     } catch (e, s) {
-      commonPrint.log('$title ===> $e, $s', logLevel: LogLevel.warning);
       if (CloudApiException.isHandledUnauthorized(e)) {
         return null;
       }
+      commonPrint.log('$title ===> $e, $s', logLevel: LogLevel.warning);
       if (silence) {
         globalState.showNotifier(e.toString());
       } else {

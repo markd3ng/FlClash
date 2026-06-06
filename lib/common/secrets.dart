@@ -24,13 +24,10 @@ class Secrets {
 
   static String get spareSiteDomain => spareDomain.trim();
 
-  static String get primaryApiDomain => apiDomain.trim();
+  static String get primaryApiDomain => _requireDomain(apiDomain, 'API_DOMAIN');
 
-  static String get fallbackApiDomain => spareApiDomain.trim();
-
-  static String get preferredApiDomain {
-    return primaryApiDomain.isNotEmpty ? primaryApiDomain : fallbackApiDomain;
-  }
+  static String get fallbackApiDomain =>
+      _requireDomain(spareApiDomain, 'SPARE_API_DOMAIN');
 
   static List<String> get apiDomains {
     final domains = <String>[];
@@ -49,6 +46,14 @@ class Secrets {
 
   static String? resolveHostOverride(String host) {
     return hostOverrideMap[host.trim().toLowerCase()];
+  }
+
+  static String _requireDomain(String value, String name) {
+    final domain = value.trim();
+    if (domain.isEmpty) {
+      throw StateError('$name must be configured');
+    }
+    return domain;
   }
 
   static Map<String, String> _parseHostOverrides(String value) {

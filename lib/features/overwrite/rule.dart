@@ -30,6 +30,7 @@ class RuleItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return CommonSelectedListItem(
       isSelected: isSelected,
+      isEditing: isEditing,
       onSelected: () {
         onSelected();
       },

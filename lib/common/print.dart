@@ -15,11 +15,13 @@ class CommonPrint {
 
   void log(String? text, {LogLevel logLevel = LogLevel.info}) {
     final payload = '[APP] $text';
+    final log = Log.app(payload).copyWith(logLevel: logLevel);
     debugPrint(payload);
+    appController.writePersistentLog(log);
     if (!appController.isAttach) {
       return;
     }
-    appController.addLog(Log.app(payload).copyWith(logLevel: logLevel));
+    appController.addLog(log, persist: false);
   }
 }
 

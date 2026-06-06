@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:dio/io.dart';
-import 'package:flutter/foundation.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/controller.dart';
 
@@ -119,7 +118,7 @@ class FlClashHttpOverrides extends HttpOverrides {
   HttpClient createHttpClient(SecurityContext? context) {
     final client = super.createHttpClient(context);
     bool allowBadCertificateCallback() =>
-        FlClashTemporaryTls.allowBadCertificate || kDebugMode;
+        FlClashTemporaryTls.allowBadCertificate;
     client.badCertificateCallback = (_, _, _) => allowBadCertificateCallback();
     client.connectionFactory = (uri, proxyHost, proxyPort) {
       return FlClashHostOverrides.connect(

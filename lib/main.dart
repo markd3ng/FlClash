@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/pages/error.dart';
 import 'package:fl_clash/providers/cloud_account_provider.dart';
 import 'package:fl_clash/services/cloud_api_service.dart';
@@ -29,6 +30,7 @@ Future<void> main() async {
       ),
     );
   } catch (e, s) {
+    commonPrint.log('init failed: $e stack: $s', logLevel: LogLevel.error);
     return runApp(
       MaterialApp(
         home: InitErrorScreen(error: e, stack: s),

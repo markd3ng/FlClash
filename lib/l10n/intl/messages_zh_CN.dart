@@ -46,13 +46,17 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m12(label) => "${label} 必须在 1024 到 49151 之间";
 
-  static String m13(value) => "剩余: ${value}";
+  static String m13(name) => "节点 ${name} 已处于其他启用链路中，或存在链式代理关系冲突";
 
-  static String m14(count) => "已选择 ${count} 项";
+  static String m14(name) => "节点 ${name} 当前不可用于此位置";
 
-  static String m15(label) => "${label}必须为URL";
+  static String m15(value) => "剩余: ${value}";
 
-  static String m16(count) => "${count} 年前";
+  static String m16(count) => "已选择 ${count} 项";
+
+  static String m17(label) => "${label}必须为URL";
+
+  static String m18(count) => "${count} 年前";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -76,6 +80,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "action_view": MessageLookupByLibrary.simpleMessage("显示/隐藏"),
     "add": MessageLookupByLibrary.simpleMessage("添加"),
     "addProfile": MessageLookupByLibrary.simpleMessage("添加配置"),
+    "addProxyChainNode": MessageLookupByLibrary.simpleMessage("新增"),
     "addRule": MessageLookupByLibrary.simpleMessage("添加规则"),
     "addedOriginRules": MessageLookupByLibrary.simpleMessage("附加到原始规则"),
     "addedRules": MessageLookupByLibrary.simpleMessage("附加规则"),
@@ -233,7 +238,6 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "emptyTip": m4,
     "en": MessageLookupByLibrary.simpleMessage("英语"),
-    "enableOverride": MessageLookupByLibrary.simpleMessage("启用覆写"),
     "entries": MessageLookupByLibrary.simpleMessage("个条目"),
     "exclude": MessageLookupByLibrary.simpleMessage("从最近任务中隐藏"),
     "excludeDesc": MessageLookupByLibrary.simpleMessage("应用在后台时,从最近任务中隐藏应用"),
@@ -474,23 +478,34 @@ class MessageLookup extends MessageLookupByLibrary {
     "providers": MessageLookupByLibrary.simpleMessage("提供者"),
     "proxies": MessageLookupByLibrary.simpleMessage("代理"),
     "proxiesSetting": MessageLookupByLibrary.simpleMessage("代理设置"),
-    "proxyChainConfig": MessageLookupByLibrary.simpleMessage("代理链配置"),
+    "proxyChainAvailableNodes": MessageLookupByLibrary.simpleMessage("可用节点"),
+    "proxyChainConflictTip": m13,
+    "proxyChainCustomNode": MessageLookupByLibrary.simpleMessage("自定义节点"),
     "proxyChainCustomNodes": MessageLookupByLibrary.simpleMessage("自定义节点"),
+    "proxyChainEmpty": MessageLookupByLibrary.simpleMessage("暂无代理链节点"),
     "proxyChainEntry": MessageLookupByLibrary.simpleMessage("入口"),
     "proxyChainExit": MessageLookupByLibrary.simpleMessage("出口"),
     "proxyChainInstruction": MessageLookupByLibrary.simpleMessage(
-      "顺序点击节点或输入节点添加到代理链中",
+      "按顺序点击节点添加：第一个为入口，最后一个为出口；保存后选择出口节点使用",
     ),
     "proxyChainMinimumNodes": MessageLookupByLibrary.simpleMessage(
       "链式代理至少需要 2 个节点",
     ),
     "proxyChainMinimumNodesHint": MessageLookupByLibrary.simpleMessage(
-      "链式代理至少需要 2 个节点，请再添加一个节点。",
+      "链式代理至少需要 2 个节点，请再添加一个出口节点。",
     ),
+    "proxyChainNodeAdded": MessageLookupByLibrary.simpleMessage("节点已加入链式代理"),
     "proxyChainOtherNodes": MessageLookupByLibrary.simpleMessage("其他节点"),
-    "proxyChainProviderNodes": MessageLookupByLibrary.simpleMessage("提供者节点"),
+    "proxyChainRelatedChainsUpdated": MessageLookupByLibrary.simpleMessage(
+      "相关链式代理已更新",
+    ),
     "proxyChainSavedAndApplied": MessageLookupByLibrary.simpleMessage(
-      "链式代理已保存并应用",
+      "链式代理已保存并应用，请选择出口节点使用",
+    ),
+    "proxyChainSelectedNodes": MessageLookupByLibrary.simpleMessage("代理链"),
+    "proxyChainUnavailableNodeTip": m14,
+    "proxyChainUriNodeSupportedFormats": MessageLookupByLibrary.simpleMessage(
+      "支持格式：ss://、ssr://、vmess://、vless://、trojan://、anytls://、hysteria:// / hy://、hysteria2:// / hy2://、tuic://、wireguard:// / wg://、http(s)://、socks(5)://",
     ),
     "proxyChainWarning": MessageLookupByLibrary.simpleMessage(
       "链式代理会显著降低网速。如果您没有明确的业务需求，或不了解此项配置，请保持关闭",
@@ -513,7 +528,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "refreshSuccess": MessageLookupByLibrary.simpleMessage("刷新完成"),
     "regExp": MessageLookupByLibrary.simpleMessage("正则"),
     "reload": MessageLookupByLibrary.simpleMessage("重载"),
-    "remaining": m13,
+    "remaining": m15,
     "remindLater": MessageLookupByLibrary.simpleMessage("稍后提醒"),
     "remote": MessageLookupByLibrary.simpleMessage("远程"),
     "remoteBackupDesc": MessageLookupByLibrary.simpleMessage("备份数据到WebDAV"),
@@ -573,7 +588,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "seconds": MessageLookupByLibrary.simpleMessage("秒"),
     "selectAll": MessageLookupByLibrary.simpleMessage("全选"),
     "selected": MessageLookupByLibrary.simpleMessage("已选择"),
-    "selectedCountTitle": m14,
+    "selectedCountTitle": m16,
     "serviceCheckFailed": MessageLookupByLibrary.simpleMessage("服务检测失败"),
     "settings": MessageLookupByLibrary.simpleMessage("设置"),
     "show": MessageLookupByLibrary.simpleMessage("显示"),
@@ -670,7 +685,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "upload": MessageLookupByLibrary.simpleMessage("上传"),
     "url": MessageLookupByLibrary.simpleMessage("URL"),
     "urlDesc": MessageLookupByLibrary.simpleMessage("通过URL获取配置文件"),
-    "urlTip": m15,
+    "urlTip": m17,
     "useHosts": MessageLookupByLibrary.simpleMessage("使用Hosts"),
     "useSystemHosts": MessageLookupByLibrary.simpleMessage("使用系统Hosts"),
     "userCenter": MessageLookupByLibrary.simpleMessage("用户中心"),
@@ -692,7 +707,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "webDAVConfiguration": MessageLookupByLibrary.simpleMessage("WebDAV配置"),
     "whitelistMode": MessageLookupByLibrary.simpleMessage("白名单模式"),
     "years": MessageLookupByLibrary.simpleMessage("年"),
-    "yearsAgo": m16,
+    "yearsAgo": m18,
     "zh_CN": MessageLookupByLibrary.simpleMessage("中文简体"),
   };
 }

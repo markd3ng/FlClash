@@ -1,11 +1,12 @@
 import 'dart:convert';
 import 'dart:math';
+import 'dart:typed_data';
+
 import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/state.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
 
 // -- Constants --
@@ -20,7 +21,7 @@ String _apiRootUrl(String domain) {
     throw ArgumentError.value(
       domain,
       'domain',
-      'API_DOMAIN or SPARE_API_DOMAIN must be configured',
+      'API domain must be configured',
     );
   }
   return 'https://$normalizedDomain';
@@ -28,20 +29,10 @@ String _apiRootUrl(String domain) {
 
 String _apiV1BaseUrl(String domain) => '${_apiRootUrl(domain)}/api/v1';
 
-// Allows accepting bad TLS certs in local dev. Off by default in debug too;
-// requires an explicit `--dart-define=ALLOW_INSECURE_TLS=true` to enable so
-// a leaked debug build cannot silently MITM.
-const _allowInsecureTls = bool.fromEnvironment(
-  'ALLOW_INSECURE_TLS',
-  defaultValue: false,
-);
-
 HttpClientAdapter _createDirectApiAdapter() {
   return createFlClashHttpClientAdapter(
     findProxy: (_) => 'DIRECT',
-    allowBadCertificate: () =>
-        FlClashTemporaryTls.allowBadCertificate ||
-        (kDebugMode && _allowInsecureTls),
+    allowBadCertificate: () => FlClashTemporaryTls.allowBadCertificate,
   );
 }
 
@@ -103,11 +94,14 @@ class CloudApiException implements Exception {
   }
 
   static bool isCertificateVerifyFailed(Object error) {
-    return FlClashTemporaryTls.isCertificateVerifyFailed(clean(error));
+    return FlClashTemporaryTls.isCertificateVerifyFailed(error);
   }
 
   static String _cleanMessage(String value) {
     var message = value.trim();
+    if (FlClashTemporaryTls.isCertificateVerifyFailed(message)) {
+      return appLocalizations.invalidCertificateTitle;
+    }
     final prefixes = [
       RegExp(r'^_?Excep(?:t)?ion[:：]\s*', caseSensitive: false),
       RegExp(r'^CloudApiException[:：]\s*', caseSensitive: false),
@@ -142,7 +136,7 @@ class CloudApiUnauthorizedHandledException implements Exception {
 }
 
 class CloudApiService {
-  final Dio _dio;
+  Dio? _dio;
   String? _cachedToken;
 
   static final RegExp _bearerTokenPattern = RegExp(
@@ -150,28 +144,29 @@ class CloudApiService {
     caseSensitive: false,
   );
 
-  CloudApiService._()
-    : _dio = Dio(
-        BaseOptions(
-          baseUrl: _apiV1BaseUrl(Secrets.preferredApiDomain),
-          connectTimeout: const Duration(
-            milliseconds: _defaultConnectTimeoutMs,
-          ),
-          receiveTimeout: const Duration(
-            milliseconds: _defaultReceiveTimeoutMs,
-          ),
-          followRedirects: true,
-          validateStatus: (status) =>
-              status != null && status < _httpServerError,
-          headers: {
-            'User-Agent': 'FlClash for oixCloud',
-            'Accept': 'application/json',
-          },
-        ),
-      ) {
-    _dio.httpClientAdapter = _createDirectApiAdapter();
-    _dio.interceptors.addAll([
-      // Logging & Authorization Interceptor
+  CloudApiService._();
+
+  Dio get _client {
+    return _dio ??= _createDio();
+  }
+
+  Dio _createDio() {
+    final dio = Dio(
+      BaseOptions(
+        baseUrl: _apiV1BaseUrl(Secrets.primaryApiDomain),
+        connectTimeout: const Duration(milliseconds: _defaultConnectTimeoutMs),
+        receiveTimeout: const Duration(milliseconds: _defaultReceiveTimeoutMs),
+        followRedirects: true,
+        validateStatus: (status) => status != null && status < _httpServerError,
+        headers: {
+          'User-Agent': 'FlClash for oixCloud',
+          'Accept': 'application/json',
+        },
+      ),
+    );
+    dio.httpClientAdapter = _createDirectApiAdapter();
+    dio.interceptors.addAll([
+      // Authorization interceptor
       InterceptorsWrapper(
         onRequest: (options, handler) async {
           if (options.extra['skipAuth'] != true &&
@@ -181,21 +176,9 @@ class CloudApiService {
             options.headers['Authorization'] = 'Bearer $token';
           }
 
-          if (kDebugMode) {
-            debugPrint('--> [${options.method}] ${options.uri}');
-            if (options.data != null) {
-              debugPrint('Body: [**REDACTED FOR SECURITY**]');
-            }
-          }
-
           handler.next(options);
         },
         onResponse: (response, handler) {
-          if (kDebugMode) {
-            debugPrint(
-              '<-- [${response.statusCode}] ${response.requestOptions.uri}',
-            );
-          }
           if (response.statusCode == 401 ||
               (response.data is Map && response.data['ret'] == 401)) {
             _cachedToken = null;
@@ -206,15 +189,13 @@ class CloudApiService {
           if (e.response?.statusCode == 401) {
             _cachedToken = null;
           }
-          if (kDebugMode) {
-            debugPrint('<-- Error: ${e.message} at ${e.requestOptions.uri}');
-          }
           handler.next(e);
         },
       ),
       // Retry Interceptor
-      RetryInterceptor(dio: _dio),
+      RetryInterceptor(dio: dio),
     ]);
+    return dio;
   }
 
   static final CloudApiService _instance = CloudApiService._();
@@ -279,8 +260,8 @@ class CloudApiService {
 
   Future<void> checkServiceHealth() async {
     try {
-      final res = await _dio.get(
-        '${_apiRootUrl(Secrets.preferredApiDomain)}/check',
+      final res = await _client.get(
+        '${_apiRootUrl(Secrets.primaryApiDomain)}/check',
         options: Options(extra: {'skipAuth': true}),
       );
       if (res.statusCode != _httpOk) {
@@ -425,7 +406,7 @@ class CloudApiService {
   login(String email, String password) async {
     _validateInput(email, password);
 
-    final res = await _dio.post(
+    final res = await _client.post(
       '/login',
       data: FormData.fromMap({
         'email': email,
@@ -465,10 +446,15 @@ class CloudApiService {
       throw Exception('Missing access token');
     }
 
-    final res = await _dio.post('/information');
+    final res = await _client.post('/information');
     final responseDto = CloudApiResponse<Map<dynamic, dynamic>>.fromJson(
       res.data,
     );
+
+    if (res.statusCode == 401 || responseDto.ret == 401) {
+      setToken(null);
+      throw const CloudApiException('Unauthorized');
+    }
 
     if (!responseDto.isSuccess || responseDto.data == null) {
       throw Exception(responseDto.msg ?? 'Failed to parse user info');
@@ -516,19 +502,19 @@ class CloudApiService {
         headers['X-Flclash-Build'] = buildNumber;
       }
 
-      final res = await _dio.get<Map<String, dynamic>>(
+      final res = await _client.get<Map<String, dynamic>>(
         '/managed/flclash/direct',
         queryParameters: queryParameters,
         options: Options(headers: headers, responseType: ResponseType.json),
       );
 
-      if (res.statusCode != 200) {
-        throw CloudApiException('Config request failed (${res.statusCode})');
-      }
-
-      if (res.data?['ret'] == 401) {
+      if (res.statusCode == 401 || res.data?['ret'] == 401) {
         setToken(null);
         throw const CloudApiException('Unauthorized');
+      }
+
+      if (res.statusCode != 200) {
+        throw CloudApiException('Config request failed (${res.statusCode})');
       }
 
       final configB64 = res.data?['config'] as String?;
@@ -641,11 +627,9 @@ class RetryInterceptor extends Interceptor {
   }
 
   String? _spareApiDomainFor(RequestOptions requestOptions) {
-    final primaryDomain = Secrets.preferredApiDomain.toLowerCase();
+    final primaryDomain = Secrets.primaryApiDomain.toLowerCase();
     final spareDomain = Secrets.fallbackApiDomain.toLowerCase();
-    if (primaryDomain.isEmpty ||
-        spareDomain.isEmpty ||
-        primaryDomain == spareDomain) {
+    if (primaryDomain == spareDomain) {
       return null;
     }
     final requestHost = requestOptions.uri.host.toLowerCase();

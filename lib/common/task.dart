@@ -277,23 +277,59 @@ void _applyProfileProxies(Map rawConfig, List<ProfileProxy> profileProxies) {
   final customNames = customProxies
       .map((proxy) => proxy['name'])
       .whereType<String>()
-      .toSet();
+      .toList();
+  final customNameSet = customNames.toSet();
   final proxies = rawConfig['proxies'];
   final nextProxies = <Map>[];
   if (proxies is List) {
     for (final proxy in proxies.whereType<Map>()) {
       final name = proxy['name'];
-      if (name is String && customNames.contains(name)) {
+      if (name is String && customNameSet.contains(name)) {
         continue;
       }
       nextProxies.add(proxy);
     }
   }
   rawConfig['proxies'] = [...customProxies, ...nextProxies];
+  _appendProfileProxyNamesToSelectorGroups(rawConfig, customNames);
+}
+
+void _appendProfileProxyNamesToSelectorGroups(
+  Map rawConfig,
+  List<String> customNames,
+) {
+  if (customNames.isEmpty) {
+    return;
+  }
+  final proxyGroups = rawConfig['proxy-groups'];
+  if (proxyGroups is! List) {
+    return;
+  }
+  for (var i = 0; i < proxyGroups.length; i++) {
+    final group = proxyGroups[i];
+    if (group is! Map) {
+      continue;
+    }
+    if (group['type'] != 'select') {
+      continue;
+    }
+    final rawProxies = group['proxies'];
+    final proxies = rawProxies is List ? List.of(rawProxies) : [];
+    for (final name in customNames) {
+      if (!proxies.contains(name)) {
+        proxies.add(name);
+      }
+    }
+    group['proxies'] = proxies;
+  }
 }
 
 void _applyProxyChains(Map rawConfig, List<ProxyChain> proxyChains) {
   if (proxyChains.isEmpty) {
+    return;
+  }
+  final validProxyChains = proxyChains.where((chain) => chain.isValid).toList();
+  if (validProxyChains.isEmpty) {
     return;
   }
   final proxies = rawConfig['proxies'];
@@ -306,29 +342,32 @@ void _applyProxyChains(Map rawConfig, List<ProxyChain> proxyChains) {
       }
     }
   }
-  final providerMap = rawConfig['proxy-providers'];
-  final providerNames = providerMap is Map
-      ? providerMap.keys.whereType<String>().toSet()
+  final proxyGroups = rawConfig['proxy-groups'];
+  final groupNames = proxyGroups is List
+      ? proxyGroups
+            .whereType<Map>()
+            .map((group) => group['name'])
+            .whereType<String>()
+            .where((name) => name.isNotEmpty)
+            .toSet()
       : <String>{};
-  final knownProxyNames = {...proxyMap.keys, ...providerNames};
-  for (final chain in proxyChains.where((chain) => chain.isValid)) {
+  final scope = ProxyChainNameScope(
+    targetNames: proxyMap.keys.toSet(),
+    dialerNames: {...proxyMap.keys, ...groupNames},
+  );
+  final applicableProxyChains = validProxyChains.where((chain) {
+    return scope.isValid(chain.normalizedProxies);
+  }).toList();
+  if (applicableProxyChains.isEmpty ||
+      findProxyChainConflictName(applicableProxyChains) != null) {
+    return;
+  }
+  for (final chain in applicableProxyChains) {
     final chainProxies = chain.normalizedProxies;
-    for (var i = 0; i < chainProxies.length - 1; i++) {
+    for (var i = 1; i < chainProxies.length; i++) {
       final proxyName = chainProxies[i];
-      final dialerProxy = chainProxies[i + 1];
-      if (!knownProxyNames.contains(proxyName) ||
-          !knownProxyNames.contains(dialerProxy)) {
-        continue;
-      }
-      final proxy = proxyMap[proxyName];
-      if (proxy != null) {
-        proxy['dialer-proxy'] = dialerProxy;
-        continue;
-      }
-      final provider = providerMap is Map ? providerMap[proxyName] : null;
-      if (provider is Map) {
-        provider['dialer-proxy'] = dialerProxy;
-      }
+      final dialerProxy = chainProxies[i - 1];
+      proxyMap[proxyName]!['dialer-proxy'] = dialerProxy;
     }
   }
 }

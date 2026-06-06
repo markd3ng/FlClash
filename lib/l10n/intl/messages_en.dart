@@ -52,13 +52,18 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m12(label) => "${label} must be between 1024 and 49151";
 
-  static String m13(value) => "Remaining: ${value}";
+  static String m13(name) =>
+      "Node ${name} is already used by another enabled chain or has a proxy chain relation conflict";
 
-  static String m14(count) => "${count} items have been selected";
+  static String m14(name) => "Node ${name} is not available in this position";
 
-  static String m15(label) => "${label} must be a url";
+  static String m15(value) => "Remaining: ${value}";
 
-  static String m16(count) =>
+  static String m16(count) => "${count} items have been selected";
+
+  static String m17(label) => "${label} must be a url";
+
+  static String m18(count) =>
       "${Intl.plural(count, one: '1 year ago', other: '${count} years ago')}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
@@ -87,6 +92,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "action_view": MessageLookupByLibrary.simpleMessage("Show/Hide"),
     "add": MessageLookupByLibrary.simpleMessage("Add"),
     "addProfile": MessageLookupByLibrary.simpleMessage("Add Profile"),
+    "addProxyChainNode": MessageLookupByLibrary.simpleMessage("Add"),
     "addRule": MessageLookupByLibrary.simpleMessage("Add rule"),
     "addedOriginRules": MessageLookupByLibrary.simpleMessage(
       "Attach on the original rules",
@@ -344,7 +350,6 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "emptyTip": m4,
     "en": MessageLookupByLibrary.simpleMessage("English"),
-    "enableOverride": MessageLookupByLibrary.simpleMessage("Enable override"),
     "entries": MessageLookupByLibrary.simpleMessage(" entries"),
     "exclude": MessageLookupByLibrary.simpleMessage("Hidden from recent tasks"),
     "excludeDesc": MessageLookupByLibrary.simpleMessage(
@@ -707,29 +712,44 @@ class MessageLookup extends MessageLookupByLibrary {
     "providers": MessageLookupByLibrary.simpleMessage("Providers"),
     "proxies": MessageLookupByLibrary.simpleMessage("Proxies"),
     "proxiesSetting": MessageLookupByLibrary.simpleMessage("Proxies setting"),
-    "proxyChainConfig": MessageLookupByLibrary.simpleMessage(
-      "Proxy chain config",
+    "proxyChainAvailableNodes": MessageLookupByLibrary.simpleMessage(
+      "Available nodes",
     ),
+    "proxyChainConflictTip": m13,
+    "proxyChainCustomNode": MessageLookupByLibrary.simpleMessage("Custom node"),
     "proxyChainCustomNodes": MessageLookupByLibrary.simpleMessage(
       "Custom nodes",
+    ),
+    "proxyChainEmpty": MessageLookupByLibrary.simpleMessage(
+      "No nodes in the proxy chain",
     ),
     "proxyChainEntry": MessageLookupByLibrary.simpleMessage("Entry"),
     "proxyChainExit": MessageLookupByLibrary.simpleMessage("Exit"),
     "proxyChainInstruction": MessageLookupByLibrary.simpleMessage(
-      "Click candidates or input nodes in order to add them to the proxy chain",
+      "Click nodes in order: the first node is the entry and the last node is the exit. Select the exit node to use the chain.",
     ),
     "proxyChainMinimumNodes": MessageLookupByLibrary.simpleMessage(
       "Proxy chains require at least 2 nodes",
     ),
     "proxyChainMinimumNodesHint": MessageLookupByLibrary.simpleMessage(
-      "Proxy chains require at least 2 nodes. Add one more node.",
+      "Proxy chains require at least 2 nodes. Add an exit node.",
+    ),
+    "proxyChainNodeAdded": MessageLookupByLibrary.simpleMessage(
+      "Node added to proxy chain",
     ),
     "proxyChainOtherNodes": MessageLookupByLibrary.simpleMessage("Other nodes"),
-    "proxyChainProviderNodes": MessageLookupByLibrary.simpleMessage(
-      "Provider nodes",
+    "proxyChainRelatedChainsUpdated": MessageLookupByLibrary.simpleMessage(
+      "Related proxy chains updated",
     ),
     "proxyChainSavedAndApplied": MessageLookupByLibrary.simpleMessage(
-      "Proxy chain saved and applied",
+      "Proxy chain saved and applied. Select the exit node to use it",
+    ),
+    "proxyChainSelectedNodes": MessageLookupByLibrary.simpleMessage(
+      "Proxy chain",
+    ),
+    "proxyChainUnavailableNodeTip": m14,
+    "proxyChainUriNodeSupportedFormats": MessageLookupByLibrary.simpleMessage(
+      "Supported formats: ss://, ssr://, vmess://, vless://, trojan://, anytls://, hysteria:// / hy://, hysteria2:// / hy2://, tuic://, wireguard:// / wg://, http(s)://, socks(5)://",
     ),
     "proxyChainWarning": MessageLookupByLibrary.simpleMessage(
       "Proxy chaining can significantly reduce network speed. Keep it disabled unless you clearly need it.",
@@ -758,7 +778,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "refreshSuccess": MessageLookupByLibrary.simpleMessage("Refresh Complete"),
     "regExp": MessageLookupByLibrary.simpleMessage("RegExp"),
     "reload": MessageLookupByLibrary.simpleMessage("Reload"),
-    "remaining": m13,
+    "remaining": m15,
     "remindLater": MessageLookupByLibrary.simpleMessage("Remind me later"),
     "remote": MessageLookupByLibrary.simpleMessage("Remote"),
     "remoteBackupDesc": MessageLookupByLibrary.simpleMessage(
@@ -846,7 +866,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "seconds": MessageLookupByLibrary.simpleMessage("Seconds"),
     "selectAll": MessageLookupByLibrary.simpleMessage("Select all"),
     "selected": MessageLookupByLibrary.simpleMessage("Selected"),
-    "selectedCountTitle": m14,
+    "selectedCountTitle": m16,
     "serviceCheckFailed": MessageLookupByLibrary.simpleMessage(
       "Service Check Failed",
     ),
@@ -971,7 +991,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "urlDesc": MessageLookupByLibrary.simpleMessage(
       "Obtain profile through URL",
     ),
-    "urlTip": m15,
+    "urlTip": m17,
     "useHosts": MessageLookupByLibrary.simpleMessage("Use hosts"),
     "useSystemHosts": MessageLookupByLibrary.simpleMessage("Use system hosts"),
     "userCenter": MessageLookupByLibrary.simpleMessage("User Center"),
@@ -1001,7 +1021,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "whitelistMode": MessageLookupByLibrary.simpleMessage("Whitelist mode"),
     "years": MessageLookupByLibrary.simpleMessage("Years"),
-    "yearsAgo": m16,
+    "yearsAgo": m18,
     "zh_CN": MessageLookupByLibrary.simpleMessage("Simplified Chinese"),
   };
 }

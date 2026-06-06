@@ -51,13 +51,18 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m12(label) => "${label} должен быть числом от 1024 до 49151";
 
-  static String m13(value) => "Осталось: ${value}";
+  static String m13(name) =>
+      "Узел ${name} уже используется другой включенной цепочкой или имеет конфликт связей цепочки прокси";
 
-  static String m14(count) => "Выбрано ${count} элементов";
+  static String m14(name) => "Узел ${name} недоступен для этой позиции";
 
-  static String m15(label) => "${label} должен быть URL";
+  static String m15(value) => "Осталось: ${value}";
 
-  static String m16(count) =>
+  static String m16(count) => "Выбрано ${count} элементов";
+
+  static String m17(label) => "${label} должен быть URL";
+
+  static String m18(count) =>
       "${Intl.plural(count, one: '${count} год назад', few: '${count} года назад', many: '${count} лет назад', other: '${count} года назад')}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
@@ -86,6 +91,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "action_view": MessageLookupByLibrary.simpleMessage("Показать/Скрыть"),
     "add": MessageLookupByLibrary.simpleMessage("Добавить"),
     "addProfile": MessageLookupByLibrary.simpleMessage("Добавить профиль"),
+    "addProxyChainNode": MessageLookupByLibrary.simpleMessage("Добавить"),
     "addRule": MessageLookupByLibrary.simpleMessage("Добавить правило"),
     "addedOriginRules": MessageLookupByLibrary.simpleMessage(
       "Добавить к оригинальным правилам",
@@ -355,9 +361,6 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "emptyTip": m4,
     "en": MessageLookupByLibrary.simpleMessage("Английский"),
-    "enableOverride": MessageLookupByLibrary.simpleMessage(
-      "Включить переопределение",
-    ),
     "entries": MessageLookupByLibrary.simpleMessage(" записей"),
     "exclude": MessageLookupByLibrary.simpleMessage(
       "Скрыть из последних задач",
@@ -746,29 +749,46 @@ class MessageLookup extends MessageLookupByLibrary {
     "providers": MessageLookupByLibrary.simpleMessage("Провайдеры"),
     "proxies": MessageLookupByLibrary.simpleMessage("Прокси"),
     "proxiesSetting": MessageLookupByLibrary.simpleMessage("Настройка прокси"),
-    "proxyChainConfig": MessageLookupByLibrary.simpleMessage(
-      "Настройка цепочки прокси",
+    "proxyChainAvailableNodes": MessageLookupByLibrary.simpleMessage(
+      "Доступные узлы",
+    ),
+    "proxyChainConflictTip": m13,
+    "proxyChainCustomNode": MessageLookupByLibrary.simpleMessage(
+      "Пользовательский узел",
     ),
     "proxyChainCustomNodes": MessageLookupByLibrary.simpleMessage(
       "Пользовательские узлы",
     ),
+    "proxyChainEmpty": MessageLookupByLibrary.simpleMessage(
+      "В цепочке прокси нет узлов",
+    ),
     "proxyChainEntry": MessageLookupByLibrary.simpleMessage("Вход"),
     "proxyChainExit": MessageLookupByLibrary.simpleMessage("Выход"),
     "proxyChainInstruction": MessageLookupByLibrary.simpleMessage(
-      "Нажимайте на кандидаты или вводите узлы по порядку, чтобы добавить их в цепочку",
+      "Добавляйте узлы по порядку: первый узел входной, последний выходной. После сохранения выберите выходной узел, чтобы использовать цепочку.",
     ),
     "proxyChainMinimumNodes": MessageLookupByLibrary.simpleMessage(
       "Для цепочки прокси нужно минимум 2 узла",
     ),
     "proxyChainMinimumNodesHint": MessageLookupByLibrary.simpleMessage(
-      "Для цепочки прокси нужно минимум 2 узла. Добавьте еще один узел.",
+      "Для цепочки прокси нужно минимум 2 узла. Добавьте выходной узел.",
+    ),
+    "proxyChainNodeAdded": MessageLookupByLibrary.simpleMessage(
+      "Узел добавлен в цепочку прокси",
     ),
     "proxyChainOtherNodes": MessageLookupByLibrary.simpleMessage("Другие узлы"),
-    "proxyChainProviderNodes": MessageLookupByLibrary.simpleMessage(
-      "Узлы провайдеров",
+    "proxyChainRelatedChainsUpdated": MessageLookupByLibrary.simpleMessage(
+      "Связанные цепочки прокси обновлены",
     ),
     "proxyChainSavedAndApplied": MessageLookupByLibrary.simpleMessage(
-      "Цепочка прокси сохранена и применена",
+      "Цепочка прокси сохранена и применена. Выберите выходной узел, чтобы использовать ее",
+    ),
+    "proxyChainSelectedNodes": MessageLookupByLibrary.simpleMessage(
+      "Цепочка прокси",
+    ),
+    "proxyChainUnavailableNodeTip": m14,
+    "proxyChainUriNodeSupportedFormats": MessageLookupByLibrary.simpleMessage(
+      "Поддерживаемые форматы: ss://, ssr://, vmess://, vless://, trojan://, anytls://, hysteria:// / hy://, hysteria2:// / hy2://, tuic://, wireguard:// / wg://, http(s)://, socks(5)://",
     ),
     "proxyChainWarning": MessageLookupByLibrary.simpleMessage(
       "Цепочка прокси может заметно снизить скорость сети. Оставьте ее выключенной, если она явно не нужна.",
@@ -801,7 +821,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "regExp": MessageLookupByLibrary.simpleMessage("Регулярное выражение"),
     "reload": MessageLookupByLibrary.simpleMessage("Перезагрузить"),
-    "remaining": m13,
+    "remaining": m15,
     "remindLater": MessageLookupByLibrary.simpleMessage("Напомнить позже"),
     "remote": MessageLookupByLibrary.simpleMessage("Удаленный"),
     "remoteBackupDesc": MessageLookupByLibrary.simpleMessage(
@@ -899,7 +919,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "seconds": MessageLookupByLibrary.simpleMessage("Секунд"),
     "selectAll": MessageLookupByLibrary.simpleMessage("Выбрать все"),
     "selected": MessageLookupByLibrary.simpleMessage("Выбрано"),
-    "selectedCountTitle": m14,
+    "selectedCountTitle": m16,
     "serviceCheckFailed": MessageLookupByLibrary.simpleMessage(
       "Проверка сервиса не удалась",
     ),
@@ -1028,7 +1048,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "urlDesc": MessageLookupByLibrary.simpleMessage(
       "Получить профиль через URL",
     ),
-    "urlTip": m15,
+    "urlTip": m17,
     "useHosts": MessageLookupByLibrary.simpleMessage("Использовать hosts"),
     "useSystemHosts": MessageLookupByLibrary.simpleMessage(
       "Использовать системные hosts",
@@ -1062,7 +1082,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Режим белого списка",
     ),
     "years": MessageLookupByLibrary.simpleMessage("Лет"),
-    "yearsAgo": m16,
+    "yearsAgo": m18,
     "zh_CN": MessageLookupByLibrary.simpleMessage("Упрощенный китайский"),
   };
 }

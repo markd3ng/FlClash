@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/models/config.dart';
+import 'package:fl_clash/state.dart';
 import 'package:flutter/material.dart';
 import 'package:screen_retriever/screen_retriever.dart';
 import 'package:window_manager/window_manager.dart';
@@ -19,6 +20,7 @@ class Window {
   Future<void> init(int version, WindowProps props) async {
     final acquire = await singleInstanceLock.acquire();
     if (!acquire) {
+      await _showExistingInstance();
       exit(0);
     }
     if (system.isWindows) {
@@ -40,6 +42,18 @@ class Window {
     await windowManager.waitUntilReadyToShow(windowOptions, () async {
       await windowManager.setPreventClose(true);
     });
+  }
+
+  Future<void> _showExistingInstance() async {
+    if (!system.isMacOS) {
+      return;
+    }
+    try {
+      await Process.run('/usr/bin/open', [
+        '-b',
+        globalState.packageInfo.packageName,
+      ]);
+    } catch (_) {}
   }
 
   Future<void> _windowPosition(WindowProps props) async {
@@ -77,9 +91,7 @@ class Window {
   }
 
   Future<bool> get isVisible async {
-    final value = await windowManager.isVisible();
-    commonPrint.log('window visible check: $value');
-    return value;
+    return windowManager.isVisible();
   }
 
   Future<void> close() async {

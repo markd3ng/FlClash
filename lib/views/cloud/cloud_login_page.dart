@@ -95,7 +95,7 @@ class _CloudLoginPageState extends ConsumerState<CloudLoginPage> {
   void _showLoginError(Object error) {
     globalState.showMessage(
       title: AppLocalizations.current.loginFailed,
-      message: TextSpan(text: error.toString()),
+      message: TextSpan(text: CloudApiException.clean(error)),
     );
   }
 

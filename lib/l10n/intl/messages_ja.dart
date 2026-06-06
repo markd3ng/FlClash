@@ -46,13 +46,18 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m12(label) => "${label} は 1024 から 49151 の間でなければなりません";
 
-  static String m13(value) => "残り: ${value}";
+  static String m13(name) =>
+      "ノード ${name} は別の有効なチェーンで使用されているか、プロキシチェーン関係の競合があります";
 
-  static String m14(count) => "${count} 項目が選択されています";
+  static String m14(name) => "ノード ${name} はこの位置では使用できません";
 
-  static String m15(label) => "${label}はURLである必要があります";
+  static String m15(value) => "残り: ${value}";
 
-  static String m16(count) => "${count}年前";
+  static String m16(count) => "${count} 項目が選択されています";
+
+  static String m17(label) => "${label}はURLである必要があります";
+
+  static String m18(count) => "${count}年前";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -78,6 +83,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "action_view": MessageLookupByLibrary.simpleMessage("表示/非表示"),
     "add": MessageLookupByLibrary.simpleMessage("追加"),
     "addProfile": MessageLookupByLibrary.simpleMessage("プロファイルを追加"),
+    "addProxyChainNode": MessageLookupByLibrary.simpleMessage("追加"),
     "addRule": MessageLookupByLibrary.simpleMessage("ルールを追加"),
     "addedOriginRules": MessageLookupByLibrary.simpleMessage("元のルールに追加"),
     "addedRules": MessageLookupByLibrary.simpleMessage("追加ルール"),
@@ -257,7 +263,6 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "emptyTip": m4,
     "en": MessageLookupByLibrary.simpleMessage("英語"),
-    "enableOverride": MessageLookupByLibrary.simpleMessage("上書きを有効化"),
     "entries": MessageLookupByLibrary.simpleMessage(" エントリ"),
     "exclude": MessageLookupByLibrary.simpleMessage("最近のタスクから非表示"),
     "excludeDesc": MessageLookupByLibrary.simpleMessage(
@@ -544,25 +549,40 @@ class MessageLookup extends MessageLookupByLibrary {
     "providers": MessageLookupByLibrary.simpleMessage("プロバイダー"),
     "proxies": MessageLookupByLibrary.simpleMessage("プロキシ"),
     "proxiesSetting": MessageLookupByLibrary.simpleMessage("プロキシ設定"),
-    "proxyChainConfig": MessageLookupByLibrary.simpleMessage("プロキシチェーン設定"),
+    "proxyChainAvailableNodes": MessageLookupByLibrary.simpleMessage(
+      "利用可能なノード",
+    ),
+    "proxyChainConflictTip": m13,
+    "proxyChainCustomNode": MessageLookupByLibrary.simpleMessage("カスタムノード"),
     "proxyChainCustomNodes": MessageLookupByLibrary.simpleMessage("カスタムノード"),
+    "proxyChainEmpty": MessageLookupByLibrary.simpleMessage(
+      "プロキシチェーンにノードがありません",
+    ),
     "proxyChainEntry": MessageLookupByLibrary.simpleMessage("入口"),
     "proxyChainExit": MessageLookupByLibrary.simpleMessage("出口"),
     "proxyChainInstruction": MessageLookupByLibrary.simpleMessage(
-      "候補をクリックするかノードを入力して、順番にプロキシチェーンへ追加します",
+      "ノードを順番に追加します。最初が入口、最後が出口です。保存後は出口ノードを選択して使用します",
     ),
     "proxyChainMinimumNodes": MessageLookupByLibrary.simpleMessage(
       "プロキシチェーンには少なくとも 2 つのノードが必要です",
     ),
     "proxyChainMinimumNodesHint": MessageLookupByLibrary.simpleMessage(
-      "プロキシチェーンには少なくとも 2 つのノードが必要です。もう 1 つ追加してください。",
+      "プロキシチェーンには少なくとも 2 つのノードが必要です。出口ノードを追加してください。",
+    ),
+    "proxyChainNodeAdded": MessageLookupByLibrary.simpleMessage(
+      "ノードをプロキシチェーンに追加しました",
     ),
     "proxyChainOtherNodes": MessageLookupByLibrary.simpleMessage("その他のノード"),
-    "proxyChainProviderNodes": MessageLookupByLibrary.simpleMessage(
-      "プロバイダーノード",
+    "proxyChainRelatedChainsUpdated": MessageLookupByLibrary.simpleMessage(
+      "関連するプロキシチェーンを更新しました",
     ),
     "proxyChainSavedAndApplied": MessageLookupByLibrary.simpleMessage(
-      "プロキシチェーンを保存して適用しました",
+      "プロキシチェーンを保存して適用しました。使用するには出口ノードを選択してください",
+    ),
+    "proxyChainSelectedNodes": MessageLookupByLibrary.simpleMessage("プロキシチェーン"),
+    "proxyChainUnavailableNodeTip": m14,
+    "proxyChainUriNodeSupportedFormats": MessageLookupByLibrary.simpleMessage(
+      "対応形式：ss://、ssr://、vmess://、vless://、trojan://、anytls://、hysteria:// / hy://、hysteria2:// / hy2://、tuic://、wireguard:// / wg://、http(s)://、socks(5)://",
     ),
     "proxyChainWarning": MessageLookupByLibrary.simpleMessage(
       "プロキシチェーンは通信速度を大きく低下させる可能性があります。明確な用途がない場合は無効のままにしてください。",
@@ -587,7 +607,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "refreshSuccess": MessageLookupByLibrary.simpleMessage("更新完了"),
     "regExp": MessageLookupByLibrary.simpleMessage("正規表現"),
     "reload": MessageLookupByLibrary.simpleMessage("リロード"),
-    "remaining": m13,
+    "remaining": m15,
     "remindLater": MessageLookupByLibrary.simpleMessage("後で通知"),
     "remote": MessageLookupByLibrary.simpleMessage("リモート"),
     "remoteBackupDesc": MessageLookupByLibrary.simpleMessage(
@@ -651,7 +671,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "seconds": MessageLookupByLibrary.simpleMessage("秒"),
     "selectAll": MessageLookupByLibrary.simpleMessage("すべて選択"),
     "selected": MessageLookupByLibrary.simpleMessage("選択済み"),
-    "selectedCountTitle": m14,
+    "selectedCountTitle": m16,
     "serviceCheckFailed": MessageLookupByLibrary.simpleMessage("サービスチェック失敗"),
     "settings": MessageLookupByLibrary.simpleMessage("設定"),
     "show": MessageLookupByLibrary.simpleMessage("表示"),
@@ -756,7 +776,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "upload": MessageLookupByLibrary.simpleMessage("アップロード"),
     "url": MessageLookupByLibrary.simpleMessage("URL"),
     "urlDesc": MessageLookupByLibrary.simpleMessage("URL経由でプロファイルを取得"),
-    "urlTip": m15,
+    "urlTip": m17,
     "useHosts": MessageLookupByLibrary.simpleMessage("ホストを使用"),
     "useSystemHosts": MessageLookupByLibrary.simpleMessage("システムホストを使用"),
     "userCenter": MessageLookupByLibrary.simpleMessage("ユーザーセンター"),
@@ -778,7 +798,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "webDAVConfiguration": MessageLookupByLibrary.simpleMessage("WebDAV設定"),
     "whitelistMode": MessageLookupByLibrary.simpleMessage("ホワイトリストモード"),
     "years": MessageLookupByLibrary.simpleMessage("年"),
-    "yearsAgo": m16,
+    "yearsAgo": m18,
     "zh_CN": MessageLookupByLibrary.simpleMessage("簡体字中国語"),
   };
 }

@@ -36,6 +36,58 @@ class ProxyChainCandidateSection {
   });
 }
 
+class ProxyChainNodeInfo {
+  final String type;
+  final String? testUrl;
+
+  const ProxyChainNodeInfo({required this.type, this.testUrl});
+}
+
+Iterable<ProfileProxy> _getValidProfileProxies(
+  Iterable<ProfileProxy> profileProxies,
+) {
+  return profileProxies.where((item) => item.isValid);
+}
+
+ProxyChainNameScope buildProxyChainNameScope({
+  required List<Group> groups,
+  Iterable<ProfileProxy> profileProxies = const [],
+}) {
+  final proxyNames = {
+    for (final group in groups)
+      for (final proxy in group.all) proxy.name,
+    for (final proxy in _getValidProfileProxies(profileProxies)) proxy.name,
+  };
+  final groupNames = {for (final group in groups) group.name};
+  return ProxyChainNameScope(
+    targetNames: proxyNames,
+    dialerNames: {...proxyNames, ...groupNames},
+  );
+}
+
+Map<String, ProxyChainNodeInfo> buildProxyChainNodeInfoMap({
+  required List<Group> groups,
+  Iterable<ProfileProxy> profileProxies = const [],
+}) {
+  final nodeInfoMap = <String, ProxyChainNodeInfo>{};
+  for (final group in groups) {
+    nodeInfoMap.putIfAbsent(
+      group.name,
+      () => ProxyChainNodeInfo(type: group.type.value, testUrl: group.testUrl),
+    );
+    for (final proxy in group.all) {
+      nodeInfoMap.putIfAbsent(
+        proxy.name,
+        () => ProxyChainNodeInfo(type: proxy.type, testUrl: group.testUrl),
+      );
+    }
+  }
+  for (final proxy in _getValidProfileProxies(profileProxies)) {
+    nodeInfoMap[proxy.name] = ProxyChainNodeInfo(type: proxy.type);
+  }
+  return nodeInfoMap;
+}
+
 List<String> _addUniqueProxyNames(Set<String> seen, Iterable<String> proxies) {
   final names = <String>[];
   for (final proxy in normalizeProxyChainProxies(proxies)) {
@@ -48,7 +100,6 @@ List<String> _addUniqueProxyNames(Set<String> seen, Iterable<String> proxies) {
 
 List<ProxyChainCandidateSection> buildProxyChainCandidateSections({
   required List<Group> groups,
-  required List<ExternalProvider> providers,
   Iterable<ProfileProxy> profileProxies = const [],
   Iterable<String> extra = const [],
 }) {
@@ -76,7 +127,7 @@ List<ProxyChainCandidateSection> buildProxyChainCandidateSections({
   addSection(
     label: appLocalizations.proxyChainCustomNodes,
     iconData: Icons.add_link,
-    proxies: profileProxies.where((item) => item.isValid).map((item) {
+    proxies: _getValidProfileProxies(profileProxies).map((item) {
       return item.name;
     }),
   );
@@ -94,14 +145,6 @@ List<ProxyChainCandidateSection> buildProxyChainCandidateSections({
           }),
     );
   }
-
-  addSection(
-    label: appLocalizations.proxyChainProviderNodes,
-    iconData: Icons.hub_outlined,
-    proxies: providers.where((item) => item.type == 'Proxy').map((item) {
-      return item.name;
-    }),
-  );
 
   addSection(
     label: appLocalizations.proxyChainOtherNodes,
@@ -170,12 +213,118 @@ class ProxyChainRoleBadge extends StatelessWidget {
   }
 }
 
+class _ProxyChainPathPreview extends StatelessWidget {
+  final List<String> proxies;
+
+  const _ProxyChainPathPreview({required this.proxies});
+
+  @override
+  Widget build(BuildContext context) {
+    if (proxies.isEmpty) {
+      return Text(
+        appLocalizations.nullTip(appLocalizations.proxies),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: context.textTheme.bodySmall?.copyWith(
+          color: context.colorScheme.onSurfaceVariant.opacity80,
+        ),
+      );
+    }
+    final children = <Widget>[];
+    for (var i = 0; i < proxies.length; i++) {
+      children.add(
+        _ProxyChainPathChip(
+          proxy: proxies[i],
+          index: i,
+          totalLength: proxies.length,
+        ),
+      );
+      if (i < proxies.length - 1) {
+        children.add(
+          Icon(
+            Icons.arrow_forward,
+            size: 18,
+            color: context.colorScheme.primary.opacity80,
+          ),
+        );
+      }
+    }
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: children,
+    );
+  }
+}
+
+class _ProxyChainPathChip extends StatelessWidget {
+  final String proxy;
+  final int index;
+  final int totalLength;
+
+  const _ProxyChainPathChip({
+    required this.proxy,
+    required this.index,
+    required this.totalLength,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final roleColor = _getProxyChainRoleColor(context, index, totalLength);
+    final isRole = index == 0 || (index == totalLength - 1 && totalLength > 1);
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 220),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(999),
+        color: isRole
+            ? roleColor.opacity15
+            : context.colorScheme.surfaceContainerHighest,
+        border: Border.all(
+          color: isRole
+              ? roleColor.opacity80
+              : context.colorScheme.outlineVariant,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            _getProxyChainRoleLabel(index, totalLength),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: context.textTheme.labelSmall?.copyWith(
+              color: isRole
+                  ? roleColor
+                  : context.colorScheme.onSurfaceVariant.opacity80,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              proxy,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: context.textTheme.labelSmall?.toJetBrainsMono.copyWith(
+                color: context.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class ProxyChainItem extends StatelessWidget {
   final bool isSelected;
   final bool isEditing;
   final ProxyChain proxyChain;
   final VoidCallback onSelected;
   final VoidCallback onEdit;
+  final VoidCallback onDelete;
   final ValueChanged<bool> onToggle;
 
   const ProxyChainItem({
@@ -185,6 +334,7 @@ class ProxyChainItem extends StatelessWidget {
     required this.proxyChain,
     required this.onSelected,
     required this.onEdit,
+    required this.onDelete,
     required this.onToggle,
   });
 
@@ -200,13 +350,7 @@ class ProxyChainItem extends StatelessWidget {
           radius: 18,
           type: CommonCardType.filled,
           isSelected: isSelected,
-          onPressed: () {
-            if (isEditing) {
-              onSelected();
-              return;
-            }
-            onEdit();
-          },
+          onPressed: onSelected,
           child: ListTile(
             minTileHeight: 32 + globalState.measure.bodyMediumHeight,
             minVerticalPadding: 12,
@@ -218,12 +362,10 @@ class ProxyChainItem extends StatelessWidget {
               style: context.textTheme.bodyMedium?.toJetBrainsMono,
             ),
             subtitle: proxyChain.proxies.isNotEmpty
-                ? Text(
-                    proxyChain.proxies.join('  ->  '),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.textTheme.bodySmall?.copyWith(
-                      color: context.colorScheme.onSurfaceVariant.opacity80,
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: _ProxyChainPathPreview(
+                      proxies: proxyChain.normalizedProxies,
                     ),
                   )
                 : null,
@@ -239,7 +381,37 @@ class ProxyChainItem extends StatelessWidget {
                       },
                     ),
                   )
-                : Switch(value: proxyChain.enable, onChanged: onToggle),
+                : Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Switch(value: proxyChain.enable, onChanged: onToggle),
+                      CommonPopupBox(
+                        popup: CommonPopupMenu(
+                          items: [
+                            PopupMenuItemData(
+                              icon: Icons.edit_outlined,
+                              label: appLocalizations.edit,
+                              onPressed: onEdit,
+                            ),
+                            PopupMenuItemData(
+                              danger: true,
+                              icon: Icons.delete_outline,
+                              label: appLocalizations.delete,
+                              onPressed: onDelete,
+                            ),
+                          ],
+                        ),
+                        targetBuilder: (open) {
+                          return IconButton(
+                            onPressed: () {
+                              open();
+                            },
+                            icon: Icon(Icons.more_vert),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
           ),
         ),
       ),
@@ -301,20 +473,26 @@ class _ProfileProxyChainsContentState
     extends ConsumerState<ProfileProxyChainsContent> {
   final _proxyChainKey = utils.id;
 
+  Set<int> _getSelectedProxyChainIds() {
+    return ref
+        .read(selectedItemsProvider(_proxyChainKey))
+        .whereType<int>()
+        .toSet();
+  }
+
   Future<void> _handleAddOrUpdateProxyChain([ProxyChain? proxyChain]) async {
     final groups = ref.read(groupsProvider);
-    final providers = ref.read(providersProvider);
     final profileProxies =
         ref.read(profileProvider(widget.profileId))?.profileProxies ?? [];
     final candidateSections = buildProxyChainCandidateSections(
       groups: groups,
-      providers: providers,
       profileProxies: profileProxies,
       extra: proxyChain?.proxies ?? [],
     );
     final res = await BaseNavigator.push<ProxyChain>(
       context,
       ProxyChainEditView(
+        profileId: widget.profileId,
         proxyChain: proxyChain,
         candidateSections: candidateSections,
       ),
@@ -325,19 +503,39 @@ class _ProfileProxyChainsContentState
     if (!mounted) {
       return;
     }
-    _putProxyChain(res);
-    appController.applyProfileDebounce(silence: true);
+    final proxyChains =
+        ref.read(profileProvider(widget.profileId))?.proxyChains ?? [];
+    final resolved = proxyChains.copyAndPutResolvingTargetConflicts(res);
+    if (!_canPutProxyChains(resolved.proxyChains)) {
+      return;
+    }
+    _putProxyChains(resolved.proxyChains);
+    _applyProfileChanges();
     context.showNotifier(appLocalizations.proxyChainSavedAndApplied);
+    if (resolved.hasDisabledConflicts) {
+      context.showNotifier(appLocalizations.proxyChainRelatedChainsUpdated);
+    }
   }
 
-  void _putProxyChain(ProxyChain proxyChain) {
+  void _putProxyChains(List<ProxyChain> proxyChains) {
     ref.read(profilesProvider.notifier).updateProfile(widget.profileId, (
       state,
     ) {
-      return state.copyWith(
-        proxyChains: state.proxyChains.copyAndPut(proxyChain),
-      );
+      return state.copyWith(proxyChains: proxyChains);
     });
+  }
+
+  void _applyProfileChanges() {
+    appController.applyProfileDebounce(silence: true);
+  }
+
+  bool _canPutProxyChains(List<ProxyChain> proxyChains) {
+    final conflictName = findProxyChainConflictName(proxyChains);
+    if (conflictName == null) {
+      return true;
+    }
+    context.showNotifier(appLocalizations.proxyChainConflictTip(conflictName));
+    return false;
   }
 
   void _handleProxyChainSelected(int proxyChainId) {
@@ -363,41 +561,89 @@ class _ProfileProxyChainsContentState
     });
   }
 
-  Future<void> _handleDeleteProxyChains() async {
+  Future<void> _handleDeleteProxyChains([Set<int>? proxyChainIds]) async {
+    final targetProxyChainIds = proxyChainIds != null
+        ? Set<int>.from(proxyChainIds)
+        : _getSelectedProxyChainIds();
+    if (targetProxyChainIds.isEmpty) {
+      return;
+    }
     final res = await globalState.showMessage(
       title: appLocalizations.tip,
       message: TextSpan(
-        text: appLocalizations.deleteMultipTip(appLocalizations.proxyChains),
+        text: proxyChainIds == null
+            ? appLocalizations.deleteMultipTip(appLocalizations.proxyChains)
+            : appLocalizations.deleteTip(appLocalizations.proxyChains),
       ),
     );
     if (res != true) {
       return;
     }
-    final selectedProxyChains = ref.read(selectedItemsProvider(_proxyChainKey));
     ref.read(profilesProvider.notifier).updateProfile(widget.profileId, (
       state,
     ) {
       return state.copyWith(
         proxyChains: state.proxyChains
-            .where((item) => !selectedProxyChains.contains(item.id))
+            .where((item) => !targetProxyChainIds.contains(item.id))
             .toList(),
       );
     });
-    ref.read(selectedItemsProvider(_proxyChainKey).notifier).value = {};
+    ref.read(selectedItemsProvider(_proxyChainKey).notifier).update((
+      selectedProxyChains,
+    ) {
+      return selectedProxyChains
+          .where((item) => !targetProxyChainIds.contains(item))
+          .toSet();
+    });
+    _applyProfileChanges();
   }
 
   void _handleProxyChainToggle(ProxyChain proxyChain, bool value) {
-    _putProxyChain(proxyChain.copyWith(enable: value));
+    final nextProxyChain = proxyChain.copyWith(enable: value);
+    if (value && !nextProxyChain.isValid) {
+      final proxies = nextProxyChain.normalizedProxies;
+      context.showNotifier(
+        proxies.length < 2
+            ? appLocalizations.proxyChainMinimumNodes
+            : appLocalizations.existsTip(appLocalizations.proxies),
+      );
+      return;
+    }
+    final proxyChains =
+        ref.read(profileProvider(widget.profileId))?.proxyChains ?? [];
+    final nextProxyChains = value
+        ? proxyChains.copyAndPutResolvingTargetConflicts(nextProxyChain)
+        : (
+            hasDisabledConflicts: false,
+            proxyChains: proxyChains.copyAndPut(nextProxyChain),
+          );
+    if (value && !_canPutProxyChains(nextProxyChains.proxyChains)) {
+      return;
+    }
+    _putProxyChains(nextProxyChains.proxyChains);
+    _applyProfileChanges();
+    if (nextProxyChains.hasDisabledConflicts) {
+      context.showNotifier(appLocalizations.proxyChainRelatedChainsUpdated);
+    }
   }
 
   void _handleProxyChainReorder(int oldIndex, int newIndex) {
+    final proxyChains =
+        ref.read(profileProvider(widget.profileId))?.proxyChains ?? [];
+    final nextProxyChains = proxyChains.copyAndReorder(oldIndex, newIndex);
+    final conflictName = findProxyChainConflictName(nextProxyChains);
+    if (conflictName != null) {
+      context.showNotifier(
+        appLocalizations.proxyChainConflictTip(conflictName),
+      );
+      return;
+    }
     ref.read(profilesProvider.notifier).updateProfile(widget.profileId, (
       state,
     ) {
-      return state.copyWith(
-        proxyChains: state.proxyChains.copyAndReorder(oldIndex, newIndex),
-      );
+      return state.copyWith(proxyChains: nextProxyChains);
     });
+    _applyProfileChanges();
   }
 
   @override
@@ -430,7 +676,7 @@ class _ProfileProxyChainsContentState
                         onPressed: _handleSelectAllProxyChains,
                         child: Text(appLocalizations.selectAll),
                       )
-                    : FilledButton.tonalIcon(
+                    : FilledButton.icon(
                         onPressed: () {
                           _handleAddOrUpdateProxyChain();
                         },
@@ -459,6 +705,9 @@ class _ProfileProxyChainsContentState
                   },
                   onEdit: () {
                     _handleAddOrUpdateProxyChain(proxyChain);
+                  },
+                  onDelete: () {
+                    _handleDeleteProxyChains({proxyChain.id});
                   },
                   onToggle: (value) {
                     _handleProxyChainToggle(proxyChain, value);
@@ -495,11 +744,13 @@ class _ProfileProxyChainsContentState
 }
 
 class ProxyChainEditView extends ConsumerStatefulWidget {
+  final int profileId;
   final ProxyChain? proxyChain;
   final List<ProxyChainCandidateSection> candidateSections;
 
   const ProxyChainEditView({
     super.key,
+    required this.profileId,
     this.proxyChain,
     required this.candidateSections,
   });
@@ -510,9 +761,10 @@ class ProxyChainEditView extends ConsumerStatefulWidget {
 
 class _ProxyChainEditViewState extends ConsumerState<ProxyChainEditView> {
   final _nameController = TextEditingController();
-  final _proxyController = TextEditingController();
   List<String> _proxies = [];
-  late bool _enable;
+  late List<ProxyChainCandidateSection> _candidateSections;
+  late ProxyChainNameScope _nameScope;
+  late Map<String, ProxyChainNodeInfo> _nodeInfoMap;
 
   @override
   void initState() {
@@ -520,34 +772,141 @@ class _ProxyChainEditViewState extends ConsumerState<ProxyChainEditView> {
     final proxyChain = widget.proxyChain;
     _nameController.text = proxyChain?.name ?? '';
     _proxies = List<String>.from(proxyChain?.proxies ?? []);
-    _enable = proxyChain?.enable ?? true;
+    _candidateSections = widget.candidateSections;
+    _nameScope = _buildNameScope();
+    _nodeInfoMap = _buildNodeInfoMap();
   }
 
   @override
   void dispose() {
     _nameController.dispose();
-    _proxyController.dispose();
     super.dispose();
   }
 
-  void _handleAdd(String value) {
+  bool _containsProxy(String proxyName) {
+    return normalizeProxyChainProxies(_proxies).contains(proxyName.trim());
+  }
+
+  List<ProfileProxy> _getProfileProxies() {
+    return ref.read(profileProvider(widget.profileId))?.profileProxies ?? [];
+  }
+
+  ProxyChainNameScope _buildNameScope() {
+    return buildProxyChainNameScope(
+      groups: ref.read(groupsProvider),
+      profileProxies: _getProfileProxies(),
+    );
+  }
+
+  Map<String, ProxyChainNodeInfo> _buildNodeInfoMap() {
+    return buildProxyChainNodeInfoMap(
+      groups: ref.read(groupsProvider),
+      profileProxies: _getProfileProxies(),
+    );
+  }
+
+  bool _validateProxies(List<String> proxies) {
+    final invalidProxyName = _nameScope.getInvalidName(proxies);
+    if (invalidProxyName == null) {
+      return true;
+    }
+    context.showNotifier(
+      appLocalizations.proxyChainUnavailableNodeTip(invalidProxyName),
+    );
+    return false;
+  }
+
+  void _appendProxy(String proxyName) {
+    _proxies = [..._proxies, proxyName];
+  }
+
+  bool _addProxy(String value) {
     final proxyName = value.trim();
     if (proxyName.isEmpty) {
+      return false;
+    }
+    if (_containsProxy(proxyName)) {
+      context.showNotifier(
+        appLocalizations.existsTip(appLocalizations.proxies),
+      );
+      return false;
+    }
+    if (!_validateProxies([..._proxies, proxyName])) {
+      return false;
+    }
+    _appendProxy(proxyName);
+    return true;
+  }
+
+  void _handleAdd(String value) {
+    if (_addProxy(value)) {
+      setState(() {});
+    }
+  }
+
+  void _refreshCandidateSections() {
+    final groups = ref.read(groupsProvider);
+    final profileProxies = _getProfileProxies();
+    _candidateSections = buildProxyChainCandidateSections(
+      groups: groups,
+      profileProxies: profileProxies,
+      extra: _proxies,
+    );
+    _nameScope = buildProxyChainNameScope(
+      groups: groups,
+      profileProxies: profileProxies,
+    );
+    _nodeInfoMap = buildProxyChainNodeInfoMap(
+      groups: groups,
+      profileProxies: profileProxies,
+    );
+  }
+
+  Future<void> _handleAddProfileProxy() async {
+    final res = await BaseNavigator.push<ProfileProxy>(
+      context,
+      ProfileProxyEditView(),
+    );
+    if (res == null || !mounted) {
       return;
     }
-    if (normalizeProxyChainProxies(_proxies).contains(proxyName)) {
+    final proxyName = res.name;
+    if (_containsProxy(proxyName)) {
       context.showNotifier(
         appLocalizations.existsTip(appLocalizations.proxies),
       );
       return;
     }
-    _proxies = [..._proxies, proxyName];
-    _proxyController.clear();
+    final profileProxies =
+        ref.read(profileProvider(widget.profileId))?.profileProxies ?? [];
+    if (hasDuplicateProfileProxyName(profileProxies, res)) {
+      context.showNotifier(
+        appLocalizations.existsTip(appLocalizations.proxies),
+      );
+      return;
+    }
+    if (hasProfileProxyGroupNameConflict(ref.read(groupsProvider), res)) {
+      context.showNotifier(
+        appLocalizations.proxyChainUnavailableNodeTip(res.name),
+      );
+      return;
+    }
+    ref.read(profilesProvider.notifier).updateProfile(widget.profileId, (
+      state,
+    ) {
+      return state.copyWith(
+        profileProxies: state.profileProxies.copyAndPut(res),
+      );
+    });
+    _appendProxy(proxyName);
+    _refreshCandidateSections();
     setState(() {});
+    appController.applyProfileDebounce(silence: true);
+    context.showNotifier(appLocalizations.proxyChainNodeAdded);
   }
 
   void _handleDelete(String value) {
-    _proxies = _proxies.where((item) => item != value).toList();
+    _proxies = _proxies.where((item) => item.trim() != value).toList();
     setState(() {});
   }
 
@@ -573,6 +932,9 @@ class _ProxyChainEditViewState extends ConsumerState<ProxyChainEditView> {
       context.showNotifier(appLocalizations.proxyChainMinimumNodes);
       return;
     }
+    if (!_validateProxies(proxies)) {
+      return;
+    }
     if (proxies.toSet().length != proxies.length) {
       context.showNotifier(
         appLocalizations.existsTip(appLocalizations.proxies),
@@ -580,11 +942,39 @@ class _ProxyChainEditViewState extends ConsumerState<ProxyChainEditView> {
       return;
     }
     final proxyChain = (widget.proxyChain ?? ProxyChain.create()).copyWith(
-      enable: _enable,
+      enable: true,
       name: _nameController.text.trim(),
       proxies: proxies,
     );
     Navigator.of(context).pop(proxyChain);
+  }
+
+  Widget _buildProxyDelay(String proxy, String? testUrl) {
+    return Consumer(
+      builder: (_, ref, _) {
+        final delay = ref.watch(
+          getDelayProvider(proxyName: proxy, testUrl: testUrl),
+        );
+        if (delay == null) {
+          return SizedBox.shrink();
+        }
+        if (delay == 0) {
+          return SizedBox.square(
+            dimension: 14,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          );
+        }
+        return Text(
+          delay > 0 ? '$delay ms' : 'Timeout',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: context.textTheme.labelSmall?.copyWith(
+            color: utils.getDelayColor(delay),
+            fontWeight: FontWeight.w600,
+          ),
+        );
+      },
+    );
   }
 
   Widget _buildProxyItem({
@@ -593,6 +983,14 @@ class _ProxyChainEditViewState extends ConsumerState<ProxyChainEditView> {
     required int totalLength,
     bool isDecorator = false,
   }) {
+    final nodeInfo = _nodeInfoMap[proxy];
+    final role = index == 0
+        ? appLocalizations.proxyChainEntry
+        : index == totalLength - 1 && totalLength > 1
+        ? appLocalizations.proxyChainExit
+        : null;
+    final nodeType = nodeInfo?.type;
+    final meta = [?role, if (nodeType?.isNotEmpty == true) nodeType!];
     return ReorderableDelayedDragStartListener(
       key: ValueKey(proxy),
       index: index,
@@ -617,21 +1015,21 @@ class _ProxyChainEditViewState extends ConsumerState<ProxyChainEditView> {
                 overflow: TextOverflow.ellipsis,
                 style: context.textTheme.bodyMedium?.toJetBrainsMono,
               ),
-              subtitle: Text(
-                index == 0
-                    ? appLocalizations.proxyChainEntry
-                    : index == totalLength - 1 && totalLength > 1
-                    ? appLocalizations.proxyChainExit
-                    : appLocalizations.proxyChains,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: context.textTheme.bodySmall?.copyWith(
-                  color: context.colorScheme.onSurfaceVariant.opacity80,
-                ),
-              ),
+              subtitle: meta.isEmpty
+                  ? null
+                  : Text(
+                      meta.join(' · '),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.textTheme.bodySmall?.copyWith(
+                        color: context.colorScheme.onSurfaceVariant.opacity80,
+                      ),
+                    ),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  _buildProxyDelay(proxy, nodeInfo?.testUrl),
+                  if (nodeInfo != null) SizedBox(width: 8),
                   Icon(
                     Icons.drag_indicator,
                     color: context.colorScheme.onSurfaceVariant.opacity80,
@@ -642,7 +1040,8 @@ class _ProxyChainEditViewState extends ConsumerState<ProxyChainEditView> {
                         : () {
                             _handleDelete(proxy);
                           },
-                    icon: Icon(Icons.close),
+                    color: context.colorScheme.error,
+                    icon: Icon(Icons.delete_outline),
                   ),
                 ],
               ),
@@ -692,6 +1091,7 @@ class _ProxyChainEditViewState extends ConsumerState<ProxyChainEditView> {
 
   Widget _buildCandidateItem({
     required String proxy,
+    required IconData iconData,
     required int index,
     required int totalLength,
   }) {
@@ -701,7 +1101,7 @@ class _ProxyChainEditViewState extends ConsumerState<ProxyChainEditView> {
       onPressed: () {
         _handleAdd(proxy);
       },
-      leading: Icon(Icons.account_tree_outlined),
+      leading: Icon(iconData),
       title: Text(
         proxy,
         maxLines: 1,
@@ -715,7 +1115,7 @@ class _ProxyChainEditViewState extends ConsumerState<ProxyChainEditView> {
   List<ProxyChainCandidateSection> _getVisibleCandidateSections(
     List<String> selectedProxies,
   ) {
-    return widget.candidateSections
+    return _candidateSections
         .map((section) {
           final proxies = section.proxies.where((item) {
             return !selectedProxies.contains(item);
@@ -734,12 +1134,24 @@ class _ProxyChainEditViewState extends ConsumerState<ProxyChainEditView> {
   Widget build(BuildContext context) {
     final selectedProxies = normalizeProxyChainProxies(_proxies);
     final candidateSections = _getVisibleCandidateSections(selectedProxies);
+    final canSubmit = selectedProxies.length >= 2;
     return CommonScaffold(
       title: appLocalizations.proxyChains,
       actions: [
         CommonMinIconButtonTheme(
-          child: IconButton.filledTonal(
-            onPressed: _handleSubmit,
+          child: IconButton.filled(
+            style:
+                IconButton.styleFrom(
+                  backgroundColor: canSubmit ? Colors.green : null,
+                  foregroundColor: canSubmit ? Colors.white : null,
+                ).copyWith(
+                  mouseCursor: WidgetStatePropertyAll(
+                    canSubmit
+                        ? SystemMouseCursors.click
+                        : SystemMouseCursors.basic,
+                  ),
+                ),
+            onPressed: canSubmit ? _handleSubmit : null,
             icon: Icon(Icons.check),
           ),
         ),
@@ -773,29 +1185,22 @@ class _ProxyChainEditViewState extends ConsumerState<ProxyChainEditView> {
                       labelText: appLocalizations.name,
                     ),
                   ),
-                  SizedBox(height: 12),
-                  CommonCard(
-                    padding: EdgeInsets.zero,
-                    type: CommonCardType.filled,
-                    radius: 18,
-                    child: SwitchListTile(
-                      value: _enable,
-                      title: Text(appLocalizations.enableOverride),
-                      onChanged: (value) {
-                        setState(() {
-                          _enable = value;
-                        });
-                      },
-                    ),
-                  ),
                 ],
               ),
             ),
           ),
           SliverToBoxAdapter(
             child: InfoHeader(
-              info: Info(label: appLocalizations.proxyChainConfig),
+              info: Info(label: appLocalizations.proxyChainSelectedNodes),
               actions: [
+                CommonMinFilledButtonTheme(
+                  child: FilledButton.icon(
+                    onPressed: _handleAddProfileProxy,
+                    icon: Icon(Icons.add_link),
+                    label: Text(appLocalizations.addProxyChainNode),
+                  ),
+                ),
+                if (_proxies.isNotEmpty) SizedBox(width: 8),
                 if (_proxies.isNotEmpty)
                   CommonMinIconButtonTheme(
                     child: IconButton.filledTonal(
@@ -819,7 +1224,7 @@ class _ProxyChainEditViewState extends ConsumerState<ProxyChainEditView> {
                   child: ListTile(
                     minTileHeight: 64,
                     title: Text(
-                      appLocalizations.nullTip(appLocalizations.proxies),
+                      appLocalizations.proxyChainEmpty,
                       style: context.textTheme.bodyMedium?.copyWith(
                         color: context.colorScheme.onSurfaceVariant.opacity80,
                       ),
@@ -855,27 +1260,6 @@ class _ProxyChainEditViewState extends ConsumerState<ProxyChainEditView> {
                 onReorder: _handleReorder,
               ),
             ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: TextField(
-                controller: _proxyController,
-                decoration: InputDecoration(
-                  border: const OutlineInputBorder(),
-                  helperText: appLocalizations.proxyChainInstruction,
-                  labelText:
-                      '${appLocalizations.proxies}/${appLocalizations.providers}',
-                  suffixIcon: IconButton(
-                    onPressed: () {
-                      _handleAdd(_proxyController.text);
-                    },
-                    icon: Icon(Icons.add),
-                  ),
-                ),
-                onSubmitted: _handleAdd,
-              ),
-            ),
-          ),
           if (candidateSections.isEmpty)
             SliverToBoxAdapter(
               child: Padding(
@@ -896,10 +1280,19 @@ class _ProxyChainEditViewState extends ConsumerState<ProxyChainEditView> {
               ),
             )
           else ...[
+            SliverToBoxAdapter(
+              child: InfoHeader(
+                padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+                info: Info(
+                  label: appLocalizations.proxyChainAvailableNodes,
+                  iconData: Icons.list_alt_outlined,
+                ),
+              ),
+            ),
             for (final section in candidateSections) ...[
               SliverToBoxAdapter(
                 child: InfoHeader(
-                  padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                   info: Info(label: section.label, iconData: section.iconData),
                 ),
               ),
@@ -910,6 +1303,7 @@ class _ProxyChainEditViewState extends ConsumerState<ProxyChainEditView> {
                   itemBuilder: (context, index) {
                     return _buildCandidateItem(
                       proxy: section.proxies[index],
+                      iconData: section.iconData,
                       index: index,
                       totalLength: section.proxies.length,
                     );

@@ -22,6 +22,8 @@ class SingleInstanceLock {
       await _accessFile?.lock();
       return true;
     } catch (_) {
+      await _accessFile?.close();
+      _accessFile = null;
       return false;
     }
   }

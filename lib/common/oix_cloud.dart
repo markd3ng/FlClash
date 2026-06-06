@@ -20,7 +20,7 @@ bool isOixCloudProfileUrl(String url) {
       path.contains('/managed/flclash') || path.contains('/api/v1/managed/');
   if (isManagedPath && cloudDomains.contains(host)) return true;
 
-  return Secrets.apiDomains.any(normalizedUrl.contains);
+  return Secrets.apiDomains.contains(host);
 }
 
 typedef ManagedProfileDeduplicator<T> = Future<void> Function(List<T> profiles);

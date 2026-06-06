@@ -2689,16 +2689,6 @@ class AppLocalizations {
     );
   }
 
-  /// `Enable override`
-  String get enableOverride {
-    return Intl.message(
-      'Enable override',
-      name: 'enableOverride',
-      desc: '',
-      args: [],
-    );
-  }
-
   /// `Do you want to save the changes?`
   String get saveChanges {
     return Intl.message(
@@ -3239,16 +3229,6 @@ class AppLocalizations {
     );
   }
 
-  /// `Proxy chain config`
-  String get proxyChainConfig {
-    return Intl.message(
-      'Proxy chain config',
-      name: 'proxyChainConfig',
-      desc: '',
-      args: [],
-    );
-  }
-
   /// `Proxy chaining can significantly reduce network speed. Keep it disabled unless you clearly need it.`
   String get proxyChainWarning {
     return Intl.message(
@@ -3259,10 +3239,10 @@ class AppLocalizations {
     );
   }
 
-  /// `Click candidates or input nodes in order to add them to the proxy chain`
+  /// `Click nodes in order: the first node is the entry and the last node is the exit. Select the exit node to use the chain.`
   String get proxyChainInstruction {
     return Intl.message(
-      'Click candidates or input nodes in order to add them to the proxy chain',
+      'Click nodes in order: the first node is the entry and the last node is the exit. Select the exit node to use the chain.',
       name: 'proxyChainInstruction',
       desc: '',
       args: [],
@@ -3279,10 +3259,10 @@ class AppLocalizations {
     );
   }
 
-  /// `Proxy chains require at least 2 nodes. Add one more node.`
+  /// `Proxy chains require at least 2 nodes. Add an exit node.`
   String get proxyChainMinimumNodesHint {
     return Intl.message(
-      'Proxy chains require at least 2 nodes. Add one more node.',
+      'Proxy chains require at least 2 nodes. Add an exit node.',
       name: 'proxyChainMinimumNodesHint',
       desc: '',
       args: [],
@@ -3319,14 +3299,19 @@ class AppLocalizations {
     );
   }
 
-  /// `Provider nodes`
-  String get proxyChainProviderNodes {
+  /// `Custom node`
+  String get proxyChainCustomNode {
     return Intl.message(
-      'Provider nodes',
-      name: 'proxyChainProviderNodes',
+      'Custom node',
+      name: 'proxyChainCustomNode',
       desc: '',
       args: [],
     );
+  }
+
+  /// `Add`
+  String get addProxyChainNode {
+    return Intl.message('Add', name: 'addProxyChainNode', desc: '', args: []);
   }
 
   /// `Other nodes`
@@ -3339,11 +3324,91 @@ class AppLocalizations {
     );
   }
 
-  /// `Proxy chain saved and applied`
+  /// `Proxy chain saved and applied. Select the exit node to use it`
   String get proxyChainSavedAndApplied {
     return Intl.message(
-      'Proxy chain saved and applied',
+      'Proxy chain saved and applied. Select the exit node to use it',
       name: 'proxyChainSavedAndApplied',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Node {name} is already used by another enabled chain or has a proxy chain relation conflict`
+  String proxyChainConflictTip(Object name) {
+    return Intl.message(
+      'Node $name is already used by another enabled chain or has a proxy chain relation conflict',
+      name: 'proxyChainConflictTip',
+      desc: '',
+      args: [name],
+    );
+  }
+
+  /// `Node {name} is not available in this position`
+  String proxyChainUnavailableNodeTip(Object name) {
+    return Intl.message(
+      'Node $name is not available in this position',
+      name: 'proxyChainUnavailableNodeTip',
+      desc: '',
+      args: [name],
+    );
+  }
+
+  /// `Related proxy chains updated`
+  String get proxyChainRelatedChainsUpdated {
+    return Intl.message(
+      'Related proxy chains updated',
+      name: 'proxyChainRelatedChainsUpdated',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Proxy chain`
+  String get proxyChainSelectedNodes {
+    return Intl.message(
+      'Proxy chain',
+      name: 'proxyChainSelectedNodes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Available nodes`
+  String get proxyChainAvailableNodes {
+    return Intl.message(
+      'Available nodes',
+      name: 'proxyChainAvailableNodes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No nodes in the proxy chain`
+  String get proxyChainEmpty {
+    return Intl.message(
+      'No nodes in the proxy chain',
+      name: 'proxyChainEmpty',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Node added to proxy chain`
+  String get proxyChainNodeAdded {
+    return Intl.message(
+      'Node added to proxy chain',
+      name: 'proxyChainNodeAdded',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Supported formats: ss://, ssr://, vmess://, vless://, trojan://, anytls://, hysteria:// / hy://, hysteria2:// / hy2://, tuic://, wireguard:// / wg://, http(s)://, socks(5)://`
+  String get proxyChainUriNodeSupportedFormats {
+    return Intl.message(
+      'Supported formats: ss://, ssr://, vmess://, vless://, trojan://, anytls://, hysteria:// / hy://, hysteria2:// / hy2://, tuic://, wireguard:// / wg://, http(s)://, socks(5)://',
+      name: 'proxyChainUriNodeSupportedFormats',
       desc: '',
       args: [],
     );

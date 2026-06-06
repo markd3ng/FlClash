@@ -267,11 +267,7 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
       try {
         await action();
       } catch (e) {
-        CloudApiService().setToken(null);
-        state = state.copyWith(
-          isLoading: false,
-          error: CloudApiException.clean(e),
-        );
+        await _rollbackFailedSignIn(e);
         rethrow;
       } finally {
         _signInFuture = null;
@@ -280,6 +276,21 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
 
     _signInFuture = future;
     return future;
+  }
+
+  Future<void> _rollbackFailedSignIn(Object error) async {
+    _lastRefreshTime = null;
+    try {
+      await _clearStoredToken();
+      await _clearCache();
+      oixCloudConfigCache.clear();
+    } catch (e, s) {
+      commonPrint.log(
+        'failed to rollback oixCloud sign-in: $e\n$s',
+        logLevel: LogLevel.warning,
+      );
+    }
+    state = CloudAccountState(error: CloudApiException.clean(error));
   }
 
   Future<void> _completeSignIn({
@@ -291,6 +302,8 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
     await SafeStorage.write('cloud_token', token);
     _lastRefreshTime = DateTime.now();
     await _saveCache(profile, announcement);
+    await _injectDefaultParams(profile);
+    await importManagedProfile(oixCloudManagedProfileUrl);
     state = state.copyWith(
       isLoading: false,
       isLoggedIn: true,
@@ -298,9 +311,6 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
       latestNotification: announcement,
     );
     globalState.showNotifier(AppLocalizations.current.loginSuccess);
-
-    await _injectDefaultParams(profile);
-    await importManagedProfile(oixCloudManagedProfileUrl);
   }
 
   Future<void> refreshProfile({bool force = false}) async {

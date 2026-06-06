@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:fl_clash/common/common.dart';
+import 'package:fl_clash/controller.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/database.dart';
@@ -15,11 +16,21 @@ String _decodeBase64(String value) {
   return utf8.decode(base64.decode(normalized));
 }
 
+String _decodeBase64Url(String value) {
+  final normalized = base64Url.normalize(value.trim());
+  return utf8.decode(base64Url.decode(normalized));
+}
+
 String _tryDecodeBase64(String value) {
+  final decoded = _decodeComponent(value);
   try {
-    return _decodeBase64(value);
+    return _decodeBase64(decoded);
   } catch (_) {
-    return value;
+    try {
+      return _decodeBase64Url(decoded);
+    } catch (_) {
+      return decoded;
+    }
   }
 }
 
@@ -46,9 +57,19 @@ int? _uriPort(Uri uri) {
   return uri.hasPort ? uri.port : null;
 }
 
-bool _parseBool(String value) {
-  final normalized = value.toLowerCase();
-  return normalized == '1' || normalized == 'true';
+bool _parseBoolOrPresence(String? value) {
+  final normalized = value?.trim().toLowerCase();
+  if (normalized == null || normalized.isEmpty) {
+    return true;
+  }
+  return normalized == '1' ||
+      normalized == 'true' ||
+      normalized == 'yes' ||
+      normalized == 'on';
+}
+
+int? _parseInt(String? value) {
+  return value == null ? null : int.tryParse(value.trim());
 }
 
 List<String> _splitValues(String value) {
@@ -80,6 +101,159 @@ void _putIfNotEmpty(Map<String, Object?> proxy, String key, Object? value) {
     return;
   }
   proxy[key] = value;
+}
+
+String _defaultProxyName(Uri uri, String label, int port) {
+  final fragment = _decodeComponent(uri.fragment).trim();
+  if (fragment.isNotEmpty) {
+    return fragment;
+  }
+  return '$label ${uri.host}:$port';
+}
+
+int _portOrDefault(Uri uri, int defaultPort) {
+  return _parsePort(_uriPort(uri)) ?? defaultPort;
+}
+
+List<String> _splitAuth(String auth) {
+  final index = auth.indexOf(':');
+  if (index == -1) {
+    return [auth];
+  }
+  return [auth.substring(0, index), auth.substring(index + 1)];
+}
+
+void _putQueryValue(
+  Map<String, Object?> proxy,
+  Map<String, String> query,
+  String key,
+) {
+  _putIfNotEmpty(proxy, key, query[key]);
+}
+
+void _putQueryInt(
+  Map<String, Object?> proxy,
+  Map<String, String> query,
+  String key,
+) {
+  final value = _parseInt(query[key]);
+  if (value != null) {
+    proxy[key] = value;
+  }
+}
+
+void _putQueryBool(
+  Map<String, Object?> proxy,
+  Map<String, String> query,
+  String key,
+) {
+  if (query.containsKey(key)) {
+    proxy[key] = _parseBoolOrPresence(query[key]);
+  }
+}
+
+void _putQueryList(
+  Map<String, Object?> proxy,
+  Map<String, String> query,
+  String key,
+) {
+  final value = query[key];
+  if (value == null) {
+    return;
+  }
+  final values = _splitValues(value);
+  if (values.isNotEmpty) {
+    proxy[key] = values;
+  }
+}
+
+void _putFirstQueryValue(
+  Map<String, Object?> proxy,
+  Map<String, String> query,
+  String targetKey,
+  List<String> keys,
+) {
+  for (final key in keys) {
+    final value = query[key];
+    if (value?.isNotEmpty == true) {
+      proxy[targetKey] = value;
+      return;
+    }
+  }
+}
+
+void _putFirstQueryBool(
+  Map<String, Object?> proxy,
+  Map<String, String> query,
+  String targetKey,
+  List<String> keys,
+) {
+  for (final key in keys) {
+    if (query.containsKey(key)) {
+      proxy[targetKey] = _parseBoolOrPresence(query[key]);
+      return;
+    }
+  }
+}
+
+String _stripScheme(String raw, String scheme) {
+  final prefix = '$scheme://';
+  if (!raw.toLowerCase().startsWith(prefix)) {
+    throw FormatException('Invalid $scheme URI');
+  }
+  return raw.substring(prefix.length);
+}
+
+String _decodeBase64OrOriginal(String value) {
+  final decoded = _tryDecodeBase64(value);
+  return decoded.isEmpty ? value : decoded;
+}
+
+String _normalizeSsrServer(String value) {
+  return value
+      .replaceFirst(RegExp(r'^\['), '')
+      .replaceFirst(RegExp(r'\]$'), '');
+}
+
+String _decodeSsrQueryValue(Map<String, String> query, String key) {
+  final value = query[key];
+  if (value == null || value.isEmpty) {
+    return '';
+  }
+  return _decodeBase64OrOriginal(value).replaceAll(RegExp(r'\s'), '');
+}
+
+List<String> _splitSsrMain(String value) {
+  final parts = value.split(':');
+  if (parts.length < 6) {
+    throw const FormatException('Invalid ssr URI');
+  }
+  final password = parts.removeLast();
+  final obfs = parts.removeLast();
+  final cipher = parts.removeLast();
+  final protocol = parts.removeLast();
+  final port = parts.removeLast();
+  final server = parts.join(':');
+  return [server, port, protocol, cipher, obfs, password];
+}
+
+String _stripAddressPrefix(String value) {
+  return value
+      .trim()
+      .replaceFirst(RegExp(r'/\d+$'), '')
+      .replaceFirst(RegExp(r'^\['), '')
+      .replaceFirst(RegExp(r'\]$'), '');
+}
+
+bool _isIpv4(String value) {
+  final parts = value.split('.');
+  if (parts.length != 4) {
+    return false;
+  }
+  return parts.every((part) {
+    final value = int.tryParse(part);
+    return value != null && value >= 0 && value <= 255;
+  });
 }
 
 Map<String, Object?> _parseSimpleProxy(
@@ -115,10 +289,29 @@ Map<String, Object?> _parseSimpleProxy(
   return proxy;
 }
 
-Map<String, Object?> _parseShadowsocks(Uri uri) {
+String _stripShadowsocksLegacyBody(String raw) {
+  final body = _stripScheme(raw, 'ss');
+  final fragmentIndex = body.indexOf('#');
+  final queryIndex = body.indexOf('?');
+  final endIndexes = [
+    if (fragmentIndex >= 0) fragmentIndex,
+    if (queryIndex >= 0) queryIndex,
+  ];
+  final endIndex = endIndexes.isEmpty
+      ? body.length
+      : endIndexes.reduce(
+          (value, element) => value < element ? value : element,
+        );
+  return body.substring(0, endIndex);
+}
+
+Map<String, Object?> _parseShadowsocks(String raw, Uri uri) {
   var nextUri = uri;
   if (!nextUri.hasPort && nextUri.host.isNotEmpty && nextUri.userInfo.isEmpty) {
-    nextUri = Uri.parse('ss://${_decodeBase64(nextUri.host)}');
+    final query = uri.hasQuery ? '?${uri.query}' : '';
+    nextUri = Uri.parse(
+      'ss://${_tryDecodeBase64(_stripShadowsocksLegacyBody(raw))}$query',
+    );
   }
   final port = _parsePort(_uriPort(nextUri));
   if (nextUri.host.isEmpty || port == null) {
@@ -308,6 +501,10 @@ Map<String, Object?> _parseVless(Uri uri) {
   if (network.isNotEmpty) {
     _buildTransportOptions(proxy, network, query);
   }
+  _putFirstQueryBool(proxy, query, 'skip-cert-verify', [
+    'allowInsecure',
+    'insecure',
+  ]);
   return proxy;
 }
 
@@ -320,10 +517,11 @@ Map<String, Object?> _parseTrojan(Uri uri) {
     'port': _parsePort(_uriPort(uri)),
     'password': _decodeComponent(uri.userInfo),
     'udp': true,
-    'skip-cert-verify': _parseBool(
-      query['allowInsecure'] ?? query['insecure'] ?? '',
-    ),
   };
+  _putFirstQueryBool(proxy, query, 'skip-cert-verify', [
+    'allowInsecure',
+    'insecure',
+  ]);
   _putIfNotEmpty(proxy, 'sni', query['sni']);
   _putIfNotEmpty(proxy, 'client-fingerprint', query['fp'] ?? 'chrome');
   if (query['alpn']?.isNotEmpty == true) {
@@ -349,8 +547,8 @@ Map<String, Object?> _parseHysteria(Uri uri) {
     'protocol': query['protocol'],
     'up': query['up'] ?? query['upmbps'],
     'down': query['down'] ?? query['downmbps'],
-    'skip-cert-verify': _parseBool(query['insecure'] ?? ''),
   };
+  _putFirstQueryBool(proxy, query, 'skip-cert-verify', ['insecure']);
   if (query['alpn']?.isNotEmpty == true) {
     proxy['alpn'] = _splitValues(query['alpn']!);
   }
@@ -371,11 +569,160 @@ Map<String, Object?> _parseHysteria2(Uri uri) {
     'fingerprint': query['pinSHA256'],
     'up': query['up'],
     'down': query['down'],
-    'skip-cert-verify': _parseBool(query['insecure'] ?? ''),
   };
+  _putFirstQueryBool(proxy, query, 'skip-cert-verify', ['insecure']);
   if (query['alpn']?.isNotEmpty == true) {
     proxy['alpn'] = _splitValues(query['alpn']!);
   }
+  return proxy;
+}
+
+Map<String, Object?> _parseSSR(String raw) {
+  final body = _stripScheme(raw, 'ssr');
+  final decoded = _decodeBase64OrOriginal(body);
+  final configParts = decoded.split('/?');
+  final params = _splitSsrMain(configParts.first);
+  final server = _normalizeSsrServer(params[0]);
+  final port = _parsePort(params[1]);
+  if (server.isEmpty || port == null) {
+    throw const FormatException('Invalid ssr URI');
+  }
+  final query = configParts.length > 1
+      ? Uri.splitQueryString(configParts[1])
+      : const <String, String>{};
+  final name = query['remarks']?.isNotEmpty == true
+      ? _decodeBase64OrOriginal(query['remarks']!).trim()
+      : server;
+  final proxy = <String, Object?>{
+    'name': name,
+    'type': 'ssr',
+    'server': server,
+    'port': port,
+    'protocol': params[2],
+    'cipher': params[3],
+    'obfs': params[4],
+    'password': _decodeBase64OrOriginal(params[5]),
+  };
+  _putIfNotEmpty(
+    proxy,
+    'protocol-param',
+    _decodeSsrQueryValue(query, 'protoparam'),
+  );
+  _putIfNotEmpty(proxy, 'obfs-param', _decodeSsrQueryValue(query, 'obfsparam'));
+  return proxy;
+}
+
+Map<String, Object?> _parseAnyTLS(Uri uri) {
+  final query = uri.queryParameters;
+  final port = _portOrDefault(uri, 443);
+  final proxy = <String, Object?>{
+    'name': _defaultProxyName(uri, 'AnyTLS', port),
+    'type': 'anytls',
+    'server': uri.host,
+    'port': port,
+    'udp': true,
+  };
+  final auth = _decodeComponent(uri.userInfo);
+  if (auth.isNotEmpty) {
+    final authParts = _splitAuth(auth);
+    proxy['password'] = authParts.length > 1 ? authParts[1] : authParts.first;
+  }
+  _putQueryValue(proxy, query, 'sni');
+  _putQueryList(proxy, query, 'alpn');
+  _putFirstQueryValue(proxy, query, 'fingerprint', ['fingerprint', 'hpkp']);
+  _putFirstQueryValue(proxy, query, 'client-fingerprint', [
+    'client-fingerprint',
+    'fp',
+  ]);
+  _putFirstQueryBool(proxy, query, 'skip-cert-verify', [
+    'skip-cert-verify',
+    'insecure',
+  ]);
+  _putQueryBool(proxy, query, 'udp');
+  _putQueryInt(proxy, query, 'idle-session-check-interval');
+  _putQueryInt(proxy, query, 'idle-session-timeout');
+  _putQueryInt(proxy, query, 'min-idle-session');
+  return proxy;
+}
+
+Map<String, Object?> _parseTUIC(Uri uri) {
+  final query = uri.queryParameters;
+  final port = _portOrDefault(uri, 443);
+  final authParts = _splitAuth(_decodeComponent(uri.userInfo));
+  if (authParts.length < 2 ||
+      authParts.first.isEmpty ||
+      authParts.last.isEmpty) {
+    throw const FormatException('Invalid tuic URI');
+  }
+  final proxy = <String, Object?>{
+    'name': _defaultProxyName(uri, 'TUIC', port),
+    'type': 'tuic',
+    'server': uri.host,
+    'port': port,
+    'uuid': authParts.first,
+    'password': authParts.last,
+  };
+  _putQueryValue(proxy, query, 'token');
+  _putQueryValue(proxy, query, 'ip');
+  _putQueryInt(proxy, query, 'heartbeat-interval');
+  _putQueryList(proxy, query, 'alpn');
+  _putQueryBool(proxy, query, 'disable-sni');
+  _putQueryBool(proxy, query, 'reduce-rtt');
+  _putQueryInt(proxy, query, 'request-timeout');
+  _putQueryValue(proxy, query, 'udp-relay-mode');
+  _putQueryValue(proxy, query, 'congestion-controller');
+  _putQueryInt(proxy, query, 'max-udp-relay-packet-size');
+  _putQueryBool(proxy, query, 'fast-open');
+  _putFirstQueryBool(proxy, query, 'skip-cert-verify', [
+    'skip-cert-verify',
+    'allow-insecure',
+  ]);
+  _putQueryInt(proxy, query, 'max-open-streams');
+  _putQueryValue(proxy, query, 'sni');
+  return proxy;
+}
+
+Map<String, Object?> _parseWireguard(Uri uri) {
+  final query = uri.queryParameters;
+  final port = _portOrDefault(uri, 443);
+  final privateKey = _decodeComponent(uri.userInfo);
+  if (privateKey.isEmpty) {
+    throw const FormatException('Invalid wireguard URI');
+  }
+  final proxy = <String, Object?>{
+    'name': _defaultProxyName(uri, 'WireGuard', port),
+    'type': 'wireguard',
+    'server': uri.host,
+    'port': port,
+    'private-key': privateKey,
+    'udp': true,
+  };
+  final address = query['address'] ?? query['ip'];
+  if (address?.isNotEmpty == true) {
+    for (final item in address!.split(',')) {
+      final ip = _stripAddressPrefix(item);
+      if (_isIpv4(ip)) {
+        proxy['ip'] = ip;
+      } else if (ip.contains(':')) {
+        proxy['ipv6'] = ip;
+      }
+    }
+  }
+  _putFirstQueryValue(proxy, query, 'public-key', ['publickey', 'public-key']);
+  _putQueryList(proxy, query, 'allowed-ips');
+  _putQueryValue(proxy, query, 'pre-shared-key');
+  final reserved = query['reserved']
+      ?.split(',')
+      .map((item) => int.tryParse(item.trim()))
+      .whereType<int>()
+      .toList();
+  if (reserved?.length == 3) {
+    proxy['reserved'] = reserved;
+  }
+  _putQueryBool(proxy, query, 'udp');
+  _putQueryInt(proxy, query, 'mtu');
+  _putQueryBool(proxy, query, 'remote-dns-resolve');
+  _putQueryList(proxy, query, 'dns');
   return proxy;
 }
 
@@ -390,12 +737,16 @@ Map<String, Object?> parseProfileProxyUri(String value) {
   }
   final scheme = uri.scheme.toLowerCase();
   final proxy = normalizeProfileProxyMap(switch (scheme) {
-    'ss' => _parseShadowsocks(uri),
+    'ss' => _parseShadowsocks(raw, uri),
+    'ssr' => _parseSSR(raw),
     'vmess' => _parseVMess(raw),
     'trojan' => _parseTrojan(uri),
     'vless' => _parseVless(uri),
-    'hysteria' => _parseHysteria(uri),
+    'anytls' => _parseAnyTLS(uri),
+    'hysteria' || 'hy' => _parseHysteria(uri),
     'hysteria2' || 'hy2' => _parseHysteria2(uri),
+    'tuic' => _parseTUIC(uri),
+    'wireguard' || 'wg' => _parseWireguard(uri),
     'http' || 'https' => _parseSimpleProxy(uri, scheme, type: 'http'),
     'socks' || 'socks5' || 'socks5h' => _parseSimpleProxy(
       uri,
@@ -424,12 +775,24 @@ void _validateProfileProxy(Map<String, Object?> proxy, String scheme) {
     case 'ss':
       _requireString(proxy, 'cipher', scheme);
       _requireString(proxy, 'password', scheme);
+    case 'ssr':
+      _requireString(proxy, 'cipher', scheme);
+      _requireString(proxy, 'password', scheme);
+      _requireString(proxy, 'protocol', scheme);
+      _requireString(proxy, 'obfs', scheme);
     case 'vmess':
     case 'vless':
       _requireString(proxy, 'uuid', scheme);
+    case 'tuic':
+      _requireString(proxy, 'uuid', scheme);
+      _requireString(proxy, 'password', scheme);
     case 'trojan':
+    case 'anytls':
     case 'hysteria2':
       _requireString(proxy, 'password', scheme);
+    case 'wireguard':
+      _requireString(proxy, 'private-key', scheme);
+      _requireString(proxy, 'public-key', scheme);
   }
 }
 
@@ -448,12 +811,37 @@ void _requirePort(Map<String, Object?> proxy, String scheme) {
   proxy['port'] = port;
 }
 
+bool hasDuplicateProfileProxyName(
+  Iterable<ProfileProxy> profileProxies,
+  ProfileProxy profileProxy,
+) {
+  final name = profileProxy.name;
+  if (name.isEmpty) {
+    return false;
+  }
+  return profileProxies.any((item) {
+    return item.id != profileProxy.id && item.name == name;
+  });
+}
+
+bool hasProfileProxyGroupNameConflict(
+  Iterable<Group> groups,
+  ProfileProxy profileProxy,
+) {
+  final name = profileProxy.name;
+  if (name.isEmpty) {
+    return false;
+  }
+  return groups.any((item) => item.name == name);
+}
+
 class ProfileProxyItem extends StatelessWidget {
   final bool isSelected;
   final bool isEditing;
   final ProfileProxy profileProxy;
   final VoidCallback onSelected;
   final VoidCallback onEdit;
+  final VoidCallback onDelete;
   final ValueChanged<bool> onToggle;
 
   const ProfileProxyItem({
@@ -463,6 +851,7 @@ class ProfileProxyItem extends StatelessWidget {
     required this.profileProxy,
     required this.onSelected,
     required this.onEdit,
+    required this.onDelete,
     required this.onToggle,
   });
 
@@ -478,13 +867,7 @@ class ProfileProxyItem extends StatelessWidget {
           radius: 18,
           type: CommonCardType.filled,
           isSelected: isSelected,
-          onPressed: () {
-            if (isEditing) {
-              onSelected();
-              return;
-            }
-            onEdit();
-          },
+          onPressed: onSelected,
           child: ListTile(
             minTileHeight: 32 + globalState.measure.bodyMediumHeight,
             minVerticalPadding: 12,
@@ -515,7 +898,37 @@ class ProfileProxyItem extends StatelessWidget {
                       },
                     ),
                   )
-                : Switch(value: profileProxy.enable, onChanged: onToggle),
+                : Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Switch(value: profileProxy.enable, onChanged: onToggle),
+                      CommonPopupBox(
+                        popup: CommonPopupMenu(
+                          items: [
+                            PopupMenuItemData(
+                              icon: Icons.edit_outlined,
+                              label: appLocalizations.edit,
+                              onPressed: onEdit,
+                            ),
+                            PopupMenuItemData(
+                              danger: true,
+                              icon: Icons.delete_outline,
+                              label: appLocalizations.delete,
+                              onPressed: onDelete,
+                            ),
+                          ],
+                        ),
+                        targetBuilder: (open) {
+                          return IconButton(
+                            onPressed: () {
+                              open();
+                            },
+                            icon: Icon(Icons.more_vert),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
           ),
         ),
       ),
@@ -534,21 +947,27 @@ class ProfileProxyEditView extends StatefulWidget {
 
 class _ProfileProxyEditViewState extends State<ProfileProxyEditView> {
   final _uriController = TextEditingController();
-  late bool _enable;
 
   @override
   void initState() {
     super.initState();
     final profileProxy = widget.profileProxy;
     _uriController.text = profileProxy?.uri ?? '';
-    _enable = profileProxy?.enable ?? true;
+    _uriController.addListener(_handleUriChanged);
   }
 
   @override
   void dispose() {
+    _uriController.removeListener(_handleUriChanged);
     _uriController.dispose();
     super.dispose();
   }
+
+  void _handleUriChanged() {
+    setState(() {});
+  }
+
+  bool get _hasUri => _uriController.text.trim().isNotEmpty;
 
   void _handleSubmit() {
     try {
@@ -556,7 +975,7 @@ class _ProfileProxyEditViewState extends State<ProfileProxyEditView> {
       final proxy = parseProfileProxyUri(uri);
       final nextProfileProxy =
           (widget.profileProxy ?? ProfileProxy.create(uri: uri, proxy: proxy))
-              .copyWith(enable: _enable, uri: uri, proxy: proxy);
+              .copyWith(enable: true, uri: uri, proxy: proxy);
       Navigator.of(context).pop(nextProfileProxy);
     } catch (e) {
       context.showNotifier(e.toString());
@@ -565,12 +984,24 @@ class _ProfileProxyEditViewState extends State<ProfileProxyEditView> {
 
   @override
   Widget build(BuildContext context) {
+    final canSubmit = _hasUri;
     return CommonScaffold(
-      title: appLocalizations.proxies,
+      title: appLocalizations.proxyChainCustomNode,
       actions: [
         CommonMinIconButtonTheme(
-          child: IconButton.filledTonal(
-            onPressed: _handleSubmit,
+          child: IconButton.filled(
+            style:
+                IconButton.styleFrom(
+                  backgroundColor: canSubmit ? Colors.green : null,
+                  foregroundColor: canSubmit ? Colors.white : null,
+                ).copyWith(
+                  mouseCursor: WidgetStatePropertyAll(
+                    canSubmit
+                        ? SystemMouseCursors.click
+                        : SystemMouseCursors.basic,
+                  ),
+                ),
+            onPressed: canSubmit ? _handleSubmit : null,
             icon: Icon(Icons.check),
           ),
         ),
@@ -583,24 +1014,13 @@ class _ProfileProxyEditViewState extends State<ProfileProxyEditView> {
             controller: _uriController,
             minLines: 4,
             maxLines: 8,
+            keyboardType: TextInputType.url,
+            textInputAction: TextInputAction.done,
             decoration: InputDecoration(
               border: const OutlineInputBorder(),
               labelText: 'URI',
-            ),
-          ),
-          SizedBox(height: 12),
-          CommonCard(
-            padding: EdgeInsets.zero,
-            type: CommonCardType.filled,
-            radius: 18,
-            child: SwitchListTile(
-              value: _enable,
-              title: Text(appLocalizations.enableOverride),
-              onChanged: (value) {
-                setState(() {
-                  _enable = value;
-                });
-              },
+              helperText: appLocalizations.proxyChainUriNodeSupportedFormats,
+              helperMaxLines: 4,
             ),
           ),
         ],
@@ -622,6 +1042,13 @@ class ProfileProxiesContent extends ConsumerStatefulWidget {
 class _ProfileProxiesContentState extends ConsumerState<ProfileProxiesContent> {
   final _profileProxyKey = utils.id;
 
+  Set<int> _getSelectedProfileProxyIds() {
+    return ref
+        .read(selectedItemsProvider(_profileProxyKey))
+        .whereType<int>()
+        .toSet();
+  }
+
   Future<void> _handleAddOrUpdateProfileProxy([
     ProfileProxy? profileProxy,
   ]) async {
@@ -637,27 +1064,58 @@ class _ProfileProxiesContentState extends ConsumerState<ProfileProxiesContent> {
     }
     final profileProxies =
         ref.read(profileProvider(widget.profileId))?.profileProxies ?? [];
-    final name = res.name;
-    final hasDuplicate = profileProxies.any((item) {
-      return item.id != res.id && item.name == name;
-    });
-    if (hasDuplicate) {
+    if (hasDuplicateProfileProxyName(profileProxies, res)) {
       context.showNotifier(
         appLocalizations.existsTip(appLocalizations.proxies),
       );
       return;
     }
-    _putProfileProxy(res);
+    if (hasProfileProxyGroupNameConflict(ref.read(groupsProvider), res)) {
+      context.showNotifier(
+        appLocalizations.proxyChainUnavailableNodeTip(res.name),
+      );
+      return;
+    }
+    final previousName = profileProxy?.name;
+    final nextName = res.name;
+    if (previousName != null &&
+        previousName.isNotEmpty &&
+        nextName.isNotEmpty &&
+        previousName != nextName) {
+      final nextProxyChains = ref
+          .read(profileProvider(widget.profileId))
+          ?.proxyChains
+          .copyAndRenameProxy(previousName, nextName);
+      final conflictName = findProxyChainConflictName(nextProxyChains ?? []);
+      if (conflictName != null) {
+        context.showNotifier(
+          appLocalizations.proxyChainConflictTip(conflictName),
+        );
+        return;
+      }
+    }
+    _putProfileProxy(res, previousName: profileProxy?.name);
+    _applyProfileChanges();
   }
 
-  void _putProfileProxy(ProfileProxy profileProxy) {
+  void _putProfileProxy(ProfileProxy profileProxy, {String? previousName}) {
     ref.read(profilesProvider.notifier).updateProfile(widget.profileId, (
       state,
     ) {
+      final nextProfileProxies = state.profileProxies.copyAndPut(profileProxy);
+      final nextName = profileProxy.name;
       return state.copyWith(
-        profileProxies: state.profileProxies.copyAndPut(profileProxy),
+        profileProxies: nextProfileProxies,
+        proxyChains: state.proxyChains.copyAndRenameProxy(
+          previousName,
+          nextName,
+        ),
       );
     });
+  }
+
+  void _applyProfileChanges() {
+    appController.applyProfileDebounce(silence: true);
   }
 
   void _handleProfileProxySelected(int profileProxyId) {
@@ -685,46 +1143,94 @@ class _ProfileProxiesContentState extends ConsumerState<ProfileProxiesContent> {
     });
   }
 
-  Future<void> _handleDeleteProfileProxies() async {
+  Future<void> _handleDeleteProfileProxies([Set<int>? profileProxyIds]) async {
+    final targetProfileProxyIds = profileProxyIds != null
+        ? Set<int>.from(profileProxyIds)
+        : _getSelectedProfileProxyIds();
+    if (targetProfileProxyIds.isEmpty) {
+      return;
+    }
     final res = await globalState.showMessage(
       title: appLocalizations.tip,
       message: TextSpan(
-        text: appLocalizations.deleteMultipTip(appLocalizations.proxies),
+        text: profileProxyIds == null
+            ? appLocalizations.deleteMultipTip(appLocalizations.proxies)
+            : appLocalizations.deleteTip(appLocalizations.proxyChainCustomNode),
       ),
     );
     if (res != true) {
       return;
     }
-    final selectedProfileProxies = ref.read(
-      selectedItemsProvider(_profileProxyKey),
-    );
+    if (!mounted) {
+      return;
+    }
+    final currentProfile = ref.read(profileProvider(widget.profileId));
+    final relatedNames =
+        currentProfile?.profileProxies
+            .where((item) => targetProfileProxyIds.contains(item.id))
+            .map((item) => item.name)
+            .toSet() ??
+        {};
+    final hasRelatedProxyChains =
+        currentProfile?.proxyChains.any((chain) {
+          return chain.proxies.any(relatedNames.contains);
+        }) ??
+        false;
     ref.read(profilesProvider.notifier).updateProfile(widget.profileId, (
       state,
     ) {
       final deletedNames = state.profileProxies
-          .where((item) => selectedProfileProxies.contains(item.id))
+          .where((item) => targetProfileProxyIds.contains(item.id))
           .map((item) => item.name)
           .toSet();
       return state.copyWith(
         profileProxies: state.profileProxies
-            .where((item) => !selectedProfileProxies.contains(item.id))
+            .where((item) => !targetProfileProxyIds.contains(item.id))
             .toList(),
-        proxyChains: state.proxyChains
-            .map(
-              (chain) => chain.copyWith(
-                proxies: chain.proxies
-                    .where((proxy) => !deletedNames.contains(proxy))
-                    .toList(),
-              ),
-            )
-            .toList(),
+        proxyChains: state.proxyChains.copyAndRemoveProxies(deletedNames),
       );
     });
-    ref.read(selectedItemsProvider(_profileProxyKey).notifier).value = {};
+    ref.read(selectedItemsProvider(_profileProxyKey).notifier).update((
+      selectedProfileProxies,
+    ) {
+      return selectedProfileProxies
+          .where((item) => !targetProfileProxyIds.contains(item))
+          .toSet();
+    });
+    _applyProfileChanges();
+    if (hasRelatedProxyChains) {
+      context.showNotifier(appLocalizations.proxyChainRelatedChainsUpdated);
+    }
   }
 
   void _handleProfileProxyToggle(ProfileProxy profileProxy, bool value) {
-    _putProfileProxy(profileProxy.copyWith(enable: value));
+    final hasRelatedProxyChains =
+        ref
+            .read(profileProvider(widget.profileId))
+            ?.proxyChains
+            .any((chain) => chain.proxies.contains(profileProxy.name)) ??
+        false;
+    ref.read(profilesProvider.notifier).updateProfile(widget.profileId, (
+      state,
+    ) {
+      final nextProfileProxy = profileProxy.copyWith(enable: value);
+      final nextProfileProxies = state.profileProxies.copyAndPut(
+        nextProfileProxy,
+      );
+      if (value) {
+        return state.copyWith(profileProxies: nextProfileProxies);
+      }
+      return state.copyWith(
+        profileProxies: nextProfileProxies,
+        proxyChains: state.proxyChains.copyAndDisableChainsUsingProxy(
+          profileProxy.name,
+        ),
+      );
+    });
+    _applyProfileChanges();
+    if (!value && hasRelatedProxyChains) {
+      context.showNotifier(appLocalizations.proxyChainRelatedChainsUpdated);
+    }
   }
 
   @override
@@ -739,7 +1245,7 @@ class _ProfileProxiesContentState extends ConsumerState<ProfileProxiesContent> {
         SliverToBoxAdapter(child: SizedBox(height: 24)),
         SliverToBoxAdapter(
           child: InfoHeader(
-            info: Info(label: appLocalizations.proxies),
+            info: Info(label: appLocalizations.proxyChainCustomNodes),
             actions: [
               if (selectedProfileProxies.isNotEmpty) ...[
                 CommonMinIconButtonTheme(
@@ -756,12 +1262,12 @@ class _ProfileProxiesContentState extends ConsumerState<ProfileProxiesContent> {
                         onPressed: _handleSelectAllProfileProxies,
                         child: Text(appLocalizations.selectAll),
                       )
-                    : FilledButton.tonalIcon(
+                    : FilledButton.icon(
                         onPressed: () {
                           _handleAddOrUpdateProfileProxy();
                         },
                         icon: Icon(Icons.add),
-                        label: Text(appLocalizations.add),
+                        label: Text(appLocalizations.addProxyChainNode),
                       ),
               ),
             ],
@@ -782,6 +1288,9 @@ class _ProfileProxiesContentState extends ConsumerState<ProfileProxiesContent> {
                 },
                 onEdit: () {
                   _handleAddOrUpdateProfileProxy(profileProxy);
+                },
+                onDelete: () {
+                  _handleDeleteProfileProxies({profileProxy.id});
                 },
                 onToggle: (value) {
                   _handleProfileProxyToggle(profileProxy, value);

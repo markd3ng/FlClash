@@ -166,6 +166,42 @@ List<String> normalizeProxyChainProxies(Iterable<String> proxies) {
       .toList();
 }
 
+class ProxyChainNameScope {
+  final Set<String> targetNames;
+  final Set<String> dialerNames;
+
+  const ProxyChainNameScope({
+    required this.targetNames,
+    required this.dialerNames,
+  });
+
+  bool isValid(Iterable<String> proxies) {
+    return getInvalidName(proxies) == null;
+  }
+
+  String? getInvalidName(Iterable<String> proxies) {
+    final names = normalizeProxyChainProxies(proxies);
+    for (var i = 0; i < names.length; i++) {
+      final name = names[i];
+      final isEntry = i == 0;
+      final isExit = i == names.length - 1;
+      if (isEntry) {
+        if (!dialerNames.contains(name)) {
+          return name;
+        }
+        continue;
+      }
+      if (!targetNames.contains(name)) {
+        return name;
+      }
+      if (!isExit && !dialerNames.contains(name)) {
+        return name;
+      }
+    }
+    return null;
+  }
+}
+
 Map<String, Object?> normalizeProfileProxyMap(Map<String, Object?> proxy) {
   final nextProxy = <String, Object?>{};
   for (final entry in proxy.entries) {
@@ -232,7 +268,7 @@ extension ProfileProxyExt on ProfileProxy {
     final nextProxy = Map<String, Object?>.from(this.proxy);
     nextProxy['name'] = name;
     nextProxy['type'] = type;
-    return normalizeProfileProxyMap(nextProxy);
+    return normalizeProfileProxyMap(nextProxy)..remove('dialer-proxy');
   }
 }
 
@@ -251,6 +287,51 @@ extension ProfileProxiesExt on List<ProfileProxy> {
 
 extension ProxyChainExt on ProxyChain {
   List<String> get normalizedProxies => normalizeProxyChainProxies(proxies);
+
+  String? get entryProxyName {
+    final proxies = normalizedProxies;
+    return proxies.isNotEmpty ? proxies.first : null;
+  }
+
+  String? get exitProxyName {
+    final proxies = normalizedProxies;
+    return proxies.length >= 2 ? proxies.last : null;
+  }
+
+  Map<String, String> get dialerProxyRelations {
+    final proxies = normalizedProxies;
+    final relations = <String, String>{};
+    for (var i = 1; i < proxies.length; i++) {
+      relations[proxies[i]] = proxies[i - 1];
+    }
+    return relations;
+  }
+
+  ProxyChain get disabledIfIncomplete {
+    return normalizedProxies.length < 2 ? copyWith(enable: false) : this;
+  }
+
+  ProxyChain copyAndRenameProxy(String previousName, String nextName) {
+    if (previousName.isEmpty || nextName.isEmpty || previousName == nextName) {
+      return this;
+    }
+    return copyWith(
+      proxies: proxies.map((proxy) {
+        return proxy.trim() == previousName ? nextName : proxy;
+      }).toList(),
+    );
+  }
+
+  ProxyChain copyAndRemoveProxies(Set<String> proxyNames) {
+    if (proxyNames.isEmpty) {
+      return this;
+    }
+    return copyWith(
+      proxies: proxies
+          .where((proxy) => !proxyNames.contains(proxy.trim()))
+          .toList(),
+    ).disabledIfIncomplete;
+  }
 
   bool get hasDuplicateProxy {
     final proxies = normalizedProxies;
@@ -294,6 +375,154 @@ extension ProxyChainsExt on List<ProxyChain> {
     nextList.insert(insertIndex, proxyChain);
     return nextList;
   }
+
+  List<ProxyChain> copyAndRenameProxy(String? previousName, String nextName) {
+    if (previousName == null) {
+      return this;
+    }
+    return map((chain) {
+      return chain.copyAndRenameProxy(previousName, nextName);
+    }).toList();
+  }
+
+  List<ProxyChain> copyAndRemoveProxies(Set<String> proxyNames) {
+    if (proxyNames.isEmpty) {
+      return this;
+    }
+    return map((chain) => chain.copyAndRemoveProxies(proxyNames)).toList();
+  }
+
+  List<ProxyChain> copyAndDisableChainsUsingProxy(String proxyName) {
+    if (proxyName.isEmpty) {
+      return this;
+    }
+    var changed = false;
+    final nextList = map((chain) {
+      if (!chain.normalizedProxies.contains(proxyName)) {
+        return chain;
+      }
+      changed = true;
+      return chain.copyWith(enable: false);
+    }).toList();
+    return changed ? nextList : this;
+  }
+
+  ({bool hasDisabledConflicts, List<ProxyChain> proxyChains})
+  copyAndPutResolvingTargetConflicts(ProxyChain proxyChain) {
+    final nextProxyChain = proxyChain.copyWith(enable: true);
+    final nextRelations = nextProxyChain.dialerProxyRelations;
+    final nextEntryProxyName = nextProxyChain.entryProxyName;
+    final nextExitProxyName = nextProxyChain.exitProxyName;
+    var hasDisabledConflicts = false;
+    final nextList = map((chain) {
+      if (chain.id == nextProxyChain.id || !chain.isValid) {
+        return chain;
+      }
+      final chainEntryProxyName = chain.entryProxyName;
+      final chainRelations = chain.dialerProxyRelations;
+      final hasExitConflict =
+          nextExitProxyName != null && chain.exitProxyName == nextExitProxyName;
+      final hasEntryConflict =
+          (nextEntryProxyName != null &&
+              chainRelations.containsKey(nextEntryProxyName)) ||
+          (chainEntryProxyName != null &&
+              nextRelations.containsKey(chainEntryProxyName));
+      final hasConflict =
+          hasExitConflict ||
+          hasEntryConflict ||
+          chainRelations.entries.any((entry) {
+            final dialer = nextRelations[entry.key];
+            return dialer != null && dialer != entry.value;
+          });
+      if (!hasConflict) {
+        return chain;
+      }
+      hasDisabledConflicts = true;
+      return chain.copyWith(enable: false);
+    }).toList();
+    return (
+      hasDisabledConflicts: hasDisabledConflicts,
+      proxyChains: nextList.copyAndPut(nextProxyChain),
+    );
+  }
+}
+
+String? _findProxyChainCycleName(
+  Map<String, String> targetDialerMap,
+  String target,
+) {
+  final seen = <String>{};
+  var current = target;
+  while (true) {
+    if (!seen.add(current)) {
+      return current;
+    }
+    final dialer = targetDialerMap[current];
+    if (dialer == null) {
+      return null;
+    }
+    current = dialer;
+  }
+}
+
+String? _findProxyChainDuplicateExitName(Iterable<ProxyChain> proxyChains) {
+  final exitNames = <String>{};
+  for (final proxyChain in proxyChains.where((item) => item.isValid)) {
+    final exitProxyName = proxyChain.exitProxyName;
+    if (exitProxyName == null) {
+      continue;
+    }
+    if (!exitNames.add(exitProxyName)) {
+      return exitProxyName;
+    }
+  }
+  return null;
+}
+
+String? _findProxyChainEntryTargetName(Iterable<ProxyChain> proxyChains) {
+  final targetNames = <String>{};
+  final entries = <String>[];
+  for (final proxyChain in proxyChains.where((item) => item.isValid)) {
+    targetNames.addAll(proxyChain.dialerProxyRelations.keys);
+    final entryProxyName = proxyChain.entryProxyName;
+    if (entryProxyName != null) {
+      entries.add(entryProxyName);
+    }
+  }
+  for (final entry in entries) {
+    if (targetNames.contains(entry)) {
+      return entry;
+    }
+  }
+  return null;
+}
+
+String? findProxyChainConflictName(Iterable<ProxyChain> proxyChains) {
+  final duplicateExitName = _findProxyChainDuplicateExitName(proxyChains);
+  if (duplicateExitName != null) {
+    return duplicateExitName;
+  }
+  final entryTargetName = _findProxyChainEntryTargetName(proxyChains);
+  if (entryTargetName != null) {
+    return entryTargetName;
+  }
+  final targetDialerMap = <String, String>{};
+  for (final proxyChain in proxyChains.where((item) => item.isValid)) {
+    for (final entry in proxyChain.dialerProxyRelations.entries) {
+      final target = entry.key;
+      final dialer = entry.value;
+      final existingDialer = targetDialerMap[target];
+      if (existingDialer != null && existingDialer != dialer) {
+        return target;
+      }
+      targetDialerMap[target] = dialer;
+      final cycleName = _findProxyChainCycleName(targetDialerMap, target);
+      if (cycleName != null) {
+        return cycleName;
+      }
+    }
+  }
+  return null;
 }
 
 @freezed
