@@ -132,6 +132,56 @@ class Build {
 
   static String get tags => 'with_gvisor';
 
+  static const _sensitiveBuildKeys = {
+    'PROFILE_KEY',
+    'BASE_DOMAIN',
+    'SPARE_DOMAIN',
+    'API_DOMAIN',
+    'SPARE_API_DOMAIN',
+    'FLCLASH_APP_SECRET',
+    'HOST_OVERRIDES',
+    'FLCLASH_KEY',
+  };
+
+  static final RegExp _sensitiveValuePattern = RegExp(
+    '(${_sensitiveBuildKeys.map(RegExp.escape).join('|')})=([^\\s]+)',
+  );
+
+  static final RegExp _dartDefinesPattern = RegExp(
+    r'((?:--)?DartDefines=|DART_DEFINES\s*=\s*)[^\r\n\s]+',
+  );
+
+  static String _redactSensitive(String value) {
+    return value.replaceAllMapped(
+      _sensitiveValuePattern,
+      (match) => '${match[1]}=<redacted>',
+    );
+  }
+
+  static String _redactOutput(String value) {
+    return _redactSensitive(value).replaceAllMapped(
+      _dartDefinesPattern,
+      (match) => '${match[1]}<redacted>',
+    );
+  }
+
+  static String _redactCommand(List<String> executable) {
+    return executable.map(_redactSensitive).join(' ');
+  }
+
+  static Map<String, String>? _redactEnvironment(
+    Map<String, String>? environment,
+  ) {
+    return environment?.map((key, value) {
+      return MapEntry(
+        key,
+        _sensitiveBuildKeys.contains(key)
+            ? '<redacted>'
+            : _redactSensitive(value),
+      );
+    });
+  }
+
   static Future<void> exec(
     List<String> executable, {
     String? name,
@@ -140,8 +190,8 @@ class Build {
     bool runInShell = true,
   }) async {
     if (name != null) print('run $name');
-    print('exec: ${executable.join(' ')}');
-    print('env: ${environment.toString()}');
+    print('exec: ${_redactCommand(executable)}');
+    print('env: ${_redactEnvironment(environment).toString()}');
     final process = await Process.start(
       executable[0],
       executable.sublist(1),
@@ -150,10 +200,10 @@ class Build {
       runInShell: runInShell,
     );
     process.stdout.listen((data) {
-      print(utf8.decode(data, allowMalformed: true));
+      print(_redactOutput(utf8.decode(data, allowMalformed: true)));
     });
     process.stderr.listen((data) {
-      print(utf8.decode(data, allowMalformed: true));
+      print(_redactOutput(utf8.decode(data, allowMalformed: true)));
     });
     final exitCode = await process.exitCode;
     if (exitCode != 0 && name != null) throw '$name error';
@@ -440,11 +490,15 @@ class BuildCommand extends Command {
       prefix: '--build-dart-define',
       env: env,
     );
+    final flutterBuildArgs = [
+      if (Platform.environment['FLUTTER_BUILD_VERBOSE'] == 'true') 'verbose',
+      'no-pub',
+    ].join(',');
 
     await Build.exec(
       name: name,
       Build.getExecutable(
-        'flutter_distributor package --skip-clean --platform ${target.name} --targets $targets --artifact-name $artifactNameTemplate --flutter-build-args=verbose,no-pub$args $dartDefines',
+        'flutter_distributor package --skip-clean --platform ${target.name} --targets $targets --artifact-name $artifactNameTemplate --flutter-build-args=$flutterBuildArgs$args $dartDefines',
       ),
     );
   }

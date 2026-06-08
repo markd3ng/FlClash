@@ -32,11 +32,18 @@ class CommonDialog extends ConsumerWidget {
       backgroundColor: backgroundColor,
       content: Container(
         constraints: BoxConstraints(
-          maxHeight: min(size.height - 40, 500),
+          maxHeight: min(
+            size.height - 40,
+            500,
+          ),
           maxWidth: 300,
         ),
         width: size.width - 40,
-        child: !overrideScroll ? SingleChildScrollView(child: child) : child,
+        child: !overrideScroll
+            ? SingleChildScrollView(
+                child: child,
+              )
+            : child,
       ),
     );
   }
@@ -45,7 +52,10 @@ class CommonDialog extends ConsumerWidget {
 class CommonModal extends ConsumerWidget {
   final Widget? child;
 
-  const CommonModal({super.key, this.child});
+  const CommonModal({
+    super.key,
+    this.child,
+  });
 
   @override
   Widget build(BuildContext context, ref) {
@@ -54,7 +64,9 @@ class CommonModal extends ConsumerWidget {
       child: Container(
         width: size.width * 0.85,
         height: size.height * 0.85,
-        decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+        ),
         clipBehavior: Clip.antiAlias,
         child: child,
       ),

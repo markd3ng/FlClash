@@ -37,6 +37,7 @@ class GlobalState {
   late Measure measure;
   late CommonTheme theme;
   late Color accentColor;
+  late ProviderContainer container;
   ColorScheme? lightDynamicColorScheme;
   ColorScheme? darkDynamicColorScheme;
   bool needInitStatus = true;
@@ -105,7 +106,7 @@ class GlobalState {
       },
     );
     final configOverrides = buildConfigOverrides(config);
-    final container = ProviderContainer(
+    container = ProviderContainer(
       overrides: [...appStateOverrides, ...configOverrides],
     );
     final profiles = await database.profilesDao.all().get();
@@ -147,7 +148,9 @@ class GlobalState {
 
   Future<void> handleStart([UpdateTasks? tasks]) async {
     startTime ??= DateTime.now();
-    await coreController.startListener();
+    if (coreController.isCompleted) {
+      await coreController.startListener();
+    }
     await service?.start();
     startUpdateTasks(tasks);
   }
@@ -158,7 +161,9 @@ class GlobalState {
 
   Future handleStop() async {
     startTime = null;
-    await coreController.stopListener();
+    if (coreController.isCompleted) {
+      await coreController.stopListener();
+    }
     await service?.stop();
     stopUpdateTasks();
   }

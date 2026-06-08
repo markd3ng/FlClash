@@ -24,11 +24,13 @@ import 'providers/database.dart';
 const _persistentLogFileName = 'app.log';
 const _persistentLogMaxBytes = 1024 * 1024;
 const _persistentLogKeepBytes = 768 * 1024;
+const _coreDisconnectedMessage = 'Core is not connected';
 
 class AppController {
   late final BuildContext _context;
   late final WidgetRef _ref;
   Future<void> _logFileWrite = Future.value();
+  Future<bool>? _coreReadyFuture;
   bool isAttach = false;
   bool _isUpdateDownloading = false;
   bool _isCloudLoginDialogShowing = false;
@@ -423,6 +425,7 @@ extension ProfilesControllerExt on AppController {
   }
 
   Future<void> updateProfiles() async {
+    await ensureCoreReadyOrThrow();
     final List<Profile> profiles = _ref.read(profilesProvider);
     final List<Future<void>> tasks = [];
     for (final profile in profiles) {
@@ -449,6 +452,7 @@ extension ProfilesControllerExt on AppController {
     bool applyIfCurrent = true,
   }) async {
     try {
+      await ensureCoreReadyOrThrow();
       if (showLoading) {
         _ref.read(isUpdatingProvider(profile.updatingKey).notifier).value =
             true;
@@ -705,6 +709,10 @@ extension ProxiesControllerExt on AppController {
   Future<void> updateGroups() async {
     try {
       commonPrint.log('updateGroups');
+      if (!await ensureCoreReady()) {
+        _ref.read(groupsProvider.notifier).value = [];
+        return;
+      }
       final groups = await retry(
         task: () async {
           final sortType = _ref.read(
@@ -774,6 +782,9 @@ extension ProxiesControllerExt on AppController {
     required String groupName,
     required String proxyName,
   }) async {
+    if (!await ensureCoreReady()) {
+      return;
+    }
     await coreController.changeProxy(
       ChangeProxyParams(groupName: groupName, proxyName: proxyName),
     );
@@ -790,6 +801,10 @@ extension ProxiesControllerExt on AppController {
   }
 
   Future<void> updateProviders() async {
+    if (!await ensureCoreReady()) {
+      _ref.read(providersProvider.notifier).value = [];
+      return;
+    }
     _ref.read(providersProvider.notifier).value = await coreController
         .getExternalProviders();
   }
@@ -799,6 +814,9 @@ extension ProxiesControllerExt on AppController {
     bool showLoading = false,
   }) async {
     try {
+      if (!await ensureCoreReady()) {
+        return _coreDisconnectedMessage;
+      }
       if (showLoading) {
         _ref.read(isUpdatingProvider(provider.updatingKey).notifier).value =
             true;
@@ -854,9 +872,11 @@ extension SetupControllerExt on AppController {
       }
     } else {
       await globalState.handleStop();
-      coreController.resetTraffic();
+      if (coreController.isCompleted) {
+        coreController.resetTraffic();
+      }
       _ref.read(trafficsProvider.notifier).clear();
-      _ref.read(totalTrafficProvider.notifier).value = Traffic();
+      _ref.read(totalTrafficProvider.notifier).value = const Traffic();
       _ref.read(runTimeProvider.notifier).value = null;
       addCheckIp();
     }
@@ -888,6 +908,9 @@ extension SetupControllerExt on AppController {
         final updateParams = _ref.read(updateParamsProvider);
         final res = await _requestAdmin(updateParams.tun.enable);
         if (res.isError) {
+          return;
+        }
+        if (!await ensureCoreReady()) {
           return;
         }
         final realTunEnable = _ref.read(realTunEnableProvider);
@@ -947,7 +970,9 @@ extension SetupControllerExt on AppController {
     }
     final res = await loadingRun<bool>(
       () async {
-        await _setupConfig(preloadInvoke);
+        if (!await _setupConfig(preloadInvoke)) {
+          return false;
+        }
         await updateGroups();
         await updateProviders();
 
@@ -1094,8 +1119,11 @@ extension SetupControllerExt on AppController {
     return res;
   }
 
-  Future<void> _setupConfig([VoidCallback? preloadInvoke]) async {
+  Future<bool> _setupConfig([VoidCallback? preloadInvoke]) async {
     commonPrint.log('setup ===>');
+    if (!await ensureCoreReady()) {
+      return false;
+    }
     var profile = _ref.read(currentProfileProvider);
     final nextProfile = await _checkAndUpdateProfileWithCertificateRetry(
       profile,
@@ -1107,7 +1135,10 @@ extension SetupControllerExt on AppController {
     final patchConfig = _ref.read(patchClashConfigProvider);
     final res = await _requestAdmin(patchConfig.tun.enable);
     if (res.isError) {
-      return;
+      return false;
+    }
+    if (!await ensureCoreReady()) {
+      return false;
     }
     final realTunEnable = _ref.read(realTunEnableProvider);
     final realPatchConfig = patchConfig.copyWith.tun(enable: realTunEnable);
@@ -1152,10 +1183,13 @@ extension SetupControllerExt on AppController {
       throw message;
     }
     addCheckIp();
+    return true;
   }
 }
 
 extension CoreControllerExt on AppController {
+  String get coreDisconnectedMessage => _coreDisconnectedMessage;
+
   Future<void> _initCore() async {
     final isInit = await coreController.isInit;
     final version = _ref.read(versionProvider);
@@ -1170,7 +1204,7 @@ extension CoreControllerExt on AppController {
     _ref.read(coreStatusProvider.notifier).value = CoreStatus.connecting;
     final result = await Future.wait([
       coreController.preload(),
-      Future.delayed(Duration(milliseconds: 300)),
+      Future.delayed(const Duration(milliseconds: 300)),
     ]);
     final String message = result[0];
     if (message.isNotEmpty) {
@@ -1181,6 +1215,33 @@ extension CoreControllerExt on AppController {
       return;
     }
     _ref.read(coreStatusProvider.notifier).value = CoreStatus.connected;
+  }
+
+  Future<bool> ensureCoreReady() async {
+    if (coreController.isCompleted) {
+      return true;
+    }
+    return _coreReadyFuture ??= _ensureCoreReady().whenComplete(() {
+      _coreReadyFuture = null;
+    });
+  }
+
+  Future<void> ensureCoreReadyOrThrow() async {
+    if (!await ensureCoreReady()) {
+      throw _coreDisconnectedMessage;
+    }
+  }
+
+  Future<bool> _ensureCoreReady() async {
+    commonPrint.log('Core disconnected, reconnecting');
+    _ref.read(coreStatusProvider.notifier).value = CoreStatus.disconnected;
+    await coreController.shutdown(false);
+    await _connectCore();
+    if (!coreController.isCompleted) {
+      return false;
+    }
+    await _initCore();
+    return coreController.isCompleted;
   }
 
   Future<Profile?> _checkAndUpdateProfileWithCertificateRetry(
@@ -1581,6 +1642,11 @@ extension CommonControllerExt on AppController {
   }
 
   Future<void> updateTraffic() async {
+    if (!coreController.isCompleted) {
+      _ref.read(trafficsProvider.notifier).addTraffic(const Traffic());
+      _ref.read(totalTrafficProvider.notifier).value = const Traffic();
+      return;
+    }
     final onlyStatisticsProxy = _ref.read(
       appSettingProvider.select((state) => state.onlyStatisticsProxy),
     );

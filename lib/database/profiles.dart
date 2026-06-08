@@ -120,6 +120,20 @@ class StringMapConverter extends TypeConverter<Map<String, String>, String> {
   }
 }
 
+class StringListConverter extends TypeConverter<List<String>, String> {
+  const StringListConverter();
+
+  @override
+  List<String> fromSql(String fromDb) {
+    return List<String>.from(json.decode(fromDb));
+  }
+
+  @override
+  String toSql(List<String> value) {
+    return json.encode(value);
+  }
+}
+
 class StringSetConverter extends TypeConverter<Set<String>, String> {
   const StringSetConverter();
 

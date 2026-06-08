@@ -69,10 +69,10 @@ jobs:
             os: Windows-2022
             arch: amd64
             name: "Windows x64"
-          # - platform: windows
-          # os: windows-11-arm
-          # arch: arm64
-          # name: "Windows arm64"
+          - platform: windows
+            os: windows-11-arm
+            arch: arm64
+            name: "Windows arm64"
           - platform: macos
             os: macos-15-intel
             arch: amd64

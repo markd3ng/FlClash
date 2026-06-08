@@ -25,7 +25,7 @@ class FixedList<T> {
   T operator [](int index) => _list[index];
 
   FixedList<T> copyWith() {
-    return FixedList(maxLength, list: _list);
+    return FixedList(maxLength, list: List.of(_list));
   }
 }
 

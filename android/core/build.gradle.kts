@@ -57,6 +57,7 @@ dependencies {
 val copyNativeLibs by tasks.register<Copy>("copyNativeLibs") {
     doFirst {
         delete("src/main/jniLibs")
+        delete("src/main/cpp/includes")
     }
     from("../../libclash/android")
     into("src/main/jniLibs")

@@ -11,6 +11,8 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'generated/app.g.dart';
 
+SelectedItemsProvider itemsProvider(String key) => selectedItemsProvider(key);
+
 mixin NotifierMixin<T> {
   T get state;
   set state(T val);
@@ -175,6 +177,14 @@ class CurrentPageLabel extends _$CurrentPageLabel
   @override
   PageLabel build() {
     return PageLabel.dashboard;
+  }
+
+  void toPage(PageLabel pageLabel) {
+    value = pageLabel;
+  }
+
+  void toProfiles() {
+    toPage(PageLabel.profiles);
   }
 }
 

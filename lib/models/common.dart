@@ -322,20 +322,10 @@ extension GroupExt on Group {
   String get realNow => now ?? '';
 
   String getCurrentSelectedName(String proxyName) {
-    final hasProxyName =
-        proxyName.isNotEmpty && all.any((proxy) => proxy.name == proxyName);
-    final hasRealNow =
-        realNow.isNotEmpty && all.any((proxy) => proxy.name == realNow);
     if (type.isComputedSelected) {
-      if (hasRealNow) {
-        return realNow;
-      }
-      return hasProxyName ? proxyName : '';
+      return realNow.isNotEmpty ? realNow : proxyName;
     }
-    if (hasProxyName) {
-      return proxyName;
-    }
-    return hasRealNow ? realNow : '';
+    return proxyName.isNotEmpty ? proxyName : realNow;
   }
 }
 
@@ -593,8 +583,8 @@ extension DelayStateExt on DelayState {
     if (delay != other.delay) {
       return delay.compareTo(other.delay);
     }
-    if (group && !group) return -1;
-    if (!group && group) return 1;
+    if (group && !other.group) return -1;
+    if (!group && other.group) return 1;
     return 0;
   }
 }
@@ -605,4 +595,12 @@ abstract class UpdatingMessage with _$UpdatingMessage {
     required String label,
     required String message,
   }) = _UpdatingMessage;
+}
+
+@immutable
+class IconButtonData {
+  final IconData icon;
+  final VoidCallback onPressed;
+
+  const IconButtonData({required this.icon, required this.onPressed});
 }

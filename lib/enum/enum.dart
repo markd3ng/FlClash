@@ -423,3 +423,44 @@ enum LoadingTag { profiles, backup_restore, access, proxies }
 enum CoreStatus { connecting, connected, disconnected }
 
 enum RuleScene { added, disabled, custom }
+
+enum ItemPosition {
+  start,
+  middle,
+  end,
+  startAndEnd;
+
+  static ItemPosition get(int index, int length) {
+    if (length == 1) {
+      return ItemPosition.startAndEnd;
+    }
+    if (index == length - 1) {
+      return ItemPosition.end;
+    }
+    if (index == 0) {
+      return ItemPosition.start;
+    }
+    return ItemPosition.middle;
+  }
+
+  static ItemPosition calculateVisualPosition<T>(
+    int currentIndex,
+    List<T> items,
+    Set<T> deletedItems,
+  ) {
+    final currentItem = items[currentIndex];
+    if (deletedItems.contains(currentItem)) {
+      return ItemPosition.middle;
+    }
+    final visualLength = items.length - deletedItems.length;
+    if (visualLength <= 0) return ItemPosition.middle;
+    var deletedCountBeforeMe = 0;
+    for (var i = 0; i < currentIndex; i++) {
+      if (deletedItems.contains(items[i])) {
+        deletedCountBeforeMe++;
+      }
+    }
+    final visualIndex = currentIndex - deletedCountBeforeMe;
+    return ItemPosition.get(visualIndex, visualLength);
+  }
+}

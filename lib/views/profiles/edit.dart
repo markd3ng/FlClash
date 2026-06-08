@@ -74,8 +74,9 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
   }
 
   Future<void> _saveoixParams(Profile currentProfile) async {
-    final edited = OixParams.parse(_oixParamsController.text)
-        .copyWith(tfo: _tfo, simplerules: _minimalConfig);
+    final edited = OixParams.parse(
+      _oixParamsController.text,
+    ).copyWith(tfo: _tfo, simplerules: _minimalConfig);
     await OixParamsStorage.save(edited);
     await appController.updateProfile(currentProfile, showLoading: true);
   }
@@ -169,6 +170,9 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
 
   Future<void> _handleSaveEdit(BuildContext context, String data) async {
     final message = await appController.safeRun<String>(() async {
+      if (!await appController.ensureCoreReady()) {
+        return appController.coreDisconnectedMessage;
+      }
       final message = await coreController.validateConfigWithData(data);
       return message;
     }, silence: false);
@@ -277,7 +281,8 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
     final cloudState = ref.watch(cloudAccountProvider);
     final isoixCloud = widget.profile.isoixCloudProfile;
     final subscription = cloudState.profile?.subscription ?? '';
-    final showRestore = isoixCloud &&
+    final showRestore =
+        isoixCloud &&
         subscription.isNotEmpty &&
         subscription != 'Pass Iron' &&
         subscription != 'null';
@@ -396,10 +401,7 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
         ListItem.switchItem(
           title: Text(appLocalizations.tcpFastOpen),
           subtitle: Text(appLocalizations.tcpFastOpenDesc),
-          delegate: SwitchDelegate<bool>(
-            value: _tfo,
-            onChanged: _setTfo,
-          ),
+          delegate: SwitchDelegate<bool>(value: _tfo, onChanged: _setTfo),
         ),
       if (isoixCloud)
         ListItem.switchItem(

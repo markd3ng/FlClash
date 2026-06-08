@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:collection/collection.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/database/database.dart';
@@ -5,6 +7,19 @@ import 'package:fl_clash/models/models.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'generated/database.g.dart';
+
+Future<void> withRollback<T>({
+  required T snapshot,
+  required FutureOr<void> Function() action,
+  required void Function(T snapshot) rollback,
+}) async {
+  try {
+    await action();
+  } catch (e, s) {
+    rollback(snapshot);
+    Error.throwWithStackTrace(e, s);
+  }
+}
 
 @riverpod
 Stream<List<Profile>> profilesStream(Ref ref) {
