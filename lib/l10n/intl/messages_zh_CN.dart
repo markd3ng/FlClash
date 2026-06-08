@@ -116,6 +116,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "autoCloseConnectionsDesc": MessageLookupByLibrary.simpleMessage(
       "切换节点后自动关闭连接",
     ),
+    "autoIpv6": MessageLookupByLibrary.simpleMessage("自动 IPv6"),
+    "autoIpv6Desc": MessageLookupByLibrary.simpleMessage(
+      "根据本地网络是否支持 IPv6 自动开关",
+    ),
     "autoLaunch": MessageLookupByLibrary.simpleMessage("自启动"),
     "autoLaunchDesc": MessageLookupByLibrary.simpleMessage("跟随系统自启动"),
     "autoRun": MessageLookupByLibrary.simpleMessage("自动运行"),
@@ -404,6 +408,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "onlyStatisticsProxyDesc": MessageLookupByLibrary.simpleMessage(
       "开启后，将只统计代理流量",
     ),
+    "openDashboard": MessageLookupByLibrary.simpleMessage("打开面板"),
     "openInstaller": MessageLookupByLibrary.simpleMessage("打开安装包"),
     "openInstallerFailed": MessageLookupByLibrary.simpleMessage(
       "无法自动打开安装包，正在打开下载链接...",

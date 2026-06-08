@@ -16,6 +16,11 @@ const defaultKeepAliveInterval = 30;
 const defaultExternalControllerAddress = '127.0.0.1:9090';
 const defaultExternalControllerSecret = 'oixCloud';
 
+// Applied globally so every proxy's uTLS handshake (incl. the three Snell
+// over-TLS legs) is shaped with a real browser ClientHello unless the profile
+// already pins its own value.
+const defaultGlobalClientFingerprint = 'chrome';
+
 bool isExternalControllerAddress(String address) {
   final value = address.trim();
   if (value.isEmpty) {
@@ -50,7 +55,32 @@ String resolveExternalController(
 }
 
 String resolveExternalControllerSecret(String secret) {
-  return secret.trim().isEmpty ? defaultExternalControllerSecret : secret;
+  return secret.trim();
+}
+
+const externalControllerDashboardBaseUrl =
+    'https://metacubex.github.io/metacubexd';
+
+String resolveExternalControllerDashboardUrl(String address, String secret) {
+  final uri = Uri.tryParse('http://${resolveExternalControllerAddress(address)}');
+  var host = uri?.host ?? '';
+  if (host.isEmpty || host == '0.0.0.0' || host == '::') {
+    host = '127.0.0.1';
+  }
+  final port = uri?.hasPort == true ? uri!.port : 9090;
+  final params = <String, String>{
+    'hostname': host,
+    'port': '$port',
+    'http': 'true',
+  };
+  final trimmedSecret = secret.trim();
+  if (trimmedSecret.isNotEmpty) {
+    params['secret'] = trimmedSecret;
+  }
+  final query = params.entries
+      .map((entry) => '${entry.key}=${Uri.encodeComponent(entry.value)}')
+      .join('&');
+  return '$externalControllerDashboardBaseUrl/#/setup?$query';
 }
 
 const defaultBypassPrivateRouteAddress = [

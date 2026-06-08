@@ -1,4 +1,5 @@
 import 'package:fl_clash/common/common.dart';
+import 'package:fl_clash/controller.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
@@ -6,6 +7,7 @@ import 'package:fl_clash/state.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class LogLevelItem extends ConsumerWidget {
   const LogLevelItem({super.key});
@@ -232,6 +234,34 @@ class HostsItem extends ConsumerWidget {
   }
 }
 
+class AutoIpv6Item extends ConsumerWidget {
+  const AutoIpv6Item({super.key});
+
+  @override
+  Widget build(BuildContext context, ref) {
+    final appLocalizations = context.appLocalizations;
+    final autoSetIpv6 = ref.watch(
+      networkSettingProvider.select((state) => state.autoSetIpv6),
+    );
+    return ListItem.switchItem(
+      leading: const Icon(Icons.autorenew_outlined),
+      title: Text(appLocalizations.autoIpv6),
+      subtitle: Text(appLocalizations.autoIpv6Desc),
+      delegate: SwitchDelegate(
+        value: autoSetIpv6,
+        onChanged: (bool value) async {
+          ref
+              .read(networkSettingProvider.notifier)
+              .update((state) => state.copyWith(autoSetIpv6: value));
+          if (value) {
+            await appController.autoUpdateIpv6();
+          }
+        },
+      ),
+    );
+  }
+}
+
 class Ipv6Item extends ConsumerWidget {
   const Ipv6Item({super.key});
 
@@ -241,17 +271,22 @@ class Ipv6Item extends ConsumerWidget {
     final ipv6 = ref.watch(
       patchClashConfigProvider.select((state) => state.ipv6),
     );
+    final autoSetIpv6 = ref.watch(
+      networkSettingProvider.select((state) => state.autoSetIpv6),
+    );
     return ListItem.switchItem(
       leading: const Icon(Icons.water_outlined),
       title: const Text('IPv6'),
       subtitle: Text(appLocalizations.ipv6Desc),
       delegate: SwitchDelegate(
         value: ipv6,
-        onChanged: (bool value) async {
-          ref
-              .read(patchClashConfigProvider.notifier)
-              .update((state) => state.copyWith(ipv6: value));
-        },
+        onChanged: autoSetIpv6
+            ? null
+            : (bool value) async {
+                ref
+                    .read(patchClashConfigProvider.notifier)
+                    .update((state) => state.copyWith(ipv6: value));
+              },
       ),
     );
   }
@@ -461,94 +496,214 @@ class ExternalControllerItem extends ConsumerWidget {
     return Column(
       children: [
         item,
-        const Divider(height: 0),
-        const ExternalControllerAddressItem(),
-        const Divider(height: 0),
-        const ExternalControllerSecretItem(),
+        const Divider(height: 0, indent: 56),
+        const ExternalControllerConfigItem(),
       ],
     );
   }
 }
 
-class ExternalControllerAddressItem extends ConsumerWidget {
-  const ExternalControllerAddressItem({super.key});
+class ExternalControllerConfigItem extends ConsumerWidget {
+  const ExternalControllerConfigItem({super.key});
 
   @override
   Widget build(BuildContext context, ref) {
-    final address = ref.watch(
+    final appLocalizations = context.appLocalizations;
+    final vm = ref.watch(
       patchClashConfigProvider.select(
-        (state) => state.externalControllerAddress,
+        (state) => VM2(state.externalControllerAddress, state.secret),
       ),
     );
-    final title =
-        '${appLocalizations.externalController} '
-        '${appLocalizations.address}';
-    final effectiveAddress = resolveExternalControllerAddress(address);
-    return ListItem.input(
-      leading: const Icon(Icons.settings_ethernet_outlined),
-      title: Text(title),
+    final effectiveAddress = resolveExternalControllerAddress(vm.a);
+    return ListItem(
+      padding: const EdgeInsets.only(left: 56, right: 16),
+      title: Text('${appLocalizations.address} / ${appLocalizations.password}'),
       subtitle: Text(effectiveAddress),
-      delegate: InputDelegate(
-        title: title,
-        value: effectiveAddress,
-        resetValue: defaultExternalControllerAddress,
-        validator: (String? value) {
-          if (value == null || value.isEmpty) {
-            return appLocalizations.emptyTip(title);
-          }
-          if (!isExternalControllerAddress(value)) {
-            return defaultExternalControllerAddress;
-          }
-          return null;
-        },
-        onChanged: (String? value) {
-          if (value == null) {
-            return;
-          }
-          ref
-              .read(patchClashConfigProvider.notifier)
-              .update(
-                (state) =>
-                    state.copyWith(externalControllerAddress: value.trim()),
-              );
+      onTap: () {
+        globalState.showCommonDialog(child: const _ExternalControllerDialog());
+      },
+      trailing: IconButton(
+        icon: const Icon(Icons.open_in_new),
+        tooltip: appLocalizations.openDashboard,
+        onPressed: () {
+          _openExternalControllerDashboard(vm.a, vm.b);
         },
       ),
     );
   }
 }
 
-class ExternalControllerSecretItem extends ConsumerWidget {
-  const ExternalControllerSecretItem({super.key});
+Future<void> _openExternalControllerDashboard(
+  String address,
+  String secret,
+) async {
+  final url = resolveExternalControllerDashboardUrl(address, secret);
+  await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+}
+
+class _ExternalControllerDialog extends ConsumerStatefulWidget {
+  const _ExternalControllerDialog();
 
   @override
-  Widget build(BuildContext context, ref) {
-    final secret = ref.watch(
-      patchClashConfigProvider.select((state) => state.secret),
-    );
-    final effectiveSecret = resolveExternalControllerSecret(secret);
-    return ListItem.input(
-      leading: const Icon(Icons.password_outlined),
-      title: Text(
-        '${appLocalizations.externalController} ${appLocalizations.password}',
+  ConsumerState<_ExternalControllerDialog> createState() =>
+      _ExternalControllerDialogState();
+}
+
+class _ExternalControllerDialogState
+    extends ConsumerState<_ExternalControllerDialog> {
+  final _formKey = GlobalKey<FormState>();
+
+  late final TextEditingController _addressController;
+  late final TextEditingController _secretController;
+
+  @override
+  void initState() {
+    super.initState();
+    final vm = ref.read(
+      patchClashConfigProvider.select(
+        (state) => VM2(state.externalControllerAddress, state.secret),
       ),
-      subtitle: Text(effectiveSecret),
-      delegate: InputDelegate(
-        title:
-            '${appLocalizations.externalController} ${appLocalizations.password}',
-        value: effectiveSecret,
-        resetValue: defaultExternalControllerSecret,
-        onChanged: (String? value) {
-          if (value == null) {
-            return;
-          }
-          ref
-              .read(patchClashConfigProvider.notifier)
-              .update(
-                (state) => state.copyWith(
-                  secret: resolveExternalControllerSecret(value),
+    );
+    _addressController = TextEditingController(
+      text: resolveExternalControllerAddress(vm.a),
+    );
+    _secretController = TextEditingController(text: vm.b);
+  }
+
+  @override
+  void dispose() {
+    _addressController.dispose();
+    _secretController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleReset() async {
+    final res = await globalState.showMessage(
+      message: TextSpan(text: context.appLocalizations.resetTip),
+    );
+    if (res != true) {
+      return;
+    }
+    ref
+        .read(patchClashConfigProvider.notifier)
+        .update(
+          (state) => state.copyWith(
+            externalControllerAddress: defaultExternalControllerAddress,
+            secret: defaultExternalControllerSecret,
+          ),
+        );
+    if (mounted) {
+      Navigator.of(context).pop();
+    }
+  }
+
+  bool _save() {
+    if (_formKey.currentState?.validate() == false) {
+      return false;
+    }
+    final address = resolveExternalControllerAddress(_addressController.text);
+    final secret = resolveExternalControllerSecret(_secretController.text);
+    ref
+        .read(patchClashConfigProvider.notifier)
+        .update(
+          (state) => state.copyWith(
+            externalControllerAddress: address,
+            secret: secret,
+          ),
+        );
+    return true;
+  }
+
+  void _handleUpdate() {
+    if (!_save()) {
+      return;
+    }
+    Navigator.of(context).pop();
+  }
+
+  void _handleOpen() {
+    if (!_save()) {
+      return;
+    }
+    _openExternalControllerDashboard(
+      _addressController.text,
+      _secretController.text,
+    );
+    Navigator.of(context).pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final appLocalizations = context.appLocalizations;
+    return CommonDialog(
+      title: appLocalizations.externalController,
+      actions: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            TextButton.icon(
+              onPressed: _handleOpen,
+              icon: const Icon(Icons.open_in_new, size: 18),
+              label: Text(appLocalizations.openDashboard),
+            ),
+            Row(
+              children: [
+                TextButton(
+                  onPressed: _handleReset,
+                  child: Text(appLocalizations.reset),
                 ),
-              );
-        },
+                const SizedBox(width: 4),
+                TextButton(
+                  onPressed: _handleUpdate,
+                  child: Text(appLocalizations.submit),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ],
+      child: Form(
+        autovalidateMode: AutovalidateMode.onUserInteraction,
+        key: _formKey,
+        child: Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Column(
+            spacing: 24,
+            children: [
+              TextFormField(
+                keyboardType: TextInputType.url,
+                maxLines: 1,
+                minLines: 1,
+                controller: _addressController,
+                decoration: InputDecoration(
+                  border: const OutlineInputBorder(),
+                  labelText: appLocalizations.address,
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return appLocalizations.emptyTip(appLocalizations.address);
+                  }
+                  if (!isExternalControllerAddress(value)) {
+                    return defaultExternalControllerAddress;
+                  }
+                  return null;
+                },
+              ),
+              TextFormField(
+                maxLines: 1,
+                minLines: 1,
+                controller: _secretController,
+                onFieldSubmitted: (_) {
+                  _handleUpdate();
+                },
+                decoration: InputDecoration(
+                  border: const OutlineInputBorder(),
+                  labelText: appLocalizations.password,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -561,6 +716,7 @@ final generalItems = <Widget>[
   const TestUrlItem(),
   const PortItem(),
   const HostsItem(),
+  const AutoIpv6Item(),
   const Ipv6Item(),
   const AllowLanItem(),
   const UnifiedDelayItem(),

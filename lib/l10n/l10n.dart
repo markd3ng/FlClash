@@ -1259,11 +1259,36 @@ class AppLocalizations {
     );
   }
 
+  /// `Open dashboard`
+  String get openDashboard {
+    return Intl.message(
+      'Open dashboard',
+      name: 'openDashboard',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `When turned on it will be able to receive IPv6 traffic`
   String get ipv6Desc {
     return Intl.message(
       'When turned on it will be able to receive IPv6 traffic',
       name: 'ipv6Desc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Auto IPv6`
+  String get autoIpv6 {
+    return Intl.message('Auto IPv6', name: 'autoIpv6', desc: '', args: []);
+  }
+
+  /// `Toggle IPv6 automatically based on local network support`
+  String get autoIpv6Desc {
+    return Intl.message(
+      'Toggle IPv6 automatically based on local network support',
+      name: 'autoIpv6Desc',
       desc: '',
       args: [],
     );

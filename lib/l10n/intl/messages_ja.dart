@@ -125,6 +125,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "autoCloseConnectionsDesc": MessageLookupByLibrary.simpleMessage(
       "ノード変更後に接続を自動閉じる",
     ),
+    "autoIpv6": MessageLookupByLibrary.simpleMessage("自動 IPv6"),
+    "autoIpv6Desc": MessageLookupByLibrary.simpleMessage(
+      "ローカルネットワークの IPv6 対応に応じて自動切り替え",
+    ),
     "autoLaunch": MessageLookupByLibrary.simpleMessage("自動起動"),
     "autoLaunchDesc": MessageLookupByLibrary.simpleMessage("システムの自動起動に従う"),
     "autoRun": MessageLookupByLibrary.simpleMessage("自動実行"),
@@ -461,6 +465,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "onlyStatisticsProxyDesc": MessageLookupByLibrary.simpleMessage(
       "有効化するとプロキシトラフィックのみ統計",
     ),
+    "openDashboard": MessageLookupByLibrary.simpleMessage("ダッシュボードを開く"),
     "openInstaller": MessageLookupByLibrary.simpleMessage("インストーラーを開く"),
     "openInstallerFailed": MessageLookupByLibrary.simpleMessage(
       "インストーラーを自動で開けませんでした。ダウンロードリンクを開きます...",

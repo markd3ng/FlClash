@@ -168,6 +168,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "autoCloseConnectionsDesc": MessageLookupByLibrary.simpleMessage(
       "Auto close connections after change node",
     ),
+    "autoIpv6": MessageLookupByLibrary.simpleMessage("Auto IPv6"),
+    "autoIpv6Desc": MessageLookupByLibrary.simpleMessage(
+      "Toggle IPv6 automatically based on local network support",
+    ),
     "autoLaunch": MessageLookupByLibrary.simpleMessage("Auto launch"),
     "autoLaunchDesc": MessageLookupByLibrary.simpleMessage(
       "Follow the system self startup",
@@ -606,6 +610,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "onlyStatisticsProxyDesc": MessageLookupByLibrary.simpleMessage(
       "When turned on, only statistics proxy traffic",
     ),
+    "openDashboard": MessageLookupByLibrary.simpleMessage("Open dashboard"),
     "openInstaller": MessageLookupByLibrary.simpleMessage("Open installer"),
     "openInstallerFailed": MessageLookupByLibrary.simpleMessage(
       "Unable to open installer automatically. Opening the download link...",

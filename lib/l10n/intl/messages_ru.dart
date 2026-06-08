@@ -165,6 +165,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "autoCloseConnectionsDesc": MessageLookupByLibrary.simpleMessage(
       "Автоматически закрывать соединения после смены узла",
     ),
+    "autoIpv6": MessageLookupByLibrary.simpleMessage("Авто IPv6"),
+    "autoIpv6Desc": MessageLookupByLibrary.simpleMessage(
+      "Автопереключение IPv6 по поддержке локальной сети",
+    ),
     "autoLaunch": MessageLookupByLibrary.simpleMessage("Автозапуск"),
     "autoLaunchDesc": MessageLookupByLibrary.simpleMessage(
       "Следовать автозапуску системы",
@@ -635,6 +639,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "onlyStatisticsProxyDesc": MessageLookupByLibrary.simpleMessage(
       "При включении будет учитываться только трафик прокси",
     ),
+    "openDashboard": MessageLookupByLibrary.simpleMessage("Открыть панель"),
     "openInstaller": MessageLookupByLibrary.simpleMessage("Открыть установщик"),
     "openInstallerFailed": MessageLookupByLibrary.simpleMessage(
       "Не удалось открыть установщик автоматически. Открываем ссылку для загрузки...",
