@@ -1,3 +1,7 @@
+## v0.8.93
+
+- chore(release): follow upstream v0.8.93
+
 ## v0.8.92
 
 - Add sqlite store
