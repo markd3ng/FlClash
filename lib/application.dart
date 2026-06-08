@@ -24,7 +24,8 @@ class Application extends ConsumerStatefulWidget {
   ConsumerState<Application> createState() => ApplicationState();
 }
 
-class ApplicationState extends ConsumerState<Application> {
+class ApplicationState extends ConsumerState<Application>
+    with WidgetsBindingObserver {
   Timer? _autoUpdateProfilesTaskTimer;
   bool _preHasVpn = false;
 
@@ -47,23 +48,47 @@ class ApplicationState extends ConsumerState<Application> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
       final currentContext = globalState.navigatorKey.currentContext;
       if (currentContext != null) {
         await appController.attach(currentContext, ref);
       } else {
         exit(0);
       }
-      _autoUpdateProfilesTask();
+      if (!mounted) return;
+      _syncAutoUpdateProfilesTask();
       appController.initLink();
       app?.initShortcuts();
     });
   }
 
-  void _autoUpdateProfilesTask() {
-    _autoUpdateProfilesTaskTimer = Timer.periodic(const Duration(minutes: 20), (timer) async {
-      await appController.autoUpdateProfiles();
-    });
+  bool get _shouldRunAutoUpdateProfilesTask {
+    final lifecycleState = WidgetsBinding.instance.lifecycleState;
+    return lifecycleState == null ||
+        lifecycleState == AppLifecycleState.resumed ||
+        (system.isDesktop && lifecycleState == AppLifecycleState.inactive);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    _syncAutoUpdateProfilesTask();
+  }
+
+  void _syncAutoUpdateProfilesTask() {
+    if (!_shouldRunAutoUpdateProfilesTask) {
+      _autoUpdateProfilesTaskTimer?.cancel();
+      _autoUpdateProfilesTaskTimer = null;
+      return;
+    }
+    _autoUpdateProfilesTaskTimer ??= Timer.periodic(
+      const Duration(minutes: 20),
+      (timer) async {
+        await appController.autoUpdateProfiles();
+      },
+    );
   }
 
   Widget _buildPlatformState({required Widget child}) {
@@ -186,22 +211,26 @@ class ApplicationState extends ConsumerState<Application> {
           locale: utils.getLocaleForString(locale),
           supportedLocales: AppLocalizations.delegate.supportedLocales,
           themeMode: themeProps.themeMode,
-          theme: _getAppTheme(ThemeData(
-            useMaterial3: true,
-            pageTransitionsTheme: _pageTransitionsTheme,
-            colorScheme: _getAppColorScheme(
-              brightness: Brightness.light,
-              primaryColor: themeProps.primaryColor,
+          theme: _getAppTheme(
+            ThemeData(
+              useMaterial3: true,
+              pageTransitionsTheme: _pageTransitionsTheme,
+              colorScheme: _getAppColorScheme(
+                brightness: Brightness.light,
+                primaryColor: themeProps.primaryColor,
+              ),
             ),
-          )),
-          darkTheme: _getAppTheme(ThemeData(
-            useMaterial3: true,
-            pageTransitionsTheme: _pageTransitionsTheme,
-            colorScheme: _getAppColorScheme(
-              brightness: Brightness.dark,
-              primaryColor: themeProps.primaryColor,
-            ).toPureBlack(themeProps.pureBlack),
-          )),
+          ),
+          darkTheme: _getAppTheme(
+            ThemeData(
+              useMaterial3: true,
+              pageTransitionsTheme: _pageTransitionsTheme,
+              colorScheme: _getAppColorScheme(
+                brightness: Brightness.dark,
+                primaryColor: themeProps.primaryColor,
+              ).toPureBlack(themeProps.pureBlack),
+            ),
+          ),
           home: child!,
         );
       },
@@ -211,6 +240,7 @@ class ApplicationState extends ConsumerState<Application> {
 
   @override
   Future<void> dispose() async {
+    WidgetsBinding.instance.removeObserver(this);
     linkManager.destroy();
     _autoUpdateProfilesTaskTimer?.cancel();
     await coreController.destroy();

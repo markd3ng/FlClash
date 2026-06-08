@@ -138,23 +138,47 @@ const defaultBypassPrivateRouteAddress = [
   'fec0::/10',
 ];
 
+int? _parseInt(dynamic value) {
+  if (value == null) return null;
+  if (value is num) return value.toInt();
+  if (value is String) return int.tryParse(value);
+  return null;
+}
+
+bool? _parseBool(dynamic value) {
+  if (value == null) return null;
+  if (value is bool) return value;
+  if (value is String) {
+    final normalized = value.toLowerCase();
+    if (normalized == 'true') return true;
+    if (normalized == 'false') return false;
+  }
+  return null;
+}
+
+List<String>? _parseStringList(dynamic value) {
+  if (value == null) return null;
+  if (value is List) return value.whereType<String>().toList();
+  return null;
+}
+
 @freezed
 abstract class ProxyGroup with _$ProxyGroup {
   const factory ProxyGroup({
     required String name,
     @JsonKey(fromJson: GroupType.parseProfileType) required GroupType type,
-    List<String>? proxies,
-    List<String>? use,
-    int? interval,
-    bool? lazy,
+    @JsonKey(fromJson: _parseStringList) List<String>? proxies,
+    @JsonKey(fromJson: _parseStringList) List<String>? use,
+    @JsonKey(fromJson: _parseInt) int? interval,
+    @JsonKey(fromJson: _parseBool) bool? lazy,
     String? url,
-    int? timeout,
-    @JsonKey(name: 'max-failed-times') int? maxFailedTimes,
+    @JsonKey(fromJson: _parseInt) int? timeout,
+    @JsonKey(name: 'max-failed-times', fromJson: _parseInt) int? maxFailedTimes,
     String? filter,
     @JsonKey(name: 'expected-filter') String? excludeFilter,
     @JsonKey(name: 'exclude-type') String? excludeType,
     @JsonKey(name: 'expected-status') dynamic expectedStatus,
-    bool? hidden,
+    @JsonKey(fromJson: _parseBool) bool? hidden,
     String? icon,
   }) = _ProxyGroup;
 

@@ -30,7 +30,6 @@ class BaseScrollBehavior extends MaterialScrollBehavior {
           case TargetPlatform.linux:
           case TargetPlatform.macOS:
           case TargetPlatform.windows:
-            assert(details.controller != null);
             return CommonScrollBar(
               controller: details.controller,
               child: child,

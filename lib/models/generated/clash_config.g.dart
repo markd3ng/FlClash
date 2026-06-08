@@ -9,20 +9,18 @@ part of '../clash_config.dart';
 _ProxyGroup _$ProxyGroupFromJson(Map<String, dynamic> json) => _ProxyGroup(
   name: json['name'] as String,
   type: GroupType.parseProfileType(json['type'] as String),
-  proxies: (json['proxies'] as List<dynamic>?)
-      ?.map((e) => e as String)
-      .toList(),
-  use: (json['use'] as List<dynamic>?)?.map((e) => e as String).toList(),
-  interval: (json['interval'] as num?)?.toInt(),
-  lazy: json['lazy'] as bool?,
+  proxies: _parseStringList(json['proxies']),
+  use: _parseStringList(json['use']),
+  interval: _parseInt(json['interval']),
+  lazy: _parseBool(json['lazy']),
   url: json['url'] as String?,
-  timeout: (json['timeout'] as num?)?.toInt(),
-  maxFailedTimes: (json['max-failed-times'] as num?)?.toInt(),
+  timeout: _parseInt(json['timeout']),
+  maxFailedTimes: _parseInt(json['max-failed-times']),
   filter: json['filter'] as String?,
   excludeFilter: json['expected-filter'] as String?,
   excludeType: json['exclude-type'] as String?,
   expectedStatus: json['expected-status'],
-  hidden: json['hidden'] as bool?,
+  hidden: _parseBool(json['hidden']),
   icon: json['icon'] as String?,
 );
 

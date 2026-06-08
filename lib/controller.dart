@@ -1500,6 +1500,10 @@ extension StoreControllerExt on AppController {
     });
   }
 
+  Future<void> savePreferences() async {
+    await preferences.saveConfig(config);
+  }
+
   Future handleClear() async {
     oixCloudConfigCache.clear();
     await preferences.clearPreferences();

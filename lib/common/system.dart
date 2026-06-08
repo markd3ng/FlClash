@@ -218,7 +218,7 @@ class Windows {
     calloc.free(operationPtr);
 
     commonPrint.log(
-      'windows runas: $command $arguments resultCode:$result',
+      'windows runas: [command masked] resultCode:$result',
       logLevel: LogLevel.warning,
     );
 

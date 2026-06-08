@@ -99,16 +99,26 @@ class FlClashHostOverrides {
 }
 
 class FlClashHttpOverrides extends HttpOverrides {
+  static bool _isLocalHost(String host) {
+    final normalizedHost = host.trim().toLowerCase();
+    return normalizedHost == localhost ||
+        normalizedHost == 'localhost' ||
+        (InternetAddress.tryParse(normalizedHost)?.isLoopback ?? false);
+  }
+
   static String handleFindProxy(Uri url) {
     final isApiDomain = Secrets.isApiDomain(url.host);
-    if (url.host == localhost || isApiDomain) {
+    if (_isLocalHost(url.host) || isApiDomain) {
       return 'DIRECT';
     }
     final port = appController.config.patchClashConfig.mixedPort;
     final isStart = appController.isStart;
-    final displayUrl = isApiDomain
-        ? Uri(scheme: url.scheme, host: url.host, path: url.path)
-        : url;
+    final displayUrl = Uri(
+      scheme: url.scheme,
+      host: url.host,
+      port: url.hasPort ? url.port : null,
+      path: url.path,
+    );
     commonPrint.log('find $displayUrl proxy:$isStart');
     if (!isStart) return 'DIRECT';
     return 'PROXY localhost:$port';

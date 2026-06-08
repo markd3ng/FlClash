@@ -62,15 +62,27 @@ class _LocalImageResponse implements FileServiceResponse {
       final controlSettings = controlHeader.split(',');
       for (final setting in controlSettings) {
         final sanitizedSetting = setting.trim().toLowerCase();
-        if (sanitizedSetting == 'no-cache') {
-          ageDuration = Duration.zero;
+        final separator = sanitizedSetting.indexOf('=');
+        final directive = separator == -1
+            ? sanitizedSetting
+            : sanitizedSetting.substring(0, separator).trim();
+        if (directive == 'no-cache' || directive == 'no-store') {
+          return _receivedTime;
         }
-        if (sanitizedSetting.startsWith('max-age=')) {
-          final validSeconds =
-              int.tryParse(sanitizedSetting.split('=')[1]) ?? 0;
-          if (validSeconds > 0) {
-            ageDuration = Duration(seconds: validSeconds);
+        if (directive == 'max-age') {
+          if (separator == -1) {
+            continue;
           }
+          final validSeconds = int.tryParse(
+            sanitizedSetting.substring(separator + 1).trim(),
+          );
+          if (validSeconds == null) {
+            continue;
+          }
+          if (validSeconds <= 0) {
+            return _receivedTime;
+          }
+          ageDuration = Duration(seconds: validSeconds);
         }
       }
     }

@@ -23,6 +23,8 @@ class AppStateManager extends ConsumerStatefulWidget {
 
 class _AppStateManagerState extends ConsumerState<AppStateManager>
     with WidgetsBindingObserver {
+  bool _isBackground = false;
+
   @override
   void initState() {
     super.initState();
@@ -66,7 +68,18 @@ class _AppStateManagerState extends ConsumerState<AppStateManager>
   @override
   Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
     commonPrint.log('$state');
+    final isBackgroundState =
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden ||
+        (state == AppLifecycleState.inactive && !system.isDesktop);
+    if (isBackgroundState) {
+      if (!_isBackground) {
+        await appController.savePreferences();
+      }
+      _isBackground = true;
+    }
     if (state == AppLifecycleState.resumed) {
+      _isBackground = false;
       render?.resume();
       WidgetsBinding.instance.addPostFrameCallback((_) {
         appController.tryCheckIp();

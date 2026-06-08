@@ -41,18 +41,65 @@ class Request {
     return headers;
   }
 
+  ({Uri? authOrigin, Map<String, dynamic>? headers, String url})
+  _resolveBasicAuth(String url, Map<String, dynamic>? headers) {
+    final uri = Uri.tryParse(url);
+    if (uri == null ||
+        uri.userInfo.isEmpty ||
+        (!uri.isScheme('http') && !uri.isScheme('https'))) {
+      return (authOrigin: null, headers: headers, url: url);
+    }
+
+    final requestUrl = uri.replace(userInfo: '').toString();
+    final requestHeaders = Map<String, dynamic>.from(headers ?? const {});
+    if (!requestHeaders.containsKey(HttpHeaders.authorizationHeader) &&
+        !requestHeaders.containsKey('Authorization')) {
+      requestHeaders[HttpHeaders.authorizationHeader] =
+          'Basic ${base64Encode(utf8.encode(Uri.decodeComponent(uri.userInfo)))}';
+    }
+    return (
+      authOrigin: Uri.tryParse(requestUrl),
+      headers: requestHeaders,
+      url: requestUrl,
+    );
+  }
+
+  Options _getOptionsForUrl(
+    Options options,
+    Uri? authOrigin,
+    String requestUrl,
+  ) {
+    if (authOrigin == null) {
+      return options;
+    }
+    final uri = Uri.tryParse(requestUrl);
+    if (uri != null &&
+        uri.scheme == authOrigin.scheme &&
+        uri.host == authOrigin.host &&
+        uri.port == authOrigin.port) {
+      return options;
+    }
+    final headers = Map<String, dynamic>.from(options.headers ?? const {});
+    headers.remove(HttpHeaders.authorizationHeader);
+    headers.remove('Authorization');
+    return options.copyWith(headers: headers);
+  }
+
   Future<Response<T>> _getWithRedirect<T>(
     String url, {
     required Options options,
     Dio? client,
   }) async {
     final dio = client ?? _clashDio;
+    final request = _resolveBasicAuth(url, options.headers);
     final opts = options.copyWith(
       followRedirects: false,
+      headers: request.headers,
       validateStatus: (status) => status != null && status < 400,
     );
 
-    var response = await dio.get<T>(url, options: opts);
+    var requestUrl = request.url;
+    var response = await dio.get<T>(requestUrl, options: opts);
     int redirectCount = 0;
     while ([
           HttpStatus.movedTemporarily,
@@ -64,8 +111,12 @@ class Request {
         redirectCount < 5) {
       final location = response.headers.value(HttpHeaders.locationHeader);
       if (location == null || location.isEmpty) break;
-      final redirectUrl = Uri.parse(url).resolve(location).toString();
-      response = await dio.get<T>(redirectUrl, options: opts);
+      final redirectUrl = Uri.parse(requestUrl).resolve(location).toString();
+      response = await dio.get<T>(
+        redirectUrl,
+        options: _getOptionsForUrl(opts, request.authOrigin, redirectUrl),
+      );
+      requestUrl = redirectUrl;
       redirectCount++;
     }
 
