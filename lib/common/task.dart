@@ -138,14 +138,21 @@ Future<Map<String, dynamic>> _makeRealProfileTask(
   rawConfig['tun']['route-address'] = realPatchConfig.tun.routeAddress;
   rawConfig['tun']['auto-route'] = realPatchConfig.tun.autoRoute;
   rawConfig['geodata-loader'] = realPatchConfig.geodataLoader.name;
-  if (rawConfig['sniffer']?['sniff'] != null) {
-    for (final value in (rawConfig['sniffer']?['sniff'] as Map).values) {
-      if (value['ports'] != null && value['ports'] is List) {
-        value['ports'] =
-            value['ports']?.map((item) => item.toString()).toList() ?? [];
-      }
+  // Block WebRTC: always sniff STUN (all ports) on pure-IP UDP so the
+  // SNIFF-PROTOCOL rule below can drop it and prevent real-IP leak.
+  final snifferMap = (rawConfig['sniffer'] as Map?) ?? {};
+  snifferMap['enable'] = true;
+  snifferMap['parse-pure-ip'] = true;
+  final sniffMap = (snifferMap['sniff'] as Map?) ?? {};
+  sniffMap['STUN'] ??= {};
+  for (final value in sniffMap.values) {
+    if (value is Map && value['ports'] is List) {
+      value['ports'] =
+          (value['ports'] as List).map((item) => item.toString()).toList();
     }
   }
+  snifferMap['sniff'] = sniffMap;
+  rawConfig['sniffer'] = snifferMap;
   if (rawConfig['profile'] == null) {
     rawConfig['profile'] = {};
   }
@@ -184,6 +191,10 @@ Future<Map<String, dynamic>> _makeRealProfileTask(
   _applyProxyChains(rawConfig, proxyChains);
   rawConfig['geox-url'] = realPatchConfig.geoXUrl.toJson();
   rawConfig['global-ua'] = realPatchConfig.globalUa ?? defaultUA;
+  final existingFingerprint = rawConfig['global-client-fingerprint'];
+  if (existingFingerprint is! String || existingFingerprint.isEmpty) {
+    rawConfig['global-client-fingerprint'] = defaultGlobalClientFingerprint;
+  }
   if (rawConfig['hosts'] == null) {
     rawConfig['hosts'] = {};
   }
@@ -262,7 +273,8 @@ Future<Map<String, dynamic>> _makeRealProfileTask(
     }
     rules = [...finalAddedRules, ...rules];
   }
-  rawConfig['rules'] = rules;
+  // Block WebRTC: drop sniffed STUN first, highest priority.
+  rawConfig['rules'] = ['SNIFF-PROTOCOL,stun,REJECT-DROP', ...rules];
   return Map<String, dynamic>.from(rawConfig);
 }
 
