@@ -164,6 +164,7 @@ abstract class NetworkProps with _$NetworkProps {
     @Default(RouteMode.config) RouteMode routeMode,
     @Default(true) bool autoSetSystemDns,
     @Default(false) bool appendSystemDns,
+    @Default(true) bool autoSetIpv6,
   }) = _NetworkProps;
 
   factory NetworkProps.fromJson(Map<String, Object?>? json) =>

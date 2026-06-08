@@ -876,7 +876,7 @@ final class CurrentPageLabelProvider
   }
 }
 
-String _$currentPageLabelHash() => r'557a1349f76b8d055dbb2c50ed22048b7bebf368';
+String _$currentPageLabelHash() => r'd4077211a1f1b6ed51c031fd72ab0af2fc92dbd7';
 
 abstract class _$CurrentPageLabel extends $Notifier<PageLabel> {
   PageLabel build();

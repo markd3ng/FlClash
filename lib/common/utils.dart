@@ -319,6 +319,23 @@ class Utils {
     return '';
   }
 
+  Future<bool> hasGlobalIpv6() async {
+    try {
+      final interfaces = await NetworkInterface.list(
+        includeLoopback: false,
+        type: InternetAddressType.IPv6,
+      );
+      for (final interface in interfaces) {
+        for (final address in interface.addresses) {
+          if (address.isGlobalIPv6) {
+            return true;
+          }
+        }
+      }
+    } catch (_) {}
+    return false;
+  }
+
   SingleActivator controlSingleActivator(LogicalKeyboardKey trigger) {
     final control = system.isMacOS ? false : true;
     return SingleActivator(trigger, control: control, meta: !control);

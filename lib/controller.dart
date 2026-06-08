@@ -922,6 +922,25 @@ extension SetupControllerExt on AppController {
     });
   }
 
+  Future<void> autoUpdateIpv6() async {
+    final autoSetIpv6 = _ref.read(
+      networkSettingProvider.select((state) => state.autoSetIpv6),
+    );
+    if (!autoSetIpv6) {
+      return;
+    }
+    final supported = await utils.hasGlobalIpv6();
+    final current = _ref.read(
+      patchClashConfigProvider.select((state) => state.ipv6),
+    );
+    if (current == supported) {
+      return;
+    }
+    _ref
+        .read(patchClashConfigProvider.notifier)
+        .update((state) => state.copyWith(ipv6: supported));
+  }
+
   void addCheckIp() {
     _ref.read(checkIpNumProvider.notifier).add();
   }
@@ -965,6 +984,7 @@ extension SetupControllerExt on AppController {
     bool force = false,
     VoidCallback? preloadInvoke,
   }) async {
+    await autoUpdateIpv6();
     if (!force && !await needSetup()) {
       return;
     }
