@@ -141,6 +141,8 @@ class Build {
     'FLCLASH_APP_SECRET',
     'HOST_OVERRIDES',
     'FLCLASH_KEY',
+    'DNS_AUTH_SECRET',
+    'DNS_AUTH_DOMAINS',
   };
 
   static final RegExp _sensitiveValuePattern = RegExp(
@@ -151,11 +153,20 @@ class Build {
     r'((?:--)?DartDefines=|DART_DEFINES\s*=\s*)[^\r\n\s]+',
   );
 
+  static final RegExp _goLinkerSecretPattern = RegExp(
+    r'(-X\s+main\.GlobalDNSAuth(?:Secret|Domains)=)\S+',
+  );
+
   static String _redactSensitive(String value) {
-    return value.replaceAllMapped(
-      _sensitiveValuePattern,
-      (match) => '${match[1]}=<redacted>',
-    );
+    return value
+        .replaceAllMapped(
+          _sensitiveValuePattern,
+          (match) => '${match[1]}=<redacted>',
+        )
+        .replaceAllMapped(
+          _goLinkerSecretPattern,
+          (match) => '${match[1]}<redacted>',
+        );
   }
 
   static String _redactOutput(String value) {
@@ -263,10 +274,19 @@ class Build {
       } else {
         env['CGO_ENABLED'] = '0';
       }
+      final ldflags = StringBuffer('-w -s');
+      final dnsAuthSecret = Platform.environment['DNS_AUTH_SECRET']?.trim();
+      if (dnsAuthSecret != null && dnsAuthSecret.isNotEmpty) {
+        ldflags.write(' -X main.GlobalDNSAuthSecret=$dnsAuthSecret');
+      }
+      final dnsAuthDomains = Platform.environment['DNS_AUTH_DOMAINS']?.trim();
+      if (dnsAuthDomains != null && dnsAuthDomains.isNotEmpty) {
+        ldflags.write(' -X main.GlobalDNSAuthDomains=$dnsAuthDomains');
+      }
       final execLines = [
         'go',
         'build',
-        '-ldflags=-w -s',
+        '-ldflags=$ldflags',
         '-tags=$tags',
         if (isLib) '-buildmode=c-shared',
         '-o',

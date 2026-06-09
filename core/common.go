@@ -172,6 +172,7 @@ func decryptFlClashIfNeeded(data []byte) ([]byte, error) {
 func parseConfigPath(path string) (*config.Config, bool, error) {
 	data, err := os.ReadFile(path)
 	if err != nil || !isFlClashEncrypted(data) {
+		setDNSAuth(nil)
 		cfg, err := executor.ParseWithPath(path)
 		return cfg, false, err
 	}
@@ -179,6 +180,7 @@ func parseConfigPath(path string) (*config.Config, bool, error) {
 	if err != nil {
 		return nil, true, err
 	}
+	applyDNSAuth()
 	cfg, err := executor.ParseWithBytes(data)
 	return cfg, true, err
 }
@@ -275,6 +277,7 @@ func applyConfig(params *SetupParams) error {
 	isOixConfig := params.RawConfig != ""
 	constant.DefaultTestURL = params.TestURL
 	if params.RawConfig != "" {
+		applyDNSAuth()
 		currentConfig, err = executor.ParseWithBytes([]byte(params.RawConfig))
 	} else {
 		currentConfig, isOixConfig, err = parseConfigPath(filepath.Join(constant.Path.HomeDir(), "config.yaml"))
@@ -284,6 +287,7 @@ func applyConfig(params *SetupParams) error {
 	}
 	setMaskedAddrs(isOixConfig, currentConfig.Proxies)
 	hub.ApplyConfig(currentConfig)
+	installDNSAuthResolver()
 	patchSelectGroup(params.SelectedMap)
 	updateListeners()
 	return err

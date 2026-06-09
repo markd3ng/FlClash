@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/metacubex/mihomo/constant"
+	"github.com/metacubex/mihomo/hub/route"
 )
 
 var (
@@ -13,6 +14,10 @@ var (
 	isOixCloud  bool
 	logReplacer *strings.Replacer
 )
+
+func init() {
+	route.LogPayloadProcessor = MaskLogPayload
+}
 
 func setMaskedAddrs(isOix bool, proxies map[string]constant.Proxy) {
 	maskLock.Lock()
