@@ -60,9 +60,12 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m16(count) => "Выбрано ${count} элементов";
 
-  static String m17(label) => "${label} должен быть URL";
+  static String m17(version) =>
+      "Доступна новая версия ${version}. Скачать и установить сейчас?";
 
-  static String m18(count) =>
+  static String m18(label) => "${label} должен быть URL";
+
+  static String m19(count) =>
       "${Intl.plural(count, one: '${count} год назад', few: '${count} года назад', many: '${count} лет назад', other: '${count} года назад')}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
@@ -153,12 +156,6 @@ class MessageLookup extends MessageLookupByLibrary {
       "Изменение настроек, связанных с приложением",
     ),
     "auto": MessageLookupByLibrary.simpleMessage("Авто"),
-    "autoCheckUpdate": MessageLookupByLibrary.simpleMessage(
-      "Автопроверка обновлений",
-    ),
-    "autoCheckUpdateDesc": MessageLookupByLibrary.simpleMessage(
-      "Автоматически проверять обновления при запуске приложения",
-    ),
     "autoCloseConnections": MessageLookupByLibrary.simpleMessage(
       "Автоматическое закрытие соединений",
     ),
@@ -222,6 +219,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "checkUpdate": MessageLookupByLibrary.simpleMessage("Проверить обновления"),
     "checkUpdateError": MessageLookupByLibrary.simpleMessage(
       "Текущее приложение уже является последней версией",
+    ),
+    "checkUpdateFailed": MessageLookupByLibrary.simpleMessage(
+      "Не удалось проверить обновления. Проверьте сеть и повторите попытку",
     ),
     "checking": MessageLookupByLibrary.simpleMessage("Проверка..."),
     "clearData": MessageLookupByLibrary.simpleMessage("Очистить данные"),
@@ -324,9 +324,6 @@ class MessageLookup extends MessageLookupByLibrary {
       "Это программное обеспечение используется только в некоммерческих целях, таких как учебные обмены и научные исследования. Запрещено использовать это программное обеспечение в коммерческих целях. Любая коммерческая деятельность, если таковая имеется, не имеет отношения к этому программному обеспечению.",
     ),
     "disconnected": MessageLookupByLibrary.simpleMessage("Отключено"),
-    "discoverNewVersion": MessageLookupByLibrary.simpleMessage(
-      "Обнаружена новая версия",
-    ),
     "discovery": MessageLookupByLibrary.simpleMessage(
       "Обнаружена новая версия",
     ),
@@ -442,7 +439,6 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "global": MessageLookupByLibrary.simpleMessage("Глобальный"),
     "go": MessageLookupByLibrary.simpleMessage("Перейти"),
-    "goDownload": MessageLookupByLibrary.simpleMessage("Перейти к загрузке"),
     "goToConfigureScript": MessageLookupByLibrary.simpleMessage(
       "Перейти к настройке скрипта",
     ),
@@ -640,7 +636,6 @@ class MessageLookup extends MessageLookupByLibrary {
       "При включении будет учитываться только трафик прокси",
     ),
     "openDashboard": MessageLookupByLibrary.simpleMessage("Открыть панель"),
-    "openInstaller": MessageLookupByLibrary.simpleMessage("Открыть установщик"),
     "openInstallerFailed": MessageLookupByLibrary.simpleMessage(
       "Не удалось открыть установщик автоматически. Открываем ссылку для загрузки...",
     ),
@@ -1039,21 +1034,25 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "unnamed": MessageLookupByLibrary.simpleMessage("Без имени"),
     "update": MessageLookupByLibrary.simpleMessage("Обновить"),
+    "updateAvailableTip": m17,
     "updateDownloadFallback": MessageLookupByLibrary.simpleMessage(
       "Не удалось загрузить обновление. Открываем ссылку для загрузки...",
     ),
-    "updateDownloadSuccess": MessageLookupByLibrary.simpleMessage(
-      "Пакет обновления загружен. Открыть сейчас?",
-    ),
     "updateDownloading": MessageLookupByLibrary.simpleMessage(
       "Загрузка обновления в фоновом режиме...",
+    ),
+    "updateInstalling": MessageLookupByLibrary.simpleMessage(
+      "Установка обновления...",
+    ),
+    "updateReadyInstall": MessageLookupByLibrary.simpleMessage(
+      "Обновление загружено. Установить сейчас?",
     ),
     "upload": MessageLookupByLibrary.simpleMessage("Загрузка"),
     "url": MessageLookupByLibrary.simpleMessage("URL"),
     "urlDesc": MessageLookupByLibrary.simpleMessage(
       "Получить профиль через URL",
     ),
-    "urlTip": m17,
+    "urlTip": m18,
     "useHosts": MessageLookupByLibrary.simpleMessage("Использовать hosts"),
     "useSystemHosts": MessageLookupByLibrary.simpleMessage(
       "Использовать системные hosts",
@@ -1087,7 +1086,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Режим белого списка",
     ),
     "years": MessageLookupByLibrary.simpleMessage("Лет"),
-    "yearsAgo": m18,
+    "yearsAgo": m19,
     "zh_CN": MessageLookupByLibrary.simpleMessage("Упрощенный китайский"),
   };
 }

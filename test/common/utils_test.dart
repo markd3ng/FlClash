@@ -176,24 +176,6 @@ void main() {
     });
   });
 
-  group('parseReleaseBody', () {
-    test('extracts bullet points', () {
-      const body = '- Feature 1\n- Feature 2\n- Bug fix';
-      final result = utils.parseReleaseBody(body);
-      expect(result, ['Feature 1', 'Feature 2', 'Bug fix']);
-    });
-
-    test('returns empty for null', () {
-      expect(utils.parseReleaseBody(null), isEmpty);
-    });
-
-    test('ignores non-bullet lines', () {
-      const body = 'Header\n- Item 1\nFooter\n- Item 2';
-      final result = utils.parseReleaseBody(body);
-      expect(result, ['Item 1', 'Item 2']);
-    });
-  });
-
   group('fastHash', () {
     test('produces consistent hash', () {
       final hash1 = utils.fastHash('hello');

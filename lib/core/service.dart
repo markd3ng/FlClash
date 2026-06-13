@@ -73,9 +73,11 @@ class CoreService extends CoreHandlerInterface {
   }
 
   Future<void> _attachSocket(Socket socket) async {
-    await _destroySocket();
+    final previous = _socket;
     _socket = socket;
-    _socketCompleter.complete(socket);
+    if (_socketCompleter.isCompleted) {
+      _socketCompleter = Completer();
+    }
     socket
         .transform(uint8ListToListIntConverter)
         .transform(utf8.decoder)
@@ -93,6 +95,10 @@ class CoreService extends CoreHandlerInterface {
             _shutdownCompleter.complete(true);
           }
         });
+    _socketCompleter.complete(socket);
+    if (previous != null) {
+      await previous.close();
+    }
   }
 
   bool _resetSocketIfCurrent(Socket socket) {
@@ -195,10 +201,10 @@ class CoreService extends CoreHandlerInterface {
   Future<void> _destroySocket() async {
     final socket = _socket;
     _socket = null;
+    if (_socketCompleter.isCompleted) {
+      _socketCompleter = Completer();
+    }
     if (socket != null) {
-      if (_socketCompleter.isCompleted) {
-        _socketCompleter = Completer();
-      }
       await socket.close();
     }
   }

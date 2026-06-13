@@ -202,13 +202,24 @@ class NamedPipeServer {
         server.onDisconnect?.call();
       } else if (message is String && message.startsWith('error:')) {
         commonPrint.log('[NamedPipeServer] $message', logLevel: LogLevel.error);
+      } else if (message is List) {
+        commonPrint.log(
+          '[NamedPipeServer] isolate error: ${message.join(' ')}',
+          logLevel: LogLevel.error,
+        );
       }
     });
 
-    server._isolate = await Isolate.spawn(_pipeIsolate, [
-      pipeName,
-      server._responsePort!.sendPort,
-    ]);
+    try {
+      server._isolate = await Isolate.spawn(
+        _pipeIsolate,
+        [pipeName, server._responsePort!.sendPort],
+        onError: server._responsePort!.sendPort,
+      );
+    } catch (_) {
+      await server.close();
+      rethrow;
+    }
 
     return server;
   }
@@ -222,12 +233,15 @@ class NamedPipeServer {
 
   Future<void> close() async {
     final wp = _writePort;
-    if (wp == null) return;
     _writePort = null;
-    wp.send(const _PipeCmd(1, null));
+    if (wp != null) {
+      wp.send(const _PipeCmd(1, null));
+      await Future.delayed(const Duration(milliseconds: 50));
+    }
     _responseSub?.cancel();
+    _responseSub = null;
     _responsePort?.close();
-    await Future.delayed(const Duration(milliseconds: 50));
+    _responsePort = null;
     _isolate?.kill();
     _isolate = null;
   }

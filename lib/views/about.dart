@@ -12,14 +12,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class AboutView extends StatelessWidget {
   const AboutView({super.key});
 
-  Future<void> _checkUpdate(BuildContext context) async {
-    final data = await appController.safeRun<Map<String, dynamic>?>(
-      request.checkForUpdate,
-      title: appLocalizations.checkUpdate,
-    );
-    appController.checkUpdateResultHandle(data: data, isUser: true);
-  }
-
   ListItem _siteLinkItem({
     required String title,
     required String domain,
@@ -44,7 +36,7 @@ class AboutView extends StatelessWidget {
         ListItem(
           title: Text(appLocalizations.checkUpdate),
           onTap: () {
-            _checkUpdate(context);
+            appController.checkUpdate(isUser: true);
           },
         ),
         if (baseDomain.isNotEmpty)
@@ -180,7 +172,7 @@ class _DeveloperModeDetectorState extends State<_DeveloperModeDetector> {
       _resetCounter();
     } else {
       _timer?.cancel();
-      _timer = Timer(Duration(seconds: 1), _resetCounter);
+      _timer = Timer(const Duration(seconds: 1), _resetCounter);
     }
   }
 

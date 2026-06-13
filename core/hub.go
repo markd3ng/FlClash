@@ -101,12 +101,6 @@ func handleValidateConfig(path string) string {
 	}
 	_, err = config.UnmarshalRawConfig(buf)
 	if err != nil {
-
-		prefix := buf
-		if len(prefix) > 30 {
-			prefix = prefix[:30]
-		}
-		// Return exactly what the parser was trying to read so we can see it in Dart logs!
 		return "Parse Error: " + err.Error()
 	}
 	return ""
@@ -161,13 +155,17 @@ func handleGetProxies() ProxiesData {
 }
 
 func handleChangeProxy(data string, fn func(string string)) {
-	runLock.Lock()
 	go func() {
+		runLock.Lock()
 		defer runLock.Unlock()
 		var params = &ChangeProxyParams{}
 		err := json.Unmarshal([]byte(data), params)
 		if err != nil {
 			fn(err.Error())
+			return
+		}
+		if params.GroupName == nil || params.ProxyName == nil {
+			fn("Missing group-name or proxy-name")
 			return
 		}
 		groupName := *params.GroupName
@@ -178,7 +176,11 @@ func handleChangeProxy(data string, fn func(string string)) {
 			fn("Not found group")
 			return
 		}
-		adapterProxy := group.(*adapter.Proxy)
+		adapterProxy, ok := group.(*adapter.Proxy)
+		if !ok {
+			fn("Group is not adapter proxy")
+			return
+		}
 		selector, ok := adapterProxy.ProxyAdapter.(outboundgroup.SelectAble)
 		if !ok {
 			fn("Group is not selectable")
@@ -195,7 +197,6 @@ func handleChangeProxy(data string, fn func(string string)) {
 		}
 
 		fn("")
-		return
 	}()
 }
 
@@ -232,18 +233,23 @@ func handleResetTraffic() {
 }
 
 func handleAsyncTestDelay(paramsString string, fn func(string)) {
-	mBatch.Go(paramsString, func() (bool, error) {
+	go func() {
+		if err := delaySem.Acquire(context.Background(), 1); err != nil {
+			fn("")
+			return
+		}
+		defer delaySem.Release(1)
 		var params = &TestDelayParams{}
 		err := json.Unmarshal([]byte(paramsString), params)
 		if err != nil {
 			fn("")
-			return false, nil
+			return
 		}
 
 		expectedStatus, err := utils.NewUnsignedRanges[uint16]("")
 		if err != nil {
 			fn("")
-			return false, nil
+			return
 		}
 
 		ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*time.Duration(params.Timeout))
@@ -260,7 +266,7 @@ func handleAsyncTestDelay(paramsString string, fn func(string)) {
 			delayData.Value = -1
 			data, _ := json.Marshal(delayData)
 			fn(string(data))
-			return false, nil
+			return
 		}
 
 		testUrl := constant.DefaultTestURL
@@ -275,14 +281,13 @@ func handleAsyncTestDelay(paramsString string, fn func(string)) {
 			delayData.Value = -1
 			data, _ := json.Marshal(delayData)
 			fn(string(data))
-			return false, nil
+			return
 		}
 
 		delayData.Value = int32(delay)
 		data, _ := json.Marshal(delayData)
 		fn(string(data))
-		return false, nil
-	})
+	}()
 }
 
 func handleGetConnections() string {
@@ -483,9 +488,12 @@ func handleStopLog() {
 
 func handleGetCountryCode(ip string, fn func(value string)) {
 	go func() {
-		runLock.Lock()
-		defer runLock.Unlock()
-		codes := mmdb.IPInstance().LookupCode(net.ParseIP(ip))
+		parsedIP := net.ParseIP(ip)
+		if parsedIP == nil {
+			fn("")
+			return
+		}
+		codes := mmdb.IPInstance().LookupCode(parsedIP)
 		if len(codes) == 0 {
 			fn("")
 			return

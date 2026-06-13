@@ -51,6 +51,27 @@ class TrafficUsage extends StatelessWidget {
     final appLocalizations = context.appLocalizations;
     final primaryColor = globalState.theme.darken3PrimaryContainer;
     final secondaryColor = globalState.theme.darken2SecondaryContainer;
+    final labelStyle = context.textTheme.bodySmall;
+    final uploadTextSize = globalState.measure.computeTextSize(
+      Text(
+        maxLines: 1,
+        appLocalizations.upload,
+        overflow: TextOverflow.ellipsis,
+        style: labelStyle,
+      ),
+    );
+    final downloadTextSize = globalState.measure.computeTextSize(
+      Text(
+        maxLines: 1,
+        appLocalizations.download,
+        overflow: TextOverflow.ellipsis,
+        style: labelStyle,
+      ),
+    );
+    final maxTextWidth = max(
+      uploadTextSize.width,
+      downloadTextSize.width,
+    );
     return SizedBox(
       height: getWidgetHeight(2),
       child: RepaintBoundary(
@@ -98,28 +119,8 @@ class TrafficUsage extends StatelessWidget {
                             Flexible(
                               child: LayoutBuilder(
                                 builder: (_, container) {
-                                  final uploadText = Text(
-                                    maxLines: 1,
-                                    appLocalizations.upload,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: context.textTheme.bodySmall,
-                                  );
-                                  final downloadText = Text(
-                                    maxLines: 1,
-                                    appLocalizations.download,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: context.textTheme.bodySmall,
-                                  );
-                                  final uploadTextSize = globalState.measure
-                                      .computeTextSize(uploadText);
-                                  final downloadTextSize = globalState.measure
-                                      .computeTextSize(downloadText);
-                                  final maxTextWidth = max(
-                                    uploadTextSize.width,
-                                    downloadTextSize.width,
-                                  );
                                   if (maxTextWidth + 24 > container.maxWidth) {
-                                    return Container();
+                                    return const SizedBox.shrink();
                                   }
                                   return Column(
                                     crossAxisAlignment:

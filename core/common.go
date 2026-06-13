@@ -2,19 +2,16 @@ package main
 
 import (
 	b "bytes"
-	"context"
 	"encoding/json"
 	"errors"
 	"os"
 	"path/filepath"
-	"runtime"
 	"sync"
 
 	"github.com/metacubex/mihomo/adapter"
 	"github.com/metacubex/mihomo/adapter/inbound"
 	"github.com/metacubex/mihomo/adapter/outboundgroup"
 	"github.com/metacubex/mihomo/adapter/provider"
-	"github.com/metacubex/mihomo/common/batch"
 	"github.com/metacubex/mihomo/component/dialer"
 	"github.com/metacubex/mihomo/component/resolver"
 	"github.com/metacubex/mihomo/config"
@@ -28,6 +25,7 @@ import (
 	"github.com/metacubex/mihomo/log"
 	rp "github.com/metacubex/mihomo/rules/provider"
 	"github.com/metacubex/mihomo/tunnel"
+	"golang.org/x/sync/semaphore"
 )
 
 var (
@@ -35,7 +33,7 @@ var (
 	version       = 0
 	isRunning     = false
 	runLock       sync.Mutex
-	mBatch, _     = batch.New[bool](context.Background(), batch.WithConcurrencyNum[bool](50))
+	delaySem      = semaphore.NewWeighted(50)
 )
 
 func getExternalProvidersRaw() map[string]cp.Provider {
@@ -270,7 +268,6 @@ func updateConfig(params *UpdateParams) {
 }
 
 func applyConfig(params *SetupParams) error {
-	runtime.GC()
 	runLock.Lock()
 	defer runLock.Unlock()
 	var err error

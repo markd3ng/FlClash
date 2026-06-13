@@ -72,28 +72,31 @@ class _StartButtonState extends ConsumerState<StartButton>
       profilesProvider.select((state) => state.isNotEmpty),
     );
     if (!hasProfile) {
-      return Container();
+      return const SizedBox.shrink();
     }
+    final textWidth =
+        globalState.measure
+            .computeTextSize(
+              Text(
+                utils.getTimeText(null),
+                style: context.textTheme.titleMedium?.toSoftBold,
+              ),
+            )
+            .width +
+        16;
     return Theme(
       data: Theme.of(context).copyWith(
         floatingActionButtonTheme: Theme.of(context).floatingActionButtonTheme
             .copyWith(
-              sizeConstraints: BoxConstraints(minWidth: 56, maxWidth: 200),
+              sizeConstraints: const BoxConstraints(
+                minWidth: 56,
+                maxWidth: 200,
+              ),
             ),
       ),
       child: AnimatedBuilder(
         animation: _controller!.view,
         builder: (_, child) {
-          final textWidth =
-              globalState.measure
-                  .computeTextSize(
-                    Text(
-                      utils.getTimeDifference(DateTime.now()),
-                      style: context.textTheme.titleMedium?.toSoftBold,
-                    ),
-                  )
-                  .width +
-              16;
           return FloatingActionButton(
             clipBehavior: Clip.antiAlias,
             materialTapTargetSize: MaterialTapTargetSize.padded,

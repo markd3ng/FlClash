@@ -36,7 +36,7 @@ class Utils {
   }
 
   String getDateStringLast2(int value) {
-    var valueRaw = '0$value';
+    final valueRaw = '0$value';
     return valueRaw.substring(valueRaw.length - 2);
   }
 
@@ -45,7 +45,7 @@ class Utils {
         'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     final random = Random();
 
-    int length = minLength + random.nextInt(maxLength - minLength + 1);
+    final length = minLength + random.nextInt(maxLength - minLength + 1);
 
     String result = '';
     for (int i = 0; i < length; i++) {
@@ -75,16 +75,6 @@ class Utils {
     return '${hex.substring(0, 8)}-${hex.substring(8, 12)}-${hex.substring(12, 16)}-${hex.substring(16, 20)}-${hex.substring(20, 32)}';
   }
 
-  String getTimeDifference(DateTime dateTime) {
-    var currentDateTime = DateTime.now();
-    var difference = currentDateTime.difference(dateTime);
-    var inHours = difference.inHours;
-    var inMinutes = difference.inMinutes;
-    var inSeconds = difference.inSeconds;
-
-    return '${getDateStringLast2(inHours)}:${getDateStringLast2(inMinutes)}:${getDateStringLast2(inSeconds)}';
-  }
-
   String getTimeText(int? timeStamp) {
     if (timeStamp == null) {
       return '00:00:00';
@@ -102,7 +92,7 @@ class Utils {
 
   Locale? getLocaleForString(String? localString) {
     if (localString == null) return null;
-    var localSplit = localString.split('_');
+    final localSplit = localString.split('_');
     if (localSplit.length == 1) {
       return Locale(localSplit[0]);
     }
@@ -157,25 +147,29 @@ class Utils {
   }
 
   int compareVersions(String version1, String version2) {
-    List<String> v1 = version1.split('+')[0].split('.');
-    List<String> v2 = version2.split('+')[0].split('.');
-    int major1 = int.parse(v1[0]);
-    int major2 = int.parse(v2[0]);
+    final v1 = version1.split('+')[0].split('.');
+    final v2 = version2.split('+')[0].split('.');
+    final major1 = int.parse(v1[0]);
+    final major2 = int.parse(v2[0]);
     if (major1 != major2) {
       return major1.compareTo(major2);
     }
-    int minor1 = v1.length > 1 ? int.parse(v1[1]) : 0;
-    int minor2 = v2.length > 1 ? int.parse(v2[1]) : 0;
+    final minor1 = v1.length > 1 ? int.parse(v1[1]) : 0;
+    final minor2 = v2.length > 1 ? int.parse(v2[1]) : 0;
     if (minor1 != minor2) {
       return minor1.compareTo(minor2);
     }
-    int patch1 = v1.length > 2 ? int.parse(v1[2]) : 0;
-    int patch2 = v2.length > 2 ? int.parse(v2[2]) : 0;
+    final patch1 = v1.length > 2 ? int.parse(v1[2]) : 0;
+    final patch2 = v2.length > 2 ? int.parse(v2[2]) : 0;
     if (patch1 != patch2) {
       return patch1.compareTo(patch2);
     }
-    int build1 = version1.contains('+') ? int.parse(version1.split('+')[1]) : 0;
-    int build2 = version2.contains('+') ? int.parse(version2.split('+')[1]) : 0;
+    final build1 = version1.contains('+')
+        ? int.parse(version1.split('+')[1])
+        : 0;
+    final build2 = version2.contains('+')
+        ? int.parse(version2.split('+')[1])
+        : 0;
     return build1.compareTo(build2);
   }
 
@@ -209,17 +203,6 @@ class Utils {
 
   FlutterView getScreen() {
     return WidgetsBinding.instance.platformDispatcher.views.first;
-  }
-
-  List<String> parseReleaseBody(String? body) {
-    if (body == null) return [];
-    const pattern = r'- \s*(.*)';
-    final regex = RegExp(pattern);
-    return regex
-        .allMatches(body)
-        .map((match) => match.group(1) ?? '')
-        .where((item) => item.isNotEmpty)
-        .toList();
   }
 
   ViewMode getViewMode(double viewWidth) {
@@ -295,15 +278,14 @@ class Utils {
   }
 
   Future<String?> getLocalIpAddress() async {
-    List<NetworkInterface> interfaces =
-        await NetworkInterface.list(includeLoopback: false)
-          ..sort((a, b) {
-            if (a.isWifi && !b.isWifi) return -1;
-            if (!a.isWifi && b.isWifi) return 1;
-            if (a.includesIPv4 && !b.includesIPv4) return -1;
-            if (!a.includesIPv4 && b.includesIPv4) return 1;
-            return 0;
-          });
+    final interfaces = await NetworkInterface.list(includeLoopback: false);
+    interfaces.sort((a, b) {
+      if (a.isWifi && !b.isWifi) return -1;
+      if (!a.isWifi && b.isWifi) return 1;
+      if (a.includesIPv4 && !b.includesIPv4) return -1;
+      if (!a.includesIPv4 && b.includesIPv4) return 1;
+      return 0;
+    });
     for (final interface in interfaces) {
       final addresses = interface.addresses;
       if (addresses.isEmpty) {

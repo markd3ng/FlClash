@@ -68,27 +68,27 @@ jobs:
           - platform: windows
             os: Windows-2022
             arch: amd64
-            name: "Windows x64"
+            name: "Windows (x64)"
           - platform: windows
             os: windows-11-arm
             arch: arm64
-            name: "Windows arm64"
+            name: "Windows (arm64)"
           - platform: macos
             os: macos-15-intel
             arch: amd64
-            name: "macOS Intel x64"
+            name: "macOS (Intel x64)"
           - platform: macos
             os: macos-latest
             arch: arm64
-            name: "macOS Apple Silicon"
+            name: "macOS (Apple Silicon)"
           - platform: linux
             os: ubuntu-22.04
             arch: amd64
-            name: "Linux x64"
+            name: "Linux (x64)"
           - platform: linux
             os: ubuntu-24.04-arm
             arch: arm64
-            name: "Linux arm64"
+            name: "Linux (arm64)"
 
     steps:
       - name: Setup rust

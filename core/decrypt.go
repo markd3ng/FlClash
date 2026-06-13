@@ -37,13 +37,11 @@ func DecryptFlClash(data []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	var filtered []byte
 	for i := 0; i < len(plaintext); i++ {
 		if plaintext[i] < 32 && plaintext[i] != '\n' && plaintext[i] != '\r' && plaintext[i] != '\t' {
 			return nil, errors.New("invalid character found in decrypted text")
 		}
-		filtered = append(filtered, plaintext[i])
 	}
 
-	return filtered, nil
+	return plaintext, nil
 }

@@ -34,7 +34,7 @@ const defaultNetworkProps = NetworkProps();
 const defaultProxiesStyleProps = ProxiesStyleProps();
 const defaultWindowProps = WindowProps();
 const defaultAccessControlProps = AccessControlProps();
-final defaultThemeProps = ThemeProps(primaryColor: defaultPrimaryColor);
+const defaultThemeProps = ThemeProps(primaryColor: defaultPrimaryColor);
 
 const List<DashboardWidget> defaultDashboardWidgets = [
   DashboardWidget.networkSpeed,
@@ -74,7 +74,6 @@ abstract class AppSettingProps with _$AppSettingProps {
     @Default(true) bool closeConnections,
     @Default(defaultTestUrl) String testUrl,
     @Default(false) bool isAnimateToPage,
-    @Default(true) bool autoCheckUpdate,
     @Default(false) bool showLabel,
     @Default(false) bool disclaimerAccepted,
     @Default(true) bool minimizeOnExit,
@@ -138,7 +137,7 @@ abstract class WindowProps with _$WindowProps {
 extension WindowPropsExt on WindowProps {
   Size get _size => Size(width, height);
 
-  Size get size => _size.isEmpty ? Size(680, 580) : _size;
+  Size get size => _size.isEmpty ? const Size(680, 580) : _size;
 }
 
 @freezed
@@ -245,7 +244,7 @@ abstract class Config with _$Config {
 
   factory Config.realFromJson(Map<String, Object?>? json) {
     if (json == null) {
-      return Config(themeProps: defaultThemeProps);
+      return const Config(themeProps: defaultThemeProps);
     }
     return _$ConfigFromJson(json);
   }

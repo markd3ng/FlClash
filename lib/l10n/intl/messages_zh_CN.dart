@@ -54,9 +54,11 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m16(count) => "已选择 ${count} 项";
 
-  static String m17(label) => "${label}必须为URL";
+  static String m17(version) => "发现新版本 ${version}，是否立即下载并安装？";
 
-  static String m18(count) => "${count} 年前";
+  static String m18(label) => "${label}必须为URL";
+
+  static String m19(count) => "${count} 年前";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -110,8 +112,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "application": MessageLookupByLibrary.simpleMessage("应用程序"),
     "applicationDesc": MessageLookupByLibrary.simpleMessage("修改应用程序相关设置"),
     "auto": MessageLookupByLibrary.simpleMessage("自动"),
-    "autoCheckUpdate": MessageLookupByLibrary.simpleMessage("自动检查更新"),
-    "autoCheckUpdateDesc": MessageLookupByLibrary.simpleMessage("应用启动时自动检查更新"),
     "autoCloseConnections": MessageLookupByLibrary.simpleMessage("自动关闭连接"),
     "autoCloseConnectionsDesc": MessageLookupByLibrary.simpleMessage(
       "切换节点后自动关闭连接",
@@ -148,6 +148,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "checkError": MessageLookupByLibrary.simpleMessage("检测失败"),
     "checkUpdate": MessageLookupByLibrary.simpleMessage("检查更新"),
     "checkUpdateError": MessageLookupByLibrary.simpleMessage("当前应用已经是最新版了"),
+    "checkUpdateFailed": MessageLookupByLibrary.simpleMessage(
+      "检查更新失败，请检查网络后重试",
+    ),
     "checking": MessageLookupByLibrary.simpleMessage("检测中..."),
     "clearData": MessageLookupByLibrary.simpleMessage("清除数据"),
     "clearProxyChain": MessageLookupByLibrary.simpleMessage("删除链式配置"),
@@ -219,7 +222,6 @@ class MessageLookup extends MessageLookupByLibrary {
       "本软件仅供学习交流、科研等非商业性质的用途，严禁将本软件用于商业目的。如有任何商业行为，均与本软件无关。",
     ),
     "disconnected": MessageLookupByLibrary.simpleMessage("已断开"),
-    "discoverNewVersion": MessageLookupByLibrary.simpleMessage("发现新版本"),
     "discovery": MessageLookupByLibrary.simpleMessage("发现新版本"),
     "dnsDesc": MessageLookupByLibrary.simpleMessage("更新DNS相关设置"),
     "dnsHijacking": MessageLookupByLibrary.simpleMessage("DNS劫持"),
@@ -287,7 +289,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "getProfileSuccess": MessageLookupByLibrary.simpleMessage("配置文件获取成功"),
     "global": MessageLookupByLibrary.simpleMessage("全局"),
     "go": MessageLookupByLibrary.simpleMessage("前往"),
-    "goDownload": MessageLookupByLibrary.simpleMessage("前往下载"),
     "goToConfigureScript": MessageLookupByLibrary.simpleMessage("前往配置脚本"),
     "hasCacheChange": MessageLookupByLibrary.simpleMessage("是否缓存修改"),
     "host": MessageLookupByLibrary.simpleMessage("主机"),
@@ -409,7 +410,6 @@ class MessageLookup extends MessageLookupByLibrary {
       "开启后，将只统计代理流量",
     ),
     "openDashboard": MessageLookupByLibrary.simpleMessage("打开面板"),
-    "openInstaller": MessageLookupByLibrary.simpleMessage("打开安装包"),
     "openInstallerFailed": MessageLookupByLibrary.simpleMessage(
       "无法自动打开安装包，正在打开下载链接...",
     ),
@@ -680,17 +680,19 @@ class MessageLookup extends MessageLookupByLibrary {
     "unknownNetworkError": MessageLookupByLibrary.simpleMessage("未知网络错误"),
     "unnamed": MessageLookupByLibrary.simpleMessage("未命名"),
     "update": MessageLookupByLibrary.simpleMessage("更新"),
+    "updateAvailableTip": m17,
     "updateDownloadFallback": MessageLookupByLibrary.simpleMessage(
       "更新下载失败，正在打开下载链接...",
     ),
-    "updateDownloadSuccess": MessageLookupByLibrary.simpleMessage(
-      "更新包已下载，是否立即打开？",
-    ),
     "updateDownloading": MessageLookupByLibrary.simpleMessage("正在后台下载更新..."),
+    "updateInstalling": MessageLookupByLibrary.simpleMessage("正在安装更新..."),
+    "updateReadyInstall": MessageLookupByLibrary.simpleMessage(
+      "更新已下载完成，是否立即安装？",
+    ),
     "upload": MessageLookupByLibrary.simpleMessage("上传"),
     "url": MessageLookupByLibrary.simpleMessage("URL"),
     "urlDesc": MessageLookupByLibrary.simpleMessage("通过URL获取配置文件"),
-    "urlTip": m17,
+    "urlTip": m18,
     "useHosts": MessageLookupByLibrary.simpleMessage("使用Hosts"),
     "useSystemHosts": MessageLookupByLibrary.simpleMessage("使用系统Hosts"),
     "userCenter": MessageLookupByLibrary.simpleMessage("用户中心"),
@@ -712,7 +714,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "webDAVConfiguration": MessageLookupByLibrary.simpleMessage("WebDAV配置"),
     "whitelistMode": MessageLookupByLibrary.simpleMessage("白名单模式"),
     "years": MessageLookupByLibrary.simpleMessage("年"),
-    "yearsAgo": m18,
+    "yearsAgo": m19,
     "zh_CN": MessageLookupByLibrary.simpleMessage("中文简体"),
   };
 }

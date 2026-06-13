@@ -15,6 +15,9 @@ import (
 var conn net.Conn
 
 func (result ActionResult) send() {
+	if conn == nil {
+		return
+	}
 	data, err := result.Json()
 	if err != nil {
 		return

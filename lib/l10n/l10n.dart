@@ -404,26 +404,6 @@ class AppLocalizations {
     );
   }
 
-  /// `Auto check updates`
-  String get autoCheckUpdate {
-    return Intl.message(
-      'Auto check updates',
-      name: 'autoCheckUpdate',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Auto check for updates when the app starts`
-  String get autoCheckUpdateDesc {
-    return Intl.message(
-      'Auto check for updates when the app starts',
-      name: 'autoCheckUpdateDesc',
-      desc: '',
-      args: [],
-    );
-  }
-
   /// `AccessControl`
   String get accessControl {
     return Intl.message(
@@ -1099,16 +1079,6 @@ class AppLocalizations {
     );
   }
 
-  /// `Discover the new version`
-  String get discoverNewVersion {
-    return Intl.message(
-      'Discover the new version',
-      name: 'discoverNewVersion',
-      desc: '',
-      args: [],
-    );
-  }
-
   /// `The current application is already the latest version`
   String get checkUpdateError {
     return Intl.message(
@@ -1119,11 +1089,31 @@ class AppLocalizations {
     );
   }
 
-  /// `Go to download`
-  String get goDownload {
+  /// `Failed to check for updates. Please check your network and try again`
+  String get checkUpdateFailed {
     return Intl.message(
-      'Go to download',
-      name: 'goDownload',
+      'Failed to check for updates. Please check your network and try again',
+      name: 'checkUpdateFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `A new version {version} is available. Download and install it now?`
+  String updateAvailableTip(Object version) {
+    return Intl.message(
+      'A new version $version is available. Download and install it now?',
+      name: 'updateAvailableTip',
+      desc: '',
+      args: [version],
+    );
+  }
+
+  /// `The update has been downloaded. Install it now?`
+  String get updateReadyInstall {
+    return Intl.message(
+      'The update has been downloaded. Install it now?',
+      name: 'updateReadyInstall',
       desc: '',
       args: [],
     );
@@ -1139,16 +1129,6 @@ class AppLocalizations {
     );
   }
 
-  /// `Update package downloaded. Open it now?`
-  String get updateDownloadSuccess {
-    return Intl.message(
-      'Update package downloaded. Open it now?',
-      name: 'updateDownloadSuccess',
-      desc: '',
-      args: [],
-    );
-  }
-
   /// `Update download failed. Opening the download link...`
   String get updateDownloadFallback {
     return Intl.message(
@@ -1159,21 +1139,21 @@ class AppLocalizations {
     );
   }
 
-  /// `Open installer`
-  String get openInstaller {
-    return Intl.message(
-      'Open installer',
-      name: 'openInstaller',
-      desc: '',
-      args: [],
-    );
-  }
-
   /// `Unable to open installer automatically. Opening the download link...`
   String get openInstallerFailed {
     return Intl.message(
       'Unable to open installer automatically. Opening the download link...',
       name: 'openInstallerFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Installing update...`
+  String get updateInstalling {
+    return Intl.message(
+      'Installing update...',
+      name: 'updateInstalling',
       desc: '',
       args: [],
     );

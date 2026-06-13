@@ -26,10 +26,48 @@ const _persistentLogMaxBytes = 1024 * 1024;
 const _persistentLogKeepBytes = 768 * 1024;
 const _coreDisconnectedMessage = 'Core is not connected';
 
+const _macUpdateScript = r'''#!/bin/bash
+DMG="$1"
+APP="$2"
+PID="$3"
+i=0
+while [ "$i" -lt 120 ]; do
+  /bin/kill -0 "$PID" 2>/dev/null || break
+  /bin/sleep 0.5
+  i=$((i + 1))
+done
+MOUNT=$(/usr/bin/mktemp -d /tmp/flclash_update.XXXXXX)
+if ! /usr/bin/hdiutil attach "$DMG" -nobrowse -noverify -mountpoint "$MOUNT" >/dev/null 2>&1; then
+  /bin/rm -f "$DMG"
+  /usr/bin/open "$APP"
+  exit 0
+fi
+SRC=$(/usr/bin/find "$MOUNT" -maxdepth 1 -name "*.app" | /usr/bin/head -1)
+if [ -z "$SRC" ]; then
+  /usr/bin/hdiutil detach "$MOUNT" >/dev/null 2>&1 || true
+  /bin/rm -f "$DMG"
+  /usr/bin/open "$APP"
+  exit 0
+fi
+if /usr/bin/ditto "$SRC" "$APP.new" >/dev/null 2>&1; then
+  /bin/rm -rf "$APP"
+  /bin/mv "$APP.new" "$APP"
+  /usr/bin/hdiutil detach "$MOUNT" >/dev/null 2>&1 || true
+  /usr/bin/open "$APP"
+else
+  /bin/rm -rf "$APP.new" 2>/dev/null || true
+  /usr/bin/hdiutil detach "$MOUNT" >/dev/null 2>&1 || true
+  /bin/rm -f "$DMG"
+  /usr/bin/open "$APP"
+fi
+''';
+
 class AppController {
   late final BuildContext _context;
   late final WidgetRef _ref;
   Future<void> _logFileWrite = Future.value();
+  File? _persistentLogFile;
+  int _persistentLogLength = 0;
   Future<bool>? _coreReadyFuture;
   bool isAttach = false;
   bool _isUpdateDownloading = false;
@@ -68,7 +106,7 @@ extension InitControllerExt on AppController {
       return false;
     };
     updateTray();
-    autoCheckUpdate();
+    checkUpdate();
     autoLaunch?.updateStatus(_ref.read(appSettingProvider).autoLaunch);
     if (!_ref.read(appSettingProvider).silentLaunch) {
       window?.show();
@@ -117,57 +155,59 @@ extension InitControllerExt on AppController {
     }
   }
 
-  Future<void> autoCheckUpdate() async {
-    final res = await request.checkForUpdate();
-    await checkUpdateResultHandle(data: res);
-  }
-
-  Future<void> checkUpdateResultHandle({
-    Map<String, dynamic>? data,
-    bool isUser = false,
-  }) async {
-    if (data != null) {
-      final tagName = data['tag_name'] as String? ?? '';
-      final body = data['body'] as String? ?? '';
-      await safeRun<void>(
-        () => _promptUpdateAndDownload(tagName: tagName, body: body),
-        title: appLocalizations.checkUpdate,
-        silence: !isUser,
-      );
-    } else if (isUser) {
-      globalState.showMessage(
-        title: appLocalizations.checkUpdate,
-        message: TextSpan(text: appLocalizations.checkUpdateError),
-      );
-    }
-  }
-
-  Future<void> _promptUpdateAndDownload({
-    required String tagName,
-    required String body,
-  }) async {
+  Future<void> checkUpdate({bool isUser = false}) async {
     if (_isUpdateDownloading) {
-      globalState.showNotifier(appLocalizations.updateDownloading);
+      if (isUser) {
+        globalState.showNotifier(appLocalizations.updateDownloading);
+      }
       return;
     }
-    final textTheme = _context.textTheme;
-    final submits = utils.parseReleaseBody(body);
-    final shouldDownload = await globalState.showMessage(
-      title: appLocalizations.discoverNewVersion,
+    String? tagName;
+    try {
+      tagName = await request.checkForUpdate();
+    } catch (error) {
+      commonPrint.log(
+        'check update failed: $error',
+        logLevel: LogLevel.warning,
+      );
+      if (isUser) {
+        globalState.showMessage(
+          title: appLocalizations.checkUpdate,
+          message: TextSpan(text: appLocalizations.checkUpdateFailed),
+          cancelable: false,
+        );
+      }
+      return;
+    }
+    if (tagName == null) {
+      if (isUser) {
+        globalState.showMessage(
+          title: appLocalizations.checkUpdate,
+          message: TextSpan(text: appLocalizations.checkUpdateError),
+          cancelable: false,
+        );
+      }
+      return;
+    }
+    final updateTagName = tagName;
+    window?.show();
+    final res = await globalState.showMessage(
+      title: appLocalizations.discovery,
       message: TextSpan(
-        text: tagName.isEmpty ? '' : '$tagName \n',
-        style: textTheme.headlineSmall,
-        children: [
-          if (submits.isNotEmpty)
-            TextSpan(text: '\n', style: textTheme.bodyMedium),
-          for (final submit in submits)
-            TextSpan(text: '- $submit \n', style: textTheme.bodyMedium),
-        ],
+        text: appLocalizations.updateAvailableTip(updateTagName),
       ),
-      confirmText: appLocalizations.download,
-      cancelText: appLocalizations.remindLater,
     );
-    if (shouldDownload != true) return;
+    if (res != true) {
+      return;
+    }
+    await safeRun<void>(
+      () => _downloadAndInstallUpdate(tagName: updateTagName),
+      title: appLocalizations.checkUpdate,
+      silence: !isUser,
+    );
+  }
+
+  Future<void> _downloadAndInstallUpdate({required String tagName}) async {
     final downloadUrl = _getUpdateDownloadUrl();
     if (downloadUrl == null) {
       await _openUpdateDownloadUrl('https://dl.dler.io');
@@ -177,24 +217,16 @@ extension InitControllerExt on AppController {
       _isUpdateDownloading = true;
       globalState.showNotifier(appLocalizations.updateDownloading);
       final updateFile = await _downloadUpdatePackage(downloadUrl, tagName);
-      final dialogResult = await globalState.showMessage(
-        title: appLocalizations.discoverNewVersion,
-        message: TextSpan(
-          style: textTheme.bodyMedium,
-          children: [
-            TextSpan(
-              text: '${appLocalizations.updateDownloadSuccess}\n',
-              style: textTheme.bodyMedium,
-            ),
-            TextSpan(text: updateFile.path, style: textTheme.bodySmall),
-          ],
-        ),
-        confirmText: appLocalizations.openInstaller,
-        cancelText: appLocalizations.remindLater,
+      window?.show();
+      final res = await globalState.showMessage(
+        title: appLocalizations.checkUpdate,
+        message: TextSpan(text: appLocalizations.updateReadyInstall),
       );
-      if (dialogResult == true) {
-        await _openUpdatePackage(updateFile, downloadUrl);
+      if (res != true) {
+        return;
       }
+      globalState.showNotifier(appLocalizations.updateInstalling);
+      await _installUpdatePackage(updateFile, downloadUrl);
     } catch (error) {
       commonPrint.log(
         'download update package failed: $error',
@@ -221,7 +253,7 @@ extension InitControllerExt on AppController {
     await tempFile.safeDelete();
     await request.downloadFile(downloadUrl, tempFile.path);
     await updateFile.safeDelete();
-    return await tempFile.rename(updateFile.path);
+    return tempFile.rename(updateFile.path);
   }
 
   String _getUpdatePackageFileName(String downloadUrl, String tagName) {
@@ -254,6 +286,77 @@ extension InitControllerExt on AppController {
     }
   }
 
+  Future<void> _installUpdatePackage(
+    File updateFile,
+    String fallbackUrl,
+  ) async {
+    var installed = false;
+    if (system.isWindows) {
+      installed = await _installWindowsUpdate(updateFile);
+    } else if (system.isMacOS) {
+      installed = await _installMacOSUpdate(updateFile);
+    }
+    if (installed) {
+      await handleExit();
+      return;
+    }
+    await _openUpdatePackage(updateFile, fallbackUrl);
+  }
+
+  Future<bool> _installWindowsUpdate(File updateFile) async {
+    try {
+      await Process.start(updateFile.path, [
+        '/SILENT',
+        '/SUPPRESSMSGBOXES',
+        '/NORESTART',
+        '/FORCECLOSEAPPLICATIONS',
+        '/RESTARTAPPLICATIONS',
+      ], mode: ProcessStartMode.detached);
+      return true;
+    } catch (error) {
+      commonPrint.log(
+        'start windows installer failed: $error',
+        logLevel: LogLevel.warning,
+      );
+      return false;
+    }
+  }
+
+  Future<bool> _installMacOSUpdate(File updateFile) async {
+    try {
+      final appBundlePath = _resolveMacOSAppPath();
+      if (appBundlePath == null) {
+        return false;
+      }
+      final scriptDir = await Directory.systemTemp.createTemp('flclash_update');
+      final scriptFile = File(p.join(scriptDir.path, 'update.sh'));
+      await scriptFile.writeAsString(_macUpdateScript);
+      await Process.start('/bin/bash', [
+        scriptFile.path,
+        updateFile.path,
+        appBundlePath,
+        '$pid',
+      ], mode: ProcessStartMode.detached);
+      return true;
+    } catch (error) {
+      commonPrint.log(
+        'start macos installer failed: $error',
+        logLevel: LogLevel.warning,
+      );
+      return false;
+    }
+  }
+
+  String? _resolveMacOSAppPath() {
+    final executable = Platform.resolvedExecutable;
+    const marker = '.app/Contents/MacOS/';
+    final index = executable.indexOf(marker);
+    if (index == -1) {
+      return null;
+    }
+    return executable.substring(0, index + '.app'.length);
+  }
+
   Future<void> _openUpdatePackage(File updateFile, String fallbackUrl) async {
     bool opened = false;
     try {
@@ -272,6 +375,7 @@ extension InitControllerExt on AppController {
       );
     }
     if (opened) return;
+    await updateFile.safeDelete();
     globalState.showNotifier(appLocalizations.openInstallerFailed);
     await _openUpdateDownloadUrl(fallbackUrl);
   }
@@ -539,7 +643,7 @@ extension ProfilesControllerExt on AppController {
     }
     toProfiles();
     final profile = await loadingRun(tag: LoadingTag.profiles, () async {
-      return await _runWithCertificateRetry(
+      return _runWithCertificateRetry(
         () => Profile.normal(url: url).update(),
         handleCloudUnauthorized: isOixCloudProfileUrl(url),
       );
@@ -569,7 +673,7 @@ extension ProfilesControllerExt on AppController {
     globalState.navigatorKey.currentState?.popUntil((route) => route.isFirst);
     toProfiles();
     final profile = await loadingRun(tag: LoadingTag.profiles, () async {
-      return await Profile.normal(label: platformFile?.name).saveFile(bytes);
+      return Profile.normal(label: platformFile?.name).saveFile(bytes);
     }, title: appLocalizations.addProfile);
     if (profile != null) {
       putProfile(profile);
@@ -630,27 +734,40 @@ extension LogsControllerExt on AppController {
   void writePersistentLog(Log log) {
     _logFileWrite = _logFileWrite
         .then((_) => _appendPersistentLog(log))
-        .catchError((_) {});
+        .catchError((error) {
+          debugPrint('write persistent log failed: $error');
+        });
   }
 
   Future<void> _appendPersistentLog(Log log) async {
+    final file = await _preparePersistentLogFile();
+    final line =
+        '${log.dateTime} [${log.logLevel.name.toUpperCase()}] ${log.payload}\n';
+    final encodedLine = utf8.encode(line);
+    if (_persistentLogLength + encodedLine.length > _persistentLogMaxBytes) {
+      await _rotatePersistentLog(file);
+    }
+    await file.writeAsBytes(encodedLine, mode: FileMode.append);
+    _persistentLogLength += encodedLine.length;
+  }
+
+  Future<File> _preparePersistentLogFile() async {
+    final cached = _persistentLogFile;
+    if (cached != null) {
+      return cached;
+    }
     final homeDirPath = await appPath.homeDirPath;
     final logsDir = Directory(p.join(homeDirPath, 'logs'));
     await logsDir.create(recursive: true);
     final file = File(p.join(logsDir.path, _persistentLogFileName));
-    await _rotatePersistentLog(file);
-    await file.writeAsString(
-      '${log.dateTime} [${log.logLevel.name.toUpperCase()}] ${log.payload}\n',
-      mode: FileMode.append,
-    );
+    _persistentLogLength = await file.exists() ? await file.length() : 0;
+    _persistentLogFile = file;
+    return file;
   }
 
   Future<void> _rotatePersistentLog(File file) async {
     if (!await file.exists()) {
-      return;
-    }
-    final length = await file.length();
-    if (length <= _persistentLogMaxBytes) {
+      _persistentLogLength = 0;
       return;
     }
     final bytes = await file.readAsBytes();
@@ -658,9 +775,9 @@ extension LogsControllerExt on AppController {
         ? bytes.length - _persistentLogKeepBytes
         : 0;
     final lineStart = bytes.indexOf(10, keepStart);
-    await file.writeAsBytes(
-      bytes.sublist(lineStart == -1 ? keepStart : lineStart + 1),
-    );
+    final kept = bytes.sublist(lineStart == -1 ? keepStart : lineStart + 1);
+    await file.writeAsBytes(kept);
+    _persistentLogLength = kept.length;
   }
 }
 
@@ -725,7 +842,7 @@ extension ProxiesControllerExt on AppController {
           final selectedMap = _ref.read(
             currentProfileProvider.select((state) => state?.selectedMap ?? {}),
           );
-          return await coreController.getProxiesGroups(
+          return coreController.getProxiesGroups(
             selectedMap: selectedMap,
             sortType: sortType,
             delayMap: delayMap,
@@ -1345,7 +1462,7 @@ extension SystemControllerExt on AppController {
   }
 
   Future<void> handleExit([bool needSave = false]) async {
-    Future.delayed(Duration(seconds: 3), () {
+    Future.delayed(const Duration(seconds: 3), () {
       system.exit();
     });
     try {
@@ -1449,7 +1566,9 @@ extension SystemControllerExt on AppController {
     tray?.update(
       trayState: _ref.read(trayStateProvider),
       traffic: _ref.read(
-        trafficsProvider.select((state) => state.list.safeLast(Traffic())),
+        trafficsProvider.select(
+          (state) => state.list.safeLast(const Traffic()),
+        ),
       ),
     );
   }
@@ -1509,10 +1628,7 @@ extension BackupControllerExt on AppController {
     );
     final configMap = _ref.read(configProvider).toJson();
     configMap['version'] = await preferences.getVersion();
-    return await backupTask(configMap, [
-      ...profileFileNames,
-      ...scriptFileNames,
-    ]);
+    return backupTask(configMap, [...profileFileNames, ...scriptFileNames]);
   }
 
   Future<void> restore(RestoreOption option) async {

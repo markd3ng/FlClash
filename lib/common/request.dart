@@ -206,7 +206,7 @@ class Request {
     return MemoryImage(data);
   }
 
-  Future<Map<String, dynamic>?> checkForUpdate() async {
+  Future<String?> checkForUpdate() async {
     for (final domain in Secrets.apiDomains) {
       try {
         final response = await _apiDirectDio.get(
@@ -233,18 +233,15 @@ class Request {
 
         if (!hasUpdate) return null;
 
-        return <String, dynamic>{
-          'tag_name': 'v${globalState.packageInfo.version}+$remoteVersion',
-          'body': '',
-        };
-      } catch (e) {
+        return 'v${globalState.packageInfo.version}+$remoteVersion';
+      } catch (_) {
         commonPrint.log(
           'checkForUpdate failed for $domain',
           logLevel: LogLevel.warning,
         );
       }
     }
-    return null;
+    throw Exception('checkForUpdate failed for all domains');
   }
 
   final Map<String, IpInfo Function(Map<String, dynamic>)> _ipInfoSources = {
@@ -262,7 +259,7 @@ class Request {
     final token = cancelToken ?? CancelToken();
     final futures = _ipInfoSources.entries.map((source) async {
       final Completer<Result<IpInfo?>> completer = Completer();
-      handleFailRes() {
+      void handleFailRes() {
         if (!completer.isCompleted && failureCount == _ipInfoSources.length) {
           completer.complete(Result.success(null));
         }

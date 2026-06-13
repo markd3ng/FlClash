@@ -61,9 +61,12 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m16(count) => "${count} items have been selected";
 
-  static String m17(label) => "${label} must be a url";
+  static String m17(version) =>
+      "A new version ${version} is available. Download and install it now?";
 
-  static String m18(count) =>
+  static String m18(label) => "${label} must be a url";
+
+  static String m19(count) =>
       "${Intl.plural(count, one: '1 year ago', other: '${count} years ago')}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
@@ -156,12 +159,6 @@ class MessageLookup extends MessageLookupByLibrary {
       "Modify application related settings",
     ),
     "auto": MessageLookupByLibrary.simpleMessage("Auto"),
-    "autoCheckUpdate": MessageLookupByLibrary.simpleMessage(
-      "Auto check updates",
-    ),
-    "autoCheckUpdateDesc": MessageLookupByLibrary.simpleMessage(
-      "Auto check for updates when the app starts",
-    ),
     "autoCloseConnections": MessageLookupByLibrary.simpleMessage(
       "Auto close connections",
     ),
@@ -221,6 +218,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "checkUpdate": MessageLookupByLibrary.simpleMessage("Check for updates"),
     "checkUpdateError": MessageLookupByLibrary.simpleMessage(
       "The current application is already the latest version",
+    ),
+    "checkUpdateFailed": MessageLookupByLibrary.simpleMessage(
+      "Failed to check for updates. Please check your network and try again",
     ),
     "checking": MessageLookupByLibrary.simpleMessage("Checking..."),
     "clearData": MessageLookupByLibrary.simpleMessage("Clear Data"),
@@ -317,9 +317,6 @@ class MessageLookup extends MessageLookupByLibrary {
       "This software is only used for non-commercial purposes such as learning exchanges and scientific research. It is strictly prohibited to use this software for commercial purposes. Any commercial activity, if any, has nothing to do with this software.",
     ),
     "disconnected": MessageLookupByLibrary.simpleMessage("Disconnected"),
-    "discoverNewVersion": MessageLookupByLibrary.simpleMessage(
-      "Discover the new version",
-    ),
     "discovery": MessageLookupByLibrary.simpleMessage(
       "Discovery a new version",
     ),
@@ -425,7 +422,6 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "global": MessageLookupByLibrary.simpleMessage("Global"),
     "go": MessageLookupByLibrary.simpleMessage("Go"),
-    "goDownload": MessageLookupByLibrary.simpleMessage("Go to download"),
     "goToConfigureScript": MessageLookupByLibrary.simpleMessage(
       "Go to configure script",
     ),
@@ -611,7 +607,6 @@ class MessageLookup extends MessageLookupByLibrary {
       "When turned on, only statistics proxy traffic",
     ),
     "openDashboard": MessageLookupByLibrary.simpleMessage("Open dashboard"),
-    "openInstaller": MessageLookupByLibrary.simpleMessage("Open installer"),
     "openInstallerFailed": MessageLookupByLibrary.simpleMessage(
       "Unable to open installer automatically. Opening the download link...",
     ),
@@ -982,21 +977,25 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "unnamed": MessageLookupByLibrary.simpleMessage("Unnamed"),
     "update": MessageLookupByLibrary.simpleMessage("Update"),
+    "updateAvailableTip": m17,
     "updateDownloadFallback": MessageLookupByLibrary.simpleMessage(
       "Update download failed. Opening the download link...",
     ),
-    "updateDownloadSuccess": MessageLookupByLibrary.simpleMessage(
-      "Update package downloaded. Open it now?",
-    ),
     "updateDownloading": MessageLookupByLibrary.simpleMessage(
       "Downloading update in background...",
+    ),
+    "updateInstalling": MessageLookupByLibrary.simpleMessage(
+      "Installing update...",
+    ),
+    "updateReadyInstall": MessageLookupByLibrary.simpleMessage(
+      "The update has been downloaded. Install it now?",
     ),
     "upload": MessageLookupByLibrary.simpleMessage("Upload"),
     "url": MessageLookupByLibrary.simpleMessage("URL"),
     "urlDesc": MessageLookupByLibrary.simpleMessage(
       "Obtain profile through URL",
     ),
-    "urlTip": m17,
+    "urlTip": m18,
     "useHosts": MessageLookupByLibrary.simpleMessage("Use hosts"),
     "useSystemHosts": MessageLookupByLibrary.simpleMessage("Use system hosts"),
     "userCenter": MessageLookupByLibrary.simpleMessage("User Center"),
@@ -1026,7 +1025,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "whitelistMode": MessageLookupByLibrary.simpleMessage("Whitelist mode"),
     "years": MessageLookupByLibrary.simpleMessage("Years"),
-    "yearsAgo": m18,
+    "yearsAgo": m19,
     "zh_CN": MessageLookupByLibrary.simpleMessage("Simplified Chinese"),
   };
 }

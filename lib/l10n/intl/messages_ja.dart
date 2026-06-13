@@ -55,9 +55,12 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m16(count) => "${count} 項目が選択されています";
 
-  static String m17(label) => "${label}はURLである必要があります";
+  static String m17(version) =>
+      "新しいバージョン ${version} が見つかりました。今すぐダウンロードしてインストールしますか？";
 
-  static String m18(count) => "${count}年前";
+  static String m18(label) => "${label}はURLである必要があります";
+
+  static String m19(count) => "${count}年前";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -117,10 +120,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "application": MessageLookupByLibrary.simpleMessage("アプリケーション"),
     "applicationDesc": MessageLookupByLibrary.simpleMessage("アプリ関連設定を変更"),
     "auto": MessageLookupByLibrary.simpleMessage("自動"),
-    "autoCheckUpdate": MessageLookupByLibrary.simpleMessage("自動更新チェック"),
-    "autoCheckUpdateDesc": MessageLookupByLibrary.simpleMessage(
-      "起動時に更新を自動チェック",
-    ),
     "autoCloseConnections": MessageLookupByLibrary.simpleMessage("接続を自動閉じる"),
     "autoCloseConnectionsDesc": MessageLookupByLibrary.simpleMessage(
       "ノード変更後に接続を自動閉じる",
@@ -161,6 +160,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "checkError": MessageLookupByLibrary.simpleMessage("確認エラー"),
     "checkUpdate": MessageLookupByLibrary.simpleMessage("更新を確認"),
     "checkUpdateError": MessageLookupByLibrary.simpleMessage("アプリは最新版です"),
+    "checkUpdateFailed": MessageLookupByLibrary.simpleMessage(
+      "更新の確認に失敗しました。ネットワークを確認して再試行してください",
+    ),
     "checking": MessageLookupByLibrary.simpleMessage("確認中..."),
     "clearData": MessageLookupByLibrary.simpleMessage("データを消去"),
     "clearProxyChain": MessageLookupByLibrary.simpleMessage("チェーン設定を削除"),
@@ -242,7 +244,6 @@ class MessageLookup extends MessageLookupByLibrary {
       "本ソフトウェアは学習交流や科学研究などの非営利目的でのみ使用されます。商用利用は厳禁です。いかなる商用活動も本ソフトウェアとは無関係です。",
     ),
     "disconnected": MessageLookupByLibrary.simpleMessage("切断済み"),
-    "discoverNewVersion": MessageLookupByLibrary.simpleMessage("新バージョンを発見"),
     "discovery": MessageLookupByLibrary.simpleMessage("新しいバージョンを発見"),
     "dnsDesc": MessageLookupByLibrary.simpleMessage("DNS関連設定の更新"),
     "dnsHijacking": MessageLookupByLibrary.simpleMessage("DNSハイジャッキング"),
@@ -324,7 +325,6 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "global": MessageLookupByLibrary.simpleMessage("グローバル"),
     "go": MessageLookupByLibrary.simpleMessage("移動"),
-    "goDownload": MessageLookupByLibrary.simpleMessage("ダウンロードへ"),
     "goToConfigureScript": MessageLookupByLibrary.simpleMessage("スクリプト設定に移動"),
     "hasCacheChange": MessageLookupByLibrary.simpleMessage("変更をキャッシュしますか？"),
     "host": MessageLookupByLibrary.simpleMessage("ホスト"),
@@ -466,7 +466,6 @@ class MessageLookup extends MessageLookupByLibrary {
       "有効化するとプロキシトラフィックのみ統計",
     ),
     "openDashboard": MessageLookupByLibrary.simpleMessage("ダッシュボードを開く"),
-    "openInstaller": MessageLookupByLibrary.simpleMessage("インストーラーを開く"),
     "openInstallerFailed": MessageLookupByLibrary.simpleMessage(
       "インストーラーを自動で開けませんでした。ダウンロードリンクを開きます...",
     ),
@@ -769,19 +768,23 @@ class MessageLookup extends MessageLookupByLibrary {
     "unknownNetworkError": MessageLookupByLibrary.simpleMessage("不明なネットワークエラー"),
     "unnamed": MessageLookupByLibrary.simpleMessage("無題"),
     "update": MessageLookupByLibrary.simpleMessage("更新"),
+    "updateAvailableTip": m17,
     "updateDownloadFallback": MessageLookupByLibrary.simpleMessage(
       "アップデートのダウンロードに失敗しました。ダウンロードリンクを開きます...",
-    ),
-    "updateDownloadSuccess": MessageLookupByLibrary.simpleMessage(
-      "アップデートパッケージをダウンロードしました。今すぐ開きますか？",
     ),
     "updateDownloading": MessageLookupByLibrary.simpleMessage(
       "バックグラウンドでアップデートをダウンロード中...",
     ),
+    "updateInstalling": MessageLookupByLibrary.simpleMessage(
+      "アップデートをインストール中...",
+    ),
+    "updateReadyInstall": MessageLookupByLibrary.simpleMessage(
+      "アップデートのダウンロードが完了しました。今すぐインストールしますか？",
+    ),
     "upload": MessageLookupByLibrary.simpleMessage("アップロード"),
     "url": MessageLookupByLibrary.simpleMessage("URL"),
     "urlDesc": MessageLookupByLibrary.simpleMessage("URL経由でプロファイルを取得"),
-    "urlTip": m17,
+    "urlTip": m18,
     "useHosts": MessageLookupByLibrary.simpleMessage("ホストを使用"),
     "useSystemHosts": MessageLookupByLibrary.simpleMessage("システムホストを使用"),
     "userCenter": MessageLookupByLibrary.simpleMessage("ユーザーセンター"),
@@ -803,7 +806,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "webDAVConfiguration": MessageLookupByLibrary.simpleMessage("WebDAV設定"),
     "whitelistMode": MessageLookupByLibrary.simpleMessage("ホワイトリストモード"),
     "years": MessageLookupByLibrary.simpleMessage("年"),
-    "yearsAgo": m18,
+    "yearsAgo": m19,
     "zh_CN": MessageLookupByLibrary.simpleMessage("簡体字中国語"),
   };
 }
