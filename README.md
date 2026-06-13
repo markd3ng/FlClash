@@ -61,6 +61,21 @@ Support the following actions
 
 <a href="https://chen08209.github.io/FlClash-fdroid-repo/repo?fingerprint=789D6D32668712EF7672F9E58DEEB15FBD6DCEEC5AE7A4371EA72F2AAE8A12FD"><img alt="Get it on F-Droid" src="snapshots/get-it-on-fdroid.svg" width="200px"/></a> <a href="https://github.com/chen08209/FlClash/releases"><img alt="Get it on GitHub" src="snapshots/get-it-on-github.svg" width="200px"/></a>
 
+## Docker
+
+Run FlClash on a web-accessible XFCE desktop (NAS / home server). After the container starts, open `http://<host>:3000` in a browser.
+
+```bash
+docker run -d --name flclash \
+  -p 3000:3000 \
+  --cap-add NET_ADMIN --device /dev/net/tun \
+  -v flclash-config:/config \
+  --shm-size 1g \
+  ghcr.io/pickrui/flclash:latest
+```
+
+Or use [docker/docker-compose.yml](docker/docker-compose.yml).
+
 ## Build
 
 1. Update submodules

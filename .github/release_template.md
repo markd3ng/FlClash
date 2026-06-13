@@ -48,6 +48,12 @@
                 <a href="https://github.com/pickrui/FlClash/releases/download/vVERSION/flclash-linux-amd64.rpm"><img src="https://img.shields.io/badge/RpmPackage-x64-F1B42F.svg?logo=redhat"> </a>
             </td>
         </tr>
+        <tr>
+            <td>Docker</td>
+            <td>
+                <a href="https://ghcr.io/pickrui/flclash"><img src="https://img.shields.io/badge/GHCR-multiarch-2496ED.svg?logo=docker"></a>
+            </td>
+        </tr>
     </tbody>
 </table>
 
