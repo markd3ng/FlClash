@@ -1,9 +1,10 @@
 name: docker
 
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_run:
+    workflows: ["build"]
+    types:
+      - completed
   workflow_dispatch:
     inputs:
       version:
@@ -19,10 +20,17 @@ jobs:
     name: Build and push image
     runs-on: ubuntu-latest
     timeout-minutes: 90
-    if: ${{ !contains(github.ref, '-') }}
+    if: >-
+      ${{ github.event_name == 'workflow_dispatch' ||
+          (github.event.workflow_run.conclusion == 'success' &&
+           github.event.workflow_run.event == 'push' &&
+           startsWith(github.event.workflow_run.head_branch, 'v') &&
+           !contains(github.event.workflow_run.head_branch, '-')) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.ref || github.event.workflow_run.head_sha }}
 
       - name: Resolve version
         id: ver
@@ -30,8 +38,9 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             VERSION="${{ github.event.inputs.version }}"
           else
-            VERSION="${GITHUB_REF_NAME#v}"
+            VERSION="${{ github.event.workflow_run.head_branch }}"
           fi
+          VERSION="${VERSION#v}"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Resolved version: $VERSION"
 
@@ -43,15 +52,15 @@ jobs:
           VERSION="${{ steps.ver.outputs.version }}"
           TAG="v${VERSION}"
           API="https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/tags/${TAG}"
-          echo "Waiting for deb assets on release ${TAG}..."
-          for i in $(seq 1 60); do
+          echo "Checking deb assets on release ${TAG}..."
+          for i in $(seq 1 10); do
             BODY=$(curl -sSL -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" "$API" || true)
             if echo "$BODY" | grep -q "flclash-linux-amd64.deb" && echo "$BODY" | grep -q "flclash-linux-arm64.deb"; then
               echo "Both deb assets are available."
               exit 0
             fi
-            echo "Attempt $i/60: assets not ready yet, sleeping 30s..."
-            sleep 30
+            echo "Attempt $i/10: assets not visible yet, sleeping 15s..."
+            sleep 15
           done
           echo "Timed out waiting for release assets."
           exit 1
