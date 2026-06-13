@@ -17,7 +17,11 @@ class Window {
     return _instance!;
   }
 
-  Future<void> init(int version, WindowProps props) async {
+  Future<void> init(
+    int version,
+    WindowProps props, {
+    bool silentLaunch = false,
+  }) async {
     final acquire = await singleInstanceLock.acquire();
     if (!acquire) {
       await _showExistingInstance();
@@ -41,6 +45,13 @@ class Window {
     await _windowPosition(props);
     await windowManager.waitUntilReadyToShow(windowOptions, () async {
       await windowManager.setPreventClose(true);
+      if (system.isLinux) {
+        if (silentLaunch) {
+          await hide();
+        } else {
+          await show();
+        }
+      }
     });
   }
 

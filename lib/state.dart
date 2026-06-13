@@ -115,7 +115,11 @@ class GlobalState {
       utils.getLocaleForString(config.appSettingProps.locale) ??
           WidgetsBinding.instance.platformDispatcher.locale,
     );
-    await window?.init(version, config.windowProps);
+    await window?.init(
+      version,
+      config.windowProps,
+      silentLaunch: config.appSettingProps.silentLaunch,
+    );
     return container;
   }
 
