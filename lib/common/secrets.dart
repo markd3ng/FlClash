@@ -14,12 +14,6 @@ class Secrets {
     'FLCLASH_APP_SECRET',
   );
 
-  static const String hostOverrides = String.fromEnvironment('HOST_OVERRIDES');
-
-  static final Map<String, String> hostOverrideMap = _parseHostOverrides(
-    hostOverrides,
-  );
-
   static String get primarySiteDomain => baseDomain.trim();
 
   static String get spareSiteDomain => spareDomain.trim();
@@ -29,23 +23,13 @@ class Secrets {
   static String get fallbackApiDomain =>
       _requireDomain(spareApiDomain, 'SPARE_API_DOMAIN');
 
-  static List<String> get apiDomains {
-    final domains = <String>[];
-    for (final domain in [primaryApiDomain, fallbackApiDomain]) {
-      final normalized = domain.toLowerCase();
-      if (normalized.isNotEmpty && !domains.contains(normalized)) {
-        domains.add(normalized);
-      }
-    }
-    return domains;
-  }
+  static List<String> get apiDomains => {
+    primaryApiDomain.toLowerCase(),
+    fallbackApiDomain.toLowerCase(),
+  }.toList();
 
   static bool isApiDomain(String host) {
     return apiDomains.contains(host.trim().toLowerCase());
-  }
-
-  static String? resolveHostOverride(String host) {
-    return hostOverrideMap[host.trim().toLowerCase()];
   }
 
   static String _requireDomain(String value, String name) {
@@ -54,21 +38,5 @@ class Secrets {
       throw StateError('$name must be configured');
     }
     return domain;
-  }
-
-  static Map<String, String> _parseHostOverrides(String value) {
-    final overrides = <String, String>{};
-    for (final item in value.split(RegExp(r'[;,]'))) {
-      final separator = item.indexOf('=');
-      if (separator <= 0 || separator == item.length - 1) {
-        continue;
-      }
-      final host = item.substring(0, separator).trim().toLowerCase();
-      final address = item.substring(separator + 1).trim();
-      if (host.isNotEmpty && address.isNotEmpty) {
-        overrides[host] = address;
-      }
-    }
-    return overrides;
   }
 }
