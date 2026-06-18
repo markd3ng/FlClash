@@ -282,7 +282,7 @@ func applyConfig(params *SetupParams) error {
 	if err != nil {
 		currentConfig, _ = config.ParseRawConfig(config.DefaultRawConfig())
 	}
-	setMaskedAddrs(isOixConfig, currentConfig.Proxies)
+	setMaskedAddrs(isOixConfig)
 	hub.ApplyConfig(currentConfig)
 	installDNSAuthResolver()
 	patchSelectGroup(params.SelectedMap)

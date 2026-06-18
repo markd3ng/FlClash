@@ -2,61 +2,83 @@ package main
 
 import (
 	"net"
-	"strings"
+	"net/netip"
 	"sync"
 
 	"github.com/metacubex/mihomo/constant"
 	"github.com/metacubex/mihomo/hub/route"
+	"github.com/metacubex/mihomo/tunnel/statistic"
 )
 
 var (
-	maskLock    sync.RWMutex
-	isOixCloud  bool
-	logReplacer *strings.Replacer
+	maskLock   sync.RWMutex
+	isOixCloud bool
+	cloudIPs   sync.Map
 )
 
 func init() {
-	route.LogPayloadProcessor = MaskLogPayload
+	statistic.MetadataProcessor = maskMetadata
+	constant.MetadataStringMasker = maskAddr
+	route.DNSQueryObfuscated = matchManagedSuffix
 }
 
-func setMaskedAddrs(isOix bool, proxies map[string]constant.Proxy) {
+func setMaskedAddrs(isOix bool) {
 	maskLock.Lock()
-	defer maskLock.Unlock()
-
 	isOixCloud = isOix
-	logReplacer = nil
-	if !isOix {
+	maskLock.Unlock()
+	cloudIPs.Clear()
+}
+
+func markCloudIP(ip string) {
+	if ip != "" {
+		cloudIPs.Store(ip, true)
+	}
+}
+
+func markCloudIPs(ips []netip.Addr) {
+	for _, ip := range ips {
+		markCloudIP(ip.String())
+	}
+}
+
+func isCloudIP(host string) bool {
+	if h, _, err := net.SplitHostPort(host); err == nil {
+		host = h
+	}
+	if _, err := netip.ParseAddr(host); err != nil {
+		return false
+	}
+	_, ok := cloudIPs.Load(host)
+	return ok
+}
+
+func maskMetadata(m *constant.Metadata) {
+	if m == nil {
 		return
 	}
-
-	seen := make(map[string]bool)
-	var replacerArgs []string
-	for _, proxy := range proxies {
-		addr := proxy.Addr()
-		host, _, e := net.SplitHostPort(addr)
-		var val string
-		if e == nil && host != "" {
-			val = host
-		} else if addr != "" {
-			val = addr
-		}
-
-		if val != "" && len(val) >= 4 && val != "127.0.0.1" && val != "localhost" && val != "0.0.0.0" && val != "::1" && !seen[val] {
-			seen[val] = true
-			replacerArgs = append(replacerArgs, val, "***")
-		}
+	maskLock.RLock()
+	enabled := isOixCloud
+	maskLock.RUnlock()
+	if !enabled {
+		return
 	}
-
-	if len(replacerArgs) > 0 {
-		logReplacer = strings.NewReplacer(replacerArgs...)
-	}
+	m.RemoteDst = maskAddr(m.RemoteDst)
+	m.Host = maskAddr(m.Host)
+	m.SniffHost = maskAddr(m.SniffHost)
 }
 
-func MaskLogPayload(payload string) string {
-	maskLock.RLock()
-	defer maskLock.RUnlock()
-	if !isOixCloud || logReplacer == nil {
-		return payload
+func maskAddr(host string) string {
+	if host == "" {
+		return host
 	}
-	return logReplacer.Replace(payload)
+	if masked, ok := maskManagedDomain(host); ok {
+		return masked
+	}
+	if isCloudIP(host) {
+		if _, port, err := net.SplitHostPort(host); err == nil {
+			return "***.***.***.***:" + port
+		}
+		return "***.***.***.***"
+	}
+	return host
 }

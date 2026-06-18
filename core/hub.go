@@ -465,11 +465,6 @@ func handleStartLog() {
 				continue
 			}
 
-			// Mask node addresses if it's an oixCloud profile
-			if logData.Payload != "" {
-				logData.Payload = MaskLogPayload(logData.Payload)
-			}
-
 			message := &Message{
 				Type: LogMessage,
 				Data: logData,

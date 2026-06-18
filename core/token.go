@@ -5,6 +5,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base32"
+	"net"
 	"net/netip"
 	"strconv"
 	"strings"
@@ -89,13 +90,13 @@ func computeDNSAuthToken(secret, basename string, window int64) string {
 	return strings.ToLower(dnsAuthEncoding.EncodeToString(sum[:dnsAuthTokenBytes]))
 }
 
-func (s *dnsAuthSettings) matchSuffix(name string) bool {
+func (s *dnsAuthSettings) matchSuffix(name string) (string, bool) {
 	for _, suf := range s.suffixes {
 		if name == suf || strings.HasSuffix(name, "."+suf) {
-			return true
+			return suf, true
 		}
 	}
-	return false
+	return "", false
 }
 
 func tokenizeHost(host string) string {
@@ -104,7 +105,7 @@ func tokenizeHost(host string) string {
 		return host
 	}
 	name := strings.ToLower(strings.TrimSuffix(host, "."))
-	if !s.matchSuffix(name) {
+	if _, ok := s.matchSuffix(name); !ok {
 		return host
 	}
 	window := time.Now().Unix() / s.window
@@ -112,20 +113,58 @@ func tokenizeHost(host string) string {
 	return token + "." + name
 }
 
+func matchManagedSuffix(host string) bool {
+	_, ok := maskManagedDomain(host)
+	return ok
+}
+
+func maskManagedDomain(host string) (string, bool) {
+	s := currentDNSAuth()
+	if s == nil || host == "" {
+		return host, false
+	}
+	name := strings.ToLower(strings.TrimSuffix(host, "."))
+	port := ""
+	if h, p, err := net.SplitHostPort(name); err == nil {
+		name, port = h, p
+	}
+	suf, ok := s.matchSuffix(name)
+	if !ok {
+		return host, false
+	}
+	masked := "***." + suf
+	if port != "" {
+		masked += ":" + port
+	}
+	return masked, true
+}
+
 type tokenInjectResolver struct {
 	resolver.Resolver
 }
 
 func (t *tokenInjectResolver) LookupIP(ctx context.Context, host string) ([]netip.Addr, error) {
-	return t.Resolver.LookupIP(ctx, tokenizeHost(host))
+	ips, err := t.Resolver.LookupIP(ctx, tokenizeHost(host))
+	if err == nil && matchManagedSuffix(host) {
+		markCloudIPs(ips)
+	}
+	return ips, err
 }
 
 func (t *tokenInjectResolver) LookupIPv4(ctx context.Context, host string) ([]netip.Addr, error) {
-	return t.Resolver.LookupIPv4(ctx, tokenizeHost(host))
+	ips, err := t.Resolver.LookupIPv4(ctx, tokenizeHost(host))
+	if err == nil && matchManagedSuffix(host) {
+		markCloudIPs(ips)
+	}
+	return ips, err
 }
 
 func (t *tokenInjectResolver) LookupIPv6(ctx context.Context, host string) ([]netip.Addr, error) {
-	return t.Resolver.LookupIPv6(ctx, tokenizeHost(host))
+	ips, err := t.Resolver.LookupIPv6(ctx, tokenizeHost(host))
+	if err == nil && matchManagedSuffix(host) {
+		markCloudIPs(ips)
+	}
+	return ips, err
 }
 
 func (t *tokenInjectResolver) ResolveECH(ctx context.Context, host string) ([]byte, error) {
