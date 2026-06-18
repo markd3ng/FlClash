@@ -6,6 +6,7 @@ import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/models/models.dart';
+import 'package:fl_clash/services/age_crypto.dart';
 import 'package:fl_clash/state.dart';
 import 'package:flutter/painting.dart';
 
@@ -474,6 +475,17 @@ class CloudApiService {
     return hmac.convert(msg).toString();
   }
 
+  bool _constantTimeEquals(String a, String b) {
+    if (a.length != b.length) {
+      return false;
+    }
+    var result = 0;
+    for (var i = 0; i < a.length; i++) {
+      result |= a.codeUnitAt(i) ^ b.codeUnitAt(i);
+    }
+    return result == 0;
+  }
+
   Future<(Uint8List, String?)> fetchManagedConfig(String paramString) async {
     try {
       final queryParameters = <String, dynamic>{};
@@ -487,20 +499,15 @@ class CloudApiService {
       }
 
       final timestamp = _flclashTimestamp();
-      final signature = _flclashSignature(timestamp);
-      final buildNumber = globalState.packageInfo.buildNumber;
 
-      if (buildNumber.isNotEmpty) {
-        queryParameters['flclash_build'] = buildNumber;
-      }
+      final identity = await AgeCrypto.generateIdentity();
+      final signature = _flclashSignature('$timestamp.${identity.recipient}');
 
       final headers = <String, String>{
         'X-Flclash-Timestamp': timestamp,
         'X-Flclash-Signature': signature,
+        'X-Flclash-Age-Pubkey': identity.recipient,
       };
-      if (buildNumber.isNotEmpty) {
-        headers['X-Flclash-Build'] = buildNumber;
-      }
 
       final res = await _client.get<Map<String, dynamic>>(
         '/managed/flclash/direct',
@@ -523,11 +530,35 @@ class CloudApiService {
       if (configB64 == null || configB64.isEmpty) {
         throw const CloudApiException('Server returned empty config');
       }
+      Uint8List configBytes;
       try {
-        return (base64Decode(configB64), userinfo);
+        configBytes = base64Decode(configB64);
       } on FormatException {
         throw const CloudApiException('Server returned invalid config');
       }
+
+      final responseSignature = res.headers.value(
+        'X-Flclash-Response-Signature',
+      );
+      final isArmored = AgeCrypto.isArmored(configBytes);
+      if (responseSignature != null && responseSignature.isNotEmpty) {
+        final expected = _flclashSignature('$timestamp.$configB64');
+        if (!_constantTimeEquals(responseSignature, expected)) {
+          throw const CloudApiException('Response signature mismatch');
+        }
+      } else if (isArmored) {
+        throw const CloudApiException('Missing response signature');
+      }
+
+      if (isArmored) {
+        try {
+          final plaintext = await AgeCrypto.decrypt(configBytes, identity);
+          return (plaintext, userinfo);
+        } catch (_) {
+          throw const CloudApiException('Server returned invalid config');
+        }
+      }
+      return (configBytes, userinfo);
     } catch (e) {
       if (e is DioException) {
         throw CloudApiException(
