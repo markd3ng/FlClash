@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"crypto/ed25519"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base32"
+	"encoding/base64"
 	"net"
 	"net/netip"
 	"strconv"
@@ -18,6 +20,7 @@ import (
 
 type dnsAuthSettings struct {
 	secret   string
+	privKey  ed25519.PrivateKey
 	window   int64
 	suffixes []string
 }
@@ -64,28 +67,43 @@ func dnsAuthSuffixes() []string {
 }
 
 func applyDNSAuth() {
-	if GlobalDNSAuthSecret == "" {
-		setDNSAuth(nil)
-		return
-	}
 	suffixes := dnsAuthSuffixes()
 	if len(suffixes) == 0 {
 		setDNSAuth(nil)
 		return
 	}
-	setDNSAuth(&dnsAuthSettings{secret: GlobalDNSAuthSecret, window: dnsAuthWindowSeconds, suffixes: suffixes})
-	log.Infoln("[DNS-Auth] enabled for %d managed suffix(es)", len(suffixes))
+	if GlobalDNSAuthPrivateKey != "" {
+		seed, err := base64.StdEncoding.DecodeString(strings.TrimSpace(GlobalDNSAuthPrivateKey))
+		if err == nil && len(seed) == ed25519.SeedSize {
+			setDNSAuth(&dnsAuthSettings{privKey: ed25519.NewKeyFromSeed(seed), window: dnsAuthWindowSeconds, suffixes: suffixes})
+			log.Infoln("[DNS-Auth] enabled (ed25519) for %d managed suffix(es)", len(suffixes))
+			return
+		}
+		log.Warnln("[DNS-Auth] invalid private key, falling back")
+	}
+	if GlobalDNSAuthSecret != "" {
+		setDNSAuth(&dnsAuthSettings{secret: GlobalDNSAuthSecret, window: dnsAuthWindowSeconds, suffixes: suffixes})
+		log.Infoln("[DNS-Auth] enabled (hmac) for %d managed suffix(es)", len(suffixes))
+		return
+	}
+	setDNSAuth(nil)
 }
 
 var dnsAuthEncoding = base32.StdEncoding.WithPadding(base32.NoPadding)
 
 const dnsAuthTokenBytes = 10
 
+func dnsAuthMessage(basename string, window int64) []byte {
+	b := make([]byte, 0, len(basename)+1+20)
+	b = append(b, basename...)
+	b = append(b, '|')
+	b = strconv.AppendInt(b, window, 10)
+	return b
+}
+
 func computeDNSAuthToken(secret, basename string, window int64) string {
 	mac := hmac.New(sha256.New, []byte(secret))
-	mac.Write([]byte(basename))
-	mac.Write([]byte{'|'})
-	mac.Write([]byte(strconv.FormatInt(window, 10)))
+	mac.Write(dnsAuthMessage(basename, window))
 	sum := mac.Sum(nil)
 	return strings.ToLower(dnsAuthEncoding.EncodeToString(sum[:dnsAuthTokenBytes]))
 }
@@ -109,6 +127,13 @@ func tokenizeHost(host string) string {
 		return host
 	}
 	window := time.Now().Unix() / s.window
+	if s.privKey != nil {
+		sig := ed25519.Sign(s.privKey, dnsAuthMessage(name, window))
+		half := ed25519.SignatureSize / 2
+		p1 := strings.ToLower(dnsAuthEncoding.EncodeToString(sig[:half]))
+		p2 := strings.ToLower(dnsAuthEncoding.EncodeToString(sig[half:]))
+		return p1 + "." + p2 + "." + name
+	}
 	token := computeDNSAuthToken(s.secret, name, window)
 	return token + "." + name
 }

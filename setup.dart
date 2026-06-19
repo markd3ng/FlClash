@@ -141,6 +141,7 @@ class Build {
     'FLCLASH_APP_SECRET',
     'FLCLASH_KEY',
     'DNS_AUTH_SECRET',
+    'DNS_AUTH_PRIVATE_KEY',
     'DNS_AUTH_DOMAINS',
   };
 
@@ -153,7 +154,7 @@ class Build {
   );
 
   static final RegExp _goLinkerSecretPattern = RegExp(
-    r'(-X\s+main\.GlobalDNSAuth(?:Secret|Domains)=)\S+',
+    r'(-X\s+main\.GlobalDNSAuth(?:Secret|PrivateKey|Domains)=)\S+',
   );
 
   static String _redactSensitive(String value) {
@@ -277,6 +278,11 @@ class Build {
       final dnsAuthSecret = Platform.environment['DNS_AUTH_SECRET']?.trim();
       if (dnsAuthSecret != null && dnsAuthSecret.isNotEmpty) {
         ldflags.write(' -X main.GlobalDNSAuthSecret=$dnsAuthSecret');
+      }
+      final dnsAuthPrivateKey =
+          Platform.environment['DNS_AUTH_PRIVATE_KEY']?.trim();
+      if (dnsAuthPrivateKey != null && dnsAuthPrivateKey.isNotEmpty) {
+        ldflags.write(' -X main.GlobalDNSAuthPrivateKey=$dnsAuthPrivateKey');
       }
       final dnsAuthDomains = Platform.environment['DNS_AUTH_DOMAINS']?.trim();
       if (dnsAuthDomains != null && dnsAuthDomains.isNotEmpty) {
