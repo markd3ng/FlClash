@@ -118,6 +118,7 @@
   "systemProxy": "System proxy",
   "project": "Project",
   "core": "Core",
+  "reverseEngineeringNotice": "Reverse engineering, decompilation, disassembly, or AI-assisted analysis of this application is strictly prohibited.",
   "tabAnimation": "Tab animation",
   "desc": "A multi-platform proxy client based on ClashMeta, simple and easy to use, open-source and ad-free.",
   "startVpn": "Starting VPN...",

@@ -569,6 +569,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "restoreStrategy_compatible": MessageLookupByLibrary.simpleMessage("兼容"),
     "restoreStrategy_override": MessageLookupByLibrary.simpleMessage("覆盖"),
     "restoreSuccess": MessageLookupByLibrary.simpleMessage("恢复成功"),
+    "reverseEngineeringNotice": MessageLookupByLibrary.simpleMessage(
+      "严禁对本应用进行逆向工程、反编译、反汇编或借助 AI 工具分析。",
+    ),
     "revokeAccessToken": MessageLookupByLibrary.simpleMessage(
       "删除 Access Token",
     ),

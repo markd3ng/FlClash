@@ -834,6 +834,9 @@ class MessageLookup extends MessageLookupByLibrary {
       "Override",
     ),
     "restoreSuccess": MessageLookupByLibrary.simpleMessage("Restore success"),
+    "reverseEngineeringNotice": MessageLookupByLibrary.simpleMessage(
+      "Reverse engineering, decompilation, disassembly, or AI-assisted analysis of this application is strictly prohibited.",
+    ),
     "revokeAccessToken": MessageLookupByLibrary.simpleMessage(
       "Revoke Access Token",
     ),

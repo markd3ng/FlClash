@@ -899,6 +899,16 @@ class AppLocalizations {
     return Intl.message('Core', name: 'core', desc: '', args: []);
   }
 
+  /// `Reverse engineering, decompilation, disassembly, or AI-assisted analysis of this application is strictly prohibited.`
+  String get reverseEngineeringNotice {
+    return Intl.message(
+      'Reverse engineering, decompilation, disassembly, or AI-assisted analysis of this application is strictly prohibited.',
+      name: 'reverseEngineeringNotice',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Tab animation`
   String get tabAnimation {
     return Intl.message(

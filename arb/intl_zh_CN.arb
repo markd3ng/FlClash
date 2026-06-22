@@ -119,6 +119,7 @@
   "systemProxy": "系统代理",
   "project": "项目",
   "core": "内核",
+  "reverseEngineeringNotice": "严禁对本应用进行逆向工程、反编译、反汇编或借助 AI 工具分析。",
   "tabAnimation": "选项卡动画",
   "desc": "基于ClashMeta的多平台代理客户端，简单易用，开源无广告。",
   "startVpn": "正在启动VPN...",

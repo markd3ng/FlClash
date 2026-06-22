@@ -137,6 +137,16 @@ class AboutView extends StatelessWidget {
       ),
       const SizedBox(height: 12),
       ..._buildMoreSection(context),
+      const SizedBox(height: 16),
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Text(
+          appLocalizations.reverseEngineeringNotice,
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            color: Theme.of(context).colorScheme.outline,
+          ),
+        ),
+      ),
     ];
     return BaseScaffold(
       title: appLocalizations.about,
