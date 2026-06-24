@@ -140,7 +140,6 @@ class Build {
     'SPARE_API_DOMAIN',
     'FLCLASH_APP_SECRET',
     'FLCLASH_KEY',
-    'DNS_AUTH_SECRET',
     'DNS_AUTH_PRIVATE_KEY',
     'DNS_AUTH_DOMAINS',
   };
@@ -154,7 +153,7 @@ class Build {
   );
 
   static final RegExp _goLinkerSecretPattern = RegExp(
-    r'(-X\s+main\.GlobalDNSAuth(?:Secret|PrivateKey|Domains)=)\S+',
+    r'(-X\s+main\.GlobalDNSAuth(?:PrivateKey|Domains)=)\S+',
   );
 
   static String _redactSensitive(String value) {
@@ -275,10 +274,6 @@ class Build {
         env['CGO_ENABLED'] = '0';
       }
       final ldflags = StringBuffer('-w -s');
-      final dnsAuthSecret = Platform.environment['DNS_AUTH_SECRET']?.trim();
-      if (dnsAuthSecret != null && dnsAuthSecret.isNotEmpty) {
-        ldflags.write(' -X main.GlobalDNSAuthSecret=$dnsAuthSecret');
-      }
       final dnsAuthPrivateKey =
           Platform.environment['DNS_AUTH_PRIVATE_KEY']?.trim();
       if (dnsAuthPrivateKey != null && dnsAuthPrivateKey.isNotEmpty) {
