@@ -13,6 +13,7 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'cloud_profile_card.dart';
+import 'cloud_register_page.dart';
 import 'store_page.dart';
 
 class CloudAccountPage extends ConsumerStatefulWidget {
@@ -314,11 +315,22 @@ class _CloudAccountPageState extends ConsumerState<CloudAccountPage> {
             ),
           ),
           const SizedBox(height: 32),
-          FilledButton.icon(
-            onPressed: () =>
-                appController.openCloudLogin(navigateToCloud: false),
-            icon: const Icon(Icons.login),
-            label: Text(AppLocalizations.current.loginTitle),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              FilledButton.icon(
+                onPressed: () =>
+                    appController.openCloudLogin(navigateToCloud: false),
+                icon: const Icon(Icons.login),
+                label: Text(AppLocalizations.current.loginTitle),
+              ),
+              const SizedBox(width: 12),
+              OutlinedButton.icon(
+                onPressed: () => showCloudRegisterPage(context),
+                icon: const Icon(Icons.person_add_alt_1_outlined),
+                label: Text(AppLocalizations.current.register),
+              ),
+            ],
           ),
         ],
       ),

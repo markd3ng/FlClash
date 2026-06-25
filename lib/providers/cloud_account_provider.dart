@@ -243,6 +243,29 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
     });
   }
 
+  Future<void> signUp({
+    required String name,
+    required String email,
+    required String password,
+    String? inviteCode,
+    String? emailCode,
+  }) {
+    return _runSignIn(() async {
+      final result = await CloudApiService().register(
+        name: name,
+        email: email,
+        password: password,
+        inviteCode: inviteCode,
+        emailCode: emailCode,
+      );
+      await _completeSignIn(
+        token: _requireNormalizedToken(result.token),
+        profile: result.profile,
+        announcement: result.announcement,
+      );
+    });
+  }
+
   Future<void> signInWithToken(String token) {
     return _runSignIn(() async {
       final normalizedToken = _requireNormalizedToken(token);

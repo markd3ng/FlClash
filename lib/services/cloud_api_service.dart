@@ -440,6 +440,81 @@ class CloudApiService {
     throw Exception(responseDto.msg ?? 'Login failed: Invalid response');
   }
 
+  Future<CloudRegisterConfig> fetchRegisterConfig() async {
+    final res = await _client.post(
+      '/register/config',
+      options: Options(extra: {'skipAuth': true}),
+    );
+    final responseDto = CloudApiResponse<Map<dynamic, dynamic>>.fromJson(
+      res.data,
+    );
+    if (responseDto.isSuccess && responseDto.data is Map) {
+      return CloudRegisterConfig.fromJson(
+        Map<String, dynamic>.from(responseDto.data as Map),
+      );
+    }
+    throw Exception(responseDto.msg ?? 'Failed to load register config');
+  }
+
+  Future<void> sendEmailVerify(String email) async {
+    if (email.isEmpty || !RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(email)) {
+      throw Exception('Invalid email format');
+    }
+    final res = await _client.post(
+      '/register/send_email',
+      data: FormData.fromMap({'email': email}),
+      options: Options(extra: {'skipAuth': true}),
+    );
+    final responseDto = CloudApiResponse<dynamic>.fromJson(res.data);
+    if (!responseDto.isSuccess) {
+      throw Exception(responseDto.msg ?? 'Failed to send verification code');
+    }
+  }
+
+  Future<
+    ({String token, CloudProfile profile, CloudNotification? announcement})
+  >
+  register({
+    required String name,
+    required String email,
+    required String password,
+    String? inviteCode,
+    String? emailCode,
+  }) async {
+    final res = await _client.post(
+      '/register',
+      data: FormData.fromMap({
+        'name': name,
+        'email': email,
+        'passwd': password,
+        'repasswd': password,
+        if (inviteCode != null && inviteCode.isNotEmpty) 'code': inviteCode,
+        if (emailCode != null && emailCode.isNotEmpty) 'emailcode': emailCode,
+        'token_expire': 365,
+      }),
+      options: Options(extra: {'skipAuth': true}),
+    );
+    return _parseAuthResult(res.data);
+  }
+
+  ({String token, CloudProfile profile, CloudNotification? announcement})
+  _parseAuthResult(dynamic data) {
+    final responseDto = CloudApiResponse<Map<dynamic, dynamic>>.fromJson(data);
+    if (responseDto.isSuccess && responseDto.data != null) {
+      final info = responseDto.data!;
+      final tokenStr = info['token']?.toString() ?? '';
+      if (tokenStr.isEmpty) throw Exception('API returned empty token');
+      setToken(tokenStr);
+      final parsed = _parseUserInfo(info);
+      return (
+        token: tokenStr,
+        profile: parsed.profile,
+        announcement: parsed.announcement,
+      );
+    }
+    throw Exception(responseDto.msg ?? 'Request failed');
+  }
+
   Future<({CloudProfile profile, CloudNotification? announcement})>
   getUserInfo() async {
     final token = _cachedToken;

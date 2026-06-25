@@ -4019,6 +4019,216 @@ class AppLocalizations {
     return Intl.message('oixCloud', name: 'oixCloud', desc: '', args: []);
   }
 
+  /// `Register`
+  String get register {
+    return Intl.message('Register', name: 'register', desc: '', args: []);
+  }
+
+  /// `Create Account`
+  String get registerTitle {
+    return Intl.message(
+      'Create Account',
+      name: 'registerTitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Registration failed`
+  String get registerFailed {
+    return Intl.message(
+      'Registration failed',
+      name: 'registerFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Registration is currently closed`
+  String get registerClosed {
+    return Intl.message(
+      'Registration is currently closed',
+      name: 'registerClosed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Already have an account?`
+  String get haveAccountAlready {
+    return Intl.message(
+      'Already have an account?',
+      name: 'haveAccountAlready',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Log in`
+  String get goLogin {
+    return Intl.message('Log in', name: 'goLogin', desc: '', args: []);
+  }
+
+  /// `Nickname`
+  String get nicknameLabel {
+    return Intl.message('Nickname', name: 'nicknameLabel', desc: '', args: []);
+  }
+
+  /// `Letters and numbers, up to 12 characters`
+  String get nicknameHint {
+    return Intl.message(
+      'Letters and numbers, up to 12 characters',
+      name: 'nicknameHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Please enter a nickname`
+  String get nicknameValidation {
+    return Intl.message(
+      'Please enter a nickname',
+      name: 'nicknameValidation',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Confirm Password`
+  String get confirmPasswordLabel {
+    return Intl.message(
+      'Confirm Password',
+      name: 'confirmPasswordLabel',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Re-enter your password`
+  String get confirmPasswordHint {
+    return Intl.message(
+      'Re-enter your password',
+      name: 'confirmPasswordHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Please confirm your password`
+  String get confirmPasswordValidation {
+    return Intl.message(
+      'Please confirm your password',
+      name: 'confirmPasswordValidation',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Passwords do not match`
+  String get passwordMismatch {
+    return Intl.message(
+      'Passwords do not match',
+      name: 'passwordMismatch',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `10-36 chars incl. upper/lowercase, number and symbol`
+  String get passwordRuleHint {
+    return Intl.message(
+      '10-36 chars incl. upper/lowercase, number and symbol',
+      name: 'passwordRuleHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Invite Code`
+  String get inviteCodeLabel {
+    return Intl.message(
+      'Invite Code',
+      name: 'inviteCodeLabel',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Enter invite code`
+  String get inviteCodeHint {
+    return Intl.message(
+      'Enter invite code',
+      name: 'inviteCodeHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Please enter the invite code`
+  String get inviteCodeValidation {
+    return Intl.message(
+      'Please enter the invite code',
+      name: 'inviteCodeValidation',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Email Code`
+  String get emailCodeLabel {
+    return Intl.message(
+      'Email Code',
+      name: 'emailCodeLabel',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Enter the 6-digit code`
+  String get emailCodeHint {
+    return Intl.message(
+      'Enter the 6-digit code',
+      name: 'emailCodeHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Please enter the email code`
+  String get emailCodeValidation {
+    return Intl.message(
+      'Please enter the email code',
+      name: 'emailCodeValidation',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Send Code`
+  String get sendCode {
+    return Intl.message('Send Code', name: 'sendCode', desc: '', args: []);
+  }
+
+  /// `Resend in {seconds}s`
+  String resendCodeIn(Object seconds) {
+    return Intl.message(
+      'Resend in ${seconds}s',
+      name: 'resendCodeIn',
+      desc: '',
+      args: [seconds],
+    );
+  }
+
+  /// `Verification code sent`
+  String get codeSent {
+    return Intl.message(
+      'Verification code sent',
+      name: 'codeSent',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `oixCloud`
   String get loggedOutViewTitle {
     return Intl.message(

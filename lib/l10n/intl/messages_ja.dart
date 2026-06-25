@@ -61,14 +61,16 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m19(count) => "残り${count}";
 
-  static String m20(count) => "${count} 項目が選択されています";
+  static String m20(seconds) => "${seconds}秒後に再送信";
 
-  static String m21(version) =>
+  static String m21(count) => "${count} 項目が選択されています";
+
+  static String m22(version) =>
       "新しいバージョン ${version} が見つかりました。今すぐダウンロードしてインストールしますか？";
 
-  static String m22(label) => "${label}はURLである必要があります";
+  static String m23(label) => "${label}はURLである必要があります";
 
-  static String m23(count) => "${count}年前";
+  static String m24(count) => "${count}年前";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -190,6 +192,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "clipboardExport": MessageLookupByLibrary.simpleMessage("クリップボードにエクスポート"),
     "clipboardImport": MessageLookupByLibrary.simpleMessage("クリップボードからインポート"),
     "close": MessageLookupByLibrary.simpleMessage("閉じる"),
+    "codeSent": MessageLookupByLibrary.simpleMessage("認証コードを送信しました"),
     "color": MessageLookupByLibrary.simpleMessage("カラー"),
     "colorSchemes": MessageLookupByLibrary.simpleMessage("カラースキーム"),
     "columns": MessageLookupByLibrary.simpleMessage("列"),
@@ -205,6 +208,11 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "confirmForceCrashCore": MessageLookupByLibrary.simpleMessage(
       "コアを強制的にクラッシュさせてもよろしいですか？",
+    ),
+    "confirmPasswordHint": MessageLookupByLibrary.simpleMessage("パスワードを再入力"),
+    "confirmPasswordLabel": MessageLookupByLibrary.simpleMessage("パスワード（確認）"),
+    "confirmPasswordValidation": MessageLookupByLibrary.simpleMessage(
+      "パスワードを確認してください",
     ),
     "confirmPurchase": MessageLookupByLibrary.simpleMessage("購入を確認"),
     "connected": MessageLookupByLibrary.simpleMessage("接続済み"),
@@ -281,6 +289,11 @@ class MessageLookup extends MessageLookupByLibrary {
     "edit": MessageLookupByLibrary.simpleMessage("編集"),
     "editGlobalRules": MessageLookupByLibrary.simpleMessage("グローバルルールを編集"),
     "editRule": MessageLookupByLibrary.simpleMessage("ルールを編集"),
+    "emailCodeHint": MessageLookupByLibrary.simpleMessage("6桁のコードを入力"),
+    "emailCodeLabel": MessageLookupByLibrary.simpleMessage("メール認証コード"),
+    "emailCodeValidation": MessageLookupByLibrary.simpleMessage(
+      "メール認証コードを入力してください",
+    ),
     "emailFormatValidation": MessageLookupByLibrary.simpleMessage(
       "メール形式が正しくありません",
     ),
@@ -354,9 +367,13 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "global": MessageLookupByLibrary.simpleMessage("グローバル"),
     "go": MessageLookupByLibrary.simpleMessage("移動"),
+    "goLogin": MessageLookupByLibrary.simpleMessage("ログイン"),
     "goPay": MessageLookupByLibrary.simpleMessage("支払いへ"),
     "goToConfigureScript": MessageLookupByLibrary.simpleMessage("スクリプト設定に移動"),
     "hasCacheChange": MessageLookupByLibrary.simpleMessage("変更をキャッシュしますか？"),
+    "haveAccountAlready": MessageLookupByLibrary.simpleMessage(
+      "すでにアカウントをお持ちですか？",
+    ),
     "host": MessageLookupByLibrary.simpleMessage("ホスト"),
     "hostsDesc": MessageLookupByLibrary.simpleMessage("ホストを追加"),
     "hotkeyConflict": MessageLookupByLibrary.simpleMessage("ホットキー競合"),
@@ -388,6 +405,11 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "invalidCertificateTitle": MessageLookupByLibrary.simpleMessage(
       "証明書の検証に失敗しました",
+    ),
+    "inviteCodeHint": MessageLookupByLibrary.simpleMessage("招待コードを入力"),
+    "inviteCodeLabel": MessageLookupByLibrary.simpleMessage("招待コード"),
+    "inviteCodeValidation": MessageLookupByLibrary.simpleMessage(
+      "招待コードを入力してください",
     ),
     "ipcidr": MessageLookupByLibrary.simpleMessage("IPCIDR"),
     "ipv6Desc": MessageLookupByLibrary.simpleMessage("有効化するとIPv6トラフィックを受信可能"),
@@ -468,6 +490,11 @@ class MessageLookup extends MessageLookupByLibrary {
     "networkSpeed": MessageLookupByLibrary.simpleMessage("ネットワーク速度"),
     "networkType": MessageLookupByLibrary.simpleMessage("ネットワーク種別"),
     "neutralScheme": MessageLookupByLibrary.simpleMessage("ニュートラル"),
+    "nicknameHint": MessageLookupByLibrary.simpleMessage("英数字、最大12文字"),
+    "nicknameLabel": MessageLookupByLibrary.simpleMessage("ニックネーム"),
+    "nicknameValidation": MessageLookupByLibrary.simpleMessage(
+      "ニックネームを入力してください",
+    ),
     "noAvailablePlans": MessageLookupByLibrary.simpleMessage("購入可能なプランがありません"),
     "noData": MessageLookupByLibrary.simpleMessage("データなし"),
     "noHotKey": MessageLookupByLibrary.simpleMessage("ホットキーなし"),
@@ -545,6 +572,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "password": MessageLookupByLibrary.simpleMessage("パスワード"),
     "passwordHint": MessageLookupByLibrary.simpleMessage("パスワードを入力"),
     "passwordLabel": MessageLookupByLibrary.simpleMessage("パスワード"),
+    "passwordMismatch": MessageLookupByLibrary.simpleMessage("パスワードが一致しません"),
+    "passwordRuleHint": MessageLookupByLibrary.simpleMessage(
+      "10〜36文字、大文字・小文字・数字・記号を含む",
+    ),
     "passwordValidation": MessageLookupByLibrary.simpleMessage(
       "パスワードを入力してください",
     ),
@@ -672,6 +703,10 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "refreshSuccess": MessageLookupByLibrary.simpleMessage("更新完了"),
     "regExp": MessageLookupByLibrary.simpleMessage("正規表現"),
+    "register": MessageLookupByLibrary.simpleMessage("登録"),
+    "registerClosed": MessageLookupByLibrary.simpleMessage("現在、新規登録は停止しています"),
+    "registerFailed": MessageLookupByLibrary.simpleMessage("登録に失敗しました"),
+    "registerTitle": MessageLookupByLibrary.simpleMessage("アカウント作成"),
     "reload": MessageLookupByLibrary.simpleMessage("リロード"),
     "remaining": m18,
     "remainingStock": m19,
@@ -686,6 +721,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "request": MessageLookupByLibrary.simpleMessage("リクエスト"),
     "requests": MessageLookupByLibrary.simpleMessage("リクエスト"),
     "requestsDesc": MessageLookupByLibrary.simpleMessage("最近のリクエスト記録を表示"),
+    "resendCodeIn": m20,
     "reset": MessageLookupByLibrary.simpleMessage("リセット"),
     "resetPageChangesTip": MessageLookupByLibrary.simpleMessage(
       "現在のページに変更があります。リセットしてもよろしいですか？",
@@ -743,7 +779,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "selectAll": MessageLookupByLibrary.simpleMessage("すべて選択"),
     "selectUpgradeTarget": MessageLookupByLibrary.simpleMessage("アップグレード対象を選択"),
     "selected": MessageLookupByLibrary.simpleMessage("選択済み"),
-    "selectedCountTitle": m20,
+    "selectedCountTitle": m21,
+    "sendCode": MessageLookupByLibrary.simpleMessage("コードを送信"),
     "serviceCheckFailed": MessageLookupByLibrary.simpleMessage("サービスチェック失敗"),
     "settings": MessageLookupByLibrary.simpleMessage("設定"),
     "show": MessageLookupByLibrary.simpleMessage("表示"),
@@ -842,7 +879,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "unknownNetworkError": MessageLookupByLibrary.simpleMessage("不明なネットワークエラー"),
     "unnamed": MessageLookupByLibrary.simpleMessage("無題"),
     "update": MessageLookupByLibrary.simpleMessage("更新"),
-    "updateAvailableTip": m21,
+    "updateAvailableTip": m22,
     "updateDownloadFallback": MessageLookupByLibrary.simpleMessage(
       "アップデートのダウンロードに失敗しました。ダウンロードリンクを開きます...",
     ),
@@ -859,7 +896,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "upload": MessageLookupByLibrary.simpleMessage("アップロード"),
     "url": MessageLookupByLibrary.simpleMessage("URL"),
     "urlDesc": MessageLookupByLibrary.simpleMessage("URL経由でプロファイルを取得"),
-    "urlTip": m22,
+    "urlTip": m23,
     "useHosts": MessageLookupByLibrary.simpleMessage("ホストを使用"),
     "useSystemHosts": MessageLookupByLibrary.simpleMessage("システムホストを使用"),
     "userCenter": MessageLookupByLibrary.simpleMessage("ユーザーセンター"),
@@ -881,7 +918,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "webDAVConfiguration": MessageLookupByLibrary.simpleMessage("WebDAV設定"),
     "whitelistMode": MessageLookupByLibrary.simpleMessage("ホワイトリストモード"),
     "years": MessageLookupByLibrary.simpleMessage("年"),
-    "yearsAgo": m23,
+    "yearsAgo": m24,
     "zh_CN": MessageLookupByLibrary.simpleMessage("簡体字中国語"),
   };
 }

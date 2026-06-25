@@ -405,11 +405,44 @@ class _CloudStorePageState extends ConsumerState<CloudStorePage> {
                 ],
               ),
               const SizedBox(height: 6),
-              Text(
-                appLocalizations.purchaseTime(bought.buyTime),
-                style: context.textTheme.bodySmall?.copyWith(
-                  color: context.colorScheme.onSurfaceVariant,
-                ),
+              Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 8,
+                runSpacing: 2,
+                children: [
+                  Text(
+                    appLocalizations.purchaseTime(bought.buyTime),
+                    style: context.textTheme.bodySmall?.copyWith(
+                      color: context.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  if (bought.isActive)
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          bought.autoRenew
+                              ? Icons.autorenew
+                              : Icons.sync_disabled,
+                          size: 13,
+                          color: bought.autoRenew
+                              ? Colors.green
+                              : context.colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 3),
+                        Text(
+                          bought.autoRenew
+                              ? appLocalizations.autoRenewOn
+                              : appLocalizations.autoRenewOff,
+                          style: context.textTheme.labelSmall?.copyWith(
+                            color: bought.autoRenew
+                                ? Colors.green
+                                : context.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                ],
               ),
               const SizedBox(height: 12),
               Wrap(
@@ -445,18 +478,6 @@ class _CloudStorePageState extends ConsumerState<CloudStorePage> {
               ? null
               : () => _runGuarded(() => _earlyRenewFlow(bought)),
           child: Text(appLocalizations.earlyRenew),
-        ),
-      );
-      actions.add(
-        OutlinedButton.icon(
-          onPressed: _busy
-              ? null
-              : () => _runGuarded(() => _toggleAutoRenewFlow(bought)),
-          icon: Icon(
-            bought.autoRenew ? Icons.toggle_on : Icons.toggle_off,
-            color: bought.autoRenew ? Colors.green : null,
-          ),
-          label: Text(bought.autoRenew ? appLocalizations.autoRenewOn : appLocalizations.autoRenewOff),
         ),
       );
       if (bought.canUpgrade) {
@@ -546,12 +567,6 @@ class _CloudStorePageState extends ConsumerState<CloudStorePage> {
       bought.id,
       coupon: coupon.isEmpty ? null : coupon,
     );
-    _showResultHtml(res.success, res.message);
-    if (res.success) await _refresh();
-  }
-
-  Future<void> _toggleAutoRenewFlow(BoughtRecord bought) async {
-    final res = await CloudApiService().toggleAutoRenew(bought.id);
     _showResultHtml(res.success, res.message);
     if (res.success) await _refresh();
   }

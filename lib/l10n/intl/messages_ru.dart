@@ -66,14 +66,16 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m19(count) => "Осталось ${count}";
 
-  static String m20(count) => "Выбрано ${count} элементов";
+  static String m20(seconds) => "Повтор через ${seconds} с";
 
-  static String m21(version) =>
+  static String m21(count) => "Выбрано ${count} элементов";
+
+  static String m22(version) =>
       "Доступна новая версия ${version}. Скачать и установить сейчас?";
 
-  static String m22(label) => "${label} должен быть URL";
+  static String m23(label) => "${label} должен быть URL";
 
-  static String m23(count) =>
+  static String m24(count) =>
       "${Intl.plural(count, one: '${count} год назад', few: '${count} года назад', many: '${count} лет назад', other: '${count} года назад')}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
@@ -260,6 +262,9 @@ class MessageLookup extends MessageLookupByLibrary {
       "Импорт из буфера обмена",
     ),
     "close": MessageLookupByLibrary.simpleMessage("Закрыть"),
+    "codeSent": MessageLookupByLibrary.simpleMessage(
+      "Код подтверждения отправлен",
+    ),
     "color": MessageLookupByLibrary.simpleMessage("Цвет"),
     "colorSchemes": MessageLookupByLibrary.simpleMessage("Цветовые схемы"),
     "columns": MessageLookupByLibrary.simpleMessage("Столбцы"),
@@ -275,6 +280,15 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "confirmForceCrashCore": MessageLookupByLibrary.simpleMessage(
       "Вы уверены, что хотите принудительно аварийно завершить работу ядра?",
+    ),
+    "confirmPasswordHint": MessageLookupByLibrary.simpleMessage(
+      "Введите пароль ещё раз",
+    ),
+    "confirmPasswordLabel": MessageLookupByLibrary.simpleMessage(
+      "Подтвердите пароль",
+    ),
+    "confirmPasswordValidation": MessageLookupByLibrary.simpleMessage(
+      "Подтвердите пароль",
     ),
     "confirmPurchase": MessageLookupByLibrary.simpleMessage(
       "Подтвердить покупку",
@@ -379,6 +393,13 @@ class MessageLookup extends MessageLookupByLibrary {
       "Редактировать глобальные правила",
     ),
     "editRule": MessageLookupByLibrary.simpleMessage("Редактировать правило"),
+    "emailCodeHint": MessageLookupByLibrary.simpleMessage(
+      "Введите 6-значный код",
+    ),
+    "emailCodeLabel": MessageLookupByLibrary.simpleMessage("Код из письма"),
+    "emailCodeValidation": MessageLookupByLibrary.simpleMessage(
+      "Введите код из письма",
+    ),
     "emailFormatValidation": MessageLookupByLibrary.simpleMessage(
       "Неверный формат email",
     ),
@@ -482,12 +503,16 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "global": MessageLookupByLibrary.simpleMessage("Глобальный"),
     "go": MessageLookupByLibrary.simpleMessage("Перейти"),
+    "goLogin": MessageLookupByLibrary.simpleMessage("Войти"),
     "goPay": MessageLookupByLibrary.simpleMessage("Оплатить"),
     "goToConfigureScript": MessageLookupByLibrary.simpleMessage(
       "Перейти к настройке скрипта",
     ),
     "hasCacheChange": MessageLookupByLibrary.simpleMessage(
       "Хотите сохранить изменения в кэше?",
+    ),
+    "haveAccountAlready": MessageLookupByLibrary.simpleMessage(
+      "Уже есть аккаунт?",
     ),
     "host": MessageLookupByLibrary.simpleMessage("Хост"),
     "hostsDesc": MessageLookupByLibrary.simpleMessage("Добавить Hosts"),
@@ -536,6 +561,13 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "invalidCertificateTitle": MessageLookupByLibrary.simpleMessage(
       "Ошибка проверки сертификата",
+    ),
+    "inviteCodeHint": MessageLookupByLibrary.simpleMessage(
+      "Введите код приглашения",
+    ),
+    "inviteCodeLabel": MessageLookupByLibrary.simpleMessage("Код приглашения"),
+    "inviteCodeValidation": MessageLookupByLibrary.simpleMessage(
+      "Введите код приглашения",
     ),
     "ipcidr": MessageLookupByLibrary.simpleMessage("IPCIDR"),
     "ipv6Desc": MessageLookupByLibrary.simpleMessage(
@@ -646,6 +678,13 @@ class MessageLookup extends MessageLookupByLibrary {
     "networkSpeed": MessageLookupByLibrary.simpleMessage("Скорость сети"),
     "networkType": MessageLookupByLibrary.simpleMessage("Тип сети"),
     "neutralScheme": MessageLookupByLibrary.simpleMessage("Нейтральные"),
+    "nicknameHint": MessageLookupByLibrary.simpleMessage(
+      "Буквы и цифры, до 12 символов",
+    ),
+    "nicknameLabel": MessageLookupByLibrary.simpleMessage("Никнейм"),
+    "nicknameValidation": MessageLookupByLibrary.simpleMessage(
+      "Введите никнейм",
+    ),
     "noAvailablePlans": MessageLookupByLibrary.simpleMessage(
       "Нет доступных тарифов",
     ),
@@ -755,6 +794,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "password": MessageLookupByLibrary.simpleMessage("Пароль"),
     "passwordHint": MessageLookupByLibrary.simpleMessage("Введите пароль"),
     "passwordLabel": MessageLookupByLibrary.simpleMessage("Пароль"),
+    "passwordMismatch": MessageLookupByLibrary.simpleMessage(
+      "Пароли не совпадают",
+    ),
+    "passwordRuleHint": MessageLookupByLibrary.simpleMessage(
+      "10-36 символов: буквы разного регистра, цифра и символ",
+    ),
     "passwordValidation": MessageLookupByLibrary.simpleMessage(
       "Пожалуйста, введите пароль",
     ),
@@ -912,6 +957,14 @@ class MessageLookup extends MessageLookupByLibrary {
       "Обновление завершено",
     ),
     "regExp": MessageLookupByLibrary.simpleMessage("Регулярное выражение"),
+    "register": MessageLookupByLibrary.simpleMessage("Регистрация"),
+    "registerClosed": MessageLookupByLibrary.simpleMessage(
+      "Регистрация в настоящее время закрыта",
+    ),
+    "registerFailed": MessageLookupByLibrary.simpleMessage(
+      "Ошибка регистрации",
+    ),
+    "registerTitle": MessageLookupByLibrary.simpleMessage("Создать аккаунт"),
     "reload": MessageLookupByLibrary.simpleMessage("Перезагрузить"),
     "remaining": m18,
     "remainingStock": m19,
@@ -930,6 +983,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "requestsDesc": MessageLookupByLibrary.simpleMessage(
       "Просмотр последних записей запросов",
     ),
+    "resendCodeIn": m20,
     "reset": MessageLookupByLibrary.simpleMessage("Сброс"),
     "resetPageChangesTip": MessageLookupByLibrary.simpleMessage(
       "На текущей странице есть изменения. Вы уверены, что хотите сбросить?",
@@ -1021,7 +1075,8 @@ class MessageLookup extends MessageLookupByLibrary {
       "Выберите тариф для улучшения",
     ),
     "selected": MessageLookupByLibrary.simpleMessage("Выбрано"),
-    "selectedCountTitle": m20,
+    "selectedCountTitle": m21,
+    "sendCode": MessageLookupByLibrary.simpleMessage("Отправить код"),
     "serviceCheckFailed": MessageLookupByLibrary.simpleMessage(
       "Проверка сервиса не удалась",
     ),
@@ -1142,7 +1197,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "unnamed": MessageLookupByLibrary.simpleMessage("Без имени"),
     "update": MessageLookupByLibrary.simpleMessage("Обновить"),
-    "updateAvailableTip": m21,
+    "updateAvailableTip": m22,
     "updateDownloadFallback": MessageLookupByLibrary.simpleMessage(
       "Не удалось загрузить обновление. Открываем ссылку для загрузки...",
     ),
@@ -1161,7 +1216,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "urlDesc": MessageLookupByLibrary.simpleMessage(
       "Получить профиль через URL",
     ),
-    "urlTip": m22,
+    "urlTip": m23,
     "useHosts": MessageLookupByLibrary.simpleMessage("Использовать hosts"),
     "useSystemHosts": MessageLookupByLibrary.simpleMessage(
       "Использовать системные hosts",
@@ -1195,7 +1250,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Режим белого списка",
     ),
     "years": MessageLookupByLibrary.simpleMessage("Лет"),
-    "yearsAgo": m23,
+    "yearsAgo": m24,
     "zh_CN": MessageLookupByLibrary.simpleMessage("Упрощенный китайский"),
   };
 }

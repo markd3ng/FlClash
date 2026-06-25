@@ -67,14 +67,16 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m19(count) => "Only ${count} left";
 
-  static String m20(count) => "${count} items have been selected";
+  static String m20(seconds) => "Resend in ${seconds}s";
 
-  static String m21(version) =>
+  static String m21(count) => "${count} items have been selected";
+
+  static String m22(version) =>
       "A new version ${version} is available. Download and install it now?";
 
-  static String m22(label) => "${label} must be a url";
+  static String m23(label) => "${label} must be a url";
 
-  static String m23(count) =>
+  static String m24(count) =>
       "${Intl.plural(count, one: '1 year ago', other: '${count} years ago')}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
@@ -251,6 +253,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "clipboardExport": MessageLookupByLibrary.simpleMessage("Export clipboard"),
     "clipboardImport": MessageLookupByLibrary.simpleMessage("Clipboard import"),
     "close": MessageLookupByLibrary.simpleMessage("Close"),
+    "codeSent": MessageLookupByLibrary.simpleMessage("Verification code sent"),
     "color": MessageLookupByLibrary.simpleMessage("Color"),
     "colorSchemes": MessageLookupByLibrary.simpleMessage("Color schemes"),
     "columns": MessageLookupByLibrary.simpleMessage("Columns"),
@@ -266,6 +269,15 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "confirmForceCrashCore": MessageLookupByLibrary.simpleMessage(
       "Are you sure you want to force crash the core?",
+    ),
+    "confirmPasswordHint": MessageLookupByLibrary.simpleMessage(
+      "Re-enter your password",
+    ),
+    "confirmPasswordLabel": MessageLookupByLibrary.simpleMessage(
+      "Confirm Password",
+    ),
+    "confirmPasswordValidation": MessageLookupByLibrary.simpleMessage(
+      "Please confirm your password",
     ),
     "confirmPurchase": MessageLookupByLibrary.simpleMessage("Confirm purchase"),
     "connected": MessageLookupByLibrary.simpleMessage("Connected"),
@@ -364,6 +376,13 @@ class MessageLookup extends MessageLookupByLibrary {
       "Edit global rules",
     ),
     "editRule": MessageLookupByLibrary.simpleMessage("Edit rule"),
+    "emailCodeHint": MessageLookupByLibrary.simpleMessage(
+      "Enter the 6-digit code",
+    ),
+    "emailCodeLabel": MessageLookupByLibrary.simpleMessage("Email Code"),
+    "emailCodeValidation": MessageLookupByLibrary.simpleMessage(
+      "Please enter the email code",
+    ),
     "emailFormatValidation": MessageLookupByLibrary.simpleMessage(
       "Invalid email format",
     ),
@@ -459,12 +478,16 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "global": MessageLookupByLibrary.simpleMessage("Global"),
     "go": MessageLookupByLibrary.simpleMessage("Go"),
+    "goLogin": MessageLookupByLibrary.simpleMessage("Log in"),
     "goPay": MessageLookupByLibrary.simpleMessage("Pay"),
     "goToConfigureScript": MessageLookupByLibrary.simpleMessage(
       "Go to configure script",
     ),
     "hasCacheChange": MessageLookupByLibrary.simpleMessage(
       "Do you want to cache the changes?",
+    ),
+    "haveAccountAlready": MessageLookupByLibrary.simpleMessage(
+      "Already have an account?",
     ),
     "host": MessageLookupByLibrary.simpleMessage("Host"),
     "hostsDesc": MessageLookupByLibrary.simpleMessage("Add Hosts"),
@@ -509,6 +532,11 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "invalidCertificateTitle": MessageLookupByLibrary.simpleMessage(
       "Certificate Verification Failed",
+    ),
+    "inviteCodeHint": MessageLookupByLibrary.simpleMessage("Enter invite code"),
+    "inviteCodeLabel": MessageLookupByLibrary.simpleMessage("Invite Code"),
+    "inviteCodeValidation": MessageLookupByLibrary.simpleMessage(
+      "Please enter the invite code",
     ),
     "ipcidr": MessageLookupByLibrary.simpleMessage("Ipcidr"),
     "ipv6Desc": MessageLookupByLibrary.simpleMessage(
@@ -613,6 +641,13 @@ class MessageLookup extends MessageLookupByLibrary {
     "networkSpeed": MessageLookupByLibrary.simpleMessage("Network speed"),
     "networkType": MessageLookupByLibrary.simpleMessage("Network type"),
     "neutralScheme": MessageLookupByLibrary.simpleMessage("Neutral"),
+    "nicknameHint": MessageLookupByLibrary.simpleMessage(
+      "Letters and numbers, up to 12 characters",
+    ),
+    "nicknameLabel": MessageLookupByLibrary.simpleMessage("Nickname"),
+    "nicknameValidation": MessageLookupByLibrary.simpleMessage(
+      "Please enter a nickname",
+    ),
     "noAvailablePlans": MessageLookupByLibrary.simpleMessage(
       "No plans available",
     ),
@@ -710,6 +745,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "password": MessageLookupByLibrary.simpleMessage("Password"),
     "passwordHint": MessageLookupByLibrary.simpleMessage("Enter password"),
     "passwordLabel": MessageLookupByLibrary.simpleMessage("Password"),
+    "passwordMismatch": MessageLookupByLibrary.simpleMessage(
+      "Passwords do not match",
+    ),
+    "passwordRuleHint": MessageLookupByLibrary.simpleMessage(
+      "10-36 chars incl. upper/lowercase, number and symbol",
+    ),
     "passwordValidation": MessageLookupByLibrary.simpleMessage(
       "Please enter password",
     ),
@@ -861,6 +902,14 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "refreshSuccess": MessageLookupByLibrary.simpleMessage("Refresh Complete"),
     "regExp": MessageLookupByLibrary.simpleMessage("RegExp"),
+    "register": MessageLookupByLibrary.simpleMessage("Register"),
+    "registerClosed": MessageLookupByLibrary.simpleMessage(
+      "Registration is currently closed",
+    ),
+    "registerFailed": MessageLookupByLibrary.simpleMessage(
+      "Registration failed",
+    ),
+    "registerTitle": MessageLookupByLibrary.simpleMessage("Create Account"),
     "reload": MessageLookupByLibrary.simpleMessage("Reload"),
     "remaining": m18,
     "remainingStock": m19,
@@ -879,6 +928,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "requestsDesc": MessageLookupByLibrary.simpleMessage(
       "View recently request records",
     ),
+    "resendCodeIn": m20,
     "reset": MessageLookupByLibrary.simpleMessage("Reset"),
     "resetPageChangesTip": MessageLookupByLibrary.simpleMessage(
       "The current page has changes. Are you sure you want to reset?",
@@ -963,7 +1013,8 @@ class MessageLookup extends MessageLookupByLibrary {
       "Select upgrade target",
     ),
     "selected": MessageLookupByLibrary.simpleMessage("Selected"),
-    "selectedCountTitle": m20,
+    "selectedCountTitle": m21,
+    "sendCode": MessageLookupByLibrary.simpleMessage("Send Code"),
     "serviceCheckFailed": MessageLookupByLibrary.simpleMessage(
       "Service Check Failed",
     ),
@@ -1080,7 +1131,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "unnamed": MessageLookupByLibrary.simpleMessage("Unnamed"),
     "update": MessageLookupByLibrary.simpleMessage("Update"),
-    "updateAvailableTip": m21,
+    "updateAvailableTip": m22,
     "updateDownloadFallback": MessageLookupByLibrary.simpleMessage(
       "Update download failed. Opening the download link...",
     ),
@@ -1099,7 +1150,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "urlDesc": MessageLookupByLibrary.simpleMessage(
       "Obtain profile through URL",
     ),
-    "urlTip": m22,
+    "urlTip": m23,
     "useHosts": MessageLookupByLibrary.simpleMessage("Use hosts"),
     "useSystemHosts": MessageLookupByLibrary.simpleMessage("Use system hosts"),
     "userCenter": MessageLookupByLibrary.simpleMessage("User Center"),
@@ -1129,7 +1180,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "whitelistMode": MessageLookupByLibrary.simpleMessage("Whitelist mode"),
     "years": MessageLookupByLibrary.simpleMessage("Years"),
-    "yearsAgo": m23,
+    "yearsAgo": m24,
     "zh_CN": MessageLookupByLibrary.simpleMessage("Simplified Chinese"),
   };
 }

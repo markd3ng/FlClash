@@ -6,5 +6,6 @@ export 'core.dart';
 export 'profile.dart';
 export 'state.dart';
 export 'cloud_account.dart';
+export 'cloud_register_config.dart';
 export 'oix_params.dart';
 export 'store.dart';
