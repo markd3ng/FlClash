@@ -568,6 +568,192 @@ class CloudApiService {
       rethrow;
     }
   }
+
+  // -- Store / Purchase --
+
+  void _ensureAuthorized(int? statusCode, int ret) {
+    if (statusCode == 401 || ret == 401) {
+      setToken(null);
+      throw const CloudApiException('Unauthorized');
+    }
+  }
+
+  Future<List<StorePlan>> fetchPlans() async {
+    final res = await _client.post('/shop/list');
+    final dto = CloudApiResponse<Map<dynamic, dynamic>>.fromJson(res.data);
+    _ensureAuthorized(res.statusCode, dto.ret);
+    if (!dto.isSuccess || dto.data == null) {
+      throw CloudApiException(dto.msg ?? appLocalizations.fetchPlansFailed);
+    }
+    final list = (dto.data!['shops'] as List?) ?? const [];
+    return list.whereType<Map>().map((e) => StorePlan.fromJson(e)).toList();
+  }
+
+  Future<List<BoughtRecord>> fetchBought() async {
+    final res = await _client.post('/shop/bought');
+    final dto = CloudApiResponse<Map<dynamic, dynamic>>.fromJson(res.data);
+    _ensureAuthorized(res.statusCode, dto.ret);
+    if (!dto.isSuccess || dto.data == null) {
+      throw CloudApiException(dto.msg ?? appLocalizations.fetchOrdersFailed);
+    }
+    final list = (dto.data!['boughts'] as List?) ?? const [];
+    return list.whereType<Map>().map((e) => BoughtRecord.fromJson(e)).toList();
+  }
+
+  Future<List<PaymentMethodOption>> fetchPaymentMethods() async {
+    final res = await _client.post('/pay/methods');
+    dynamic data = res.data;
+    if (data is String) {
+      try {
+        data = jsonDecode(data);
+      } catch (_) {}
+    }
+    if (data is Map && data['ret'] == 401) {
+      setToken(null);
+      throw const CloudApiException('Unauthorized');
+    }
+    final list = (data is Map ? data['result'] : null) as List? ?? const [];
+    return list
+        .whereType<Map>()
+        .map((e) => PaymentMethodOption.fromJson(e))
+        .toList();
+  }
+
+  Future<({bool success, String message})> _postShopAction(
+    String path,
+    Map<String, dynamic> body,
+  ) async {
+    final res = await _client.post(path, data: FormData.fromMap(body));
+    final dto = CloudApiResponse<dynamic>.fromJson(res.data);
+    _ensureAuthorized(res.statusCode, dto.ret);
+    return (
+      success: dto.isSuccess,
+      message: dto.msg ?? (dto.isSuccess ? appLocalizations.operationSuccess : appLocalizations.operationFailed),
+    );
+  }
+
+  Future<({bool success, String message})> buyPlanWithBalance(
+    int shopId, {
+    String? coupon,
+    bool autoRenew = false,
+  }) {
+    return _postShopAction('/shop/buy', {
+      'shop': shopId,
+      if (coupon != null && coupon.isNotEmpty) 'coupon_code': coupon,
+      'autorenew': autoRenew ? 1 : 0,
+    });
+  }
+
+  Future<({bool success, String message})> upgradePlan(
+    int boughtId,
+    int targetShopId, {
+    String? coupon,
+  }) {
+    return _postShopAction('/shop/upgrade', {
+      'bought_id': boughtId,
+      'target_shop_id': targetShopId,
+      if (coupon != null && coupon.isNotEmpty) 'coupon_code': coupon,
+    });
+  }
+
+  Future<({bool success, String message})> toggleAutoRenew(int boughtId) {
+    return _postShopAction('/shop/renew', {'id': boughtId});
+  }
+
+  Future<({bool success, String message})> activatePlan(int boughtId) {
+    return _postShopAction('/shop/activate', {'id': boughtId});
+  }
+
+  Future<({bool success, String message})> earlyRenewPlan(
+    int boughtId, {
+    String? coupon,
+  }) {
+    return _postShopAction('/shop/early_renew', {
+      'id': boughtId,
+      if (coupon != null && coupon.isNotEmpty) 'coupon_code': coupon,
+    });
+  }
+
+  /// 发起充值（任意金额进入余额）。
+  Future<PaymentInitiation> createRecharge({
+    required String payment,
+    required double amount,
+    String? type,
+    String? coin,
+  }) {
+    final body = <String, dynamic>{
+      'payment': payment,
+      'amount': amount,
+      'price': amount,
+      if (type != null && type.isNotEmpty) 'type': type,
+      if (coin != null && coin.isNotEmpty) 'coin': coin,
+    };
+    return _initiatePayment('/pay/recharge', body);
+  }
+
+  /// 按套餐直接下单（无需先充值）。价格为 0 时服务端直接用余额完成购买。
+  Future<PaymentInitiation> createOrder({
+    required int shopId,
+    required String payment,
+    String? type,
+    String? coin,
+    String? coupon,
+    bool autoRenew = false,
+  }) {
+    final body = <String, dynamic>{
+      'shop': shopId,
+      'payment': payment,
+      'autorenew': autoRenew ? 1 : 0,
+      if (type != null && type.isNotEmpty) 'type': type,
+      if (coin != null && coin.isNotEmpty) 'coin': coin,
+      if (coupon != null && coupon.isNotEmpty) 'coupon_code': coupon,
+    };
+    return _initiatePayment('/pay/order', body);
+  }
+
+  Future<PaymentInitiation> _initiatePayment(
+    String path,
+    Map<String, dynamic> body,
+  ) async {
+    final res = await _client.post(
+      path,
+      data: FormData.fromMap(body),
+      options: Options(
+        followRedirects: false,
+        validateStatus: (status) => status != null && status < _httpServerError,
+      ),
+    );
+    if (res.statusCode == 401 ||
+        (res.data is Map && res.data['ret'] == 401)) {
+      setToken(null);
+      throw const CloudApiException('Unauthorized');
+    }
+    return PaymentInitiation.parse(
+      res.data,
+      statusCode: res.statusCode,
+      redirectLocation: res.headers.value('location'),
+    );
+  }
+
+  /// 查询支付订单状态：返回 true 表示已支付。
+  Future<bool> queryPaymentPaid(String pid, {String payment = 'cryptapi'}) async {
+    final res = await _client.post(
+      '/pay/status',
+      data: FormData.fromMap({'pid': pid, 'payment': payment}),
+    );
+    dynamic data = res.data;
+    if (data is String) {
+      try {
+        data = jsonDecode(data);
+      } catch (_) {}
+    }
+    if (data is! Map) return false;
+    final result = data['result'];
+    final status = result is num
+        ? result.toInt()
+        : int.tryParse(result?.toString() ?? '') ?? 0;
+    return status == 1;
+  }
 }
 
 // -- Interceptor to handle Retries --

@@ -20,47 +20,55 @@ typedef String MessageIfAbsent(String messageStr, List<dynamic> args);
 class MessageLookup extends MessageLookupByLibrary {
   String get localeName => 'ja';
 
-  static String m0(count) => "${count}日前";
+  static String m0(value) => "コミッション残高 ¥ ${value}";
 
-  static String m1(label) => "選択された${label}を削除してもよろしいですか？";
+  static String m1(count) => "${count}日前";
 
-  static String m2(label) => "現在の${label}を削除してもよろしいですか？";
+  static String m2(label) => "選択された${label}を削除してもよろしいですか？";
 
-  static String m3(label) => "${label}詳細";
+  static String m3(label) => "現在の${label}を削除してもよろしいですか？";
 
-  static String m4(label) => "${label}は空欄にできません";
+  static String m4(label) => "${label}詳細";
 
-  static String m5(label) => "現在の${label}は既に存在しています";
+  static String m5(label) => "${label}は空欄にできません";
 
-  static String m6(date) => "有効期限: ${date}";
+  static String m6(label) => "現在の${label}は既に存在しています";
 
-  static String m7(count) => "${count}時間前";
+  static String m7(date) => "有効期限: ${date}";
 
-  static String m8(count) => "${count}分前";
+  static String m8(count) => "${count}時間前";
 
-  static String m9(count) => "${count}ヶ月前";
+  static String m9(count) => "${count}分前";
 
-  static String m10(label) => "まだ${label}はありません";
+  static String m10(count) => "${count}ヶ月前";
 
-  static String m11(label) => "${label}は数字でなければなりません";
+  static String m11(label) => "まだ${label}はありません";
 
-  static String m12(label) => "${label} は 1024 から 49151 の間でなければなりません";
+  static String m12(label) => "${label}は数字でなければなりません";
 
-  static String m13(name) =>
+  static String m13(id) => "プラン #${id}";
+
+  static String m14(label) => "${label} は 1024 から 49151 の間でなければなりません";
+
+  static String m15(name) =>
       "ノード ${name} は別の有効なチェーンで使用されているか、プロキシチェーン関係の競合があります";
 
-  static String m14(name) => "ノード ${name} はこの位置では使用できません";
+  static String m16(name) => "ノード ${name} はこの位置では使用できません";
 
-  static String m15(value) => "残り: ${value}";
+  static String m17(time) => "購入時間 ${time}";
 
-  static String m16(count) => "${count} 項目が選択されています";
+  static String m18(value) => "残り: ${value}";
 
-  static String m17(version) =>
+  static String m19(count) => "残り${count}";
+
+  static String m20(count) => "${count} 項目が選択されています";
+
+  static String m21(version) =>
       "新しいバージョン ${version} が見つかりました。今すぐダウンロードしてインストールしますか？";
 
-  static String m18(label) => "${label}はURLである必要があります";
+  static String m22(label) => "${label}はURLである必要があります";
 
-  static String m19(count) => "${count}年前";
+  static String m23(count) => "${count}年前";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -78,12 +86,18 @@ class MessageLookup extends MessageLookupByLibrary {
     "accessControlSettings": MessageLookupByLibrary.simpleMessage("アクセス制御設定"),
     "accessToken": MessageLookupByLibrary.simpleMessage("アクセストークン"),
     "account": MessageLookupByLibrary.simpleMessage("アカウント"),
+    "accountBalance": MessageLookupByLibrary.simpleMessage("アカウント残高"),
     "action": MessageLookupByLibrary.simpleMessage("アクション"),
     "action_mode": MessageLookupByLibrary.simpleMessage("モード切替"),
     "action_proxy": MessageLookupByLibrary.simpleMessage("システムプロキシ"),
     "action_start": MessageLookupByLibrary.simpleMessage("開始/停止"),
     "action_tun": MessageLookupByLibrary.simpleMessage("TUN"),
     "action_view": MessageLookupByLibrary.simpleMessage("表示/非表示"),
+    "activate": MessageLookupByLibrary.simpleMessage("アクティブ化"),
+    "activatePlanConfirm": MessageLookupByLibrary.simpleMessage(
+      "このプランをアクティブ化しますか？アクティブ化すると現在有効なプランになります。",
+    ),
+    "activatePlanTitle": MessageLookupByLibrary.simpleMessage("プランをアクティブ化"),
     "add": MessageLookupByLibrary.simpleMessage("追加"),
     "addProfile": MessageLookupByLibrary.simpleMessage("プロファイルを追加"),
     "addProxyChainNode": MessageLookupByLibrary.simpleMessage("追加"),
@@ -91,6 +105,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "addedOriginRules": MessageLookupByLibrary.simpleMessage("元のルールに追加"),
     "addedRules": MessageLookupByLibrary.simpleMessage("追加ルール"),
     "address": MessageLookupByLibrary.simpleMessage("アドレス"),
+    "addressCopied": MessageLookupByLibrary.simpleMessage("アドレスをコピーしました"),
     "addressHelp": MessageLookupByLibrary.simpleMessage("WebDAVサーバーアドレス"),
     "addressTip": MessageLookupByLibrary.simpleMessage("有効なWebDAVアドレスを入力"),
     "adminAutoLaunch": MessageLookupByLibrary.simpleMessage("管理者自動起動"),
@@ -108,6 +123,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "allowLanDesc": MessageLookupByLibrary.simpleMessage("LAN経由でのプロキシアクセスを許可"),
     "allowTemporarily": MessageLookupByLibrary.simpleMessage("一時的に許可"),
     "announcement": MessageLookupByLibrary.simpleMessage("お知らせ"),
+    "annualPlan": MessageLookupByLibrary.simpleMessage("年額"),
     "apiAvailable": MessageLookupByLibrary.simpleMessage("APIサービスは正常です"),
     "apiUnavailable": MessageLookupByLibrary.simpleMessage("API利用不可"),
     "app": MessageLookupByLibrary.simpleMessage("アプリ"),
@@ -130,11 +146,14 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "autoLaunch": MessageLookupByLibrary.simpleMessage("自動起動"),
     "autoLaunchDesc": MessageLookupByLibrary.simpleMessage("システムの自動起動に従う"),
+    "autoRenewOff": MessageLookupByLibrary.simpleMessage("自動更新:オフ"),
+    "autoRenewOn": MessageLookupByLibrary.simpleMessage("自動更新:オン"),
     "autoRun": MessageLookupByLibrary.simpleMessage("自動実行"),
     "autoRunDesc": MessageLookupByLibrary.simpleMessage("アプリ起動時に自動実行"),
     "autoSetSystemDns": MessageLookupByLibrary.simpleMessage("オートセットシステムDNS"),
     "autoUpdate": MessageLookupByLibrary.simpleMessage("自動更新"),
     "autoUpdateInterval": MessageLookupByLibrary.simpleMessage("自動更新間隔（分）"),
+    "availablePlans": MessageLookupByLibrary.simpleMessage("購入可能なプラン"),
     "backup": MessageLookupByLibrary.simpleMessage("バックアップ"),
     "backupAndRestore": MessageLookupByLibrary.simpleMessage("バックアップと復元"),
     "backupAndRestoreDesc": MessageLookupByLibrary.simpleMessage(
@@ -146,6 +165,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "basicConfigDesc": MessageLookupByLibrary.simpleMessage("基本設定をグローバルに変更"),
     "bind": MessageLookupByLibrary.simpleMessage("バインド"),
     "blacklistMode": MessageLookupByLibrary.simpleMessage("ブラックリストモード"),
+    "buyWithBalance": MessageLookupByLibrary.simpleMessage("残高で購入"),
     "bypassDomain": MessageLookupByLibrary.simpleMessage("バイパスドメイン"),
     "bypassDomainDesc": MessageLookupByLibrary.simpleMessage("システムプロキシ有効時のみ適用"),
     "cacheCorrupt": MessageLookupByLibrary.simpleMessage(
@@ -164,14 +184,17 @@ class MessageLookup extends MessageLookupByLibrary {
       "更新の確認に失敗しました。ネットワークを確認して再試行してください",
     ),
     "checking": MessageLookupByLibrary.simpleMessage("確認中..."),
+    "checkingPayment": MessageLookupByLibrary.simpleMessage("確認中..."),
     "clearData": MessageLookupByLibrary.simpleMessage("データを消去"),
     "clearProxyChain": MessageLookupByLibrary.simpleMessage("チェーン設定を削除"),
     "clipboardExport": MessageLookupByLibrary.simpleMessage("クリップボードにエクスポート"),
     "clipboardImport": MessageLookupByLibrary.simpleMessage("クリップボードからインポート"),
+    "close": MessageLookupByLibrary.simpleMessage("閉じる"),
     "color": MessageLookupByLibrary.simpleMessage("カラー"),
     "colorSchemes": MessageLookupByLibrary.simpleMessage("カラースキーム"),
     "columns": MessageLookupByLibrary.simpleMessage("列"),
     "commission": MessageLookupByLibrary.simpleMessage("コミッション"),
+    "commissionBalance": m0,
     "compatible": MessageLookupByLibrary.simpleMessage("互換モード"),
     "compatibleDesc": MessageLookupByLibrary.simpleMessage(
       "有効化すると一部機能を失いますが、Clashの完全サポートを獲得",
@@ -183,6 +206,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "confirmForceCrashCore": MessageLookupByLibrary.simpleMessage(
       "コアを強制的にクラッシュさせてもよろしいですか？",
     ),
+    "confirmPurchase": MessageLookupByLibrary.simpleMessage("購入を確認"),
     "connected": MessageLookupByLibrary.simpleMessage("接続済み"),
     "connecting": MessageLookupByLibrary.simpleMessage("接続中..."),
     "connection": MessageLookupByLibrary.simpleMessage("接続"),
@@ -213,7 +237,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "dark": MessageLookupByLibrary.simpleMessage("ダーク"),
     "dashboard": MessageLookupByLibrary.simpleMessage("ダッシュボード"),
     "days": MessageLookupByLibrary.simpleMessage("日"),
-    "daysAgo": m0,
+    "daysAgo": m1,
     "defaultNameserver": MessageLookupByLibrary.simpleMessage("デフォルトネームサーバー"),
     "defaultNameserverDesc": MessageLookupByLibrary.simpleMessage(
       "DNSサーバーの解決用",
@@ -224,15 +248,15 @@ class MessageLookup extends MessageLookupByLibrary {
     "delaySort": MessageLookupByLibrary.simpleMessage("遅延順"),
     "delayTest": MessageLookupByLibrary.simpleMessage("遅延テスト"),
     "delete": MessageLookupByLibrary.simpleMessage("削除"),
-    "deleteMultipTip": m1,
-    "deleteTip": m2,
+    "deleteMultipTip": m2,
+    "deleteTip": m3,
     "desc": MessageLookupByLibrary.simpleMessage(
       "ClashMetaベースのマルチプラットフォームプロキシクライアント。シンプルで使いやすく、オープンソースで広告なし。",
     ),
     "destination": MessageLookupByLibrary.simpleMessage("宛先"),
     "destinationGeoIP": MessageLookupByLibrary.simpleMessage("宛先地理情報"),
     "destinationIPASN": MessageLookupByLibrary.simpleMessage("宛先IP ASN"),
-    "details": m3,
+    "details": m4,
     "detectionTip": MessageLookupByLibrary.simpleMessage("サードパーティAPIに依存（参考値）"),
     "developerMode": MessageLookupByLibrary.simpleMessage("デベロッパーモード"),
     "developerModeEnableTip": MessageLookupByLibrary.simpleMessage(
@@ -244,6 +268,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "本ソフトウェアは学習交流や科学研究などの非営利目的でのみ使用されます。商用利用は厳禁です。いかなる商用活動も本ソフトウェアとは無関係です。",
     ),
     "disconnected": MessageLookupByLibrary.simpleMessage("切断済み"),
+    "discountCodeOptional": MessageLookupByLibrary.simpleMessage("割引コード（任意）"),
     "discovery": MessageLookupByLibrary.simpleMessage("新しいバージョンを発見"),
     "dnsDesc": MessageLookupByLibrary.simpleMessage("DNS関連設定の更新"),
     "dnsHijacking": MessageLookupByLibrary.simpleMessage("DNSハイジャッキング"),
@@ -252,6 +277,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "documentCenter": MessageLookupByLibrary.simpleMessage("ドキュメントセンター"),
     "domain": MessageLookupByLibrary.simpleMessage("ドメイン"),
     "download": MessageLookupByLibrary.simpleMessage("ダウンロード"),
+    "earlyRenew": MessageLookupByLibrary.simpleMessage("早期更新"),
     "edit": MessageLookupByLibrary.simpleMessage("編集"),
     "editGlobalRules": MessageLookupByLibrary.simpleMessage("グローバルルールを編集"),
     "editRule": MessageLookupByLibrary.simpleMessage("ルールを編集"),
@@ -266,18 +292,19 @@ class MessageLookup extends MessageLookupByLibrary {
     "emergencyModeDesc": MessageLookupByLibrary.simpleMessage(
       "通常の回線が利用できないときに、このオプションを有効にしてバックアップノードに切り替えてください",
     ),
-    "emptyTip": m4,
+    "emptyTip": m5,
     "en": MessageLookupByLibrary.simpleMessage("英語"),
+    "enableAutoRenew": MessageLookupByLibrary.simpleMessage("自動更新を有効にする"),
     "entries": MessageLookupByLibrary.simpleMessage(" エントリ"),
     "exclude": MessageLookupByLibrary.simpleMessage("最近のタスクから非表示"),
     "excludeDesc": MessageLookupByLibrary.simpleMessage(
       "アプリがバックグラウンド時に最近のタスクから非表示",
     ),
-    "existsTip": m5,
+    "existsTip": m6,
     "exit": MessageLookupByLibrary.simpleMessage("終了"),
     "expand": MessageLookupByLibrary.simpleMessage("標準"),
     "expirationTime": MessageLookupByLibrary.simpleMessage("有効期限"),
-    "expireDate": m6,
+    "expireDate": m7,
     "exportFile": MessageLookupByLibrary.simpleMessage("ファイルをエクスポート"),
     "exportLogs": MessageLookupByLibrary.simpleMessage("ログをエクスポート"),
     "exportSuccess": MessageLookupByLibrary.simpleMessage("エクスポート成功"),
@@ -294,6 +321,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "fallback": MessageLookupByLibrary.simpleMessage("フォールバック"),
     "fallbackDesc": MessageLookupByLibrary.simpleMessage("通常はオフショアDNSを使用"),
     "fallbackFilter": MessageLookupByLibrary.simpleMessage("フォールバックフィルター"),
+    "fetchOrdersFailed": MessageLookupByLibrary.simpleMessage("購入履歴の取得に失敗しました"),
+    "fetchPlansFailed": MessageLookupByLibrary.simpleMessage("プランの取得に失敗しました"),
     "fidelityScheme": MessageLookupByLibrary.simpleMessage("ハイファイデリティー"),
     "file": MessageLookupByLibrary.simpleMessage("ファイル"),
     "fileDesc": MessageLookupByLibrary.simpleMessage("プロファイルを直接アップロード"),
@@ -325,6 +354,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "global": MessageLookupByLibrary.simpleMessage("グローバル"),
     "go": MessageLookupByLibrary.simpleMessage("移動"),
+    "goPay": MessageLookupByLibrary.simpleMessage("支払いへ"),
     "goToConfigureScript": MessageLookupByLibrary.simpleMessage("スクリプト設定に移動"),
     "hasCacheChange": MessageLookupByLibrary.simpleMessage("変更をキャッシュしますか？"),
     "host": MessageLookupByLibrary.simpleMessage("ホスト"),
@@ -335,7 +365,8 @@ class MessageLookup extends MessageLookupByLibrary {
       "キーボードでアプリを制御",
     ),
     "hours": MessageLookupByLibrary.simpleMessage("時間"),
-    "hoursAgo": m7,
+    "hoursAgo": m8,
+    "iHavePaid": MessageLookupByLibrary.simpleMessage("支払い済み"),
     "icon": MessageLookupByLibrary.simpleMessage("アイコン"),
     "iconConfiguration": MessageLookupByLibrary.simpleMessage("アイコン設定"),
     "iconStyle": MessageLookupByLibrary.simpleMessage("アイコンスタイル"),
@@ -350,6 +381,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "internet": MessageLookupByLibrary.simpleMessage("インターネット"),
     "interval": MessageLookupByLibrary.simpleMessage("インターバル"),
     "intranetIP": MessageLookupByLibrary.simpleMessage("イントラネットIP"),
+    "invalidAmount": MessageLookupByLibrary.simpleMessage("有効な金額を入力してください"),
     "invalidBackupFile": MessageLookupByLibrary.simpleMessage("無効なバックアップファイル"),
     "invalidCertificateContent": MessageLookupByLibrary.simpleMessage(
       "サーバー証明書を検証できません。現在のネットワークとサーバーを信頼できる場合のみ、この再試行だけ検証をスキップできます。",
@@ -408,13 +440,14 @@ class MessageLookup extends MessageLookupByLibrary {
       "システムの終了イベントを変更",
     ),
     "minutes": MessageLookupByLibrary.simpleMessage("分"),
-    "minutesAgo": m8,
+    "minutesAgo": m9,
     "mixedPort": MessageLookupByLibrary.simpleMessage("混合ポート"),
     "mode": MessageLookupByLibrary.simpleMessage("モード"),
     "monochromeScheme": MessageLookupByLibrary.simpleMessage("モノクローム"),
     "months": MessageLookupByLibrary.simpleMessage("月"),
-    "monthsAgo": m9,
+    "monthsAgo": m10,
     "more": MessageLookupByLibrary.simpleMessage("詳細"),
+    "myOrders": MessageLookupByLibrary.simpleMessage("マイオーダー"),
     "name": MessageLookupByLibrary.simpleMessage("名前"),
     "nameSort": MessageLookupByLibrary.simpleMessage("名前順"),
     "nameserver": MessageLookupByLibrary.simpleMessage("ネームサーバー"),
@@ -435,6 +468,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "networkSpeed": MessageLookupByLibrary.simpleMessage("ネットワーク速度"),
     "networkType": MessageLookupByLibrary.simpleMessage("ネットワーク種別"),
     "neutralScheme": MessageLookupByLibrary.simpleMessage("ニュートラル"),
+    "noAvailablePlans": MessageLookupByLibrary.simpleMessage("購入可能なプランがありません"),
     "noData": MessageLookupByLibrary.simpleMessage("データなし"),
     "noHotKey": MessageLookupByLibrary.simpleMessage("ホットキーなし"),
     "noIcon": MessageLookupByLibrary.simpleMessage("なし"),
@@ -443,11 +477,18 @@ class MessageLookup extends MessageLookupByLibrary {
     "noMoreInfoDesc": MessageLookupByLibrary.simpleMessage("追加情報なし"),
     "noNetwork": MessageLookupByLibrary.simpleMessage("ネットワークなし"),
     "noNetworkApp": MessageLookupByLibrary.simpleMessage("ネットワークなしアプリ"),
+    "noPaymentMethods": MessageLookupByLibrary.simpleMessage(
+      "利用可能な支払い方法がありません",
+    ),
     "noProxy": MessageLookupByLibrary.simpleMessage("プロキシなし"),
     "noProxyDesc": MessageLookupByLibrary.simpleMessage(
       "プロファイルを作成するか、有効なプロファイルを追加してください",
     ),
+    "noPurchaseRecords": MessageLookupByLibrary.simpleMessage("購入履歴がありません"),
     "noResolve": MessageLookupByLibrary.simpleMessage("IPを解決しない"),
+    "noUpgradablePlans": MessageLookupByLibrary.simpleMessage(
+      "アップグレード可能なプランがありません",
+    ),
     "none": MessageLookupByLibrary.simpleMessage("なし"),
     "notSelectedTip": MessageLookupByLibrary.simpleMessage(
       "現在のプロキシグループは選択できません",
@@ -455,8 +496,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "nullProfileDesc": MessageLookupByLibrary.simpleMessage(
       "プロファイルがありません。追加してください",
     ),
-    "nullTip": m10,
-    "numberTip": m11,
+    "nullTip": m11,
+    "numberTip": m12,
     "oixCloud": MessageLookupByLibrary.simpleMessage("oixCloud"),
     "oneColumn": MessageLookupByLibrary.simpleMessage("1列"),
     "onlyIcon": MessageLookupByLibrary.simpleMessage("アイコンのみ"),
@@ -466,11 +507,15 @@ class MessageLookup extends MessageLookupByLibrary {
       "有効化するとプロキシトラフィックのみ統計",
     ),
     "openDashboard": MessageLookupByLibrary.simpleMessage("ダッシュボードを開く"),
+    "openInBrowser": MessageLookupByLibrary.simpleMessage("ブラウザで開く"),
     "openInstallerFailed": MessageLookupByLibrary.simpleMessage(
       "インストーラーを自動で開けませんでした。ダウンロードリンクを開きます...",
     ),
+    "operationFailed": MessageLookupByLibrary.simpleMessage("操作に失敗しました"),
+    "operationSuccess": MessageLookupByLibrary.simpleMessage("操作に成功しました"),
     "optionalParameters": MessageLookupByLibrary.simpleMessage("オプションパラメータ"),
     "options": MessageLookupByLibrary.simpleMessage("オプション"),
+    "orderAndPay": MessageLookupByLibrary.simpleMessage("注文して支払う"),
     "other": MessageLookupByLibrary.simpleMessage("その他"),
     "otherContributors": MessageLookupByLibrary.simpleMessage("その他の貢献者"),
     "outboundMode": MessageLookupByLibrary.simpleMessage("アウトバウンドモード"),
@@ -504,6 +549,16 @@ class MessageLookup extends MessageLookupByLibrary {
       "パスワードを入力してください",
     ),
     "paste": MessageLookupByLibrary.simpleMessage("貼り付け"),
+    "paymentAmount": MessageLookupByLibrary.simpleMessage("支払い金額"),
+    "paymentMethod": MessageLookupByLibrary.simpleMessage("支払い方法"),
+    "paymentRequestFailed": MessageLookupByLibrary.simpleMessage(
+      "支払いリクエストに失敗しました",
+    ),
+    "paymentSuccess": MessageLookupByLibrary.simpleMessage("支払いに成功しました"),
+    "planEnded": MessageLookupByLibrary.simpleMessage("終了"),
+    "planInUse": MessageLookupByLibrary.simpleMessage("使用中"),
+    "planNotActivated": MessageLookupByLibrary.simpleMessage("未アクティブ"),
+    "planNumber": m13,
     "pleaseBindWebDAV": MessageLookupByLibrary.simpleMessage(
       "WebDAVをバインドしてください",
     ),
@@ -522,7 +577,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "points": MessageLookupByLibrary.simpleMessage("ポイント"),
     "port": MessageLookupByLibrary.simpleMessage("ポート"),
     "portConflictTip": MessageLookupByLibrary.simpleMessage("別のポートを入力してください"),
-    "portTip": m12,
+    "portTip": m14,
     "preferH3Desc": MessageLookupByLibrary.simpleMessage("DOHのHTTP/3を優先使用"),
     "pressKeyboard": MessageLookupByLibrary.simpleMessage("キーボードを押してください"),
     "preview": MessageLookupByLibrary.simpleMessage("プレビュー"),
@@ -556,7 +611,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "proxyChainAvailableNodes": MessageLookupByLibrary.simpleMessage(
       "利用可能なノード",
     ),
-    "proxyChainConflictTip": m13,
+    "proxyChainConflictTip": m15,
     "proxyChainCustomNode": MessageLookupByLibrary.simpleMessage("カスタムノード"),
     "proxyChainCustomNodes": MessageLookupByLibrary.simpleMessage("カスタムノード"),
     "proxyChainEmpty": MessageLookupByLibrary.simpleMessage(
@@ -584,7 +639,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "プロキシチェーンを保存して適用しました。使用するには出口ノードを選択してください",
     ),
     "proxyChainSelectedNodes": MessageLookupByLibrary.simpleMessage("プロキシチェーン"),
-    "proxyChainUnavailableNodeTip": m14,
+    "proxyChainUnavailableNodeTip": m16,
     "proxyChainUriNodeSupportedFormats": MessageLookupByLibrary.simpleMessage(
       "対応形式：ss://、ssr://、vmess://、vless://、trojan://、anytls://、hysteria:// / hy://、hysteria2:// / hy2://、tuic://、wireguard:// / wg://、http(s)://、socks(5)://",
     ),
@@ -601,17 +656,25 @@ class MessageLookup extends MessageLookupByLibrary {
     "proxyPortDesc": MessageLookupByLibrary.simpleMessage("Clashのリスニングポートを設定"),
     "proxyProviders": MessageLookupByLibrary.simpleMessage("プロキシプロバイダー"),
     "pruneCache": MessageLookupByLibrary.simpleMessage("キャッシュの削除"),
+    "purchaseTime": m17,
     "pureBlackMode": MessageLookupByLibrary.simpleMessage("純黒モード"),
     "qrcode": MessageLookupByLibrary.simpleMessage("QRコード"),
     "qrcodeDesc": MessageLookupByLibrary.simpleMessage("QRコードをスキャンしてプロファイルを取得"),
     "rainbowScheme": MessageLookupByLibrary.simpleMessage("レインボー"),
+    "receivingAddress": MessageLookupByLibrary.simpleMessage("受取アドレス"),
+    "recharge": MessageLookupByLibrary.simpleMessage("チャージ"),
+    "rechargeAmount": MessageLookupByLibrary.simpleMessage("チャージ金額（¥）"),
     "redirPort": MessageLookupByLibrary.simpleMessage("Redirポート"),
     "redo": MessageLookupByLibrary.simpleMessage("やり直す"),
     "refresh": MessageLookupByLibrary.simpleMessage("更新"),
+    "refreshAfterPayment": MessageLookupByLibrary.simpleMessage(
+      "支払い完了後、下にスワイプして結果を確認してください",
+    ),
     "refreshSuccess": MessageLookupByLibrary.simpleMessage("更新完了"),
     "regExp": MessageLookupByLibrary.simpleMessage("正規表現"),
     "reload": MessageLookupByLibrary.simpleMessage("リロード"),
-    "remaining": m15,
+    "remaining": m18,
+    "remainingStock": m19,
     "remindLater": MessageLookupByLibrary.simpleMessage("後で通知"),
     "remote": MessageLookupByLibrary.simpleMessage("リモート"),
     "remoteBackupDesc": MessageLookupByLibrary.simpleMessage(
@@ -667,6 +730,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "save": MessageLookupByLibrary.simpleMessage("保存"),
     "saveChanges": MessageLookupByLibrary.simpleMessage("変更を保存しますか？"),
     "saveTip": MessageLookupByLibrary.simpleMessage("保存してもよろしいですか？"),
+    "scanOrTransferPay": MessageLookupByLibrary.simpleMessage("スキャン／送金支払い"),
+    "scanToPayNotice": MessageLookupByLibrary.simpleMessage(
+      "Alipay / WeChat でスキャンして支払い",
+    ),
     "script": MessageLookupByLibrary.simpleMessage("スクリプト"),
     "scriptModeDesc": MessageLookupByLibrary.simpleMessage(
       "スクリプトモード、外部拡張スクリプトを使用し、ワンクリックで設定を上書きする機能を提供",
@@ -674,8 +741,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "search": MessageLookupByLibrary.simpleMessage("検索"),
     "seconds": MessageLookupByLibrary.simpleMessage("秒"),
     "selectAll": MessageLookupByLibrary.simpleMessage("すべて選択"),
+    "selectUpgradeTarget": MessageLookupByLibrary.simpleMessage("アップグレード対象を選択"),
     "selected": MessageLookupByLibrary.simpleMessage("選択済み"),
-    "selectedCountTitle": m16,
+    "selectedCountTitle": m20,
     "serviceCheckFailed": MessageLookupByLibrary.simpleMessage("サービスチェック失敗"),
     "settings": MessageLookupByLibrary.simpleMessage("設定"),
     "show": MessageLookupByLibrary.simpleMessage("表示"),
@@ -685,6 +753,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "size": MessageLookupByLibrary.simpleMessage("サイズ"),
     "socksPort": MessageLookupByLibrary.simpleMessage("Socksポート"),
     "softwareCenter": MessageLookupByLibrary.simpleMessage("ソフトウェアセンター"),
+    "soldOut": MessageLookupByLibrary.simpleMessage("売り切れ"),
     "sort": MessageLookupByLibrary.simpleMessage("並び替え"),
     "source": MessageLookupByLibrary.simpleMessage("ソース"),
     "sourceIp": MessageLookupByLibrary.simpleMessage("送信元IP"),
@@ -707,6 +776,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "statusDesc": MessageLookupByLibrary.simpleMessage("無効時はシステムDNSを使用"),
     "stop": MessageLookupByLibrary.simpleMessage("停止"),
     "stopVpn": MessageLookupByLibrary.simpleMessage("VPNを停止中..."),
+    "store": MessageLookupByLibrary.simpleMessage("ストア"),
     "style": MessageLookupByLibrary.simpleMessage("スタイル"),
     "subRule": MessageLookupByLibrary.simpleMessage("サブルール"),
     "submit": MessageLookupByLibrary.simpleMessage("送信"),
@@ -727,6 +797,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "tcpFastOpenDesc": MessageLookupByLibrary.simpleMessage(
       "TCPの接続確立を高速化するには、このオプションをオンにしてください",
     ),
+    "teamPlan": MessageLookupByLibrary.simpleMessage("チーム"),
     "testUrl": MessageLookupByLibrary.simpleMessage("URLテスト"),
     "textScale": MessageLookupByLibrary.simpleMessage("テキストスケーリング"),
     "theme": MessageLookupByLibrary.simpleMessage("テーマ"),
@@ -751,6 +822,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "tproxyPort": MessageLookupByLibrary.simpleMessage("Tproxyポート"),
     "trafficUsage": MessageLookupByLibrary.simpleMessage("トラフィック使用量"),
     "trafficUsed": MessageLookupByLibrary.simpleMessage("トラフィック使用量"),
+    "transferConfirmNotice": MessageLookupByLibrary.simpleMessage(
+      "送金完了後、システムが自動的に確認し、選択したプランが自動的に有効になります。",
+    ),
     "tun": MessageLookupByLibrary.simpleMessage("TUN"),
     "tunDesc": MessageLookupByLibrary.simpleMessage("管理者モードでのみ有効"),
     "turnOff": MessageLookupByLibrary.simpleMessage("オフ"),
@@ -768,7 +842,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "unknownNetworkError": MessageLookupByLibrary.simpleMessage("不明なネットワークエラー"),
     "unnamed": MessageLookupByLibrary.simpleMessage("無題"),
     "update": MessageLookupByLibrary.simpleMessage("更新"),
-    "updateAvailableTip": m17,
+    "updateAvailableTip": m21,
     "updateDownloadFallback": MessageLookupByLibrary.simpleMessage(
       "アップデートのダウンロードに失敗しました。ダウンロードリンクを開きます...",
     ),
@@ -781,10 +855,11 @@ class MessageLookup extends MessageLookupByLibrary {
     "updateReadyInstall": MessageLookupByLibrary.simpleMessage(
       "アップデートのダウンロードが完了しました。今すぐインストールしますか？",
     ),
+    "upgradePlan": MessageLookupByLibrary.simpleMessage("プランをアップグレード"),
     "upload": MessageLookupByLibrary.simpleMessage("アップロード"),
     "url": MessageLookupByLibrary.simpleMessage("URL"),
     "urlDesc": MessageLookupByLibrary.simpleMessage("URL経由でプロファイルを取得"),
-    "urlTip": m18,
+    "urlTip": m22,
     "useHosts": MessageLookupByLibrary.simpleMessage("ホストを使用"),
     "useSystemHosts": MessageLookupByLibrary.simpleMessage("システムホストを使用"),
     "userCenter": MessageLookupByLibrary.simpleMessage("ユーザーセンター"),
@@ -806,7 +881,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "webDAVConfiguration": MessageLookupByLibrary.simpleMessage("WebDAV設定"),
     "whitelistMode": MessageLookupByLibrary.simpleMessage("ホワイトリストモード"),
     "years": MessageLookupByLibrary.simpleMessage("年"),
-    "yearsAgo": m19,
+    "yearsAgo": m23,
     "zh_CN": MessageLookupByLibrary.simpleMessage("簡体字中国語"),
   };
 }

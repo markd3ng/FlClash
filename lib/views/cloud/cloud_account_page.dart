@@ -13,6 +13,7 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'cloud_profile_card.dart';
+import 'store_page.dart';
 
 class CloudAccountPage extends ConsumerStatefulWidget {
   const CloudAccountPage({super.key});
@@ -178,6 +179,49 @@ class _CloudAccountPageState extends ConsumerState<CloudAccountPage> {
       child: Column(
         children: [
           CloudProfileCard(profile: state.profile!),
+          const SizedBox(height: 16),
+          CommonCard(
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const CloudStorePage(),
+                ),
+              );
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.storefront,
+                    color: context.colorScheme.primary,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '商店',
+                          style: context.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '购买套餐 · 充值 · 续费升级',
+                          style: context.textTheme.bodySmall?.copyWith(
+                            color: context.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right),
+                ],
+              ),
+            ),
+          ),
           if (state.latestNotification != null &&
               state.latestNotification!.cleanMessage.isNotEmpty) ...[
             const SizedBox(height: 16),

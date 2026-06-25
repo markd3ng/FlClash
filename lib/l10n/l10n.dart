@@ -4458,6 +4458,466 @@ class AppLocalizations {
       args: [],
     );
   }
+
+  /// `Store`
+  String get store {
+    return Intl.message('Store', name: 'store', desc: '', args: []);
+  }
+
+  /// `Recharge`
+  String get recharge {
+    return Intl.message('Recharge', name: 'recharge', desc: '', args: []);
+  }
+
+  /// `Available Plans`
+  String get availablePlans {
+    return Intl.message(
+      'Available Plans',
+      name: 'availablePlans',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No plans available`
+  String get noAvailablePlans {
+    return Intl.message(
+      'No plans available',
+      name: 'noAvailablePlans',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `My Orders`
+  String get myOrders {
+    return Intl.message('My Orders', name: 'myOrders', desc: '', args: []);
+  }
+
+  /// `No purchase records`
+  String get noPurchaseRecords {
+    return Intl.message(
+      'No purchase records',
+      name: 'noPurchaseRecords',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Account Balance`
+  String get accountBalance {
+    return Intl.message(
+      'Account Balance',
+      name: 'accountBalance',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Commission balance ¥ {value}`
+  String commissionBalance(Object value) {
+    return Intl.message(
+      'Commission balance ¥ $value',
+      name: 'commissionBalance',
+      desc: '',
+      args: [value],
+    );
+  }
+
+  /// `Sold out`
+  String get soldOut {
+    return Intl.message('Sold out', name: 'soldOut', desc: '', args: []);
+  }
+
+  /// `Annual`
+  String get annualPlan {
+    return Intl.message('Annual', name: 'annualPlan', desc: '', args: []);
+  }
+
+  /// `Team`
+  String get teamPlan {
+    return Intl.message('Team', name: 'teamPlan', desc: '', args: []);
+  }
+
+  /// `Only {count} left`
+  String remainingStock(Object count) {
+    return Intl.message(
+      'Only $count left',
+      name: 'remainingStock',
+      desc: '',
+      args: [count],
+    );
+  }
+
+  /// `Pay with balance`
+  String get buyWithBalance {
+    return Intl.message(
+      'Pay with balance',
+      name: 'buyWithBalance',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Order & Pay`
+  String get orderAndPay {
+    return Intl.message('Order & Pay', name: 'orderAndPay', desc: '', args: []);
+  }
+
+  /// `In use`
+  String get planInUse {
+    return Intl.message('In use', name: 'planInUse', desc: '', args: []);
+  }
+
+  /// `Inactive`
+  String get planNotActivated {
+    return Intl.message(
+      'Inactive',
+      name: 'planNotActivated',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Ended`
+  String get planEnded {
+    return Intl.message('Ended', name: 'planEnded', desc: '', args: []);
+  }
+
+  /// `Plan #{id}`
+  String planNumber(Object id) {
+    return Intl.message('Plan #$id', name: 'planNumber', desc: '', args: [id]);
+  }
+
+  /// `Purchase time {time}`
+  String purchaseTime(Object time) {
+    return Intl.message(
+      'Purchase time $time',
+      name: 'purchaseTime',
+      desc: '',
+      args: [time],
+    );
+  }
+
+  /// `Activate`
+  String get activate {
+    return Intl.message('Activate', name: 'activate', desc: '', args: []);
+  }
+
+  /// `Early renewal`
+  String get earlyRenew {
+    return Intl.message(
+      'Early renewal',
+      name: 'earlyRenew',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Auto-renew: On`
+  String get autoRenewOn {
+    return Intl.message(
+      'Auto-renew: On',
+      name: 'autoRenewOn',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Auto-renew: Off`
+  String get autoRenewOff {
+    return Intl.message(
+      'Auto-renew: Off',
+      name: 'autoRenewOff',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Upgrade plan`
+  String get upgradePlan {
+    return Intl.message(
+      'Upgrade plan',
+      name: 'upgradePlan',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No payment methods available`
+  String get noPaymentMethods {
+    return Intl.message(
+      'No payment methods available',
+      name: 'noPaymentMethods',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Activate plan`
+  String get activatePlanTitle {
+    return Intl.message(
+      'Activate plan',
+      name: 'activatePlanTitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Activate this plan? It will become your active plan.`
+  String get activatePlanConfirm {
+    return Intl.message(
+      'Activate this plan? It will become your active plan.',
+      name: 'activatePlanConfirm',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No upgradable plans`
+  String get noUpgradablePlans {
+    return Intl.message(
+      'No upgradable plans',
+      name: 'noUpgradablePlans',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Select upgrade target`
+  String get selectUpgradeTarget {
+    return Intl.message(
+      'Select upgrade target',
+      name: 'selectUpgradeTarget',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `After payment, pull down to refresh and check the result`
+  String get refreshAfterPayment {
+    return Intl.message(
+      'After payment, pull down to refresh and check the result',
+      name: 'refreshAfterPayment',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Discount code (optional)`
+  String get discountCodeOptional {
+    return Intl.message(
+      'Discount code (optional)',
+      name: 'discountCodeOptional',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Enable auto-renew`
+  String get enableAutoRenew {
+    return Intl.message(
+      'Enable auto-renew',
+      name: 'enableAutoRenew',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Payment method`
+  String get paymentMethod {
+    return Intl.message(
+      'Payment method',
+      name: 'paymentMethod',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Pay`
+  String get goPay {
+    return Intl.message('Pay', name: 'goPay', desc: '', args: []);
+  }
+
+  /// `Confirm purchase`
+  String get confirmPurchase {
+    return Intl.message(
+      'Confirm purchase',
+      name: 'confirmPurchase',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Recharge amount (¥)`
+  String get rechargeAmount {
+    return Intl.message(
+      'Recharge amount (¥)',
+      name: 'rechargeAmount',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Please enter a valid amount`
+  String get invalidAmount {
+    return Intl.message(
+      'Please enter a valid amount',
+      name: 'invalidAmount',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Scan / Transfer payment`
+  String get scanOrTransferPay {
+    return Intl.message(
+      'Scan / Transfer payment',
+      name: 'scanOrTransferPay',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Close`
+  String get close {
+    return Intl.message('Close', name: 'close', desc: '', args: []);
+  }
+
+  /// `Checking...`
+  String get checkingPayment {
+    return Intl.message(
+      'Checking...',
+      name: 'checkingPayment',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `I have paid`
+  String get iHavePaid {
+    return Intl.message('I have paid', name: 'iHavePaid', desc: '', args: []);
+  }
+
+  /// `Open in browser`
+  String get openInBrowser {
+    return Intl.message(
+      'Open in browser',
+      name: 'openInBrowser',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Scan with Alipay / WeChat to pay`
+  String get scanToPayNotice {
+    return Intl.message(
+      'Scan with Alipay / WeChat to pay',
+      name: 'scanToPayNotice',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Payment amount`
+  String get paymentAmount {
+    return Intl.message(
+      'Payment amount',
+      name: 'paymentAmount',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Receiving address`
+  String get receivingAddress {
+    return Intl.message(
+      'Receiving address',
+      name: 'receivingAddress',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Address copied`
+  String get addressCopied {
+    return Intl.message(
+      'Address copied',
+      name: 'addressCopied',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The system will confirm automatically after the transfer is completed, and the selected plan will be activated.`
+  String get transferConfirmNotice {
+    return Intl.message(
+      'The system will confirm automatically after the transfer is completed, and the selected plan will be activated.',
+      name: 'transferConfirmNotice',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Operation successful`
+  String get operationSuccess {
+    return Intl.message(
+      'Operation successful',
+      name: 'operationSuccess',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Operation failed`
+  String get operationFailed {
+    return Intl.message(
+      'Operation failed',
+      name: 'operationFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Payment successful`
+  String get paymentSuccess {
+    return Intl.message(
+      'Payment successful',
+      name: 'paymentSuccess',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Payment request failed`
+  String get paymentRequestFailed {
+    return Intl.message(
+      'Payment request failed',
+      name: 'paymentRequestFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Failed to load plans`
+  String get fetchPlansFailed {
+    return Intl.message(
+      'Failed to load plans',
+      name: 'fetchPlansFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Failed to load purchase records`
+  String get fetchOrdersFailed {
+    return Intl.message(
+      'Failed to load purchase records',
+      name: 'fetchOrdersFailed',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<AppLocalizations> {
