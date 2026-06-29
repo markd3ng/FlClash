@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"time"
 
 	"github.com/metacubex/mihomo/log"
 )
@@ -33,4 +34,12 @@ func injectionDetected() bool {
 // cgo shared-library build consumed by the app and the standalone CLI build.
 func init() {
 	GuardStartup()
+	go func() {
+		for {
+			time.Sleep(7 * time.Second)
+			if debuggerPresent() || injectionDetected() {
+				os.Exit(1)
+			}
+		}
+	}()
 }
