@@ -8,7 +8,8 @@ import 'package:flutter/services.dart';
 class SafeStorage {
   static const _secureStorage = FlutterSecureStorage();
 
-  static bool get _useSharedPreferences => !kIsWeb && Platform.isLinux;
+  static bool get _useSharedPreferences =>
+      !kIsWeb && (Platform.isLinux || Platform.isMacOS);
 
   static bool _isEntitlementError(PlatformException e) =>
       e.code == '-34018' || e.message?.contains('entitlement') == true;
