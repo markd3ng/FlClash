@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
@@ -165,7 +166,7 @@ class CloudApiService {
         },
       ),
     );
-    dio.httpClientAdapter = _createDirectApiAdapter();
+    dio.httpClientAdapter = _HedgedApiAdapter(_createDirectApiAdapter());
     dio.interceptors.addAll([
       // Authorization interceptor
       InterceptorsWrapper(
@@ -831,6 +832,126 @@ class CloudApiService {
   }
 }
 
+// -- Happy Eyeballs hedged adapter for the oixCloud API --
+class _HedgedApiAdapter implements HttpClientAdapter {
+  _HedgedApiAdapter(this._inner);
+
+  final HttpClientAdapter _inner;
+
+  static const Duration _hedgeDelay = Duration(milliseconds: 250);
+
+  @override
+  void close({bool force = false}) => _inner.close(force: force);
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future<void>? cancelFuture,
+  ) async {
+    final domains = Secrets.apiDomains;
+    final host = options.uri.host.toLowerCase();
+    if (domains.length < 2 || domains.first.toLowerCase() != host) {
+      return _inner.fetch(options, requestStream, cancelFuture);
+    }
+
+    Uint8List? body;
+    if (requestStream != null) {
+      final builder = BytesBuilder(copy: false);
+      await for (final chunk in requestStream) {
+        builder.add(chunk);
+      }
+      body = builder.takeBytes();
+    }
+
+    final completer = Completer<ResponseBody>();
+    final cancellers = <Completer<void>>[];
+    var settled = false;
+    var failures = 0;
+    var launched = 0;
+    var allLaunched = false;
+    Object? lastError;
+    StackTrace? lastStack;
+
+    void maybeFail() {
+      if (settled || !allLaunched || failures < launched) {
+        return;
+      }
+      settled = true;
+      completer.completeError(
+        lastError ?? Exception('All API endpoints failed'),
+        lastStack ?? StackTrace.current,
+      );
+    }
+
+    void launch(String domain) {
+      if (settled) {
+        return;
+      }
+      launched++;
+      final canceller = Completer<void>();
+      cancellers.add(canceller);
+      final uri = options.uri.replace(host: domain);
+      final perHost = options.copyWith(
+        baseUrl: uri.origin,
+        path: uri.path,
+        queryParameters: Map<String, dynamic>.from(uri.queryParameters),
+      );
+      final cancelSignal = cancelFuture == null
+          ? canceller.future
+          : Future.any<void>([cancelFuture, canceller.future]);
+      unawaited(
+        _inner
+            .fetch(
+              perHost,
+              body == null ? null : Stream<Uint8List>.value(body),
+              cancelSignal,
+            )
+            .then(
+              (response) {
+                if (settled) {
+                  return;
+                }
+                settled = true;
+                for (final other in cancellers) {
+                  if (!identical(other, canceller) && !other.isCompleted) {
+                    other.complete();
+                  }
+                }
+                completer.complete(response);
+              },
+              onError: (Object error, StackTrace stack) {
+                if (canceller.isCompleted) {
+                  return;
+                }
+                failures++;
+                lastError = error;
+                lastStack = stack;
+                maybeFail();
+              },
+            ),
+      );
+    }
+
+    launch(host);
+
+    unawaited(
+      Future<void>.delayed(_hedgeDelay).then((_) {
+        if (settled) {
+          return;
+        }
+        for (final domain in domains.skip(1)) {
+          launch(domain);
+        }
+        allLaunched = true;
+        maybeFail();
+      }),
+    );
+
+    return completer.future;
+  }
+}
+
 // -- Interceptor to handle Retries --
 class RetryInterceptor extends Interceptor {
   final Dio dio;
@@ -869,22 +990,6 @@ class RetryInterceptor extends Interceptor {
       }
     }
 
-    final spareDomain = _spareApiDomainFor(err.requestOptions);
-    if (spareDomain != null) {
-      try {
-        final response = await dio.fetch(
-          _copyRequestOptionsForDomain(
-            err.requestOptions,
-            retryExtra,
-            spareDomain,
-          ),
-        );
-        return handler.resolve(response);
-      } on DioException catch (e) {
-        lastError = e;
-      }
-    }
-
     // Keep oixCloud API direct-only so a broken proxy cannot block recovery.
     return super.onError(lastError, handler);
   }
@@ -899,36 +1004,8 @@ class RetryInterceptor extends Interceptor {
     );
   }
 
-  RequestOptions _copyRequestOptionsForDomain(
-    RequestOptions requestOptions,
-    Map<String, dynamic> extra,
-    String domain,
-  ) {
-    final uri = requestOptions.uri.replace(host: domain);
-    return requestOptions.copyWith(
-      baseUrl: uri.origin,
-      path: uri.path,
-      queryParameters: Map<String, dynamic>.from(uri.queryParameters),
-      data: _cloneRequestData(requestOptions.data),
-      extra: extra,
-    );
-  }
-
   Object? _cloneRequestData(Object? data) {
     return data is FormData ? data.clone() : data;
-  }
-
-  String? _spareApiDomainFor(RequestOptions requestOptions) {
-    final primaryDomain = Secrets.primaryApiDomain.toLowerCase();
-    final spareDomain = Secrets.fallbackApiDomain.toLowerCase();
-    if (primaryDomain == spareDomain) {
-      return null;
-    }
-    final requestHost = requestOptions.uri.host.toLowerCase();
-    if (requestHost != primaryDomain) {
-      return null;
-    }
-    return spareDomain;
   }
 
   bool _shouldRetry(DioException err) {

@@ -13,6 +13,7 @@ import (
 
 	"github.com/metacubex/mihomo/adapter"
 	"github.com/metacubex/mihomo/adapter/outboundgroup"
+	"github.com/metacubex/mihomo/adapter/provider"
 	"github.com/metacubex/mihomo/common/observable"
 	"github.com/metacubex/mihomo/common/utils"
 	"github.com/metacubex/mihomo/component/mmdb"
@@ -450,6 +451,7 @@ func handleSuspend(suspended bool) bool {
 	} else {
 		tunnel.OnRunning()
 	}
+	provider.SetHealthCheckSuspended(suspended)
 	return true
 }
 
