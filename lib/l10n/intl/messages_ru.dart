@@ -71,7 +71,7 @@ class MessageLookup extends MessageLookupByLibrary {
   static String m21(count) => "Выбрано ${count} элементов";
 
   static String m22(version) =>
-      "Доступна новая версия ${version}. Скачать и установить сейчас?";
+      "Доступна новая версия ${version}. Открыть ссылку для скачивания сейчас?";
 
   static String m23(label) => "${label} должен быть URL";
 

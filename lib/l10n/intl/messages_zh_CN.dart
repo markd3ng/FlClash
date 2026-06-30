@@ -64,7 +64,7 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m21(count) => "已选择 ${count} 项";
 
-  static String m22(version) => "发现新版本 ${version}，是否立即下载并安装？";
+  static String m22(version) => "发现新版本 ${version}，是否立即打开下载链接？";
 
   static String m23(label) => "${label}必须为URL";
 

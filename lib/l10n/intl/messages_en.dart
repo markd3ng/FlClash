@@ -72,7 +72,7 @@ class MessageLookup extends MessageLookupByLibrary {
   static String m21(count) => "${count} items have been selected";
 
   static String m22(version) =>
-      "A new version ${version} is available. Download and install it now?";
+      "A new version ${version} is available. Open the download link now?";
 
   static String m23(label) => "${label} must be a url";
 

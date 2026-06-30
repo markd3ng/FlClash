@@ -143,7 +143,7 @@
   "checkUpdate": "Check for updates",
   "checkUpdateError": "The current application is already the latest version",
   "checkUpdateFailed": "Failed to check for updates. Please check your network and try again",
-  "updateAvailableTip": "A new version {version} is available. Download and install it now?",
+  "updateAvailableTip": "A new version {version} is available. Open the download link now?",
   "updateReadyInstall": "The update has been downloaded. Install it now?",
   "updateDownloading": "Downloading update in background...",
   "updateDownloadFallback": "Update download failed. Opening the download link...",

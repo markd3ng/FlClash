@@ -142,7 +142,7 @@
   "checkUpdate": "更新を確認",
   "checkUpdateError": "アプリは最新版です",
   "checkUpdateFailed": "更新の確認に失敗しました。ネットワークを確認して再試行してください",
-  "updateAvailableTip": "新しいバージョン {version} が見つかりました。今すぐダウンロードしてインストールしますか？",
+  "updateAvailableTip": "新しいバージョン {version} が見つかりました。今すぐダウンロードリンクを開きますか？",
   "updateReadyInstall": "アップデートのダウンロードが完了しました。今すぐインストールしますか？",
   "updateDownloading": "バックグラウンドでアップデートをダウンロード中...",
   "updateDownloadFallback": "アップデートのダウンロードに失敗しました。ダウンロードリンクを開きます...",

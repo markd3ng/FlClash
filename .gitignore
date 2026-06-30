@@ -76,3 +76,5 @@ devtools_options.yaml
 .fvm/
 .fvmrc
 .env.local
+AGENTS.md
+CLAUDE.md

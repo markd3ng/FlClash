@@ -144,7 +144,7 @@
   "checkUpdate": "检查更新",
   "checkUpdateError": "当前应用已经是最新版了",
   "checkUpdateFailed": "检查更新失败，请检查网络后重试",
-  "updateAvailableTip": "发现新版本 {version}，是否立即下载并安装？",
+  "updateAvailableTip": "发现新版本 {version}，是否立即打开下载链接？",
   "updateReadyInstall": "更新已下载完成，是否立即安装？",
   "updateDownloading": "正在后台下载更新...",
   "updateDownloadFallback": "更新下载失败，正在打开下载链接...",

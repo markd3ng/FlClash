@@ -26,42 +26,6 @@ const _persistentLogMaxBytes = 1024 * 1024;
 const _persistentLogKeepBytes = 768 * 1024;
 const _coreDisconnectedMessage = 'Core is not connected';
 
-const _macUpdateScript = r'''#!/bin/bash
-DMG="$1"
-APP="$2"
-PID="$3"
-i=0
-while [ "$i" -lt 120 ]; do
-  /bin/kill -0 "$PID" 2>/dev/null || break
-  /bin/sleep 0.5
-  i=$((i + 1))
-done
-MOUNT=$(/usr/bin/mktemp -d /tmp/flclash_update.XXXXXX)
-if ! /usr/bin/hdiutil attach "$DMG" -nobrowse -noverify -mountpoint "$MOUNT" >/dev/null 2>&1; then
-  /bin/rm -f "$DMG"
-  /usr/bin/open "$APP"
-  exit 0
-fi
-SRC=$(/usr/bin/find "$MOUNT" -maxdepth 1 -name "*.app" | /usr/bin/head -1)
-if [ -z "$SRC" ]; then
-  /usr/bin/hdiutil detach "$MOUNT" >/dev/null 2>&1 || true
-  /bin/rm -f "$DMG"
-  /usr/bin/open "$APP"
-  exit 0
-fi
-if /usr/bin/ditto "$SRC" "$APP.new" >/dev/null 2>&1; then
-  /bin/rm -rf "$APP"
-  /bin/mv "$APP.new" "$APP"
-  /usr/bin/hdiutil detach "$MOUNT" >/dev/null 2>&1 || true
-  /usr/bin/open "$APP"
-else
-  /bin/rm -rf "$APP.new" 2>/dev/null || true
-  /usr/bin/hdiutil detach "$MOUNT" >/dev/null 2>&1 || true
-  /bin/rm -f "$DMG"
-  /usr/bin/open "$APP"
-fi
-''';
-
 class AppController {
   late final BuildContext _context;
   late final WidgetRef _ref;
@@ -70,7 +34,6 @@ class AppController {
   int _persistentLogLength = 0;
   Future<bool>? _coreReadyFuture;
   bool isAttach = false;
-  bool _isUpdateDownloading = false;
   bool _isCloudLoginDialogShowing = false;
 
   static AppController? _instance;
@@ -156,12 +119,6 @@ extension InitControllerExt on AppController {
   }
 
   Future<void> checkUpdate({bool isUser = false}) async {
-    if (_isUpdateDownloading) {
-      if (isUser) {
-        globalState.showNotifier(appLocalizations.updateDownloading);
-      }
-      return;
-    }
     String? tagName;
     try {
       tagName = await request.checkForUpdate();
@@ -200,184 +157,12 @@ extension InitControllerExt on AppController {
     if (res != true) {
       return;
     }
+    final downloadUrl = _getUpdateDownloadUrl() ?? 'https://dl.dler.io';
     await safeRun<void>(
-      () => _downloadAndInstallUpdate(tagName: updateTagName),
+      () => _openUpdateDownloadUrl(downloadUrl),
       title: appLocalizations.checkUpdate,
       silence: !isUser,
     );
-  }
-
-  Future<void> _downloadAndInstallUpdate({required String tagName}) async {
-    final downloadUrl = _getUpdateDownloadUrl();
-    if (downloadUrl == null) {
-      await _openUpdateDownloadUrl('https://dl.dler.io');
-      return;
-    }
-    try {
-      _isUpdateDownloading = true;
-      globalState.showNotifier(appLocalizations.updateDownloading);
-      final updateFile = await _downloadUpdatePackage(downloadUrl, tagName);
-      window?.show();
-      final res = await globalState.showMessage(
-        title: appLocalizations.checkUpdate,
-        message: TextSpan(text: appLocalizations.updateReadyInstall),
-      );
-      if (res != true) {
-        return;
-      }
-      globalState.showNotifier(appLocalizations.updateInstalling);
-      await _installUpdatePackage(updateFile, downloadUrl);
-    } catch (error) {
-      commonPrint.log(
-        'download update package failed: $error',
-        logLevel: LogLevel.warning,
-      );
-      globalState.showNotifier(appLocalizations.updateDownloadFallback);
-      await _openUpdateDownloadUrl(downloadUrl);
-    } finally {
-      _isUpdateDownloading = false;
-    }
-  }
-
-  Future<File> _downloadUpdatePackage(
-    String downloadUrl,
-    String tagName,
-  ) async {
-    final fileName = _getUpdatePackageFileName(downloadUrl, tagName);
-    final downloadDirPath = await _getUpdateDownloadDirPath();
-    final updateFile = File(p.join(downloadDirPath, fileName));
-    if (await updateFile.exists() && await updateFile.length() > 0) {
-      return updateFile;
-    }
-    final tempFile = File('${updateFile.path}.download');
-    await tempFile.safeDelete();
-    await request.downloadFile(downloadUrl, tempFile.path);
-    await updateFile.safeDelete();
-    return tempFile.rename(updateFile.path);
-  }
-
-  String _getUpdatePackageFileName(String downloadUrl, String tagName) {
-    final sourceFileName = p.basename(Uri.parse(downloadUrl).path);
-    if (tagName.isEmpty) {
-      return sourceFileName;
-    }
-    final extension = p.extension(sourceFileName);
-    final name = p.basenameWithoutExtension(sourceFileName);
-    final version = tagName
-        .replaceAll(RegExp(r'[^0-9A-Za-z._-]+'), '-')
-        .replaceAll(RegExp(r'-+'), '-')
-        .replaceAll(RegExp(r'^-|-$'), '');
-    return '$name-$version$extension';
-  }
-
-  Future<String> _getUpdateDownloadDirPath() async {
-    try {
-      final downloadDirPath = await appPath.downloadDirPath.timeout(
-        const Duration(seconds: 3),
-      );
-      return p.join(downloadDirPath, 'FlClash');
-    } catch (error) {
-      commonPrint.log(
-        'get update download dir failed: $error',
-        logLevel: LogLevel.warning,
-      );
-      final homeDirPath = await appPath.homeDirPath;
-      return p.join(homeDirPath, 'updates');
-    }
-  }
-
-  Future<void> _installUpdatePackage(
-    File updateFile,
-    String fallbackUrl,
-  ) async {
-    var installed = false;
-    if (system.isWindows) {
-      installed = await _installWindowsUpdate(updateFile);
-    } else if (system.isMacOS) {
-      installed = await _installMacOSUpdate(updateFile);
-    }
-    if (installed) {
-      await handleExit();
-      return;
-    }
-    await _openUpdatePackage(updateFile, fallbackUrl);
-  }
-
-  Future<bool> _installWindowsUpdate(File updateFile) async {
-    try {
-      await Process.start(updateFile.path, [
-        '/SILENT',
-        '/SUPPRESSMSGBOXES',
-        '/NORESTART',
-        '/FORCECLOSEAPPLICATIONS',
-        '/RESTARTAPPLICATIONS',
-      ], mode: ProcessStartMode.detached);
-      return true;
-    } catch (error) {
-      commonPrint.log(
-        'start windows installer failed: $error',
-        logLevel: LogLevel.warning,
-      );
-      return false;
-    }
-  }
-
-  Future<bool> _installMacOSUpdate(File updateFile) async {
-    try {
-      final appBundlePath = _resolveMacOSAppPath();
-      if (appBundlePath == null) {
-        return false;
-      }
-      final scriptDir = await Directory.systemTemp.createTemp('flclash_update');
-      final scriptFile = File(p.join(scriptDir.path, 'update.sh'));
-      await scriptFile.writeAsString(_macUpdateScript);
-      await Process.start('/bin/bash', [
-        scriptFile.path,
-        updateFile.path,
-        appBundlePath,
-        '$pid',
-      ], mode: ProcessStartMode.detached);
-      return true;
-    } catch (error) {
-      commonPrint.log(
-        'start macos installer failed: $error',
-        logLevel: LogLevel.warning,
-      );
-      return false;
-    }
-  }
-
-  String? _resolveMacOSAppPath() {
-    final executable = Platform.resolvedExecutable;
-    const marker = '.app/Contents/MacOS/';
-    final index = executable.indexOf(marker);
-    if (index == -1) {
-      return null;
-    }
-    return executable.substring(0, index + '.app'.length);
-  }
-
-  Future<void> _openUpdatePackage(File updateFile, String fallbackUrl) async {
-    bool opened = false;
-    try {
-      if (system.isAndroid) {
-        opened = await app?.openFile(updateFile.path) ?? false;
-      } else {
-        opened = await launchUrl(
-          Uri.file(updateFile.path),
-          mode: LaunchMode.externalApplication,
-        );
-      }
-    } catch (error) {
-      commonPrint.log(
-        'open update package failed: $error',
-        logLevel: LogLevel.warning,
-      );
-    }
-    if (opened) return;
-    await updateFile.safeDelete();
-    globalState.showNotifier(appLocalizations.openInstallerFailed);
-    await _openUpdateDownloadUrl(fallbackUrl);
   }
 
   Future<void> _openUpdateDownloadUrl(String downloadUrl) async {
