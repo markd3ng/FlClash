@@ -79,9 +79,13 @@ class _AppStateManagerState extends ConsumerState<AppStateManager>
       _isBackground = true;
     }
     if (state == AppLifecycleState.resumed) {
+      final wasBackground = _isBackground;
       _isBackground = false;
       render?.resume();
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (wasBackground) {
+          appController.clearDelay();
+        }
         appController.tryCheckIp();
         if (system.isAndroid) {
           appController.tryStartCore();

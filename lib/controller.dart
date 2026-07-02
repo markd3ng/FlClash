@@ -680,6 +680,10 @@ extension ProxiesControllerExt on AppController {
     _ref.read(delayDataSourceProvider.notifier).setDelay(delay);
   }
 
+  void clearDelay() {
+    _ref.read(delayDataSourceProvider.notifier).value = {};
+  }
+
   Future<void> changeProxy({
     required String groupName,
     required String proxyName,
@@ -1212,6 +1216,7 @@ extension CoreControllerExt on AppController {
   Future<void> restartCore([bool start = false]) async {
     _ref.read(coreStatusProvider.notifier).value = CoreStatus.disconnected;
     await coreController.shutdown(true);
+    clearDelay();
     await _connectCore();
     await _initCore();
     if (start || _ref.read(isStartProvider)) {
