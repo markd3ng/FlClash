@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/core/core.dart';
@@ -9,6 +10,7 @@ import 'package:fl_clash/models/core.dart';
 
 import 'interface.dart';
 import 'ipc_cipher.dart';
+import 'ipc_frame.dart';
 
 class CoreService extends CoreHandlerInterface {
   static const _coreStartTimeout = Duration(seconds: 10);
@@ -84,17 +86,24 @@ class CoreService extends CoreHandlerInterface {
     if (_socketCompleter.isCompleted) {
       _socketCompleter = Completer();
     }
+    final decoder = IpcFrameDecoder();
     socket
-        .transform(uint8ListToListIntConverter)
-        .transform(utf8.decoder)
-        .transform(const LineSplitter())
-        .listen((data) async {
-          final plain = await _ipc.decodeFrame(data);
-          if (plain == null) {
+        .listen((chunk) async {
+          final List<Uint8List> frames;
+          try {
+            frames = decoder.add(chunk);
+          } on FormatException {
+            socket.destroy();
             return;
           }
-          final dataJson = await plain.commonToJSON<dynamic>();
-          handleResult(ActionResult.fromJson(dataJson));
+          for (final frame in frames) {
+            final plain = await _ipc.decodeFrame(frame);
+            if (plain == null) {
+              continue;
+            }
+            final dataJson = await plain.commonToJSON<dynamic>();
+            handleResult(ActionResult.fromJson(dataJson));
+          }
         })
         .onDone(() {
           if (_resetSocketIfCurrent(socket)) {
@@ -205,7 +214,7 @@ class CoreService extends CoreHandlerInterface {
 
   Future<void> sendMessage(String message) async {
     final socket = await _socketCompleter.future;
-    socket.writeln(await _ipc.encodeFrame(message));
+    socket.add(encodeIpcFrame(await _ipc.encodeFrame(message)));
   }
 
   Future<void> _deleteSocketFile() async {

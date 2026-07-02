@@ -3,23 +3,29 @@
 package main
 
 import (
-	"bufio"
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"os"
 	"strconv"
-	"strings"
+	"sync"
 	"time"
 
 	"golang.org/x/crypto/chacha20poly1305"
 )
 
-var conn net.Conn
+const maxIPCFrameLength = 64 * 1024 * 1024
+
+var (
+	conn   net.Conn
+	connMu sync.Mutex
+)
 
 // ipcKey is the per-session symmetric key for the local App<->core socket.
 // It is delivered out-of-band via the FLCLASH_IPC_KEY environment variable at
@@ -37,7 +43,7 @@ func initIPCKey() {
 	}
 }
 
-// encodeFrame encrypts one newline-framed message: base64(nonce || sealed).
+// encodeFrame encrypts one frame payload: nonce || sealed.
 func encodeFrame(plaintext []byte) ([]byte, error) {
 	if ipcKey == nil {
 		return plaintext, nil
@@ -54,17 +60,13 @@ func encodeFrame(plaintext []byte) ([]byte, error) {
 	buf := make([]byte, 0, len(nonce)+len(sealed))
 	buf = append(buf, nonce...)
 	buf = append(buf, sealed...)
-	return []byte(base64.StdEncoding.EncodeToString(buf)), nil
+	return buf, nil
 }
 
-// decodeFrame reverses encodeFrame for one received line.
-func decodeFrame(line string) ([]byte, error) {
+// decodeFrame reverses encodeFrame for one received frame payload.
+func decodeFrame(raw []byte) ([]byte, error) {
 	if ipcKey == nil {
-		return []byte(line), nil
-	}
-	raw, err := base64.StdEncoding.DecodeString(strings.TrimSpace(line))
-	if err != nil {
-		return nil, err
+		return raw, nil
 	}
 	if len(raw) < chacha20poly1305.NonceSize {
 		return nil, errors.New("ipc frame too short")
@@ -75,6 +77,30 @@ func decodeFrame(line string) ([]byte, error) {
 	}
 	nonce := raw[:chacha20poly1305.NonceSize]
 	return aead.Open(nil, nonce, raw[chacha20poly1305.NonceSize:], nil)
+}
+
+func writeFrame(w io.Writer, data []byte) error {
+	frame := make([]byte, 4+len(data))
+	binary.LittleEndian.PutUint32(frame, uint32(len(data)))
+	copy(frame[4:], data)
+	_, err := w.Write(frame)
+	return err
+}
+
+func readFrame(r io.Reader) ([]byte, error) {
+	lenBuf := make([]byte, 4)
+	if _, err := io.ReadFull(r, lenBuf); err != nil {
+		return nil, err
+	}
+	length := binary.LittleEndian.Uint32(lenBuf)
+	if length > maxIPCFrameLength {
+		return nil, errors.New("ipc frame too large")
+	}
+	data := make([]byte, length)
+	if _, err := io.ReadFull(r, data); err != nil {
+		return nil, err
+	}
+	return data, nil
 }
 
 func (result ActionResult) send() {
@@ -104,7 +130,11 @@ func send(data []byte) {
 	if err != nil {
 		return
 	}
-	_, _ = conn.Write(append(frame, '\n'))
+	connMu.Lock()
+	defer connMu.Unlock()
+	if err := writeFrame(conn, frame); err != nil {
+		log.Println("server write error:", err)
+	}
 }
 
 func startServer(arg string) {
@@ -135,11 +165,12 @@ func startServer(arg string) {
 		_ = conn.Close()
 	}(conn)
 
-	reader := bufio.NewReader(conn)
-
 	for {
-		data, err := reader.ReadString('\n')
+		data, err := readFrame(conn)
 		if err != nil {
+			if err != io.EOF {
+				log.Println("server read error:", err)
+			}
 			return
 		}
 		plain, err := decodeFrame(data)
