@@ -2,10 +2,49 @@
 
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:args/command_runner.dart';
 import 'package:crypto/crypto.dart';
 import 'package:path/path.dart';
+
+// Obfuscate compile-time secrets (v2) so plaintext keys/domains are not left in
+// the Go core binary or the Flutter dart-defines. Restored at runtime by
+// core/secrets.go and lib/common/secrets.dart, which share this exact scheme:
+// keystream = SHA256-CTR(master, nonce), master = SHA256(a||b||"oix-obf-v2-flclash").
+final Random _obfRandom = Random.secure();
+
+String _obfV2(String plain) {
+  final data = utf8.encode(plain);
+  final nonce = List<int>.generate(8, (_) => _obfRandom.nextInt(256));
+  final ks = _obfKeystream(nonce, data.length);
+  final out = List<int>.generate(data.length, (i) => data[i] ^ ks[i]);
+  return 'v2:${base64.encode(<int>[...nonce, ...out])}';
+}
+
+List<int> _obfMaster() {
+  const a = [0x5a, 0x1c, 0xe7, 0x93, 0x2f, 0xb8, 0x04, 0xd6, 0x69, 0xa1, 0x3e, 0xcf, 0x72, 0x8d, 0x15, 0xba];
+  const b = [0xc4, 0x37, 0x9e, 0x08, 0x51, 0xed, 0x2a, 0x7f, 0xd3, 0x60, 0x1b, 0x86, 0xf9, 0x42, 0xad, 0x0e];
+  return sha256.convert(<int>[...a, ...b, ...utf8.encode('oix-obf-v2-flclash')]).bytes;
+}
+
+List<int> _obfKeystream(List<int> nonce, int count) {
+  final master = _obfMaster();
+  final out = <int>[];
+  var counter = 0;
+  while (out.length < count) {
+    out.addAll(sha256.convert(<int>[
+      ...master,
+      ...nonce,
+      (counter >> 24) & 0xff,
+      (counter >> 16) & 0xff,
+      (counter >> 8) & 0xff,
+      counter & 0xff,
+    ]).bytes);
+    counter++;
+  }
+  return out.sublist(0, count);
+}
 
 enum Target { windows, linux, android, macos }
 
@@ -273,19 +312,25 @@ class Build {
       } else {
         env['CGO_ENABLED'] = '0';
       }
-      final ldflags = StringBuffer('-w -s');
+      // -w -s strips the symbol table and DWARF; -buildid= removes the build
+      // fingerprint. Combined with -trimpath below (which drops source paths),
+      // this matches the mihomo/Clash.Meta hardening baseline.
+      final ldflags = StringBuffer('-w -s -buildid=');
       final dnsAuthPrivateKey =
           Platform.environment['DNS_AUTH_PRIVATE_KEY']?.trim();
       if (dnsAuthPrivateKey != null && dnsAuthPrivateKey.isNotEmpty) {
-        ldflags.write(' -X main.GlobalDNSAuthPrivateKey=$dnsAuthPrivateKey');
+        ldflags.write(
+          ' -X main.GlobalDNSAuthPrivateKey=${_obfV2(dnsAuthPrivateKey)}',
+        );
       }
       final dnsAuthDomains = Platform.environment['DNS_AUTH_DOMAINS']?.trim();
       if (dnsAuthDomains != null && dnsAuthDomains.isNotEmpty) {
-        ldflags.write(' -X main.GlobalDNSAuthDomains=$dnsAuthDomains');
+        ldflags.write(' -X main.GlobalDNSAuthDomains=${_obfV2(dnsAuthDomains)}');
       }
       final execLines = [
         'go',
         'build',
+        '-trimpath',
         '-ldflags=$ldflags',
         '-tags=$tags',
         if (isLib) '-buildmode=c-shared',
@@ -442,7 +487,14 @@ class BuildCommand extends Command {
 
     return values.entries
         .where((entry) => entry.value != null && entry.value!.isNotEmpty)
-        .map((entry) => '$prefix=${entry.key}=${entry.value}')
+        .map((entry) {
+          // APP_ENV is not a secret; everything else is obfuscated (v2) and
+          // restored at runtime by lib/common/secrets.dart.
+          final value = entry.key == 'APP_ENV'
+              ? entry.value!
+              : _obfV2(entry.value!);
+          return '$prefix=${entry.key}=$value';
+        })
         .join(' ');
   }
 
@@ -512,6 +564,11 @@ class BuildCommand extends Command {
     final flutterBuildArgs = [
       if (Platform.environment['FLUTTER_BUILD_VERBOSE'] == 'true') 'verbose',
       'no-pub',
+      // Obfuscate Dart symbol names in the AOT snapshot; split-debug-info keeps
+      // the mapping so release crashes can still be de-obfuscated (retain the
+      // build/debug-symbols/<platform> dir per release).
+      'obfuscate',
+      'split-debug-info=build/debug-symbols/${target.name}',
     ].join(',');
 
     await Build.exec(
@@ -539,7 +596,7 @@ class BuildCommand extends Command {
     await Build.exec(
       name: name,
       Build.getExecutable(
-        'flutter build apk --no-pub --target-platform $targetPlatform $dartDefines',
+        'flutter build apk --no-pub --obfuscate --split-debug-info=build/debug-symbols/android --target-platform $targetPlatform $dartDefines',
       ),
     );
 

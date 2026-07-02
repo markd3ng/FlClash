@@ -63,6 +63,7 @@ abstract class InitParams with _$InitParams {
     @JsonKey(name: 'home-dir') required String homeDir,
     required int version,
     @Default('') @JsonKey(name: 'profile-key') String profileKey,
+    @Default('') @JsonKey(name: 'config-age-secret-key') String configAgeSecretKey,
   }) = _InitParams;
 
   factory InitParams.fromJson(Map<String, Object?> json) =>

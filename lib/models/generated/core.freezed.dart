@@ -921,7 +921,7 @@ $AccessControlPropsCopyWith<$Res> get accessControlProps {
 /// @nodoc
 mixin _$InitParams {
 
-@JsonKey(name: 'home-dir') String get homeDir; int get version;@JsonKey(name: 'profile-key') String get profileKey;
+@JsonKey(name: 'home-dir') String get homeDir; int get version;@JsonKey(name: 'profile-key') String get profileKey;@JsonKey(name: 'config-age-secret-key') String get configAgeSecretKey;
 /// Create a copy of InitParams
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -934,16 +934,16 @@ $InitParamsCopyWith<InitParams> get copyWith => _$InitParamsCopyWithImpl<InitPar
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is InitParams&&(identical(other.homeDir, homeDir) || other.homeDir == homeDir)&&(identical(other.version, version) || other.version == version)&&(identical(other.profileKey, profileKey) || other.profileKey == profileKey));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is InitParams&&(identical(other.homeDir, homeDir) || other.homeDir == homeDir)&&(identical(other.version, version) || other.version == version)&&(identical(other.profileKey, profileKey) || other.profileKey == profileKey)&&(identical(other.configAgeSecretKey, configAgeSecretKey) || other.configAgeSecretKey == configAgeSecretKey));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,homeDir,version,profileKey);
+int get hashCode => Object.hash(runtimeType,homeDir,version,profileKey,configAgeSecretKey);
 
 @override
 String toString() {
-  return 'InitParams(homeDir: $homeDir, version: $version, profileKey: $profileKey)';
+  return 'InitParams(homeDir: $homeDir, version: $version, profileKey: $profileKey, configAgeSecretKey: $configAgeSecretKey)';
 }
 
 
@@ -954,7 +954,7 @@ abstract mixin class $InitParamsCopyWith<$Res>  {
   factory $InitParamsCopyWith(InitParams value, $Res Function(InitParams) _then) = _$InitParamsCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(name: 'home-dir') String homeDir, int version,@JsonKey(name: 'profile-key') String profileKey
+@JsonKey(name: 'home-dir') String homeDir, int version,@JsonKey(name: 'profile-key') String profileKey,@JsonKey(name: 'config-age-secret-key') String configAgeSecretKey
 });
 
 
@@ -971,11 +971,12 @@ class _$InitParamsCopyWithImpl<$Res>
 
 /// Create a copy of InitParams
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? homeDir = null,Object? version = null,Object? profileKey = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? homeDir = null,Object? version = null,Object? profileKey = null,Object? configAgeSecretKey = null,}) {
   return _then(_self.copyWith(
 homeDir: null == homeDir ? _self.homeDir : homeDir // ignore: cast_nullable_to_non_nullable
 as String,version: null == version ? _self.version : version // ignore: cast_nullable_to_non_nullable
 as int,profileKey: null == profileKey ? _self.profileKey : profileKey // ignore: cast_nullable_to_non_nullable
+as String,configAgeSecretKey: null == configAgeSecretKey ? _self.configAgeSecretKey : configAgeSecretKey // ignore: cast_nullable_to_non_nullable
 as String,
   ));
 }
@@ -1061,10 +1062,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'home-dir')  String homeDir,  int version, @JsonKey(name: 'profile-key')  String profileKey)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'home-dir')  String homeDir,  int version, @JsonKey(name: 'profile-key')  String profileKey, @JsonKey(name: 'config-age-secret-key')  String configAgeSecretKey)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _InitParams() when $default != null:
-return $default(_that.homeDir,_that.version,_that.profileKey);case _:
+return $default(_that.homeDir,_that.version,_that.profileKey,_that.configAgeSecretKey);case _:
   return orElse();
 
 }
@@ -1082,10 +1083,10 @@ return $default(_that.homeDir,_that.version,_that.profileKey);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'home-dir')  String homeDir,  int version, @JsonKey(name: 'profile-key')  String profileKey)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'home-dir')  String homeDir,  int version, @JsonKey(name: 'profile-key')  String profileKey, @JsonKey(name: 'config-age-secret-key')  String configAgeSecretKey)  $default,) {final _that = this;
 switch (_that) {
 case _InitParams():
-return $default(_that.homeDir,_that.version,_that.profileKey);case _:
+return $default(_that.homeDir,_that.version,_that.profileKey,_that.configAgeSecretKey);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1102,10 +1103,10 @@ return $default(_that.homeDir,_that.version,_that.profileKey);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'home-dir')  String homeDir,  int version, @JsonKey(name: 'profile-key')  String profileKey)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'home-dir')  String homeDir,  int version, @JsonKey(name: 'profile-key')  String profileKey, @JsonKey(name: 'config-age-secret-key')  String configAgeSecretKey)?  $default,) {final _that = this;
 switch (_that) {
 case _InitParams() when $default != null:
-return $default(_that.homeDir,_that.version,_that.profileKey);case _:
+return $default(_that.homeDir,_that.version,_that.profileKey,_that.configAgeSecretKey);case _:
   return null;
 
 }
@@ -1117,12 +1118,13 @@ return $default(_that.homeDir,_that.version,_that.profileKey);case _:
 @JsonSerializable()
 
 class _InitParams implements InitParams {
-  const _InitParams({@JsonKey(name: 'home-dir') required this.homeDir, required this.version, @JsonKey(name: 'profile-key') this.profileKey = ''});
+  const _InitParams({@JsonKey(name: 'home-dir') required this.homeDir, required this.version, @JsonKey(name: 'profile-key') this.profileKey = '', @JsonKey(name: 'config-age-secret-key') this.configAgeSecretKey = ''});
   factory _InitParams.fromJson(Map<String, dynamic> json) => _$InitParamsFromJson(json);
 
 @override@JsonKey(name: 'home-dir') final  String homeDir;
 @override final  int version;
 @override@JsonKey(name: 'profile-key') final  String profileKey;
+@override@JsonKey(name: 'config-age-secret-key') final  String configAgeSecretKey;
 
 /// Create a copy of InitParams
 /// with the given fields replaced by the non-null parameter values.
@@ -1137,16 +1139,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _InitParams&&(identical(other.homeDir, homeDir) || other.homeDir == homeDir)&&(identical(other.version, version) || other.version == version)&&(identical(other.profileKey, profileKey) || other.profileKey == profileKey));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _InitParams&&(identical(other.homeDir, homeDir) || other.homeDir == homeDir)&&(identical(other.version, version) || other.version == version)&&(identical(other.profileKey, profileKey) || other.profileKey == profileKey)&&(identical(other.configAgeSecretKey, configAgeSecretKey) || other.configAgeSecretKey == configAgeSecretKey));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,homeDir,version,profileKey);
+int get hashCode => Object.hash(runtimeType,homeDir,version,profileKey,configAgeSecretKey);
 
 @override
 String toString() {
-  return 'InitParams(homeDir: $homeDir, version: $version, profileKey: $profileKey)';
+  return 'InitParams(homeDir: $homeDir, version: $version, profileKey: $profileKey, configAgeSecretKey: $configAgeSecretKey)';
 }
 
 
@@ -1157,7 +1159,7 @@ abstract mixin class _$InitParamsCopyWith<$Res> implements $InitParamsCopyWith<$
   factory _$InitParamsCopyWith(_InitParams value, $Res Function(_InitParams) _then) = __$InitParamsCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(name: 'home-dir') String homeDir, int version,@JsonKey(name: 'profile-key') String profileKey
+@JsonKey(name: 'home-dir') String homeDir, int version,@JsonKey(name: 'profile-key') String profileKey,@JsonKey(name: 'config-age-secret-key') String configAgeSecretKey
 });
 
 
@@ -1174,11 +1176,12 @@ class __$InitParamsCopyWithImpl<$Res>
 
 /// Create a copy of InitParams
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? homeDir = null,Object? version = null,Object? profileKey = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? homeDir = null,Object? version = null,Object? profileKey = null,Object? configAgeSecretKey = null,}) {
   return _then(_InitParams(
 homeDir: null == homeDir ? _self.homeDir : homeDir // ignore: cast_nullable_to_non_nullable
 as String,version: null == version ? _self.version : version // ignore: cast_nullable_to_non_nullable
 as int,profileKey: null == profileKey ? _self.profileKey : profileKey // ignore: cast_nullable_to_non_nullable
+as String,configAgeSecretKey: null == configAgeSecretKey ? _self.configAgeSecretKey : configAgeSecretKey // ignore: cast_nullable_to_non_nullable
 as String,
   ));
 }

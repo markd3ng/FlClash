@@ -50,6 +50,9 @@ func handleInitClash(paramsString string) bool {
 	if params.ProfileKey != "" {
 		GlobalProfileKey = params.ProfileKey
 	}
+	if params.ConfigAgeSecretKey != "" {
+		GlobalConfigAgeSecretKey = params.ConfigAgeSecretKey
+	}
 	isInit = true
 	return isInit
 }

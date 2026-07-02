@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
@@ -29,6 +30,118 @@ class AgeCrypto {
     final publicKeyBytes = publicKey.bytes;
     final recipient = _bech32Encode('age', publicKeyBytes);
     return AgeIdentity._(keyPair, publicKeyBytes, recipient);
+  }
+
+  /// Rebuilds a persistent identity from a stored 32-byte X25519 seed, so the
+  /// same recipient/private key survives across launches for at-rest use.
+  static Future<AgeIdentity> identityFromSeed(List<int> seed) async {
+    final keyPair = await _x25519.newKeyPairFromSeed(seed);
+    final publicKey = await keyPair.extractPublicKey();
+    final publicKeyBytes = publicKey.bytes;
+    final recipient = _bech32Encode('age', publicKeyBytes);
+    return AgeIdentity._(keyPair, publicKeyBytes, recipient);
+  }
+
+  /// Encrypts [plaintext] to a single X25519 [recipientPublicKey] (raw 32-byte
+  /// key) and returns an ASCII-armored age file, byte-for-byte compatible with
+  /// the server [AgeEncryptor] and mihomo's component/age. Used for at-rest
+  /// encryption where the client encrypts to its own persistent identity.
+  static Future<Uint8List> encrypt(
+    List<int> plaintext,
+    List<int> recipientPublicKey,
+  ) async {
+    final fileKey = _randomBytes(16);
+
+    final ephemeralKeyPair = await _x25519.newKeyPair();
+    final ephemeralPublic = await ephemeralKeyPair.extractPublicKey();
+    final ephemeralShare = ephemeralPublic.bytes;
+
+    final shared = await _x25519.sharedSecretKey(
+      keyPair: ephemeralKeyPair,
+      remotePublicKey: SimplePublicKey(
+        recipientPublicKey,
+        type: KeyPairType.x25519,
+      ),
+    );
+    final sharedBytes = await shared.extractBytes();
+
+    final salt = Uint8List(ephemeralShare.length + recipientPublicKey.length);
+    salt.setAll(0, ephemeralShare);
+    salt.setAll(ephemeralShare.length, recipientPublicKey);
+
+    final wrapKey = await _hkdf.deriveKey(
+      secretKey: SecretKey(sharedBytes),
+      nonce: salt,
+      info: utf8.encode(_x25519Info),
+    );
+    final wrapKeyBytes = await wrapKey.extractBytes();
+
+    final wrappedBox = await _aead.encrypt(
+      fileKey,
+      secretKey: SecretKey(wrapKeyBytes),
+      nonce: Uint8List(12),
+    );
+    final wrappedFileKey = <int>[
+      ...wrappedBox.cipherText,
+      ...wrappedBox.mac.bytes,
+    ];
+
+    final headerWithoutMac =
+        'age-encryption.org/v1\n'
+        '-> X25519 ${_b64RawEncode(ephemeralShare)}\n'
+        '${_wrapBase64(wrappedFileKey)}'
+        '---';
+
+    final macKey = await _hkdf.deriveKey(
+      secretKey: SecretKey(fileKey),
+      nonce: Uint8List(32),
+      info: utf8.encode('header'),
+    );
+    final macKeyBytes = await macKey.extractBytes();
+    final mac = await Hmac.sha256().calculateMac(
+      utf8.encode(headerWithoutMac),
+      secretKey: SecretKey(macKeyBytes),
+    );
+    final header = '$headerWithoutMac ${_b64RawEncode(mac.bytes)}\n';
+
+    final payload = await _encryptPayload(plaintext, fileKey);
+    final binary = <int>[...utf8.encode(header), ...payload];
+    return _armorEncode(binary);
+  }
+
+  static Future<Uint8List> _encryptPayload(
+    List<int> plaintext,
+    List<int> fileKey,
+  ) async {
+    final nonce = _randomBytes(16);
+    final payloadKey = await _hkdf.deriveKey(
+      secretKey: SecretKey(fileKey),
+      nonce: nonce,
+      info: utf8.encode(_payloadInfo),
+    );
+    final secretKey = SecretKey(await payloadKey.extractBytes());
+
+    final output = BytesBuilder(copy: false);
+    output.add(nonce);
+    final total = plaintext.length;
+    final chunkCount = total == 0 ? 1 : ((total + _chunkSize - 1) ~/ _chunkSize);
+    for (var index = 0; index < chunkCount; index++) {
+      final start = index * _chunkSize;
+      var end = start + _chunkSize;
+      if (end > total) {
+        end = total;
+      }
+      final isLast = index == chunkCount - 1;
+      final chunk = plaintext.sublist(start, end);
+      final box = await _aead.encrypt(
+        chunk,
+        secretKey: secretKey,
+        nonce: _streamNonce(index, isLast),
+      );
+      output.add(box.cipherText);
+      output.add(box.mac.bytes);
+    }
+    return output.toBytes();
   }
 
   static bool isArmored(List<int> data) {
@@ -239,6 +352,50 @@ class AgeCrypto {
   static Uint8List _b64RawDecode(String value) {
     final padding = (4 - value.length % 4) % 4;
     return Uint8List.fromList(base64.decode(value + ('=' * padding)));
+  }
+
+  static String _b64RawEncode(List<int> data) {
+    return base64.encode(data).replaceAll('=', '');
+  }
+
+  static String _wrapBase64(List<int> data) {
+    final encoded = _b64RawEncode(data);
+    final buffer = StringBuffer();
+    for (var i = 0; i < encoded.length; i += 64) {
+      var end = i + 64;
+      if (end > encoded.length) {
+        end = encoded.length;
+      }
+      buffer.write(encoded.substring(i, end));
+      buffer.write('\n');
+    }
+    return buffer.toString();
+  }
+
+  static Uint8List _armorEncode(List<int> binary) {
+    final encoded = base64.encode(binary);
+    final buffer = StringBuffer()
+      ..write(_armorBegin)
+      ..write('\n');
+    for (var i = 0; i < encoded.length; i += 64) {
+      var end = i + 64;
+      if (end > encoded.length) {
+        end = encoded.length;
+      }
+      buffer.write(encoded.substring(i, end));
+      buffer.write('\n');
+    }
+    buffer
+      ..write(_armorEnd)
+      ..write('\n');
+    return Uint8List.fromList(utf8.encode(buffer.toString()));
+  }
+
+  static Uint8List _randomBytes(int length) {
+    final random = Random.secure();
+    return Uint8List.fromList(
+      List<int>.generate(length, (_) => random.nextInt(256)),
+    );
   }
 
   static String _bech32Encode(String hrp, List<int> data) {

@@ -110,6 +110,7 @@ _InitParams _$InitParamsFromJson(Map<String, dynamic> json) => _InitParams(
   homeDir: json['home-dir'] as String,
   version: (json['version'] as num).toInt(),
   profileKey: json['profile-key'] as String? ?? '',
+  configAgeSecretKey: json['config-age-secret-key'] as String? ?? '',
 );
 
 Map<String, dynamic> _$InitParamsToJson(_InitParams instance) =>
@@ -117,6 +118,7 @@ Map<String, dynamic> _$InitParamsToJson(_InitParams instance) =>
       'home-dir': instance.homeDir,
       'version': instance.version,
       'profile-key': instance.profileKey,
+      'config-age-secret-key': instance.configAgeSecretKey,
     };
 
 _ChangeProxyParams _$ChangeProxyParamsFromJson(Map<String, dynamic> json) =>

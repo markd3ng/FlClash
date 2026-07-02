@@ -1,13 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/core/controller.dart';
 import 'package:fl_clash/enum/enum.dart';
-import 'package:crypto/crypto.dart';
-import 'package:cryptography/cryptography.dart';
+import 'package:fl_clash/services/age_crypto.dart';
+import 'package:fl_clash/services/config_key_store.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import 'clash_config.dart';
@@ -24,9 +23,7 @@ FetchManagedConfigCallback? _fetchManagedConfigCallback;
 /// token bootstrap to finish before issuing a managed-config fetch.
 Future<void> Function()? _ensureCloudReady;
 final Map<int, Uint8List> oixCloudConfigCache = {};
-final AesGcm _profileCipher = AesGcm.with256bits();
 
-const _flclashEncryptedMagic = 'FLEN';
 const _flclashEncryptedVersion = 0x02;
 
 bool _isUnauthorizedError(Object error) {
@@ -35,6 +32,11 @@ bool _isUnauthorizedError(Object error) {
 }
 
 bool isEncryptedProfileBytes(Uint8List bytes) {
+  if (AgeCrypto.isArmored(bytes)) {
+    return true;
+  }
+  // Legacy FLEN (AES-GCM) format: still recognised so older snapshots are not
+  // re-encrypted; new snapshots are written as age (see encryptProfileBytes).
   return bytes.length >= 5 &&
       bytes[0] == 0x46 &&
       bytes[1] == 0x4C &&
@@ -43,34 +45,12 @@ bool isEncryptedProfileBytes(Uint8List bytes) {
       bytes[4] == _flclashEncryptedVersion;
 }
 
-Uint8List _randomBytes(int length) {
-  final random = Random.secure();
-  return Uint8List.fromList(
-    List<int>.generate(length, (_) => random.nextInt(256)),
-  );
-}
-
 Future<Uint8List> encryptProfileBytes(Uint8List bytes) async {
-  final profileKey = Secrets.profileKey.trim();
-  if (profileKey.isEmpty) {
-    throw Exception('PROFILE_KEY is not configured');
-  }
-
-  final secretKey = SecretKey(sha256.convert(utf8.encode(profileKey)).bytes);
-  final nonce = _randomBytes(12);
-  final secretBox = await _profileCipher.encrypt(
-    bytes,
-    secretKey: secretKey,
-    nonce: nonce,
-  );
-
-  return Uint8List.fromList([
-    ...ascii.encode(_flclashEncryptedMagic),
-    _flclashEncryptedVersion,
-    ...nonce,
-    ...secretBox.cipherText,
-    ...secretBox.mac.bytes,
-  ]);
+  // At-rest encryption uses a per-device age identity (secret in platform
+  // secure storage, injected into the core via InitParams) instead of the
+  // shared compile-time profile key.
+  final identity = await ConfigKeyStore.identity();
+  return AgeCrypto.encrypt(bytes, identity.publicKeyBytes);
 }
 
 Future<Uint8List> ensureEncryptedProfileBytes(Uint8List bytes) async {

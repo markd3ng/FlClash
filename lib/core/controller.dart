@@ -7,6 +7,7 @@ import 'package:fl_clash/core/core.dart';
 import 'package:fl_clash/core/interface.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
+import 'package:fl_clash/services/config_key_store.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart';
 
@@ -60,11 +61,13 @@ class CoreController {
   Future<bool> init(int version) async {
     await initGeo();
     final homeDirPath = await appPath.homeDirPath;
+    final configAgeSecretKey = await ConfigKeyStore.seedBase64();
     return await _interface.init(
       InitParams(
         homeDir: homeDirPath,
         version: version,
         profileKey: Secrets.profileKey,
+        configAgeSecretKey: configAgeSecretKey,
       ),
     );
   }

@@ -13,9 +13,10 @@ import (
 )
 
 type InitParams struct {
-	HomeDir    string `json:"home-dir"`
-	Version    int    `json:"version"`
-	ProfileKey string `json:"profile-key"`
+	HomeDir            string `json:"home-dir"`
+	Version            int    `json:"version"`
+	ProfileKey         string `json:"profile-key"`
+	ConfigAgeSecretKey string `json:"config-age-secret-key"`
 }
 
 type SetupParams struct {

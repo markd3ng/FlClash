@@ -160,7 +160,14 @@ func isFlClashEncrypted(data []byte) bool {
 	return len(data) >= 5 && string(data[:4]) == "FLEN" && data[4] == 0x02
 }
 
+func isEncryptedConfig(data []byte) bool {
+	return isAgeArmored(data) || isFlClashEncrypted(data)
+}
+
 func decryptFlClashIfNeeded(data []byte) ([]byte, error) {
+	if isAgeArmored(data) {
+		return DecryptFlClashAge(data)
+	}
 	if !isFlClashEncrypted(data) {
 		return data, nil
 	}
@@ -169,7 +176,7 @@ func decryptFlClashIfNeeded(data []byte) ([]byte, error) {
 
 func parseConfigPath(path string) (*config.Config, bool, error) {
 	data, err := os.ReadFile(path)
-	if err != nil || !isFlClashEncrypted(data) {
+	if err != nil || !isEncryptedConfig(data) {
 		setDNSAuth(nil)
 		cfg, err := executor.ParseWithPath(path)
 		return cfg, false, err

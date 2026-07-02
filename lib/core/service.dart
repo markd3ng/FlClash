@@ -8,6 +8,7 @@ import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/core.dart';
 
 import 'interface.dart';
+import 'ipc_cipher.dart';
 
 class CoreService extends CoreHandlerInterface {
   static const _coreStartTimeout = Duration(seconds: 10);
@@ -25,6 +26,11 @@ class CoreService extends CoreHandlerInterface {
   Socket? _socket;
 
   Process? _process;
+
+  // Per-session key for the local core IPC socket. Handed to the core
+  // out-of-band via the FLCLASH_IPC_KEY env var so it never crosses the socket.
+  final List<int> _ipcKey = IpcCipher.generateKey();
+  late final IpcCipher _ipc = IpcCipher(_ipcKey);
 
   factory CoreService() {
     _instance ??= CoreService._internal();
@@ -83,7 +89,11 @@ class CoreService extends CoreHandlerInterface {
         .transform(utf8.decoder)
         .transform(const LineSplitter())
         .listen((data) async {
-          final dataJson = await data.trim().commonToJSON<dynamic>();
+          final plain = await _ipc.decodeFrame(data);
+          if (plain == null) {
+            return;
+          }
+          final dataJson = await plain.commonToJSON<dynamic>();
           handleResult(ActionResult.fromJson(dataJson));
         })
         .onDone(() {
@@ -125,14 +135,21 @@ class CoreService extends CoreHandlerInterface {
         ? '${serverSocket.port}'
         : serverSocket.address.address;
     if (system.isWindows && await system.checkIsAdmin()) {
-      final isSuccess = await request.startCoreByHelper(arg);
+      final isSuccess = await request.startCoreByHelper(
+        arg,
+        base64.encode(_ipcKey),
+      );
       if (isSuccess) {
         await _waitForConnection();
         return;
       }
     }
     try {
-      final process = await Process.start(appPath.corePath, [arg]);
+      final process = await Process.start(
+        appPath.corePath,
+        [arg],
+        environment: {'FLCLASH_IPC_KEY': base64.encode(_ipcKey)},
+      );
       _process = process;
       unawaited(
         process.exitCode.then((code) {
@@ -188,7 +205,7 @@ class CoreService extends CoreHandlerInterface {
 
   Future<void> sendMessage(String message) async {
     final socket = await _socketCompleter.future;
-    socket.writeln(message);
+    socket.writeln(await _ipc.encodeFrame(message));
   }
 
   Future<void> _deleteSocketFile() async {

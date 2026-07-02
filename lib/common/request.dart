@@ -312,13 +312,17 @@ class Request {
     }
   }
 
-  Future<bool> startCoreByHelper(String arg) async {
+  Future<bool> startCoreByHelper(String arg, String ipcKey) async {
     if (!await pingHelper()) return false;
     try {
       final response = await dio
           .post(
             'http://$localhost:$helperPort/start',
-            data: json.encode({'path': appPath.corePath, 'arg': arg}),
+            data: json.encode({
+              'path': appPath.corePath,
+              'arg': arg,
+              'key': ipcKey,
+            }),
             options: Options(responseType: ResponseType.plain),
           )
           .timeout(const Duration(milliseconds: 2000));

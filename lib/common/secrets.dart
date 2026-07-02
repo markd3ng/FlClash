@@ -1,17 +1,30 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
+import 'package:crypto/crypto.dart';
+
 class Secrets {
   const Secrets._();
 
-  static const String profileKey = String.fromEnvironment('PROFILE_KEY');
-
-  static const String baseDomain = String.fromEnvironment('BASE_DOMAIN');
-  static const String spareDomain = String.fromEnvironment('SPARE_DOMAIN');
-  static const String apiDomain = String.fromEnvironment('API_DOMAIN');
-  static const String spareApiDomain = String.fromEnvironment(
-    'SPARE_API_DOMAIN',
+  static final String profileKey = _deob(
+    const String.fromEnvironment('PROFILE_KEY'),
   );
 
-  static const String flClashAppSecret = String.fromEnvironment(
-    'FLCLASH_APP_SECRET',
+  static final String baseDomain = _deob(
+    const String.fromEnvironment('BASE_DOMAIN'),
+  );
+  static final String spareDomain = _deob(
+    const String.fromEnvironment('SPARE_DOMAIN'),
+  );
+  static final String apiDomain = _deob(
+    const String.fromEnvironment('API_DOMAIN'),
+  );
+  static final String spareApiDomain = _deob(
+    const String.fromEnvironment('SPARE_API_DOMAIN'),
+  );
+
+  static final String flClashAppSecret = _deob(
+    const String.fromEnvironment('FLCLASH_APP_SECRET'),
   );
 
   static String get primarySiteDomain => baseDomain.trim();
@@ -38,5 +51,57 @@ class Secrets {
       throw StateError('$name must be configured');
     }
     return domain;
+  }
+
+  // Compile-time secrets are injected obfuscated (v2) by setup.dart for release
+  // builds and restored here at runtime; plain values (dev --dart-define-from-file)
+  // pass through unchanged. Keystream = SHA256-CTR(master, nonce) with a
+  // runtime-derived master, matching core/secrets.go and setup.dart.
+  static const String _v2Prefix = 'v2:';
+
+  static String _deob(String value) {
+    if (!value.startsWith(_v2Prefix)) {
+      return value;
+    }
+    final raw = base64.decode(value.substring(_v2Prefix.length));
+    if (raw.length < 8) {
+      return value;
+    }
+    final nonce = raw.sublist(0, 8);
+    final cipher = raw.sublist(8);
+    final ks = _keystream(nonce, cipher.length);
+    final out = Uint8List(cipher.length);
+    for (var i = 0; i < cipher.length; i++) {
+      out[i] = cipher[i] ^ ks[i];
+    }
+    return utf8.decode(out);
+  }
+
+  static Uint8List _obfMaster() {
+    const a = [0x5a, 0x1c, 0xe7, 0x93, 0x2f, 0xb8, 0x04, 0xd6, 0x69, 0xa1, 0x3e, 0xcf, 0x72, 0x8d, 0x15, 0xba];
+    const b = [0xc4, 0x37, 0x9e, 0x08, 0x51, 0xed, 0x2a, 0x7f, 0xd3, 0x60, 0x1b, 0x86, 0xf9, 0x42, 0xad, 0x0e];
+    return Uint8List.fromList(
+      sha256.convert(<int>[...a, ...b, ...utf8.encode('oix-obf-v2-flclash')]).bytes,
+    );
+  }
+
+  static Uint8List _keystream(List<int> nonce, int count) {
+    final master = _obfMaster();
+    final out = <int>[];
+    var counter = 0;
+    while (out.length < count) {
+      out.addAll(
+        sha256.convert(<int>[
+          ...master,
+          ...nonce,
+          (counter >> 24) & 0xff,
+          (counter >> 16) & 0xff,
+          (counter >> 8) & 0xff,
+          counter & 0xff,
+        ]).bytes,
+      );
+      counter++;
+    }
+    return Uint8List.fromList(out.sublist(0, count));
   }
 }

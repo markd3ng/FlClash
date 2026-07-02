@@ -22,3 +22,6 @@ panic = "abort"
 codegen-units = 1
 lto = true
 opt-level = "s"
+# Remove the symbol table from the release binary (raises the RE bar; purely
+# strips symbols, no behavior change).
+strip = true
