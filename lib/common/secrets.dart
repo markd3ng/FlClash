@@ -63,7 +63,11 @@ class Secrets {
     if (!value.startsWith(_v2Prefix)) {
       return value;
     }
-    final raw = base64.decode(value.substring(_v2Prefix.length));
+    // normalize restores '=' padding in case it was stripped by argument
+    // parsing along the build pipeline.
+    final raw = base64.decode(
+      base64.normalize(value.substring(_v2Prefix.length)),
+    );
     if (raw.length < 8) {
       return value;
     }
