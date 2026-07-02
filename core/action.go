@@ -3,9 +3,12 @@ package main
 import (
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
+	"runtime"
 	"unsafe"
 
 	"github.com/metacubex/mihomo/config"
+	"github.com/metacubex/mihomo/log"
 )
 
 type Action struct {
@@ -52,6 +55,14 @@ func decodeAndDecrypt(base64Str string) ([]byte, error) {
 }
 
 func handleAction(action *Action, result ActionResult) {
+	defer func() {
+		if r := recover(); r != nil {
+			buf := make([]byte, 4096)
+			n := runtime.Stack(buf, false)
+			log.Errorln("panic in handleAction(%s): %v\n%s", action.Method, r, buf[:n])
+			result.error(fmt.Sprintf("internal panic: %v", r))
+		}
+	}()
 	switch action.Method {
 	case initClashMethod:
 		paramsString := action.Data.(string)

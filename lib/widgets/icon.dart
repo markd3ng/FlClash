@@ -80,7 +80,15 @@ class _ImageCacheWidgetState extends State<ImageCacheWidget> {
     if (!mounted) {
       return;
     }
-    _imageNotifier.value = (await _cacheMange.downloadFile(src, key: src)).file;
+    try {
+      final file = (await _cacheMange.downloadFile(src, key: src)).file;
+      if (!mounted) {
+        return;
+      }
+      _imageNotifier.value = file;
+    } catch (_) {
+      // Keep the stale cached image (or default icon) when refresh fails.
+    }
   }
 
   @override
