@@ -351,6 +351,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "forceRestartCoreTip": MessageLookupByLibrary.simpleMessage(
       "コアを強制再起動してもよろしいですか？",
     ),
+    "forgotPassword": MessageLookupByLibrary.simpleMessage("パスワードをお忘れですか？"),
     "fourColumns": MessageLookupByLibrary.simpleMessage("4列"),
     "fruitSaladScheme": MessageLookupByLibrary.simpleMessage("フルーツサラダ"),
     "general": MessageLookupByLibrary.simpleMessage("一般"),
@@ -490,6 +491,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "networkSpeed": MessageLookupByLibrary.simpleMessage("ネットワーク速度"),
     "networkType": MessageLookupByLibrary.simpleMessage("ネットワーク種別"),
     "neutralScheme": MessageLookupByLibrary.simpleMessage("ニュートラル"),
+    "newPasswordLabel": MessageLookupByLibrary.simpleMessage("新しいパスワード"),
     "nicknameHint": MessageLookupByLibrary.simpleMessage("英数字、最大12文字"),
     "nicknameLabel": MessageLookupByLibrary.simpleMessage("ニックネーム"),
     "nicknameValidation": MessageLookupByLibrary.simpleMessage(
@@ -723,10 +725,21 @@ class MessageLookup extends MessageLookupByLibrary {
     "requestsDesc": MessageLookupByLibrary.simpleMessage("最近のリクエスト記録を表示"),
     "resendCodeIn": m20,
     "reset": MessageLookupByLibrary.simpleMessage("リセット"),
+    "resetEmailSent": MessageLookupByLibrary.simpleMessage(
+      "リセットメールを送信しました。メール内のリセットリンクまたはコードを下に貼り付けてください。",
+    ),
     "resetPageChangesTip": MessageLookupByLibrary.simpleMessage(
       "現在のページに変更があります。リセットしてもよろしいですか？",
     ),
+    "resetPasswordSuccess": MessageLookupByLibrary.simpleMessage(
+      "パスワードをリセットしました。新しいパスワードでログインしてください",
+    ),
+    "resetPasswordTitle": MessageLookupByLibrary.simpleMessage("パスワードのリセット"),
     "resetTip": MessageLookupByLibrary.simpleMessage("リセットを確定"),
+    "resetTokenLabel": MessageLookupByLibrary.simpleMessage("リセットリンクまたはコード"),
+    "resetTokenValidation": MessageLookupByLibrary.simpleMessage(
+      "リセットリンクまたはコードを入力してください",
+    ),
     "resources": MessageLookupByLibrary.simpleMessage("リソース"),
     "resourcesDesc": MessageLookupByLibrary.simpleMessage("外部リソース関連情報"),
     "respectRules": MessageLookupByLibrary.simpleMessage("ルール尊重"),
@@ -781,6 +794,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "selected": MessageLookupByLibrary.simpleMessage("選択済み"),
     "selectedCountTitle": m21,
     "sendCode": MessageLookupByLibrary.simpleMessage("コードを送信"),
+    "sendResetEmail": MessageLookupByLibrary.simpleMessage("リセットメールを送信"),
     "serviceCheckFailed": MessageLookupByLibrary.simpleMessage("サービスチェック失敗"),
     "settings": MessageLookupByLibrary.simpleMessage("設定"),
     "show": MessageLookupByLibrary.simpleMessage("表示"),

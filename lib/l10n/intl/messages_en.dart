@@ -456,6 +456,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "forceRestartCoreTip": MessageLookupByLibrary.simpleMessage(
       "Are you sure you want to force restart the core?",
     ),
+    "forgotPassword": MessageLookupByLibrary.simpleMessage("Forgot password?"),
     "fourColumns": MessageLookupByLibrary.simpleMessage("Four columns"),
     "fruitSaladScheme": MessageLookupByLibrary.simpleMessage("FruitSalad"),
     "general": MessageLookupByLibrary.simpleMessage("General"),
@@ -641,6 +642,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "networkSpeed": MessageLookupByLibrary.simpleMessage("Network speed"),
     "networkType": MessageLookupByLibrary.simpleMessage("Network type"),
     "neutralScheme": MessageLookupByLibrary.simpleMessage("Neutral"),
+    "newPasswordLabel": MessageLookupByLibrary.simpleMessage("New password"),
     "nicknameHint": MessageLookupByLibrary.simpleMessage(
       "Letters and numbers, up to 12 characters",
     ),
@@ -930,10 +932,25 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "resendCodeIn": m20,
     "reset": MessageLookupByLibrary.simpleMessage("Reset"),
+    "resetEmailSent": MessageLookupByLibrary.simpleMessage(
+      "Reset email sent. Paste the reset link or code from the email below.",
+    ),
     "resetPageChangesTip": MessageLookupByLibrary.simpleMessage(
       "The current page has changes. Are you sure you want to reset?",
     ),
+    "resetPasswordSuccess": MessageLookupByLibrary.simpleMessage(
+      "Password has been reset, please sign in with your new password",
+    ),
+    "resetPasswordTitle": MessageLookupByLibrary.simpleMessage(
+      "Reset password",
+    ),
     "resetTip": MessageLookupByLibrary.simpleMessage("Make sure to reset"),
+    "resetTokenLabel": MessageLookupByLibrary.simpleMessage(
+      "Reset link or code",
+    ),
+    "resetTokenValidation": MessageLookupByLibrary.simpleMessage(
+      "Please enter the reset link or code",
+    ),
     "resources": MessageLookupByLibrary.simpleMessage("Resources"),
     "resourcesDesc": MessageLookupByLibrary.simpleMessage(
       "External resource related info",
@@ -1015,6 +1032,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "selected": MessageLookupByLibrary.simpleMessage("Selected"),
     "selectedCountTitle": m21,
     "sendCode": MessageLookupByLibrary.simpleMessage("Send Code"),
+    "sendResetEmail": MessageLookupByLibrary.simpleMessage("Send reset email"),
     "serviceCheckFailed": MessageLookupByLibrary.simpleMessage(
       "Service Check Failed",
     ),

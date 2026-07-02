@@ -210,8 +210,30 @@ class _CloudLoginPageState extends ConsumerState<CloudLoginPage> {
               ? AppLocalizations.current.passwordValidation
               : null,
         ),
+        const SizedBox(height: 4),
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton(
+            onPressed: isLoading ? null : _showForgotPasswordDialog,
+            child: Text(AppLocalizations.current.forgotPassword),
+          ),
+        ),
       ],
     );
+  }
+
+  Future<void> _showForgotPasswordDialog() async {
+    final email = await showDialog<String>(
+      context: context,
+      builder: (_) =>
+          _ForgotPasswordDialog(initialEmail: _emailController.text.trim()),
+    );
+    if (email == null || !mounted) {
+      return;
+    }
+    _emailController.text = email;
+    _passwordController.clear();
+    globalState.showNotifier(AppLocalizations.current.resetPasswordSuccess);
   }
 
   Widget _buildTokenForm(bool isLoading) {
@@ -239,3 +261,173 @@ class _CloudLoginPageState extends ConsumerState<CloudLoginPage> {
 }
 
 enum _LoginMode { emailPassword, token }
+
+class _ForgotPasswordDialog extends StatefulWidget {
+  final String initialEmail;
+
+  const _ForgotPasswordDialog({required this.initialEmail});
+
+  @override
+  State<_ForgotPasswordDialog> createState() => _ForgotPasswordDialogState();
+}
+
+class _ForgotPasswordDialogState extends State<_ForgotPasswordDialog> {
+  final _formKey = GlobalKey<FormState>();
+  late final _emailController = TextEditingController(
+    text: widget.initialEmail,
+  );
+  final _tokenController = TextEditingController();
+  final _passwordController = TextEditingController();
+
+  var _emailSent = false;
+  var _obscurePassword = true;
+  var _isSubmitting = false;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _tokenController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  String _extractToken(String value) {
+    final match = RegExp(
+      r'/password/token/([A-Za-z0-9]+)',
+    ).firstMatch(value);
+    return match?.group(1) ?? value.trim();
+  }
+
+  Future<void> _handleSubmit() async {
+    if (_isSubmitting || !_formKey.currentState!.validate()) {
+      return;
+    }
+    setState(() => _isSubmitting = true);
+    try {
+      if (!_emailSent) {
+        await CloudApiService().sendPasswordReset(_emailController.text.trim());
+        if (mounted) {
+          setState(() => _emailSent = true);
+        }
+      } else {
+        await CloudApiService().resetPasswordWithToken(
+          token: _extractToken(_tokenController.text),
+          password: _passwordController.text,
+        );
+        if (mounted) {
+          Navigator.of(context).pop(_emailController.text.trim());
+        }
+      }
+    } catch (error) {
+      globalState.showMessage(
+        title: AppLocalizations.current.resetPasswordTitle,
+        message: TextSpan(text: CloudApiException.clean(error)),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      } else {
+        _isSubmitting = false;
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(AppLocalizations.current.resetPasswordTitle),
+      content: SizedBox(
+        width: 400,
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextFormField(
+                controller: _emailController,
+                enabled: !_isSubmitting && !_emailSent,
+                decoration: InputDecoration(
+                  labelText: AppLocalizations.current.emailLabel,
+                  prefixIcon: const Icon(Icons.mail_outline),
+                  border: const OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.emailAddress,
+                autofocus: true,
+                validator: (v) => v?.isEmpty == true
+                    ? AppLocalizations.current.emailValidation
+                    : null,
+              ),
+              if (_emailSent) ...[
+                const SizedBox(height: 12),
+                Text(
+                  AppLocalizations.current.resetEmailSent,
+                  style: context.textTheme.bodySmall,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _tokenController,
+                  enabled: !_isSubmitting,
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.current.resetTokenLabel,
+                    prefixIcon: const Icon(Icons.key),
+                    border: const OutlineInputBorder(),
+                  ),
+                  validator: (v) => v?.trim().isEmpty == true
+                      ? AppLocalizations.current.resetTokenValidation
+                      : null,
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _passwordController,
+                  enabled: !_isSubmitting,
+                  obscureText: _obscurePassword,
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.current.newPasswordLabel,
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    border: const OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                      ),
+                      onPressed: _isSubmitting
+                          ? null
+                          : () => setState(
+                              () => _obscurePassword = !_obscurePassword,
+                            ),
+                    ),
+                  ),
+                  validator: (v) => v?.isEmpty == true
+                      ? AppLocalizations.current.passwordValidation
+                      : null,
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
+          child: Text(AppLocalizations.current.cancel),
+        ),
+        FilledButton(
+          onPressed: _isSubmitting ? null : _handleSubmit,
+          child: _isSubmitting
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Text(
+                  _emailSent
+                      ? AppLocalizations.current.resetPasswordTitle
+                      : AppLocalizations.current.sendResetEmail,
+                ),
+        ),
+      ],
+    );
+  }
+}

@@ -4429,6 +4429,86 @@ class AppLocalizations {
     return Intl.message('Password', name: 'passwordLabel', desc: '', args: []);
   }
 
+  /// `Forgot password?`
+  String get forgotPassword {
+    return Intl.message(
+      'Forgot password?',
+      name: 'forgotPassword',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Reset password`
+  String get resetPasswordTitle {
+    return Intl.message(
+      'Reset password',
+      name: 'resetPasswordTitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Send reset email`
+  String get sendResetEmail {
+    return Intl.message(
+      'Send reset email',
+      name: 'sendResetEmail',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Reset email sent. Paste the reset link or code from the email below.`
+  String get resetEmailSent {
+    return Intl.message(
+      'Reset email sent. Paste the reset link or code from the email below.',
+      name: 'resetEmailSent',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Reset link or code`
+  String get resetTokenLabel {
+    return Intl.message(
+      'Reset link or code',
+      name: 'resetTokenLabel',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Please enter the reset link or code`
+  String get resetTokenValidation {
+    return Intl.message(
+      'Please enter the reset link or code',
+      name: 'resetTokenValidation',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `New password`
+  String get newPasswordLabel {
+    return Intl.message(
+      'New password',
+      name: 'newPasswordLabel',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Password has been reset, please sign in with your new password`
+  String get resetPasswordSuccess {
+    return Intl.message(
+      'Password has been reset, please sign in with your new password',
+      name: 'resetPasswordSuccess',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Enter password`
   String get passwordHint {
     return Intl.message(

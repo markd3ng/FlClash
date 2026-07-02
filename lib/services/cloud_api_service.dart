@@ -472,6 +472,40 @@ class CloudApiService {
     }
   }
 
+  Future<void> sendPasswordReset(String email) async {
+    if (email.isEmpty || !RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(email)) {
+      throw Exception('Invalid email format');
+    }
+    final res = await _client.post(
+      '/password/reset',
+      data: FormData.fromMap({'email': email}),
+      options: Options(extra: {'skipAuth': true}),
+    );
+    final responseDto = CloudApiResponse<dynamic>.fromJson(res.data);
+    if (!responseDto.isSuccess) {
+      throw Exception(responseDto.msg ?? 'Failed to send reset email');
+    }
+  }
+
+  Future<void> resetPasswordWithToken({
+    required String token,
+    required String password,
+  }) async {
+    final res = await _client.post(
+      '/password/token',
+      data: FormData.fromMap({
+        'token': token,
+        'passwd': password,
+        'repasswd': password,
+      }),
+      options: Options(extra: {'skipAuth': true}),
+    );
+    final responseDto = CloudApiResponse<dynamic>.fromJson(res.data);
+    if (!responseDto.isSuccess) {
+      throw Exception(responseDto.msg ?? 'Failed to reset password');
+    }
+  }
+
   Future<
     ({String token, CloudProfile profile, CloudNotification? announcement})
   >

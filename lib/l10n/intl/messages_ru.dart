@@ -481,6 +481,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "forceRestartCoreTip": MessageLookupByLibrary.simpleMessage(
       "Вы уверены, что хотите принудительно перезапустить ядро?",
     ),
+    "forgotPassword": MessageLookupByLibrary.simpleMessage("Забыли пароль?"),
     "fourColumns": MessageLookupByLibrary.simpleMessage("Четыре столбца"),
     "fruitSaladScheme": MessageLookupByLibrary.simpleMessage("Фруктовый микс"),
     "general": MessageLookupByLibrary.simpleMessage("Общие"),
@@ -678,6 +679,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "networkSpeed": MessageLookupByLibrary.simpleMessage("Скорость сети"),
     "networkType": MessageLookupByLibrary.simpleMessage("Тип сети"),
     "neutralScheme": MessageLookupByLibrary.simpleMessage("Нейтральные"),
+    "newPasswordLabel": MessageLookupByLibrary.simpleMessage("Новый пароль"),
     "nicknameHint": MessageLookupByLibrary.simpleMessage(
       "Буквы и цифры, до 12 символов",
     ),
@@ -985,11 +987,24 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "resendCodeIn": m20,
     "reset": MessageLookupByLibrary.simpleMessage("Сброс"),
+    "resetEmailSent": MessageLookupByLibrary.simpleMessage(
+      "Письмо отправлено. Вставьте ссылку или код из письма ниже.",
+    ),
     "resetPageChangesTip": MessageLookupByLibrary.simpleMessage(
       "На текущей странице есть изменения. Вы уверены, что хотите сбросить?",
     ),
+    "resetPasswordSuccess": MessageLookupByLibrary.simpleMessage(
+      "Пароль сброшен, войдите с новым паролем",
+    ),
+    "resetPasswordTitle": MessageLookupByLibrary.simpleMessage("Сброс пароля"),
     "resetTip": MessageLookupByLibrary.simpleMessage(
       "Убедитесь, что хотите сбросить",
+    ),
+    "resetTokenLabel": MessageLookupByLibrary.simpleMessage(
+      "Ссылка или код сброса",
+    ),
+    "resetTokenValidation": MessageLookupByLibrary.simpleMessage(
+      "Введите ссылку или код сброса",
     ),
     "resources": MessageLookupByLibrary.simpleMessage("Ресурсы"),
     "resourcesDesc": MessageLookupByLibrary.simpleMessage(
@@ -1077,6 +1092,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "selected": MessageLookupByLibrary.simpleMessage("Выбрано"),
     "selectedCountTitle": m21,
     "sendCode": MessageLookupByLibrary.simpleMessage("Отправить код"),
+    "sendResetEmail": MessageLookupByLibrary.simpleMessage(
+      "Отправить письмо для сброса",
+    ),
     "serviceCheckFailed": MessageLookupByLibrary.simpleMessage(
       "Проверка сервиса не удалась",
     ),
