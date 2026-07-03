@@ -227,7 +227,7 @@ func quickSetup(callback unsafe.Pointer, initParamsChar *C.char, setupParamsChar
 
 //export setEventListener
 func setEventListener(listener unsafe.Pointer) {
-	if eventListener != nil || listener == nil {
+	if eventListener != nil {
 		releaseObject(eventListener)
 	}
 	eventListener = listener

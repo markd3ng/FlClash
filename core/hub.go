@@ -15,7 +15,6 @@ import (
 	"github.com/metacubex/mihomo/adapter/outboundgroup"
 	"github.com/metacubex/mihomo/adapter/provider"
 	"github.com/metacubex/mihomo/common/observable"
-	"github.com/metacubex/mihomo/common/utils"
 	"github.com/metacubex/mihomo/component/mmdb"
 	"github.com/metacubex/mihomo/component/resolver"
 	"github.com/metacubex/mihomo/component/updater"
@@ -32,9 +31,8 @@ import (
 )
 
 var (
-	isInit            = false
-	externalProviders = map[string]cp.Provider{}
-	logSubscriber     observable.Subscription[log.Event]
+	isInit        = false
+	logSubscriber observable.Subscription[log.Event]
 )
 
 func handleInitClash(paramsString string) bool {
@@ -88,7 +86,7 @@ func handleForceGC() {
 }
 
 func handleShutdown() bool {
-	stopListeners()
+	listener.StopListener()
 	executor.Shutdown()
 	handleForceGC()
 	isInit = false
@@ -192,10 +190,7 @@ func handleChangeProxy(data string, fn func(string string)) {
 		}
 		if proxyName == "" {
 			selector.ForceSet(proxyName)
-		} else {
-			err = selector.Set(proxyName)
-		}
-		if err != nil {
+		} else if err := selector.Set(proxyName); err != nil {
 			fn(err.Error())
 			return
 		}
@@ -204,13 +199,11 @@ func handleChangeProxy(data string, fn func(string string)) {
 	}()
 }
 
-func handleGetTraffic(onlyStatisticsProxy bool) string {
-	up, down := statistic.DefaultManager.NowTraffic(onlyStatisticsProxy)
-	traffic := map[string]int64{
+func marshalTraffic(up, down int64) string {
+	data, err := json.Marshal(map[string]int64{
 		"up":   up,
 		"down": down,
-	}
-	data, err := json.Marshal(traffic)
+	})
 	if err != nil {
 		log.Errorln("Error: %s", err)
 		return ""
@@ -218,18 +211,12 @@ func handleGetTraffic(onlyStatisticsProxy bool) string {
 	return string(data)
 }
 
+func handleGetTraffic(onlyStatisticsProxy bool) string {
+	return marshalTraffic(statistic.DefaultManager.NowTraffic(onlyStatisticsProxy))
+}
+
 func handleGetTotalTraffic(onlyStatisticsProxy bool) string {
-	up, down := statistic.DefaultManager.TotalTraffic(onlyStatisticsProxy)
-	traffic := map[string]int64{
-		"up":   up,
-		"down": down,
-	}
-	data, err := json.Marshal(traffic)
-	if err != nil {
-		log.Errorln("Error: %s", err)
-		return ""
-	}
-	return string(data)
+	return marshalTraffic(statistic.DefaultManager.TotalTraffic(onlyStatisticsProxy))
 }
 
 func handleResetTraffic() {
@@ -244,53 +231,40 @@ func handleAsyncTestDelay(paramsString string, fn func(string)) {
 		}
 		defer delaySem.Release(1)
 		var params = &TestDelayParams{}
-		err := json.Unmarshal([]byte(paramsString), params)
-		if err != nil {
+		if err := json.Unmarshal([]byte(paramsString), params); err != nil {
 			fn("")
 			return
 		}
-
-		expectedStatus, err := utils.NewUnsignedRanges[uint16]("")
-		if err != nil {
-			fn("")
-			return
-		}
-
-		ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*time.Duration(params.Timeout))
-		defer cancel()
-
-		proxies := tunnel.AllProxies()
-		proxy := proxies[params.ProxyName]
 
 		delayData := &Delay{
-			Name: params.ProxyName,
+			Name:  params.ProxyName,
+			Value: -1,
 		}
-
-		if proxy == nil {
-			delayData.Value = -1
+		reply := func() {
 			data, _ := json.Marshal(delayData)
 			fn(string(data))
+		}
+
+		proxy := tunnel.AllProxies()[params.ProxyName]
+		if proxy == nil {
+			reply()
 			return
 		}
 
 		testUrl := constant.DefaultTestURL
-
 		if params.TestUrl != "" {
 			testUrl = params.TestUrl
 		}
 		delayData.Url = testUrl
 
-		delay, err := proxy.URLTest(ctx, testUrl, expectedStatus)
-		if err != nil || delay == 0 {
-			delayData.Value = -1
-			data, _ := json.Marshal(delayData)
-			fn(string(data))
-			return
-		}
+		ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*time.Duration(params.Timeout))
+		defer cancel()
 
-		delayData.Value = int32(delay)
-		data, _ := json.Marshal(delayData)
-		fn(string(data))
+		delay, err := proxy.URLTest(ctx, testUrl, nil)
+		if err == nil && delay > 0 {
+			delayData.Value = int32(delay)
+		}
+		reply()
 	}()
 }
 
@@ -309,18 +283,11 @@ func handleGetConnections() string {
 func handleCloseConnections() bool {
 	runLock.Lock()
 	defer runLock.Unlock()
-	closeConnections()
-	return true
-}
-
-func closeConnections() {
 	statistic.DefaultManager.Range(func(c statistic.Tracker) bool {
-		err := c.Close()
-		if err != nil {
-			return false
-		}
+		_ = c.Close()
 		return true
 	})
+	return true
 }
 
 func handleResetConnections() bool {
@@ -344,9 +311,8 @@ func handleCloseConnection(connectionId string) bool {
 func handleGetExternalProviders() string {
 	runLock.Lock()
 	defer runLock.Unlock()
-	externalProviders = getExternalProvidersRaw()
 	eps := make([]ExternalProvider, 0)
-	for _, p := range externalProviders {
+	for _, p := range getExternalProvidersRaw() {
 		externalProvider, err := toExternalProvider(p)
 		if err != nil {
 			continue
@@ -363,10 +329,15 @@ func handleGetExternalProviders() string {
 	return string(data)
 }
 
-func handleGetExternalProvider(externalProviderName string) string {
+func lookupExternalProvider(name string) (cp.Provider, bool) {
 	runLock.Lock()
 	defer runLock.Unlock()
-	externalProvider, exist := externalProviders[externalProviderName]
+	p, exist := getExternalProvidersRaw()[name]
+	return p, exist
+}
+
+func handleGetExternalProvider(externalProviderName string) string {
+	externalProvider, exist := lookupExternalProvider(externalProviderName)
 	if !exist {
 		return ""
 	}
@@ -384,31 +355,20 @@ func handleGetExternalProvider(externalProviderName string) string {
 func handleUpdateGeoData(geoType string, geoName string, fn func(value string)) {
 	go func() {
 		path := constant.Path.Resolve(geoName)
+		var err error
 		switch geoType {
 		case "MMDB":
-			err := updater.UpdateMMDBWithPath(path)
-			if err != nil {
-				fn(err.Error())
-				return
-			}
+			err = updater.UpdateMMDBWithPath(path)
 		case "ASN":
-			err := updater.UpdateASNWithPath(path)
-			if err != nil {
-				fn(err.Error())
-				return
-			}
+			err = updater.UpdateASNWithPath(path)
 		case "GEOIP":
-			err := updater.UpdateGeoIpWithPath(path)
-			if err != nil {
-				fn(err.Error())
-				return
-			}
+			err = updater.UpdateGeoIpWithPath(path)
 		case "GEOSITE":
-			err := updater.UpdateGeoSiteWithPath(path)
-			if err != nil {
-				fn(err.Error())
-				return
-			}
+			err = updater.UpdateGeoSiteWithPath(path)
+		}
+		if err != nil {
+			fn(err.Error())
+			return
 		}
 		fn("")
 	}()
@@ -416,13 +376,12 @@ func handleUpdateGeoData(geoType string, geoName string, fn func(value string)) 
 
 func handleUpdateExternalProvider(providerName string, fn func(value string)) {
 	go func() {
-		externalProvider, exist := externalProviders[providerName]
+		externalProvider, exist := lookupExternalProvider(providerName)
 		if !exist {
 			fn("external provider is not exist")
 			return
 		}
-		err := externalProvider.Update()
-		if err != nil {
+		if err := externalProvider.Update(); err != nil {
 			fn(err.Error())
 			return
 		}
@@ -432,15 +391,14 @@ func handleUpdateExternalProvider(providerName string, fn func(value string)) {
 
 func handleSideLoadExternalProvider(providerName string, data []byte, fn func(value string)) {
 	go func() {
-		runLock.Lock()
-		defer runLock.Unlock()
-		externalProvider, exist := externalProviders[providerName]
+		externalProvider, exist := lookupExternalProvider(providerName)
 		if !exist {
 			fn("external provider is not exist")
 			return
 		}
-		err := sideUpdateExternalProvider(externalProvider, data)
-		if err != nil {
+		runLock.Lock()
+		defer runLock.Unlock()
+		if err := sideUpdateExternalProvider(externalProvider, data); err != nil {
 			fn(err.Error())
 			return
 		}
@@ -459,10 +417,7 @@ func handleSuspend(suspended bool) bool {
 }
 
 func handleStartLog() {
-	if logSubscriber != nil {
-		log.UnSubscribe(logSubscriber)
-		logSubscriber = nil
-	}
+	handleStopLog()
 	logSubscriber = log.Subscribe()
 	go func() {
 		for logData := range logSubscriber {
@@ -509,25 +464,20 @@ func handleGetMemory(fn func(value string)) {
 }
 
 func handleGetConfig(path string) (*config.RawConfig, error) {
-	bytes, err := readFile(path)
+	data, err := readFile(path)
 	if err != nil {
 		return nil, err
 	}
-	prof, err := config.UnmarshalRawConfig(bytes)
-	if err != nil {
-		return nil, err
-	}
-	return prof, nil
+	return config.UnmarshalRawConfig(data)
 }
 
 func handleCrash() {
 	panic("handle invoke crash")
 }
 
-func handleUpdateConfig(bytes []byte) string {
+func handleUpdateConfig(data []byte) string {
 	var params = &UpdateParams{}
-	err := json.Unmarshal(bytes, params)
-	if err != nil {
+	if err := json.Unmarshal(data, params); err != nil {
 		return err.Error()
 	}
 	updateConfig(params)
@@ -536,37 +486,20 @@ func handleUpdateConfig(bytes []byte) string {
 
 func handleDelFile(path string, result ActionResult) {
 	go func() {
-		fileInfo, err := os.Stat(path)
-		if err != nil {
-			if !os.IsNotExist(err) {
-				result.success(err.Error())
-			}
-			result.success("")
+		if err := os.RemoveAll(path); err != nil {
+			result.success(err.Error())
 			return
-		}
-		if fileInfo.IsDir() {
-			err = os.RemoveAll(path)
-			if err != nil {
-				result.success(err.Error())
-				return
-			}
-		} else {
-			err = os.Remove(path)
-			if err != nil {
-				result.success(err.Error())
-				return
-			}
 		}
 		result.success("")
 	}()
 }
 
-func handleSetupConfig(bytes []byte) string {
+func handleSetupConfig(data []byte) string {
 	if !isInit {
 		return "not initialized"
 	}
 	var params = defaultSetupParams()
-	err := UnmarshalJson(bytes, params)
+	err := UnmarshalJson(data, params)
 	if err != nil {
 		log.Errorln("unmarshalRawConfig error %v", err)
 		_ = applyConfig(defaultSetupParams())

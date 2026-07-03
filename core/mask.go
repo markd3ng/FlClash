@@ -4,6 +4,7 @@ import (
 	"net"
 	"net/netip"
 	"sync"
+	"sync/atomic"
 
 	"github.com/metacubex/mihomo/constant"
 	"github.com/metacubex/mihomo/hub/route"
@@ -11,8 +12,7 @@ import (
 )
 
 var (
-	maskLock   sync.RWMutex
-	isOixCloud bool
+	isOixCloud atomic.Bool
 	cloudIPs   sync.Map
 )
 
@@ -23,9 +23,7 @@ func init() {
 }
 
 func setMaskedAddrs(isOix bool) {
-	maskLock.Lock()
-	isOixCloud = isOix
-	maskLock.Unlock()
+	isOixCloud.Store(isOix)
 	cloudIPs.Clear()
 }
 
@@ -53,13 +51,7 @@ func isCloudIP(host string) bool {
 }
 
 func maskMetadata(m *constant.Metadata) {
-	if m == nil {
-		return
-	}
-	maskLock.RLock()
-	enabled := isOixCloud
-	maskLock.RUnlock()
-	if !enabled {
+	if m == nil || !isOixCloud.Load() {
 		return
 	}
 	m.RemoteDst = maskAddr(m.RemoteDst)

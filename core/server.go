@@ -8,7 +8,6 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"log"
 	"net"
@@ -104,9 +103,6 @@ func readFrame(r io.Reader) ([]byte, error) {
 }
 
 func (result ActionResult) send() {
-	if conn == nil {
-		return
-	}
 	data, err := result.Json()
 	if err != nil {
 		return
@@ -138,32 +134,27 @@ func send(data []byte) {
 }
 
 func startServer(arg string) {
-
 	initIPCKey()
 
-	_, err := strconv.Atoi(arg)
+	network, address := "unix", arg
+	if _, err := strconv.Atoi(arg); err == nil {
+		network, address = "tcp", "127.0.0.1:"+arg
+	}
 
 	var dialErr error
 	for i := 0; i < 5; i++ {
-		if err != nil {
-			conn, dialErr = net.Dial("unix", arg)
-		} else {
-			conn, dialErr = net.Dial("tcp", fmt.Sprintf("127.0.0.1:%s", arg))
-		}
-		if dialErr == nil {
+		if conn, dialErr = net.Dial(network, address); dialErr == nil {
 			break
 		}
 		time.Sleep(time.Second)
 	}
-
 	if dialErr != nil {
 		log.Println("Connection failed:", dialErr)
 		return
 	}
-
-	defer func(conn net.Conn) {
+	defer func() {
 		_ = conn.Close()
-	}(conn)
+	}()
 
 	for {
 		data, err := readFrame(conn)
@@ -177,20 +168,14 @@ func startServer(arg string) {
 		if err != nil {
 			return
 		}
-		var action = &Action{}
-
-		err = json.Unmarshal(plain, action)
-
-		if err != nil {
+		action := &Action{}
+		if err := json.Unmarshal(plain, action); err != nil {
 			return
 		}
-
-		result := ActionResult{
+		go handleAction(action, ActionResult{
 			Id:     action.Id,
 			Method: action.Method,
-		}
-
-		go handleAction(action, result)
+		})
 	}
 }
 

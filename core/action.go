@@ -171,6 +171,7 @@ func handleAction(action *Action, result ActionResult) {
 	case getExternalProviderMethod:
 		externalProviderName := action.Data.(string)
 		result.success(handleGetExternalProvider(externalProviderName))
+		return
 	case updateGeoDataMethod:
 		paramsString := action.Data.(string)
 		var params = map[string]string{}
@@ -232,12 +233,15 @@ func handleAction(action *Action, result ActionResult) {
 		return
 	case crashMethod:
 		result.success(true)
-		handleCrash()
-	case deleteFile:
+		go handleCrash()
+		return
+	case deleteFileMethod:
 		path := action.Data.(string)
 		handleDelFile(path, result)
 		return
 	default:
-		nextHandle(action, result)
+		if !nextHandle(action, result) {
+			result.error(fmt.Sprintf("unsupported method: %s", action.Method))
+		}
 	}
 }

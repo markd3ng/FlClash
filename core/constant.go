@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"net/netip"
 	"time"
 
@@ -111,7 +110,7 @@ const (
 	setupConfigMethod              Method = "setupConfig"
 	getConfigFromBytesMethod       Method = "getConfigFromBytes"
 	getConfigMethod                Method = "getConfig"
-	deleteFile                     Method = "deleteFile"
+	deleteFileMethod               Method = "deleteFile"
 )
 
 type Method string
@@ -135,8 +134,3 @@ const (
 	RequestMessage MessageType = "request"
 	LoadedMessage  MessageType = "loaded"
 )
-
-func (message *Message) Json() (string, error) {
-	data, err := json.Marshal(message)
-	return string(data), err
-}

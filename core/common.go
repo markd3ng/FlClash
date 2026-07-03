@@ -1,7 +1,7 @@
 package main
 
 import (
-	b "bytes"
+	"bytes"
 	"encoding/json"
 	"errors"
 	"os"
@@ -52,42 +52,38 @@ func getExternalProvidersRaw() map[string]cp.Provider {
 }
 
 func toExternalProvider(p cp.Provider) (*ExternalProvider, error) {
-	switch p.(type) {
+	switch p := p.(type) {
 	case *provider.ProxySetProvider:
-		psp := p.(*provider.ProxySetProvider)
 		return &ExternalProvider{
-			Name:             psp.Name(),
-			Type:             psp.Type().String(),
-			VehicleType:      psp.VehicleType().String(),
-			Count:            psp.Count(),
-			UpdateAt:         psp.UpdatedAt(),
-			Path:             psp.Vehicle().Path(),
-			SubscriptionInfo: psp.GetSubscriptionInfo(),
+			Name:             p.Name(),
+			Type:             p.Type().String(),
+			VehicleType:      p.VehicleType().String(),
+			Count:            p.Count(),
+			UpdateAt:         p.UpdatedAt(),
+			Path:             p.Vehicle().Path(),
+			SubscriptionInfo: p.GetSubscriptionInfo(),
 		}, nil
 	case *rp.RuleSetProvider:
-		rsp := p.(*rp.RuleSetProvider)
 		return &ExternalProvider{
-			Name:        rsp.Name(),
-			Type:        rsp.Type().String(),
-			VehicleType: rsp.VehicleType().String(),
-			Count:       rsp.Count(),
-			UpdateAt:    rsp.UpdatedAt(),
-			Path:        rsp.Vehicle().Path(),
+			Name:        p.Name(),
+			Type:        p.Type().String(),
+			VehicleType: p.VehicleType().String(),
+			Count:       p.Count(),
+			UpdateAt:    p.UpdatedAt(),
+			Path:        p.Vehicle().Path(),
 		}, nil
 	default:
 		return nil, errors.New("not external provider")
 	}
 }
 
-func sideUpdateExternalProvider(p cp.Provider, bytes []byte) error {
-	switch p.(type) {
+func sideUpdateExternalProvider(p cp.Provider, data []byte) error {
+	switch p := p.(type) {
 	case *provider.ProxySetProvider:
-		psp := p.(*provider.ProxySetProvider)
-		_, _, err := psp.SideUpdate(bytes)
+		_, _, err := p.SideUpdate(data)
 		return err
-	case rp.RuleSetProvider:
-		rsp := p.(*rp.RuleSetProvider)
-		_, _, err := rsp.SideUpdate(bytes)
+	case *rp.RuleSetProvider:
+		_, _, err := p.SideUpdate(data)
 		return err
 	default:
 		return errors.New("not external provider")
@@ -122,10 +118,6 @@ func updateListeners() {
 	if !features.Android {
 		listener.ReCreateTun(general.Tun, tunnel.Tunnel)
 	}
-}
-
-func stopListeners() {
-	listener.StopListener()
 }
 
 func patchSelectGroup(mapping map[string]string) {
@@ -191,20 +183,11 @@ func parseConfigPath(path string) (*config.Config, bool, error) {
 }
 
 func readFile(path string) ([]byte, error) {
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		return nil, err
-	}
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
-
-	data, err = decryptFlClashIfNeeded(data)
-	if err != nil {
-		return nil, err
-	}
-
-	return data, err
+	return decryptFlClashIfNeeded(data)
 }
 
 func updateConfig(params *UpdateParams) {
@@ -280,7 +263,7 @@ func applyConfig(params *SetupParams) error {
 	var err error
 	isOixConfig := params.RawConfig != ""
 	constant.DefaultTestURL = params.TestURL
-	if params.RawConfig != "" {
+	if isOixConfig {
 		applyDNSAuth()
 		currentConfig, err = executor.ParseWithBytes([]byte(params.RawConfig))
 	} else {
@@ -298,8 +281,7 @@ func applyConfig(params *SetupParams) error {
 }
 
 func UnmarshalJson(data []byte, v any) error {
-	decoder := json.NewDecoder(b.NewReader(data))
+	decoder := json.NewDecoder(bytes.NewReader(data))
 	decoder.UseNumber()
-	err := decoder.Decode(v)
-	return err
+	return decoder.Decode(v)
 }
