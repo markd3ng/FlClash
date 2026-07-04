@@ -201,6 +201,32 @@ jobs:
           flutter --version
           flutter pub get
 
+      - name: Setup macOS Signing
+        if: matrix.platform == 'macos'
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+          MACOS_KEYCHAIN_PASSWORD: ${{ secrets.MACOS_KEYCHAIN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          CERT_PATH="$RUNNER_TEMP/devid_cert.p12"
+          KEYCHAIN_PATH="$RUNNER_TEMP/app-signing.keychain-db"
+          # Decode the base64 Developer ID certificate (.p12)
+          printf '%s' "$MACOS_CERTIFICATE" | openssl enc -base64 -d -A > "$CERT_PATH"
+          # Create a dedicated temporary keychain and make it searchable
+          security create-keychain -p "$MACOS_KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$MACOS_KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security import "$CERT_PATH" -P "$MACOS_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          # Import the Apple Developer ID intermediate CA so the chain is complete (best-effort)
+          curl -fsSL https://www.apple.com/certificateauthority/DeveloperIDG2CA.cer -o "$RUNNER_TEMP/DeveloperIDG2CA.cer" && security import "$RUNNER_TEMP/DeveloperIDG2CA.cer" -k "$KEYCHAIN_PATH" || true
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$MACOS_KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH" >/dev/null
+          # Prepend the temp keychain to the search list (keep existing ones)
+          security list-keychains -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | sed s/\"//g)
+          rm -f "$CERT_PATH"
+          echo "Available Developer ID signing identities:"
+          security find-identity -v -p codesigning "$KEYCHAIN_PATH"
+
       - name: Build Application
         id: build
         shell: bash
