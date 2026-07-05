@@ -190,22 +190,13 @@ class _CloudStorePageState extends ConsumerState<CloudStorePage> {
     final priceText =
         '¥ ${plan.price.toStringAsFixed(plan.price == plan.price.roundToDouble() ? 0 : 2)}';
     final metas = <Widget>[
-      if (plan.isAnnual)
-        _planMetaChip(Icons.event_available, appLocalizations.annualPlan,
-            color: context.colorScheme.primary, emphasize: true),
-      if (plan.isTeamPackage)
-        _planMetaChip(Icons.groups, appLocalizations.teamPlan,
-            color: context.colorScheme.tertiary, emphasize: true),
-      if (plan.bandwidth > 0)
-        _planMetaChip(Icons.data_usage, '${plan.bandwidth} GB'),
-      if (plan.classExpireDays > 0)
-        _planMetaChip(Icons.schedule,
-            '${plan.classExpireDays} ${appLocalizations.days}'),
+      for (final tag in plan.tags)
+        _planMetaChip(_iconForFeatureTag(tag), tag),
     ];
     final lowStock =
         !plan.soldOut && plan.inventory > 0 && plan.inventory <= 5;
 
-    return Padding(
+    final card = Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: CommonCard(
         child: Padding(
@@ -242,13 +233,24 @@ class _CloudStorePageState extends ConsumerState<CloudStorePage> {
                   children: metas,
                 ),
               ],
-              if (plan.content.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                Text(
-                  plan.content,
-                  style: context.textTheme.bodySmall?.copyWith(
-                    color: context.colorScheme.onSurfaceVariant,
-                  ),
+              if (plan.userClass == 1) ...[
+                const SizedBox(height: 10),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.warning_amber_rounded,
+                        size: 16, color: Colors.orange),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        appLocalizations.mainlandNetworkWarning,
+                        style: context.textTheme.labelMedium?.copyWith(
+                          color: Colors.orange.shade800,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
               if (lowStock) ...[
@@ -305,6 +307,7 @@ class _CloudStorePageState extends ConsumerState<CloudStorePage> {
         ),
       ),
     );
+    return plan.soldOut ? Opacity(opacity: 0.55, child: card) : card;
   }
 
   Widget _planMetaChip(IconData icon, String label,
@@ -331,6 +334,29 @@ class _CloudStorePageState extends ConsumerState<CloudStorePage> {
         ],
       ),
     );
+  }
+
+  IconData _iconForFeatureTag(String tag) {
+    if (tag.contains('流量') || tag.contains('GiB') || tag.contains('GB')) {
+      return Icons.data_usage;
+    }
+    if (tag.contains('Mbps') || tag.contains('速率') || tag.contains('速度') || tag.contains('限速')) {
+      return Icons.speed;
+    }
+    if (tag.contains('有效期') || tag.contains('天') || tag.contains('日')) {
+      return Icons.schedule;
+    }
+    if (tag.contains('临界') || tag.contains('连接') || tag.contains('设备')) {
+      return Icons.devices;
+    }
+    if (tag.contains('服务单') || tag.contains('工单')) {
+      return Icons.confirmation_number;
+    }
+    if (tag.contains('团队')) return Icons.groups;
+    if (tag.contains('按量')) return Icons.paid;
+    if (tag.contains('开发者')) return Icons.code;
+    if (tag.contains('重置')) return Icons.refresh;
+    return Icons.label_outline;
   }
 
   Icon _paymentIcon(PaymentMethodOption m) {

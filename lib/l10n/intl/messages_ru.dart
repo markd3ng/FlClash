@@ -624,6 +624,9 @@ class MessageLookup extends MessageLookupByLibrary {
       "Используется для разблокировки Loopback UWP",
     ),
     "loose": MessageLookupByLibrary.simpleMessage("Свободный"),
+    "mainlandNetworkWarning": MessageLookupByLibrary.simpleMessage(
+      "Может не подходить для сетей материкового Китая",
+    ),
     "memoryInfo": MessageLookupByLibrary.simpleMessage("Информация о памяти"),
     "messageTest": MessageLookupByLibrary.simpleMessage(
       "Тестирование сообщения",

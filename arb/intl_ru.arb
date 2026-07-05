@@ -600,6 +600,7 @@
   "remainingStock": "Осталось {count}",
   "buyWithBalance": "Оплатить с баланса",
   "orderAndPay": "Заказать и оплатить",
+  "mainlandNetworkWarning": "Может не подходить для сетей материкового Китая",
   "planInUse": "Используется",
   "planNotActivated": "Не активирован",
   "planEnded": "Завершён",

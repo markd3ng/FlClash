@@ -601,6 +601,7 @@
   "remainingStock": "Only {count} left",
   "buyWithBalance": "Pay with balance",
   "orderAndPay": "Order & Pay",
+  "mainlandNetworkWarning": "May not be suitable for networks in mainland China",
   "planInUse": "In use",
   "planNotActivated": "Inactive",
   "planEnded": "Ended",

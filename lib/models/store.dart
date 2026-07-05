@@ -16,6 +16,7 @@ class StorePlan {
   final bool canBuy;
   final bool canUpgradeTo;
   final int inventory;
+  final List<String> tags;
 
   const StorePlan({
     required this.id,
@@ -32,6 +33,7 @@ class StorePlan {
     required this.canBuy,
     required this.canUpgradeTo,
     required this.inventory,
+    this.tags = const [],
   });
 
   bool get soldOut => inventory == 0;
@@ -52,6 +54,7 @@ class StorePlan {
       canBuy: _asBool(json['can_buy']),
       canUpgradeTo: _asBool(json['can_upgrade_to']),
       inventory: _asInt(json['inventory']),
+      tags: _asStringList(json['tags']),
     );
   }
 }
@@ -266,4 +269,14 @@ bool _asBool(dynamic v) {
   if (v is num) return v != 0;
   final s = v?.toString().toLowerCase();
   return s == '1' || s == 'true' || s == 'yes';
+}
+
+List<String> _asStringList(dynamic v) {
+  if (v is List) {
+    return v
+        .map((e) => e?.toString() ?? '')
+        .where((e) => e.isNotEmpty)
+        .toList();
+  }
+  return const [];
 }

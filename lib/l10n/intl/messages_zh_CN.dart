@@ -398,6 +398,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "loopback": MessageLookupByLibrary.simpleMessage("回环解锁工具"),
     "loopbackDesc": MessageLookupByLibrary.simpleMessage("用于UWP回环解锁"),
     "loose": MessageLookupByLibrary.simpleMessage("宽松"),
+    "mainlandNetworkWarning": MessageLookupByLibrary.simpleMessage(
+      "可能不适用于中国大陆网络",
+    ),
     "memoryInfo": MessageLookupByLibrary.simpleMessage("内存信息"),
     "messageTest": MessageLookupByLibrary.simpleMessage("消息测试"),
     "messageTestTip": MessageLookupByLibrary.simpleMessage("这是一条消息。"),

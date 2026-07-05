@@ -589,6 +589,9 @@ class MessageLookup extends MessageLookupByLibrary {
       "Used for UWP loopback unlocking",
     ),
     "loose": MessageLookupByLibrary.simpleMessage("Loose"),
+    "mainlandNetworkWarning": MessageLookupByLibrary.simpleMessage(
+      "May not be suitable for networks in mainland China",
+    ),
     "memoryInfo": MessageLookupByLibrary.simpleMessage("Memory info"),
     "messageTest": MessageLookupByLibrary.simpleMessage("Message test"),
     "messageTestTip": MessageLookupByLibrary.simpleMessage(

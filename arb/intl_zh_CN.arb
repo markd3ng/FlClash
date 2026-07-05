@@ -602,6 +602,7 @@
   "remainingStock": "仅剩 {count}",
   "buyWithBalance": "余额购买",
   "orderAndPay": "下单支付",
+  "mainlandNetworkWarning": "可能不适用于中国大陆网络",
   "planInUse": "使用中",
   "planNotActivated": "未激活",
   "planEnded": "已结束",

@@ -450,6 +450,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "loopback": MessageLookupByLibrary.simpleMessage("ループバック解除ツール"),
     "loopbackDesc": MessageLookupByLibrary.simpleMessage("UWPループバック解除用"),
     "loose": MessageLookupByLibrary.simpleMessage("疎"),
+    "mainlandNetworkWarning": MessageLookupByLibrary.simpleMessage(
+      "中国本土のネットワークには適さない可能性があります",
+    ),
     "memoryInfo": MessageLookupByLibrary.simpleMessage("メモリ情報"),
     "messageTest": MessageLookupByLibrary.simpleMessage("メッセージテスト"),
     "messageTestTip": MessageLookupByLibrary.simpleMessage("これはメッセージです。"),

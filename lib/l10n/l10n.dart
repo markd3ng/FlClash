@@ -4854,6 +4854,16 @@ class AppLocalizations {
     return Intl.message('Order & Pay', name: 'orderAndPay', desc: '', args: []);
   }
 
+  /// `May not be suitable for networks in mainland China`
+  String get mainlandNetworkWarning {
+    return Intl.message(
+      'May not be suitable for networks in mainland China',
+      name: 'mainlandNetworkWarning',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `In use`
   String get planInUse {
     return Intl.message('In use', name: 'planInUse', desc: '', args: []);

@@ -600,6 +600,7 @@
   "remainingStock": "残り{count}",
   "buyWithBalance": "残高で購入",
   "orderAndPay": "注文して支払う",
+  "mainlandNetworkWarning": "中国本土のネットワークには適さない可能性があります",
   "planInUse": "使用中",
   "planNotActivated": "未アクティブ",
   "planEnded": "終了",
