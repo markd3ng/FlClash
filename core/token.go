@@ -24,60 +24,15 @@ type dnsAuthSettings struct {
 
 const dnsAuthWindowSeconds = 300
 
-const dnsAuthCacheTTL = 300 * time.Second
-
-type dnsAuthIPCacheEntry struct {
-	ips    []netip.Addr
-	expire time.Time
-}
-
 var (
 	dnsAuthLock    sync.RWMutex
 	dnsAuthCurrent *dnsAuthSettings
-	dnsAuthIPCache sync.Map
 )
 
 func setDNSAuth(s *dnsAuthSettings) {
-	clearDNSAuthCache()
 	dnsAuthLock.Lock()
 	dnsAuthCurrent = s
 	dnsAuthLock.Unlock()
-}
-
-func clearDNSAuthCache() {
-	dnsAuthIPCache.Range(func(key, _ any) bool {
-		dnsAuthIPCache.Delete(key)
-		return true
-	})
-}
-
-func dnsAuthCacheKey(host, kind string) string {
-	return kind + "\x00" + strings.ToLower(strings.TrimSuffix(host, "."))
-}
-
-func getDNSAuthIPCache(host, kind string) ([]netip.Addr, bool) {
-	key := dnsAuthCacheKey(host, kind)
-	value, ok := dnsAuthIPCache.Load(key)
-	if !ok {
-		return nil, false
-	}
-	entry, ok := value.(dnsAuthIPCacheEntry)
-	if !ok || time.Now().After(entry.expire) {
-		dnsAuthIPCache.Delete(key)
-		return nil, false
-	}
-	ips := append([]netip.Addr(nil), entry.ips...)
-	return ips, true
-}
-
-func putDNSAuthIPCache(host, kind string, ips []netip.Addr) {
-	if len(ips) == 0 {
-		return
-	}
-	dnsAuthIPCache.Store(dnsAuthCacheKey(host, kind), dnsAuthIPCacheEntry{
-		ips:    append([]netip.Addr(nil), ips...),
-		expire: time.Now().Add(dnsAuthCacheTTL),
-	})
 }
 
 func currentDNSAuth() *dnsAuthSettings {
@@ -195,35 +150,28 @@ type tokenInjectResolver struct {
 	resolver.Resolver
 }
 
-// managedLookup wraps a resolver lookup with the DNS-Auth token rewrite. For
-// managed suffixes it also serves/populates the fixed-TTL IP cache and marks
-// resolved IPs as cloud nodes; other hosts pass straight through.
-func (t *tokenInjectResolver) managedLookup(ctx context.Context, host, kind string, lookup func(context.Context, string) ([]netip.Addr, error)) ([]netip.Addr, error) {
-	if !matchManagedSuffix(host) {
-		return lookup(ctx, tokenizeHost(host))
-	}
-	if ips, ok := getDNSAuthIPCache(host, kind); ok {
-		markCloudIPs(ips)
-		return ips, nil
-	}
+// managedLookup rewrites managed-suffix hosts with the DNS-Auth token and marks
+// the resolved IPs as cloud nodes. Result caching is delegated to the wrapped
+// resolver, which caches by the signed name and honors each record's real DNS
+// TTL (so rotating node IPs stay fresh); other hosts pass straight through.
+func (t *tokenInjectResolver) managedLookup(ctx context.Context, host string, lookup func(context.Context, string) ([]netip.Addr, error)) ([]netip.Addr, error) {
 	ips, err := lookup(ctx, tokenizeHost(host))
-	if err == nil {
+	if err == nil && matchManagedSuffix(host) {
 		markCloudIPs(ips)
-		putDNSAuthIPCache(host, kind, ips)
 	}
 	return ips, err
 }
 
 func (t *tokenInjectResolver) LookupIP(ctx context.Context, host string) ([]netip.Addr, error) {
-	return t.managedLookup(ctx, host, "ip", t.Resolver.LookupIP)
+	return t.managedLookup(ctx, host, t.Resolver.LookupIP)
 }
 
 func (t *tokenInjectResolver) LookupIPv4(ctx context.Context, host string) ([]netip.Addr, error) {
-	return t.managedLookup(ctx, host, "ipv4", t.Resolver.LookupIPv4)
+	return t.managedLookup(ctx, host, t.Resolver.LookupIPv4)
 }
 
 func (t *tokenInjectResolver) LookupIPv6(ctx context.Context, host string) ([]netip.Addr, error) {
-	return t.managedLookup(ctx, host, "ipv6", t.Resolver.LookupIPv6)
+	return t.managedLookup(ctx, host, t.Resolver.LookupIPv6)
 }
 
 func (t *tokenInjectResolver) ResolveECH(ctx context.Context, host string) ([]byte, error) {
@@ -231,12 +179,10 @@ func (t *tokenInjectResolver) ResolveECH(ctx context.Context, host string) ([]by
 }
 
 func (t *tokenInjectResolver) ClearCache() {
-	clearDNSAuthCache()
 	t.Resolver.ClearCache()
 }
 
 func (t *tokenInjectResolver) ResetConnection() {
-	clearDNSAuthCache()
 	t.Resolver.ResetConnection()
 }
 
