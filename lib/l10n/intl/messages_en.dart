@@ -768,6 +768,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "paymentSuccess": MessageLookupByLibrary.simpleMessage(
       "Payment successful",
     ),
+    "paymentUnknownResponse": MessageLookupByLibrary.simpleMessage(
+      "Payment endpoint returned an unknown format",
+    ),
     "planEnded": MessageLookupByLibrary.simpleMessage("Ended"),
     "planInUse": MessageLookupByLibrary.simpleMessage("In use"),
     "planNotActivated": MessageLookupByLibrary.simpleMessage("Inactive"),
@@ -1077,6 +1080,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "stop": MessageLookupByLibrary.simpleMessage("Stop"),
     "stopVpn": MessageLookupByLibrary.simpleMessage("Stopping VPN..."),
     "store": MessageLookupByLibrary.simpleMessage("Store"),
+    "storeSubtitle": MessageLookupByLibrary.simpleMessage(
+      "Buy plans · Recharge · Renew & upgrade",
+    ),
     "style": MessageLookupByLibrary.simpleMessage("Style"),
     "subRule": MessageLookupByLibrary.simpleMessage("Sub rule"),
     "submit": MessageLookupByLibrary.simpleMessage("Submit"),

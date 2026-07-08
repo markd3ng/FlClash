@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:fl_clash/l10n/l10n.dart';
+
 /// 商店套餐（对应面板 /api/v1/shop/list 返回项）
 class StorePlan {
   final int id;
@@ -187,9 +189,9 @@ class PaymentInitiation {
       } catch (_) {}
     }
     if (decoded is! Map) {
-      return const PaymentInitiation(
+      return PaymentInitiation(
         kind: PaymentInitiationKind.error,
-        message: '支付接口返回未知格式',
+        message: AppLocalizations.current.paymentUnknownResponse,
       );
     }
 
@@ -237,7 +239,7 @@ class PaymentInitiation {
     if (ret == 200) {
       return PaymentInitiation(
         kind: PaymentInitiationKind.balanceDone,
-        message: decoded['msg']?.toString() ?? '操作成功',
+        message: decoded['msg']?.toString() ?? AppLocalizations.current.operationSuccess,
       );
     }
 
@@ -247,7 +249,7 @@ class PaymentInitiation {
         ?.toString();
     return PaymentInitiation(
       kind: PaymentInitiationKind.error,
-      message: msg ?? '支付请求失败',
+      message: msg ?? AppLocalizations.current.paymentRequestFailed,
     );
   }
 }

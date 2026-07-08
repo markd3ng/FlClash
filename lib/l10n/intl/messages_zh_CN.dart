@@ -513,6 +513,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "paymentMethod": MessageLookupByLibrary.simpleMessage("支付方式"),
     "paymentRequestFailed": MessageLookupByLibrary.simpleMessage("支付请求失败"),
     "paymentSuccess": MessageLookupByLibrary.simpleMessage("支付成功"),
+    "paymentUnknownResponse": MessageLookupByLibrary.simpleMessage(
+      "支付接口返回未知格式",
+    ),
     "planEnded": MessageLookupByLibrary.simpleMessage("已结束"),
     "planInUse": MessageLookupByLibrary.simpleMessage("使用中"),
     "planNotActivated": MessageLookupByLibrary.simpleMessage("未激活"),
@@ -734,6 +737,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "stop": MessageLookupByLibrary.simpleMessage("暂停"),
     "stopVpn": MessageLookupByLibrary.simpleMessage("正在停止VPN..."),
     "store": MessageLookupByLibrary.simpleMessage("商店"),
+    "storeSubtitle": MessageLookupByLibrary.simpleMessage("购买套餐 · 充值 · 续费升级"),
     "style": MessageLookupByLibrary.simpleMessage("风格"),
     "subRule": MessageLookupByLibrary.simpleMessage("子规则"),
     "submit": MessageLookupByLibrary.simpleMessage("提交"),

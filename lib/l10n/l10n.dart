@@ -5218,6 +5218,26 @@ class AppLocalizations {
       args: [],
     );
   }
+
+  /// `Buy plans · Recharge · Renew & upgrade`
+  String get storeSubtitle {
+    return Intl.message(
+      'Buy plans · Recharge · Renew & upgrade',
+      name: 'storeSubtitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Payment endpoint returned an unknown format`
+  String get paymentUnknownResponse {
+    return Intl.message(
+      'Payment endpoint returned an unknown format',
+      name: 'paymentUnknownResponse',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<AppLocalizations> {

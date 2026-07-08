@@ -639,5 +639,7 @@
   "paymentSuccess": "Оплата прошла успешно",
   "paymentRequestFailed": "Не удалось выполнить запрос оплаты",
   "fetchPlansFailed": "Не удалось загрузить тарифы",
-  "fetchOrdersFailed": "Не удалось загрузить записи о покупках"
+  "fetchOrdersFailed": "Не удалось загрузить записи о покупках",
+  "storeSubtitle": "Покупка тарифов · Пополнение · Продление и апгрейд",
+  "paymentUnknownResponse": "Платёжный endpoint вернул неизвестный формат"
 }

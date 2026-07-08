@@ -639,5 +639,7 @@
   "paymentSuccess": "支払いに成功しました",
   "paymentRequestFailed": "支払いリクエストに失敗しました",
   "fetchPlansFailed": "プランの取得に失敗しました",
-  "fetchOrdersFailed": "購入履歴の取得に失敗しました"
+  "fetchOrdersFailed": "購入履歴の取得に失敗しました",
+  "storeSubtitle": "プラン購入 · チャージ · 更新とアップグレード",
+  "paymentUnknownResponse": "支払いエンドポイントが不明な形式を返しました"
 }

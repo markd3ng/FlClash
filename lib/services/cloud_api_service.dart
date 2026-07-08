@@ -17,6 +17,11 @@ const int _defaultReceiveTimeoutMs = 15000;
 const int _httpOk = 200;
 const int _httpServerError = 500;
 
+// Marks a request as non-idempotent (balance/order/email side effects). Such
+// requests must never be hedged to a spare domain or retried, otherwise a slow
+// backend response could be processed twice (e.g. double charge).
+const String _nonIdempotentExtraKey = 'flclash_non_idempotent';
+
 String _apiRootUrl(String domain) {
   final normalizedDomain = domain.trim();
   if (normalizedDomain.isEmpty) {
@@ -378,7 +383,8 @@ class CloudApiService {
     );
     final match = trafficRegex.firstMatch(value.trim());
     if (match == null) {
-      throw FormatException('Invalid traffic format: $value');
+      commonPrint.log('unrecognized traffic value, treating as 0: $value');
+      return 0;
     }
 
     final numValue = double.tryParse(match.group(1) ?? '0') ?? 0.0;
@@ -464,7 +470,7 @@ class CloudApiService {
     final res = await _client.post(
       '/register/send_email',
       data: FormData.fromMap({'email': email}),
-      options: Options(extra: {'skipAuth': true}),
+      options: _writeOptions(Options(extra: {'skipAuth': true})),
     );
     final responseDto = CloudApiResponse<dynamic>.fromJson(res.data);
     if (!responseDto.isSuccess) {
@@ -479,7 +485,7 @@ class CloudApiService {
     final res = await _client.post(
       '/password/reset',
       data: FormData.fromMap({'email': email}),
-      options: Options(extra: {'skipAuth': true}),
+      options: _writeOptions(Options(extra: {'skipAuth': true})),
     );
     final responseDto = CloudApiResponse<dynamic>.fromJson(res.data);
     if (!responseDto.isSuccess) {
@@ -498,7 +504,7 @@ class CloudApiService {
         'passwd': password,
         'repasswd': password,
       }),
-      options: Options(extra: {'skipAuth': true}),
+      options: _writeOptions(Options(extra: {'skipAuth': true})),
     );
     final responseDto = CloudApiResponse<dynamic>.fromJson(res.data);
     if (!responseDto.isSuccess) {
@@ -527,7 +533,7 @@ class CloudApiService {
         if (emailCode != null && emailCode.isNotEmpty) 'emailcode': emailCode,
         'token_expire': 365,
       }),
-      options: Options(extra: {'skipAuth': true}),
+      options: _writeOptions(Options(extra: {'skipAuth': true})),
     );
     return _parseAuthResult(res.data);
   }
@@ -681,6 +687,16 @@ class CloudApiService {
 
   // -- Store / Purchase --
 
+  // Tags an Options as non-idempotent so hedging and retries are disabled.
+  Options _writeOptions([Options? base]) {
+    final options = base ?? Options();
+    final extra = <String, dynamic>{
+      ...?options.extra,
+      _nonIdempotentExtraKey: true,
+    };
+    return options.copyWith(extra: extra);
+  }
+
   void _ensureAuthorized(int? statusCode, int ret) {
     if (statusCode == 401 || ret == 401) {
       setToken(null);
@@ -733,7 +749,11 @@ class CloudApiService {
     String path,
     Map<String, dynamic> body,
   ) async {
-    final res = await _client.post(path, data: FormData.fromMap(body));
+    final res = await _client.post(
+      path,
+      data: FormData.fromMap(body),
+      options: _writeOptions(),
+    );
     final dto = CloudApiResponse<dynamic>.fromJson(res.data);
     _ensureAuthorized(res.statusCode, dto.ret);
     return (
@@ -828,9 +848,12 @@ class CloudApiService {
     final res = await _client.post(
       path,
       data: FormData.fromMap(body),
-      options: Options(
-        followRedirects: false,
-        validateStatus: (status) => status != null && status < _httpServerError,
+      options: _writeOptions(
+        Options(
+          followRedirects: false,
+          validateStatus: (status) =>
+              status != null && status < _httpServerError,
+        ),
       ),
     );
     if (res.statusCode == 401 ||
@@ -885,7 +908,9 @@ class _HedgedApiAdapter implements HttpClientAdapter {
   ) async {
     final domains = Secrets.apiDomains;
     final host = options.uri.host.toLowerCase();
-    if (domains.length < 2 || domains.first.toLowerCase() != host) {
+    if (domains.length < 2 ||
+        domains.first.toLowerCase() != host ||
+        options.extra[_nonIdempotentExtraKey] == true) {
       return _inner.fetch(options, requestStream, cancelFuture);
     }
 
@@ -1001,7 +1026,8 @@ class RetryInterceptor extends Interceptor {
     ErrorInterceptorHandler handler,
   ) async {
     if (!_shouldRetry(err) ||
-        err.requestOptions.extra[_retryHandledKey] == true) {
+        err.requestOptions.extra[_retryHandledKey] == true ||
+        err.requestOptions.extra[_nonIdempotentExtraKey] == true) {
       return super.onError(err, handler);
     }
 

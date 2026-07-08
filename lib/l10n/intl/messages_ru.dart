@@ -817,6 +817,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "paymentSuccess": MessageLookupByLibrary.simpleMessage(
       "Оплата прошла успешно",
     ),
+    "paymentUnknownResponse": MessageLookupByLibrary.simpleMessage(
+      "Платёжный endpoint вернул неизвестный формат",
+    ),
     "planEnded": MessageLookupByLibrary.simpleMessage("Завершён"),
     "planInUse": MessageLookupByLibrary.simpleMessage("Используется"),
     "planNotActivated": MessageLookupByLibrary.simpleMessage("Не активирован"),
@@ -1139,6 +1142,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "stop": MessageLookupByLibrary.simpleMessage("Стоп"),
     "stopVpn": MessageLookupByLibrary.simpleMessage("Остановка VPN..."),
     "store": MessageLookupByLibrary.simpleMessage("Магазин"),
+    "storeSubtitle": MessageLookupByLibrary.simpleMessage(
+      "Покупка тарифов · Пополнение · Продление и апгрейд",
+    ),
     "style": MessageLookupByLibrary.simpleMessage("Стиль"),
     "subRule": MessageLookupByLibrary.simpleMessage("Подправило"),
     "submit": MessageLookupByLibrary.simpleMessage("Отправить"),

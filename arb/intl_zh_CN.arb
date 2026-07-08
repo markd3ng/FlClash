@@ -641,5 +641,7 @@
   "paymentSuccess": "支付成功",
   "paymentRequestFailed": "支付请求失败",
   "fetchPlansFailed": "获取套餐失败",
-  "fetchOrdersFailed": "获取购买记录失败"
+  "fetchOrdersFailed": "获取购买记录失败",
+  "storeSubtitle": "购买套餐 · 充值 · 续费升级",
+  "paymentUnknownResponse": "支付接口返回未知格式"
 }

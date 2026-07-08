@@ -591,6 +591,9 @@ class MessageLookup extends MessageLookupByLibrary {
       "支払いリクエストに失敗しました",
     ),
     "paymentSuccess": MessageLookupByLibrary.simpleMessage("支払いに成功しました"),
+    "paymentUnknownResponse": MessageLookupByLibrary.simpleMessage(
+      "支払いエンドポイントが不明な形式を返しました",
+    ),
     "planEnded": MessageLookupByLibrary.simpleMessage("終了"),
     "planInUse": MessageLookupByLibrary.simpleMessage("使用中"),
     "planNotActivated": MessageLookupByLibrary.simpleMessage("未アクティブ"),
@@ -831,6 +834,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "stop": MessageLookupByLibrary.simpleMessage("停止"),
     "stopVpn": MessageLookupByLibrary.simpleMessage("VPNを停止中..."),
     "store": MessageLookupByLibrary.simpleMessage("ストア"),
+    "storeSubtitle": MessageLookupByLibrary.simpleMessage(
+      "プラン購入 · チャージ · 更新とアップグレード",
+    ),
     "style": MessageLookupByLibrary.simpleMessage("スタイル"),
     "subRule": MessageLookupByLibrary.simpleMessage("サブルール"),
     "submit": MessageLookupByLibrary.simpleMessage("送信"),

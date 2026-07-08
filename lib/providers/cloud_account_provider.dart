@@ -21,6 +21,7 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
   Future<void>? _signInFuture;
   Future<void>? _managedProfileFuture;
   Future<void>? _unauthorizedFuture;
+  Future<void>? _refreshFuture;
 
   String _requireNormalizedToken(String token) {
     final normalizedToken = CloudApiService.normalizeToken(token);
@@ -336,7 +337,19 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
     globalState.showNotifier(AppLocalizations.current.loginSuccess);
   }
 
-  Future<void> refreshProfile({bool force = false}) async {
+  Future<void> refreshProfile({bool force = false}) {
+    final inFlight = _refreshFuture;
+    if (inFlight != null) {
+      return inFlight;
+    }
+    final future = _runRefreshProfile(force: force);
+    _refreshFuture = future.whenComplete(() {
+      _refreshFuture = null;
+    });
+    return _refreshFuture!;
+  }
+
+  Future<void> _runRefreshProfile({bool force = false}) async {
     if (!state.isLoggedIn) return;
     if (!force && _lastRefreshTime != null) {
       if (DateTime.now().difference(_lastRefreshTime!) <

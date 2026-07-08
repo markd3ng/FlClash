@@ -203,14 +203,14 @@ class _CloudAccountPageState extends ConsumerState<CloudAccountPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '商店',
+                          AppLocalizations.current.store,
                           style: context.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          '购买套餐 · 充值 · 续费升级',
+                          AppLocalizations.current.storeSubtitle,
                           style: context.textTheme.bodySmall?.copyWith(
                             color: context.colorScheme.onSurfaceVariant,
                           ),
