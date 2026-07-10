@@ -4794,20 +4794,15 @@ class AppLocalizations {
     );
   }
 
-  /// `Account Balance`
+  /// `Balance`
   String get accountBalance {
-    return Intl.message(
-      'Account Balance',
-      name: 'accountBalance',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Balance', name: 'accountBalance', desc: '', args: []);
   }
 
-  /// `Commission balance ¥ {value}`
+  /// `Commission ¥ {value}`
   String commissionBalance(Object value) {
     return Intl.message(
-      'Commission balance ¥ $value',
+      'Commission ¥ $value',
       name: 'commissionBalance',
       desc: '',
       args: [value],

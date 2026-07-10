@@ -20,7 +20,7 @@ typedef String MessageIfAbsent(String messageStr, List<dynamic> args);
 class MessageLookup extends MessageLookupByLibrary {
   String get localeName => 'en';
 
-  static String m0(value) => "Commission balance ¥ ${value}";
+  static String m0(value) => "Commission ¥ ${value}";
 
   static String m1(count) =>
       "${Intl.plural(count, one: '1 day ago', other: '${count} days ago')}";
@@ -97,7 +97,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "accessToken": MessageLookupByLibrary.simpleMessage("Access Token"),
     "account": MessageLookupByLibrary.simpleMessage("Account"),
-    "accountBalance": MessageLookupByLibrary.simpleMessage("Account Balance"),
+    "accountBalance": MessageLookupByLibrary.simpleMessage("Balance"),
     "action": MessageLookupByLibrary.simpleMessage("Action"),
     "action_mode": MessageLookupByLibrary.simpleMessage("Switch mode"),
     "action_proxy": MessageLookupByLibrary.simpleMessage("System proxy"),

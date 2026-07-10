@@ -20,7 +20,7 @@ typedef String MessageIfAbsent(String messageStr, List<dynamic> args);
 class MessageLookup extends MessageLookupByLibrary {
   String get localeName => 'zh_CN';
 
-  static String m0(value) => "返利余额 ¥ ${value}";
+  static String m0(value) => "佣金 ¥ ${value}";
 
   static String m1(count) => "${count} 天前";
 
@@ -84,7 +84,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "accessControlSettings": MessageLookupByLibrary.simpleMessage("访问控制设置"),
     "accessToken": MessageLookupByLibrary.simpleMessage("Access Token"),
     "account": MessageLookupByLibrary.simpleMessage("账号"),
-    "accountBalance": MessageLookupByLibrary.simpleMessage("账户余额"),
+    "accountBalance": MessageLookupByLibrary.simpleMessage("余额"),
     "action": MessageLookupByLibrary.simpleMessage("操作"),
     "action_mode": MessageLookupByLibrary.simpleMessage("切换模式"),
     "action_proxy": MessageLookupByLibrary.simpleMessage("系统代理"),
@@ -184,7 +184,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "color": MessageLookupByLibrary.simpleMessage("颜色"),
     "colorSchemes": MessageLookupByLibrary.simpleMessage("配色方案"),
     "columns": MessageLookupByLibrary.simpleMessage("列数"),
-    "commission": MessageLookupByLibrary.simpleMessage("返利"),
+    "commission": MessageLookupByLibrary.simpleMessage("佣金"),
     "commissionBalance": m0,
     "compatible": MessageLookupByLibrary.simpleMessage("兼容模式"),
     "compatibleDesc": MessageLookupByLibrary.simpleMessage(
