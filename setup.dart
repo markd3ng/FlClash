@@ -691,8 +691,8 @@ class BuildCommand extends Command {
         final token = target != Target.android
             ? await Build.calcSha256(corePaths.first)
             : null;
-        Build.buildHelper(target, token!);
-        _buildDistributor(
+        await Build.buildHelper(target, token!);
+        await _buildDistributor(
           target: target,
           targets: 'exe,zip',
           args:
@@ -709,7 +709,7 @@ class BuildCommand extends Command {
         ].join(',');
         final defaultTarget = targetMap[arch];
         await _getLinuxDependencies(arch!);
-        _buildDistributor(
+        await _buildDistributor(
           target: target,
           targets: targets,
           args:
@@ -740,7 +740,7 @@ class BuildCommand extends Command {
           final defaultTargets = defaultArches
               .map((e) => targetMap[e])
               .toList();
-          _buildDistributor(
+          await _buildDistributor(
             target: target,
             targets: 'apk',
             args:
@@ -751,7 +751,7 @@ class BuildCommand extends Command {
         return;
       case Target.macos:
         await _getMacosDependencies();
-        _buildDistributor(
+        await _buildDistributor(
           target: target,
           targets: 'dmg',
           args: ' --description $archName',
@@ -768,5 +768,5 @@ Future<void> main(Iterable<String> args) async {
   runner.addCommand(BuildCommand(target: Target.linux));
   runner.addCommand(BuildCommand(target: Target.windows));
   runner.addCommand(BuildCommand(target: Target.macos));
-  runner.run(args);
+  await runner.run(args);
 }

@@ -7,6 +7,7 @@ on:
 
 env:
   IS_STABLE: ${{ !contains(github.ref, '-') }}
+  FLUTTER_VERSION: '3.44.4'
   GO_VERSION: '1.26'
   MSYS_NO_PATHCONV: 1
 
@@ -57,8 +58,8 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: master
-          flutter-version: 3.41.6
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
       - name: Install dependencies
@@ -149,7 +150,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: master
-          flutter-version: 3.41.6
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: ${{ matrix.platform != 'windows' }}
 
       - name: Cache Gradle
@@ -248,6 +249,11 @@ jobs:
           BUILD_ARGS="$BUILD_ARGS --out app"
           [ "${{ env.IS_STABLE }}" == "true" ] && BUILD_ARGS="$BUILD_ARGS --env stable"
           dart setup.dart $BUILD_ARGS
+
+          if [ ! -d ./dist ] || [ -z "$(find ./dist -type f -print -quit)" ]; then
+            echo "Build produced no artifacts in ./dist" >&2
+            exit 1
+          fi
           
           find ./dist -name "*.exe" -type f -exec sh -c 'mv "$1" "${1%.exe}-setup.exe"' _ {} \;
           find ./dist -name "*.appimage" -type f -exec sh -c 'mv "$1" "${1%.appimage}.AppImage"' _ {} \;
@@ -258,6 +264,7 @@ jobs:
           name: artifact-${{ matrix.platform }}${{ matrix.arch && format('-{0}', matrix.arch) }}
           path: ./dist
           overwrite: true
+          if-no-files-found: error
 
   changelog:
     permissions:
