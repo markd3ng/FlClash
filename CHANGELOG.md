@@ -1,3 +1,7 @@
+## v0.8.94
+
+- feat: release v0.8.94
+
 ## v0.8.93
 
 - chore(release): follow upstream v0.8.93
