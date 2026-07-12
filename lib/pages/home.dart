@@ -6,7 +6,6 @@ import 'package:fl_clash/models/common.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -24,9 +23,6 @@ class HomePage extends StatelessWidget {
           child: Consumer(
             builder: (context, ref, child) {
               final state = ref.watch(navigationStateProvider);
-              final systemUiOverlayStyle = ref.read(
-                systemUiOverlayStyleStateProvider,
-              );
               final isMobile = state.viewMode == ViewMode.mobile;
               final navigationItems = state.navigationItems;
               final currentIndex = state.currentIndex;
@@ -48,34 +44,28 @@ class HomePage extends StatelessWidget {
                 ),
               );
               if (isMobile) {
-                return AnnotatedRegion<SystemUiOverlayStyle>(
-                  value: systemUiOverlayStyle.copyWith(
-                    systemNavigationBarColor:
-                        context.colorScheme.surfaceContainer,
-                  ),
-                  child: Column(
-                    children: [
-                      Flexible(
-                        flex: 1,
-                        child: MediaQuery.removePadding(
-                          removeTop: false,
-                          removeBottom: true,
-                          removeLeft: true,
-                          removeRight: true,
-                          context: context,
-                          child: child!,
-                        ),
-                      ),
-                      MediaQuery.removePadding(
-                        removeTop: true,
-                        removeBottom: false,
+                return Column(
+                  children: [
+                    Flexible(
+                      flex: 1,
+                      child: MediaQuery.removePadding(
+                        removeTop: false,
+                        removeBottom: true,
                         removeLeft: true,
                         removeRight: true,
                         context: context,
-                        child: bottomNavigationBar,
+                        child: child!,
                       ),
-                    ],
-                  ),
+                    ),
+                    MediaQuery.removePadding(
+                      removeTop: true,
+                      removeBottom: false,
+                      removeLeft: true,
+                      removeRight: true,
+                      context: context,
+                      child: bottomNavigationBar,
+                    ),
+                  ],
                 );
               } else {
                 return child!;

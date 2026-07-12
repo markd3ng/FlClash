@@ -131,9 +131,9 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
           profile = profile.copyWith(autoUpdate: false);
         }
       }
-      appController.putProfile(await profile.saveFile(_fileData!));
+      await appController.saveProfileFile(profile, _fileData!);
     } else if (!hasUpdate) {
-      appController.putProfile(profile);
+      await appController.putProfile(profile, reportOnWait: false);
     } else {
       appController.safeRun(() async {
         await Future.delayed(commonDuration);
@@ -240,8 +240,8 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
 
   Future<void> _uploadProfileFile() async {
     final platformFile = await appController.safeRun(picker.pickerFile);
-    if (platformFile?.bytes == null) return;
-    _fileData = platformFile?.bytes;
+    if (platformFile == null) return;
+    _fileData = await platformFile.readBytes();
     if (!mounted) {
       return;
     }
@@ -292,6 +292,7 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
           textInputAction: TextInputAction.next,
           controller: _labelController,
           enabled: !isoixCloud,
+          inputFormatters: TextInputLimits.limit(TextInputLimits.name),
           decoration: InputDecoration(
             border: const OutlineInputBorder(),
             labelText: appLocalizations.name,
@@ -339,6 +340,10 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
             title: TextFormField(
               textInputAction: TextInputAction.next,
               controller: _autoUpdateDurationController,
+              keyboardType: TextInputType.number,
+              inputFormatters: TextInputLimits.digitsOnly(
+                TextInputLimits.interval,
+              ),
               decoration: InputDecoration(
                 border: const OutlineInputBorder(),
                 labelText: appLocalizations.autoUpdateInterval,

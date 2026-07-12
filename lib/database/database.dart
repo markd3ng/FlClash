@@ -14,6 +14,8 @@ part 'profiles.dart';
 part 'rules.dart';
 part 'scripts.dart';
 
+const currentDatabaseSchemaVersion = 3;
+
 @DriftDatabase(
   tables: [Profiles, Scripts, Rules, ProfileRuleLinks],
   daos: [ProfilesDao, ScriptsDao, RulesDao],
@@ -22,15 +24,27 @@ class Database extends _$Database {
   Database([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => currentDatabaseSchemaVersion;
 
   @override
   MigrationStrategy get migration {
     return MigrationStrategy(
+      beforeOpen: (details) async {
+        await customStatement('''
+          DELETE FROM profile_rule_mapping
+          WHERE rule_id NOT IN (SELECT id FROM rules)
+             OR (profile_id IS NOT NULL AND profile_id NOT IN (SELECT id FROM profiles))
+        ''');
+        await customStatement('PRAGMA foreign_keys = ON');
+      },
       onUpgrade: (m, from, to) async {
         if (from < 2) {
           await m.addColumn(profiles, profiles.proxyChains);
           await m.addColumn(profiles, profiles.profileProxies);
+        }
+        if (from < 3) {
+          await m.addColumn(profiles, profiles.customProxyGroups);
+          await m.addColumn(profiles, profiles.customRules);
         }
       },
     );
@@ -43,6 +57,13 @@ class Database extends _$Database {
     });
   }
 
+  Future<void> createSnapshot(String path) async {
+    final file = File(path);
+    await file.safeDelete();
+    final escapedPath = path.replaceAll("'", "''");
+    await customStatement("VACUUM INTO '$escapedPath'");
+  }
+
   Future<void> restore(
     List<Profile> profiles,
     List<Script> scripts,
@@ -50,21 +71,45 @@ class Database extends _$Database {
     List<ProfileRuleLink> links, {
     bool isOverride = false,
   }) async {
-    if (profiles.isNotEmpty ||
-        scripts.isNotEmpty ||
-        rules.isNotEmpty ||
-        links.isNotEmpty) {
-      await batch((b) {
-        isOverride
-            ? profilesDao.setAllWithBatch(b, profiles)
-            : profilesDao.putAllWithBatch(
-                b,
-                profiles.map((item) => item.toCompanion()),
-              );
+    await batch((b) {
+      if (isOverride) {
+        profilesDao.setAllWithBatch(b, profiles);
         scriptsDao.setAllWithBatch(b, scripts);
         rulesDao.restoreWithBatch(b, rules, links);
-      });
-    }
+      } else {
+        profilesDao.putAllWithBatch(
+          b,
+          profiles.map((item) => item.toCompanion()),
+        );
+        b.insertAllOnConflictUpdate(
+          this.scripts,
+          scripts.map((item) => item.toCompanion()),
+        );
+        b.insertAllOnConflictUpdate(
+          this.rules,
+          rules.map((item) => item.toCompanion()),
+        );
+        b.insertAllOnConflictUpdate(
+          profileRuleLinks,
+          links.map((item) => item.toCompanion()),
+        );
+      }
+    });
+  }
+
+  Future<List<int>> deleteScriptAndClearReferences(int scriptId) {
+    return transaction(() async {
+      final affectedProfileIds =
+          await (select(profiles)
+                ..where((table) => table.scriptId.equals(scriptId)))
+              .map((row) => row.id)
+              .get();
+      await (update(profiles)
+            ..where((table) => table.scriptId.equals(scriptId)))
+          .write(const ProfilesCompanion(scriptId: Value(null)));
+      await scripts.remove((table) => table.id.equals(scriptId));
+      return affectedProfileIds;
+    });
   }
 }
 

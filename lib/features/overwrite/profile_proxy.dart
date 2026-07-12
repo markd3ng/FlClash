@@ -835,6 +835,15 @@ bool hasProfileProxyGroupNameConflict(
   return groups.any((item) => item.name == name);
 }
 
+bool hasProfileProxyCustomNameConflict(
+  Profile profile,
+  ProfileProxy profileProxy,
+) {
+  final name = profileProxy.name;
+  return reservedOutboundNames.contains(name) ||
+      profile.customProxyGroups.any((group) => group.name == name);
+}
+
 class ProfileProxyItem extends StatelessWidget {
   final bool isSelected;
   final bool isEditing;
@@ -1042,6 +1051,15 @@ class ProfileProxiesContent extends ConsumerStatefulWidget {
 class _ProfileProxiesContentState extends ConsumerState<ProfileProxiesContent> {
   final _profileProxyKey = utils.id;
 
+  Future<String?> _findRawReference(String name) {
+    final profile = ref.read(profileProvider(widget.profileId));
+    return appController.findRawProfileOutboundReference(
+      widget.profileId,
+      name,
+      includeTopLevelRules: profile?.overwriteType != OverwriteType.custom,
+    );
+  }
+
   Set<int> _getSelectedProfileProxyIds() {
     return ref
         .read(selectedItemsProvider(_profileProxyKey))
@@ -1070,6 +1088,13 @@ class _ProfileProxiesContentState extends ConsumerState<ProfileProxiesContent> {
       );
       return;
     }
+    final profile = ref.read(profileProvider(widget.profileId));
+    if (profile != null && hasProfileProxyCustomNameConflict(profile, res)) {
+      context.showNotifier(
+        appLocalizations.existsTip(appLocalizations.proxies),
+      );
+      return;
+    }
     if (hasProfileProxyGroupNameConflict(ref.read(groupsProvider), res)) {
       context.showNotifier(
         appLocalizations.proxyChainUnavailableNodeTip(res.name),
@@ -1093,6 +1118,22 @@ class _ProfileProxiesContentState extends ConsumerState<ProfileProxiesContent> {
         );
         return;
       }
+      try {
+        final rawReference = await _findRawReference(previousName);
+        if (rawReference != null) {
+          if (mounted) {
+            context.showNotifier(
+              appLocalizations.rawOutboundInUse(previousName, rawReference),
+            );
+          }
+          return;
+        }
+      } catch (error) {
+        if (mounted) {
+          context.showNotifier(error.toString());
+        }
+        return;
+      }
     }
     _putProfileProxy(res, previousName: profileProxy?.name);
     _applyProfileChanges();
@@ -1104,13 +1145,15 @@ class _ProfileProxiesContentState extends ConsumerState<ProfileProxiesContent> {
     ) {
       final nextProfileProxies = state.profileProxies.copyAndPut(profileProxy);
       final nextName = profileProxy.name;
-      return state.copyWith(
-        profileProxies: nextProfileProxies,
-        proxyChains: state.proxyChains.copyAndRenameProxy(
-          previousName,
-          nextName,
-        ),
-      );
+      return state
+          .copyWith(
+            profileProxies: nextProfileProxies,
+            proxyChains: state.proxyChains.copyAndRenameProxy(
+              previousName,
+              nextName,
+            ),
+          )
+          .copyAndRenameOutboundReferences(previousName, nextName);
     });
   }
 
@@ -1171,6 +1214,42 @@ class _ProfileProxiesContentState extends ConsumerState<ProfileProxiesContent> {
             .map((item) => item.name)
             .toSet() ??
         {};
+    for (final name in relatedNames) {
+      try {
+        final rawReference = await _findRawReference(name);
+        if (rawReference != null) {
+          if (mounted) {
+            context.showNotifier(
+              appLocalizations.rawOutboundInUse(name, rawReference),
+            );
+          }
+          return;
+        }
+      } catch (error) {
+        if (mounted) {
+          context.showNotifier(error.toString());
+        }
+        return;
+      }
+    }
+    if (!mounted) {
+      return;
+    }
+    final referencedName = relatedNames.firstWhere(
+      (name) =>
+          currentProfile?.hasCustomOutboundReferences(
+            name,
+            includeProxyChains: false,
+          ) ??
+          false,
+      orElse: () => '',
+    );
+    if (referencedName.isNotEmpty) {
+      context.showNotifier(
+        appLocalizations.customOutboundInUse(referencedName),
+      );
+      return;
+    }
     final hasRelatedProxyChains =
         currentProfile?.proxyChains.any((chain) {
           return chain.proxies.any(relatedNames.contains);
@@ -1183,12 +1262,14 @@ class _ProfileProxiesContentState extends ConsumerState<ProfileProxiesContent> {
           .where((item) => targetProfileProxyIds.contains(item.id))
           .map((item) => item.name)
           .toSet();
-      return state.copyWith(
-        profileProxies: state.profileProxies
-            .where((item) => !targetProfileProxyIds.contains(item.id))
-            .toList(),
-        proxyChains: state.proxyChains.copyAndRemoveProxies(deletedNames),
-      );
+      return state
+          .copyWith(
+            profileProxies: state.profileProxies
+                .where((item) => !targetProfileProxyIds.contains(item.id))
+                .toList(),
+            proxyChains: state.proxyChains.copyAndRemoveProxies(deletedNames),
+          )
+          .copyAndRemoveOutboundCaches(deletedNames);
     });
     ref.read(selectedItemsProvider(_profileProxyKey).notifier).update((
       selectedProfileProxies,
@@ -1203,12 +1284,50 @@ class _ProfileProxiesContentState extends ConsumerState<ProfileProxiesContent> {
     }
   }
 
-  void _handleProfileProxyToggle(ProfileProxy profileProxy, bool value) {
+  Future<void> _handleProfileProxyToggle(
+    ProfileProxy profileProxy,
+    bool value,
+  ) async {
+    final profile = ref.read(profileProvider(widget.profileId));
+    if (!value &&
+        (profile?.hasCustomOutboundReferences(
+              profileProxy.name,
+              includeProxyChains: false,
+            ) ??
+            false)) {
+      context.showNotifier(
+        appLocalizations.customOutboundInUse(profileProxy.name),
+      );
+      return;
+    }
+    if (!value) {
+      try {
+        final rawReference = await _findRawReference(profileProxy.name);
+        if (rawReference != null) {
+          if (mounted) {
+            context.showNotifier(
+              appLocalizations.rawOutboundInUse(
+                profileProxy.name,
+                rawReference,
+              ),
+            );
+          }
+          return;
+        }
+      } catch (error) {
+        if (mounted) {
+          context.showNotifier(error.toString());
+        }
+        return;
+      }
+    }
+    if (!mounted) {
+      return;
+    }
     final hasRelatedProxyChains =
-        ref
-            .read(profileProvider(widget.profileId))
-            ?.proxyChains
-            .any((chain) => chain.proxies.contains(profileProxy.name)) ??
+        profile?.proxyChains.any(
+          (chain) => chain.proxies.contains(profileProxy.name),
+        ) ??
         false;
     ref.read(profilesProvider.notifier).updateProfile(widget.profileId, (
       state,
@@ -1220,12 +1339,14 @@ class _ProfileProxiesContentState extends ConsumerState<ProfileProxiesContent> {
       if (value) {
         return state.copyWith(profileProxies: nextProfileProxies);
       }
-      return state.copyWith(
-        profileProxies: nextProfileProxies,
-        proxyChains: state.proxyChains.copyAndDisableChainsUsingProxy(
-          profileProxy.name,
-        ),
-      );
+      return state
+          .copyWith(
+            profileProxies: nextProfileProxies,
+            proxyChains: state.proxyChains.copyAndDisableChainsUsingProxy(
+              profileProxy.name,
+            ),
+          )
+          .copyAndRemoveOutboundCaches({profileProxy.name});
     });
     _applyProfileChanges();
     if (!value && hasRelatedProxyChains) {

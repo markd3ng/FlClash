@@ -1,4 +1,8 @@
+import 'dart:async';
+
+import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/common/proxy.dart';
+import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/state.dart';
 import 'package:flutter/material.dart';
@@ -30,7 +34,14 @@ class _ProxyManagerState extends ConsumerState<ProxyManager> {
     super.initState();
     ref.listenManual(proxyStateProvider, (prev, next) {
       if (prev != next) {
-        _updateProxy(next);
+        unawaited(
+          _updateProxy(next).catchError((Object error, StackTrace stackTrace) {
+            commonPrint.log(
+              'system proxy update failed: $error\n$stackTrace',
+              logLevel: LogLevel.warning,
+            );
+          }),
+        );
       }
     }, fireImmediately: true);
   }

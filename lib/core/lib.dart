@@ -41,8 +41,25 @@ class CoreLib extends CoreHandlerInterface {
     if (!_connectedCompleter.isCompleted) {
       return false;
     }
-    _connectedCompleter = Completer();
-    return service?.shutdown() ?? true;
+    var coreStopped = false;
+    Object? actionError;
+    StackTrace? actionStackTrace;
+    try {
+      coreStopped = await invoke<bool>(method: ActionMethod.shutdown) ?? false;
+    } catch (error, stackTrace) {
+      actionError = error;
+      actionStackTrace = stackTrace;
+    } finally {
+      _connectedCompleter = Completer();
+    }
+    final serviceStopped = await service?.shutdown() ?? true;
+    if (actionError != null) {
+      Error.throwWithStackTrace(
+        actionError,
+        actionStackTrace ?? StackTrace.current,
+      );
+    }
+    return coreStopped && serviceStopped;
   }
 
   @override

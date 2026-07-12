@@ -95,6 +95,8 @@ UpdateParams updateParams(Ref ref) {
         secret: resolveExternalControllerSecret(state.secret),
         unifiedDelay: state.unifiedDelay,
         mixedPort: state.mixedPort,
+        geoAutoUpdate: state.geoAutoUpdate,
+        geoUpdateInterval: normalizeGeoUpdateInterval(state.geoUpdateInterval),
       ),
     ),
   );
@@ -685,6 +687,8 @@ Future<SetupState> setupState(Ref ref, int? profileId) async {
   final overwriteType = profile?.overwriteType ?? OverwriteType.standard;
   final proxyChains = profile?.proxyChains ?? [];
   final profileProxies = profile?.profileProxies ?? [];
+  final customProxyGroups = profile?.customProxyGroups ?? [];
+  final customRules = profile?.customRules ?? [];
   final dns = ref.watch(patchClashConfigProvider.select((state) => state.dns));
   final script = await ref.watch(scriptProvider(scriptId).future);
   final overrideDns = ref.watch(overrideDnsProvider);
@@ -698,6 +702,8 @@ Future<SetupState> setupState(Ref ref, int? profileId) async {
     addedRules: addedRules,
     proxyChains: proxyChains,
     profileProxies: profileProxies,
+    customProxyGroups: customProxyGroups,
+    customRules: customRules,
     script: script,
     overrideDns: overrideDns,
     dns: dns,

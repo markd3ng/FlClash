@@ -71,6 +71,8 @@ class ServicePlugin : FlutterPlugin, MethodChannel.MethodCallHandler,
             val data = call.arguments<String>()!!
             Service.invokeAction(data) {
                 result.success(it)
+            }.onFailure {
+                result.error("service_error", it.message, null)
             }
         }
     }

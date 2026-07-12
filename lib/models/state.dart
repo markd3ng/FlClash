@@ -342,12 +342,15 @@ abstract class MakeRealProfileState with _$MakeRealProfileState {
     required String profilesPath,
     required int profileId,
     required Map<String, dynamic> rawConfig,
+    required OverwriteType overwriteType,
     required ClashConfig realPatchConfig,
     required bool overrideDns,
     required bool appendSystemDns,
     required List<Rule> addedRules,
     required List<ProxyChain> proxyChains,
     required List<ProfileProxy> profileProxies,
+    required List<ProxyGroup> customProxyGroups,
+    required List<Rule> customRules,
     required String defaultUA,
   }) = _MakeRealProfileState;
 }
@@ -360,6 +363,7 @@ abstract class MigrationData with _$MigrationData {
     @Default([]) List<Script> scripts,
     @Default([]) List<Profile> profiles,
     @Default([]) List<ProfileRuleLink> links,
+    @Default([]) List<VM2<String, String>> fileMigrations,
   }) = _MigrationData;
 }
 
@@ -372,6 +376,8 @@ abstract class SetupState with _$SetupState {
     required List<Rule> addedRules,
     required List<ProxyChain> proxyChains,
     required List<ProfileProxy> profileProxies,
+    required List<ProxyGroup> customProxyGroups,
+    required List<Rule> customRules,
     required Script? script,
     required bool overrideDns,
     required Dns dns,
@@ -412,6 +418,17 @@ extension SetupStateExt on SetupState {
       }
       if (overwriteType == OverwriteType.standard) {
         if (!ruleListEquality.equals(addedRules, lastSetupState.addedRules)) {
+          return true;
+        }
+      }
+      if (overwriteType == OverwriteType.custom) {
+        if (!proxyGroupsEquality.equals(
+          customProxyGroups,
+          lastSetupState.customProxyGroups,
+        )) {
+          return true;
+        }
+        if (!ruleListEquality.equals(customRules, lastSetupState.customRules)) {
           return true;
         }
       }

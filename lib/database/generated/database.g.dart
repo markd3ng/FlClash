@@ -151,6 +151,26 @@ class $ProfilesTable extends Profiles
     requiredDuringInsert: false,
     defaultValue: Constant('[]'),
   ).withConverter<List<ProfileProxy>>($ProfilesTable.$converterprofileProxies);
+  @override
+  late final GeneratedColumnWithTypeConverter<List<ProxyGroup>, String>
+  customProxyGroups = GeneratedColumn<String>(
+    'custom_proxy_groups',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: Constant('[]'),
+  ).withConverter<List<ProxyGroup>>($ProfilesTable.$convertercustomProxyGroups);
+  @override
+  late final GeneratedColumnWithTypeConverter<List<Rule>, String> customRules =
+      GeneratedColumn<String>(
+        'custom_rules',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: Constant('[]'),
+      ).withConverter<List<Rule>>($ProfilesTable.$convertercustomRules);
   static const VerificationMeta _orderMeta = const VerificationMeta('order');
   @override
   late final GeneratedColumn<int> order = GeneratedColumn<int>(
@@ -176,6 +196,8 @@ class $ProfilesTable extends Profiles
     unfoldSet,
     proxyChains,
     profileProxies,
+    customProxyGroups,
+    customRules,
     order,
   ];
   @override
@@ -335,6 +357,18 @@ class $ProfilesTable extends Profiles
           data['${effectivePrefix}profile_proxies'],
         )!,
       ),
+      customProxyGroups: $ProfilesTable.$convertercustomProxyGroups.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}custom_proxy_groups'],
+        )!,
+      ),
+      customRules: $ProfilesTable.$convertercustomRules.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}custom_rules'],
+        )!,
+      ),
       order: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}order'],
@@ -361,6 +395,10 @@ class $ProfilesTable extends Profiles
       const ProxyChainListConverter();
   static TypeConverter<List<ProfileProxy>, String> $converterprofileProxies =
       const ProfileProxyListConverter();
+  static TypeConverter<List<ProxyGroup>, String> $convertercustomProxyGroups =
+      const ProxyGroupListConverter();
+  static TypeConverter<List<Rule>, String> $convertercustomRules =
+      const RuleListConverter();
 }
 
 class RawProfile extends DataClass implements Insertable<RawProfile> {
@@ -378,6 +416,8 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
   final Set<String> unfoldSet;
   final List<ProxyChain> proxyChains;
   final List<ProfileProxy> profileProxies;
+  final List<ProxyGroup> customProxyGroups;
+  final List<Rule> customRules;
   final int? order;
   const RawProfile({
     required this.id,
@@ -394,6 +434,8 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
     required this.unfoldSet,
     required this.proxyChains,
     required this.profileProxies,
+    required this.customProxyGroups,
+    required this.customRules,
     this.order,
   });
   @override
@@ -445,6 +487,16 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
         $ProfilesTable.$converterprofileProxies.toSql(profileProxies),
       );
     }
+    {
+      map['custom_proxy_groups'] = Variable<String>(
+        $ProfilesTable.$convertercustomProxyGroups.toSql(customProxyGroups),
+      );
+    }
+    {
+      map['custom_rules'] = Variable<String>(
+        $ProfilesTable.$convertercustomRules.toSql(customRules),
+      );
+    }
     if (!nullToAbsent || order != null) {
       map['order'] = Variable<int>(order);
     }
@@ -475,6 +527,8 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
       unfoldSet: Value(unfoldSet),
       proxyChains: Value(proxyChains),
       profileProxies: Value(profileProxies),
+      customProxyGroups: Value(customProxyGroups),
+      customRules: Value(customRules),
       order: order == null && nullToAbsent
           ? const Value.absent()
           : Value(order),
@@ -511,6 +565,10 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
       profileProxies: serializer.fromJson<List<ProfileProxy>>(
         json['profileProxies'],
       ),
+      customProxyGroups: serializer.fromJson<List<ProxyGroup>>(
+        json['customProxyGroups'],
+      ),
+      customRules: serializer.fromJson<List<Rule>>(json['customRules']),
       order: serializer.fromJson<int?>(json['order']),
     );
   }
@@ -538,6 +596,10 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
       'unfoldSet': serializer.toJson<Set<String>>(unfoldSet),
       'proxyChains': serializer.toJson<List<ProxyChain>>(proxyChains),
       'profileProxies': serializer.toJson<List<ProfileProxy>>(profileProxies),
+      'customProxyGroups': serializer.toJson<List<ProxyGroup>>(
+        customProxyGroups,
+      ),
+      'customRules': serializer.toJson<List<Rule>>(customRules),
       'order': serializer.toJson<int?>(order),
     };
   }
@@ -557,6 +619,8 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
     Set<String>? unfoldSet,
     List<ProxyChain>? proxyChains,
     List<ProfileProxy>? profileProxies,
+    List<ProxyGroup>? customProxyGroups,
+    List<Rule>? customRules,
     Value<int?> order = const Value.absent(),
   }) => RawProfile(
     id: id ?? this.id,
@@ -580,6 +644,8 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
     unfoldSet: unfoldSet ?? this.unfoldSet,
     proxyChains: proxyChains ?? this.proxyChains,
     profileProxies: profileProxies ?? this.profileProxies,
+    customProxyGroups: customProxyGroups ?? this.customProxyGroups,
+    customRules: customRules ?? this.customRules,
     order: order.present ? order.value : this.order,
   );
   RawProfile copyWithCompanion(ProfilesCompanion data) {
@@ -616,6 +682,12 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
       profileProxies: data.profileProxies.present
           ? data.profileProxies.value
           : this.profileProxies,
+      customProxyGroups: data.customProxyGroups.present
+          ? data.customProxyGroups.value
+          : this.customProxyGroups,
+      customRules: data.customRules.present
+          ? data.customRules.value
+          : this.customRules,
       order: data.order.present ? data.order.value : this.order,
     );
   }
@@ -637,6 +709,8 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
           ..write('unfoldSet: $unfoldSet, ')
           ..write('proxyChains: $proxyChains, ')
           ..write('profileProxies: $profileProxies, ')
+          ..write('customProxyGroups: $customProxyGroups, ')
+          ..write('customRules: $customRules, ')
           ..write('order: $order')
           ..write(')'))
         .toString();
@@ -658,6 +732,8 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
     unfoldSet,
     proxyChains,
     profileProxies,
+    customProxyGroups,
+    customRules,
     order,
   );
   @override
@@ -678,6 +754,8 @@ class RawProfile extends DataClass implements Insertable<RawProfile> {
           other.unfoldSet == this.unfoldSet &&
           other.proxyChains == this.proxyChains &&
           other.profileProxies == this.profileProxies &&
+          other.customProxyGroups == this.customProxyGroups &&
+          other.customRules == this.customRules &&
           other.order == this.order);
 }
 
@@ -696,6 +774,8 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
   final Value<Set<String>> unfoldSet;
   final Value<List<ProxyChain>> proxyChains;
   final Value<List<ProfileProxy>> profileProxies;
+  final Value<List<ProxyGroup>> customProxyGroups;
+  final Value<List<Rule>> customRules;
   final Value<int?> order;
   const ProfilesCompanion({
     this.id = const Value.absent(),
@@ -712,6 +792,8 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
     this.unfoldSet = const Value.absent(),
     this.proxyChains = const Value.absent(),
     this.profileProxies = const Value.absent(),
+    this.customProxyGroups = const Value.absent(),
+    this.customRules = const Value.absent(),
     this.order = const Value.absent(),
   });
   ProfilesCompanion.insert({
@@ -729,6 +811,8 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
     required Set<String> unfoldSet,
     this.proxyChains = const Value.absent(),
     this.profileProxies = const Value.absent(),
+    this.customProxyGroups = const Value.absent(),
+    this.customRules = const Value.absent(),
     this.order = const Value.absent(),
   }) : label = Value(label),
        url = Value(url),
@@ -752,6 +836,8 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
     Expression<String>? unfoldSet,
     Expression<String>? proxyChains,
     Expression<String>? profileProxies,
+    Expression<String>? customProxyGroups,
+    Expression<String>? customRules,
     Expression<int>? order,
   }) {
     return RawValuesInsertable({
@@ -770,6 +856,8 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
       if (unfoldSet != null) 'unfold_set': unfoldSet,
       if (proxyChains != null) 'proxy_chains': proxyChains,
       if (profileProxies != null) 'profile_proxies': profileProxies,
+      if (customProxyGroups != null) 'custom_proxy_groups': customProxyGroups,
+      if (customRules != null) 'custom_rules': customRules,
       if (order != null) 'order': order,
     });
   }
@@ -789,6 +877,8 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
     Value<Set<String>>? unfoldSet,
     Value<List<ProxyChain>>? proxyChains,
     Value<List<ProfileProxy>>? profileProxies,
+    Value<List<ProxyGroup>>? customProxyGroups,
+    Value<List<Rule>>? customRules,
     Value<int?>? order,
   }) {
     return ProfilesCompanion(
@@ -807,6 +897,8 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
       unfoldSet: unfoldSet ?? this.unfoldSet,
       proxyChains: proxyChains ?? this.proxyChains,
       profileProxies: profileProxies ?? this.profileProxies,
+      customProxyGroups: customProxyGroups ?? this.customProxyGroups,
+      customRules: customRules ?? this.customRules,
       order: order ?? this.order,
     );
   }
@@ -870,6 +962,18 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
         $ProfilesTable.$converterprofileProxies.toSql(profileProxies.value),
       );
     }
+    if (customProxyGroups.present) {
+      map['custom_proxy_groups'] = Variable<String>(
+        $ProfilesTable.$convertercustomProxyGroups.toSql(
+          customProxyGroups.value,
+        ),
+      );
+    }
+    if (customRules.present) {
+      map['custom_rules'] = Variable<String>(
+        $ProfilesTable.$convertercustomRules.toSql(customRules.value),
+      );
+    }
     if (order.present) {
       map['order'] = Variable<int>(order.value);
     }
@@ -893,6 +997,8 @@ class ProfilesCompanion extends UpdateCompanion<RawProfile> {
           ..write('unfoldSet: $unfoldSet, ')
           ..write('proxyChains: $proxyChains, ')
           ..write('profileProxies: $profileProxies, ')
+          ..write('customProxyGroups: $customProxyGroups, ')
+          ..write('customRules: $customRules, ')
           ..write('order: $order')
           ..write(')'))
         .toString();
@@ -1760,6 +1866,8 @@ typedef $$ProfilesTableCreateCompanionBuilder =
       required Set<String> unfoldSet,
       Value<List<ProxyChain>> proxyChains,
       Value<List<ProfileProxy>> profileProxies,
+      Value<List<ProxyGroup>> customProxyGroups,
+      Value<List<Rule>> customRules,
       Value<int?> order,
     });
 typedef $$ProfilesTableUpdateCompanionBuilder =
@@ -1778,6 +1886,8 @@ typedef $$ProfilesTableUpdateCompanionBuilder =
       Value<Set<String>> unfoldSet,
       Value<List<ProxyChain>> proxyChains,
       Value<List<ProfileProxy>> profileProxies,
+      Value<List<ProxyGroup>> customProxyGroups,
+      Value<List<Rule>> customRules,
       Value<int?> order,
     });
 
@@ -1898,6 +2008,18 @@ class $$ProfilesTableFilterComposer
     builder: (column) => ColumnWithTypeConverterFilters(column),
   );
 
+  ColumnWithTypeConverterFilters<List<ProxyGroup>, List<ProxyGroup>, String>
+  get customProxyGroups => $composableBuilder(
+    column: $table.customProxyGroups,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<List<Rule>, List<Rule>, String>
+  get customRules => $composableBuilder(
+    column: $table.customRules,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
   ColumnFilters<int> get order => $composableBuilder(
     column: $table.order,
     builder: (column) => ColumnFilters(column),
@@ -2008,6 +2130,16 @@ class $$ProfilesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get customProxyGroups => $composableBuilder(
+    column: $table.customProxyGroups,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get customRules => $composableBuilder(
+    column: $table.customRules,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get order => $composableBuilder(
     column: $table.order,
     builder: (column) => ColumnOrderings(column),
@@ -2088,6 +2220,18 @@ class $$ProfilesTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumnWithTypeConverter<List<ProxyGroup>, String>
+  get customProxyGroups => $composableBuilder(
+    column: $table.customProxyGroups,
+    builder: (column) => column,
+  );
+
+  GeneratedColumnWithTypeConverter<List<Rule>, String> get customRules =>
+      $composableBuilder(
+        column: $table.customRules,
+        builder: (column) => column,
+      );
+
   GeneratedColumn<int> get order =>
       $composableBuilder(column: $table.order, builder: (column) => column);
 
@@ -2160,6 +2304,9 @@ class $$ProfilesTableTableManager
                 Value<Set<String>> unfoldSet = const Value.absent(),
                 Value<List<ProxyChain>> proxyChains = const Value.absent(),
                 Value<List<ProfileProxy>> profileProxies = const Value.absent(),
+                Value<List<ProxyGroup>> customProxyGroups =
+                    const Value.absent(),
+                Value<List<Rule>> customRules = const Value.absent(),
                 Value<int?> order = const Value.absent(),
               }) => ProfilesCompanion(
                 id: id,
@@ -2176,6 +2323,8 @@ class $$ProfilesTableTableManager
                 unfoldSet: unfoldSet,
                 proxyChains: proxyChains,
                 profileProxies: profileProxies,
+                customProxyGroups: customProxyGroups,
+                customRules: customRules,
                 order: order,
               ),
           createCompanionCallback:
@@ -2195,6 +2344,9 @@ class $$ProfilesTableTableManager
                 required Set<String> unfoldSet,
                 Value<List<ProxyChain>> proxyChains = const Value.absent(),
                 Value<List<ProfileProxy>> profileProxies = const Value.absent(),
+                Value<List<ProxyGroup>> customProxyGroups =
+                    const Value.absent(),
+                Value<List<Rule>> customRules = const Value.absent(),
                 Value<int?> order = const Value.absent(),
               }) => ProfilesCompanion.insert(
                 id: id,
@@ -2211,6 +2363,8 @@ class $$ProfilesTableTableManager
                 unfoldSet: unfoldSet,
                 proxyChains: proxyChains,
                 profileProxies: profileProxies,
+                customProxyGroups: customProxyGroups,
+                customRules: customRules,
                 order: order,
               ),
           withReferenceMapper: (p0) => p0

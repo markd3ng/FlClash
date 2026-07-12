@@ -1,6 +1,6 @@
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
-import 'package:flutter/services.dart';
+import 'dart:ui' show Brightness, Size;
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import 'common.dart';
@@ -34,7 +34,6 @@ abstract class AppState with _$AppState {
     required Traffic totalTraffic,
     @Default(false) bool realTunEnable,
     @Default(false) bool loading,
-    required SystemUiOverlayStyle systemUiOverlayStyle,
     @Default(CoreStatus.connecting) CoreStatus coreStatus,
   }) = _AppState;
 }

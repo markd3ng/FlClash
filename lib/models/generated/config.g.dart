@@ -32,6 +32,7 @@ _AppSettingProps _$AppSettingPropsFromJson(Map<String, dynamic> json) =>
           ) ??
           RestoreStrategy.compatible,
       showTrayTitle: json['showTrayTitle'] as bool? ?? true,
+      customUserAgent: json['customUserAgent'] as String? ?? '',
     );
 
 Map<String, dynamic> _$AppSettingPropsToJson(_AppSettingProps instance) =>
@@ -55,6 +56,7 @@ Map<String, dynamic> _$AppSettingPropsToJson(_AppSettingProps instance) =>
       'developerMode': instance.developerMode,
       'restoreStrategy': _$RestoreStrategyEnumMap[instance.restoreStrategy]!,
       'showTrayTitle': instance.showTrayTitle,
+      'customUserAgent': instance.customUserAgent,
     };
 
 const _$RestoreStrategyEnumMap = {

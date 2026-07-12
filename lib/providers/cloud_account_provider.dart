@@ -143,7 +143,7 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
     required int? fallbackProfileId,
   }) async {
     oixCloudConfigCache.remove(id);
-    ref.read(profilesProvider.notifier).del(id);
+    await ref.read(profilesProvider.notifier).del(id, reportOnWait: false);
     await appController.clearEffect(id);
     if (ref.read(currentProfileIdProvider) != id) {
       return;

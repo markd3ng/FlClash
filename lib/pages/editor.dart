@@ -127,7 +127,7 @@ class _EditorPageState extends ConsumerState<EditorPage> {
     if (file == null) {
       return;
     }
-    final res = utf8.decode(file.bytes?.toList() ?? []);
+    final res = utf8.decode(await file.readBytes());
     _controller.text = res;
   }
 
@@ -137,6 +137,7 @@ class _EditorPageState extends ConsumerState<EditorPage> {
         title: appLocalizations.import,
         value: '',
         labelText: appLocalizations.url,
+        inputFormatters: TextInputLimits.limit(TextInputLimits.url),
         validator: (value) {
           if (value == null || value.isEmpty) {
             return appLocalizations.emptyTip(appLocalizations.value);
@@ -465,6 +466,7 @@ class FindPanel extends StatelessWidget implements PreferredSizeWidget {
       child: TextField(
         maxLines: 1,
         focusNode: focusNode,
+        inputFormatters: TextInputLimits.limit(TextInputLimits.search),
         style: context.textTheme.bodyMedium,
         decoration: InputDecoration(
           border: OutlineInputBorder(),

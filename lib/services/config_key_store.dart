@@ -45,6 +45,12 @@ class ConfigKeyStore {
     return identity;
   }
 
+  static Future<void> clear() async {
+    _cachedSeedBase64 = null;
+    _cachedIdentity = null;
+    await SafeStorage.delete(_seedKey);
+  }
+
   static Uint8List _randomSeed() {
     final random = Random.secure();
     return Uint8List.fromList(

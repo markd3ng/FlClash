@@ -12,10 +12,11 @@ import (
 )
 
 type InitParams struct {
-	HomeDir            string `json:"home-dir"`
-	Version            int    `json:"version"`
-	ProfileKey         string `json:"profile-key"`
-	ConfigAgeSecretKey string `json:"config-age-secret-key"`
+	HomeDir              string `json:"home-dir"`
+	ValidationSourceHome string `json:"validation-source-home"`
+	Version              int    `json:"version"`
+	ProfileKey           string `json:"profile-key"`
+	ConfigAgeSecretKey   string `json:"config-age-secret-key"`
 }
 
 type SetupParams struct {
@@ -38,6 +39,8 @@ type UpdateParams struct {
 	Secret             *string            `json:"secret"`
 	Interface          *string            `json:"interface-name"`
 	UnifiedDelay       *bool              `json:"unified-delay"`
+	GeoAutoUpdate      *bool              `json:"geo-auto-update"`
+	GeoUpdateInterval  *int               `json:"geo-update-interval"`
 }
 
 type tunSchema struct {
@@ -123,14 +126,23 @@ type Delay struct {
 	Value int32  `json:"value"`
 }
 
+type GeoUpdateStatus struct {
+	Type     string `json:"type"`
+	Updating bool   `json:"updating"`
+	Skipped  bool   `json:"skipped,omitempty"`
+	Reload   bool   `json:"reload,omitempty"`
+	Error    string `json:"error,omitempty"`
+}
+
 type Message struct {
 	Type MessageType `json:"type"`
 	Data interface{} `json:"data"`
 }
 
 const (
-	LogMessage     MessageType = "log"
-	DelayMessage   MessageType = "delay"
-	RequestMessage MessageType = "request"
-	LoadedMessage  MessageType = "loaded"
+	LogMessage       MessageType = "log"
+	DelayMessage     MessageType = "delay"
+	RequestMessage   MessageType = "request"
+	LoadedMessage    MessageType = "loaded"
+	GeoUpdateMessage MessageType = "geoUpdate"
 )

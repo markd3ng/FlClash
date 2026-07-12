@@ -187,7 +187,7 @@ final class UpdateParamsProvider
   }
 }
 
-String _$updateParamsHash() => r'6111a543d8d8bb01fb01a6d7a7473cb77b9ff32e';
+String _$updateParamsHash() => r'f79f5fa54e58365cc84ec57bba87381855a8849c';
 
 @ProviderFor(proxyState)
 final proxyStateProvider = ProxyStateProvider._();
@@ -2497,7 +2497,7 @@ final class SetupStateProvider
   }
 }
 
-String _$setupStateHash() => r'927b4457b03d4c5fa29e8cc84739ac859a6b0bbb';
+String _$setupStateHash() => r'a43df2ec02a39ffdcd46f307b7b9c4ed83f8d47c';
 
 final class SetupStateFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<SetupState>, int?> {

@@ -88,29 +88,43 @@ class GlobalState {
       logs: FixedList(maxLength),
       traffics: FixedList(30),
       totalTraffic: Traffic(),
-      systemUiOverlayStyle: const SystemUiOverlayStyle(),
     );
     final appStateOverrides = buildAppStateOverrides(appState);
     packageInfo = await PackageInfo.fromPlatform();
+    await recoverPendingRestore(
+      homePath: await appPath.homeDirPath,
+      databasePath: await appPath.databasePath,
+      durableConfigPath: await appPath.durableConfigPath,
+    );
     final configMap = await preferences.getConfigMap();
     final config = await migration.migrationIfNeeded(
       configMap,
       sync: (data) async {
         final newConfigMap = data.configMap;
         final config = Config.realFromJson(newConfigMap);
-        await Future.wait([
-          database.restore(data.profiles, data.scripts, data.rules, data.links),
-          preferences.saveConfig(config),
-        ]);
+        await database.transaction(() async {
+          await database.restore(
+            data.profiles,
+            data.scripts,
+            data.rules,
+            data.links,
+          );
+        });
+        if (!await preferences.saveConfig(config)) {
+          throw StateError('failed to persist migrated config');
+        }
         return config;
       },
     );
+    if (!await preferences.saveConfig(config)) {
+      throw StateError('failed to persist application config');
+    }
     final configOverrides = buildConfigOverrides(config);
     container = ProviderContainer(
       overrides: [...appStateOverrides, ...configOverrides],
     );
     final profiles = await database.profilesDao.all().get();
-    container.read(profilesProvider.notifier).setAndReorder(profiles);
+    await container.read(profilesProvider.notifier).setAndReorder(profiles);
     await AppLocalizations.load(
       utils.getLocaleForString(config.appSettingProps.locale) ??
           WidgetsBinding.instance.platformDispatcher.locale,
@@ -120,6 +134,9 @@ class GlobalState {
       config.windowProps,
       silentLaunch: config.appSettingProps.silentLaunch,
     );
+    if (system.isAndroid) {
+      await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    }
     return container;
   }
 

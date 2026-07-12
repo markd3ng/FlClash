@@ -12,14 +12,20 @@ _ProxyGroup _$ProxyGroupFromJson(Map<String, dynamic> json) => _ProxyGroup(
   proxies: _parseStringList(json['proxies']),
   use: _parseStringList(json['use']),
   interval: _parseInt(json['interval']),
+  tolerance: _parseInt(json['tolerance']),
   lazy: _parseBool(json['lazy']),
+  disableUdp: _parseBool(json['disable-udp']),
   url: json['url'] as String?,
   timeout: _parseInt(json['timeout']),
   maxFailedTimes: _parseInt(json['max-failed-times']),
   filter: json['filter'] as String?,
-  excludeFilter: json['expected-filter'] as String?,
+  excludeFilter: json['exclude-filter'] as String?,
   excludeType: json['exclude-type'] as String?,
   expectedStatus: json['expected-status'],
+  includeAll: _parseBool(json['include-all']),
+  includeAllProxies: _parseBool(json['include-all-proxies']),
+  includeAllProviders: _parseBool(json['include-all-providers']),
+  strategy: json['strategy'] as String?,
   hidden: _parseBool(json['hidden']),
   icon: json['icon'] as String?,
 );
@@ -31,24 +37,30 @@ Map<String, dynamic> _$ProxyGroupToJson(_ProxyGroup instance) =>
       'proxies': instance.proxies,
       'use': instance.use,
       'interval': instance.interval,
+      'tolerance': instance.tolerance,
       'lazy': instance.lazy,
+      'disable-udp': instance.disableUdp,
       'url': instance.url,
       'timeout': instance.timeout,
       'max-failed-times': instance.maxFailedTimes,
       'filter': instance.filter,
-      'expected-filter': instance.excludeFilter,
+      'exclude-filter': instance.excludeFilter,
       'exclude-type': instance.excludeType,
       'expected-status': instance.expectedStatus,
+      'include-all': instance.includeAll,
+      'include-all-proxies': instance.includeAllProxies,
+      'include-all-providers': instance.includeAllProviders,
+      'strategy': instance.strategy,
       'hidden': instance.hidden,
       'icon': instance.icon,
     };
 
 const _$GroupTypeEnumMap = {
-  GroupType.Selector: 'Selector',
-  GroupType.URLTest: 'URLTest',
-  GroupType.Fallback: 'Fallback',
-  GroupType.LoadBalance: 'LoadBalance',
-  GroupType.Relay: 'Relay',
+  GroupType.Selector: 'select',
+  GroupType.URLTest: 'url-test',
+  GroupType.Fallback: 'fallback',
+  GroupType.LoadBalance: 'load-balance',
+  GroupType.Relay: 'relay',
 };
 
 _RuleProvider _$RuleProviderFromJson(Map<String, dynamic> json) =>
@@ -386,6 +398,10 @@ _ClashConfig _$ClashConfigFromJson(Map<String, dynamic> json) => _ClashConfig(
         (k, e) => MapEntry(k, e as String),
       ) ??
       const {},
+  geoAutoUpdate: json['geo-auto-update'] as bool? ?? false,
+  geoUpdateInterval:
+      (json['geo-update-interval'] as num?)?.toInt() ??
+      defaultGeoUpdateInterval,
 );
 
 Map<String, dynamic> _$ClashConfigToJson(_ClashConfig instance) =>
@@ -415,6 +431,8 @@ Map<String, dynamic> _$ClashConfigToJson(_ClashConfig instance) =>
       'external-controller-address': instance.externalControllerAddress,
       'secret': instance.secret,
       'hosts': instance.hosts,
+      'geo-auto-update': instance.geoAutoUpdate,
+      'geo-update-interval': instance.geoUpdateInterval,
     };
 
 const _$ModeEnumMap = {

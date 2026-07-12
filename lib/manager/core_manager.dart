@@ -105,7 +105,45 @@ class _CoreContainerState extends ConsumerState<CoreManager>
     if (WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed) {
       context.showNotifier(message);
     }
-    await coreController.shutdown(false);
+    globalState.startTime = null;
+    globalState.stopUpdateTasks();
+    ref.read(runTimeProvider.notifier).value = null;
+    await runCleanupActions([
+      stopSystemProxyIfNeeded,
+      () => coreController.shutdown(false),
+    ]);
     super.onCrash(message);
+  }
+
+  @override
+  void onGeoUpdate(
+    String geoType,
+    bool updating,
+    bool skipped,
+    bool reload,
+    String? error,
+  ) {
+    if (reload) {
+      if (ref.read(isStartProvider)) {
+        debouncer.call(
+          FunctionTag.geoReload,
+          () => appController.restartCore(),
+        );
+      }
+      return;
+    }
+    final geoResource = GeoResource.fromJson(geoType.toLowerCase());
+    ref.read(isUpdatingProvider(geoResource.updatingKey).notifier).value =
+        updating;
+    if (updating) {
+      globalState.showNotifier(appLocalizations.geoUpdating(geoResource.name));
+    } else if (error != null && error.isNotEmpty) {
+      globalState.showNotifier(error);
+    } else if (skipped) {
+      globalState.showNotifier(appLocalizations.geoSkipped(geoResource.name));
+    } else {
+      globalState.showNotifier(appLocalizations.geoUpdated(geoResource.name));
+    }
+    super.onGeoUpdate(geoType, updating, skipped, reload, error);
   }
 }

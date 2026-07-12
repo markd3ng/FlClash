@@ -1203,60 +1203,6 @@ abstract class _$DelayDataSource extends $Notifier<DelayMap> {
   }
 }
 
-@ProviderFor(SystemUiOverlayStyleState)
-final systemUiOverlayStyleStateProvider = SystemUiOverlayStyleStateProvider._();
-
-final class SystemUiOverlayStyleStateProvider
-    extends $NotifierProvider<SystemUiOverlayStyleState, SystemUiOverlayStyle> {
-  SystemUiOverlayStyleStateProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'systemUiOverlayStyleStateProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$systemUiOverlayStyleStateHash();
-
-  @$internal
-  @override
-  SystemUiOverlayStyleState create() => SystemUiOverlayStyleState();
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(SystemUiOverlayStyle value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<SystemUiOverlayStyle>(value),
-    );
-  }
-}
-
-String _$systemUiOverlayStyleStateHash() =>
-    r'4d164a39c08b5435821a6dacdd70782a4be9d239';
-
-abstract class _$SystemUiOverlayStyleState
-    extends $Notifier<SystemUiOverlayStyle> {
-  SystemUiOverlayStyle build();
-  @$mustCallSuper
-  @override
-  void runBuild() {
-    final ref = this.ref as $Ref<SystemUiOverlayStyle, SystemUiOverlayStyle>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<SystemUiOverlayStyle, SystemUiOverlayStyle>,
-              SystemUiOverlayStyle,
-              Object?,
-              Object?
-            >;
-    element.handleCreate(ref, build);
-  }
-}
-
 @ProviderFor(_CoreStatus)
 final coreStatusProvider = _CoreStatusProvider._();
 

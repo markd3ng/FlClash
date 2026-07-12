@@ -14,6 +14,7 @@ import 'package:path/path.dart';
 class CoreController {
   static CoreController? _instance;
   late CoreHandlerInterface _interface;
+  final Map<String, Future<String>> _geoUpdates = {};
 
   CoreController._internal() {
     if (system.isAndroid) {
@@ -72,8 +73,8 @@ class CoreController {
     );
   }
 
-  Future<void> shutdown(bool isUser) async {
-    await _interface.shutdown(isUser);
+  Future<bool> shutdown(bool isUser) async {
+    return _interface.shutdown(isUser);
   }
 
   FutureOr<bool> get isInit => _interface.isInit;
@@ -104,11 +105,11 @@ class CoreController {
   Future<String> setupConfig({
     required SetupParams params,
     required SetupState setupState,
-    VoidCallback? preloadInvoke,
+    FutureOr<void> Function()? preloadInvoke,
   }) async {
     final res = _interface.setupConfig(params);
     if (preloadInvoke != null) {
-      preloadInvoke();
+      await preloadInvoke();
     }
     return res;
   }
@@ -179,7 +180,10 @@ class CoreController {
   }
 
   Future<String> updateGeoData(UpdateGeoDataParams params) {
-    return _interface.updateGeoData(params);
+    final key = '${params.geoType}:${params.geoName}';
+    return _geoUpdates[key] ??= _interface
+        .updateGeoData(params)
+        .whenComplete(() => _geoUpdates.remove(key));
   }
 
   Future<String> sideLoadExternalProvider({
@@ -213,10 +217,7 @@ class CoreController {
   Future<Map<String, dynamic>> getConfig(String path) async {
     final res = await _interface.getConfig(path);
     if (res.isSuccess) {
-      final data = Map<String, dynamic>.from(res.data);
-      data['rules'] = data['rule'];
-      data.remove('rule');
-      return data;
+      return normalizeCoreRawConfig(Map<String, dynamic>.from(res.data));
     } else {
       throw res.message;
     }
@@ -225,10 +226,7 @@ class CoreController {
   Future<Map<String, dynamic>> getConfigFromBytes(String dataStr) async {
     final res = await _interface.getConfigFromBytes(dataStr);
     if (res.isSuccess) {
-      final data = Map<String, dynamic>.from(res.data);
-      data['rules'] = data['rule'];
-      data.remove('rule');
-      return data;
+      return normalizeCoreRawConfig(Map<String, dynamic>.from(res.data));
     } else {
       throw res.message;
     }
@@ -295,6 +293,32 @@ class CoreController {
   Future<String> deleteFile(String path) async {
     return await _interface.deleteFile(path);
   }
+}
+
+Map<String, dynamic> normalizeCoreRawConfig(Map<String, dynamic> data) {
+  final normalized = Map<String, dynamic>.from(data);
+  if (normalized.containsKey('rule')) {
+    normalized['rules'] = normalized.remove('rule');
+  }
+  final tunnels = normalized['tunnels'];
+  if (tunnels is List) {
+    normalized['tunnels'] = tunnels.map((value) {
+      if (value is! Map) return value;
+      final tunnel = Map<String, dynamic>.from(value);
+      for (final (jsonKey, yamlKey) in const [
+        ('Network', 'network'),
+        ('Address', 'address'),
+        ('Target', 'target'),
+        ('Proxy', 'proxy'),
+      ]) {
+        if (tunnel.containsKey(jsonKey) && !tunnel.containsKey(yamlKey)) {
+          tunnel[yamlKey] = tunnel.remove(jsonKey);
+        }
+      }
+      return tunnel;
+    }).toList();
+  }
+  return normalized;
 }
 
 final coreController = CoreController();

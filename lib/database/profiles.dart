@@ -37,6 +37,13 @@ class Profiles extends Table {
       .map(const ProfileProxyListConverter())
       .withDefault(Constant('[]'))();
 
+    TextColumn get customProxyGroups => text()
+      .map(const ProxyGroupListConverter())
+      .withDefault(Constant('[]'))();
+
+    TextColumn get customRules =>
+      text().map(const RuleListConverter()).withDefault(Constant('[]'))();
+
   IntColumn get order => integer().nullable()();
 
   @override
@@ -195,6 +202,35 @@ class ProfileProxyListConverter
   }
 }
 
+class ProxyGroupListConverter
+    extends TypeConverter<List<ProxyGroup>, String> {
+  const ProxyGroupListConverter();
+
+  @override
+  List<ProxyGroup> fromSql(String fromDb) {
+    return _jsonListFromSql(fromDb, ProxyGroup.fromJson);
+  }
+
+  @override
+  String toSql(List<ProxyGroup> value) {
+    return _jsonListToSql(value, (item) => item.toJson());
+  }
+}
+
+class RuleListConverter extends TypeConverter<List<Rule>, String> {
+  const RuleListConverter();
+
+  @override
+  List<Rule> fromSql(String fromDb) {
+    return _jsonListFromSql(fromDb, Rule.fromJson);
+  }
+
+  @override
+  String toSql(List<Rule> value) {
+    return _jsonListToSql(value, (item) => item.toJson());
+  }
+}
+
 extension RawProfilExt on RawProfile {
   Profile toProfile() {
     return Profile(
@@ -211,6 +247,8 @@ extension RawProfilExt on RawProfile {
       overwriteType: overwriteType,
       proxyChains: proxyChains,
       profileProxies: profileProxies,
+      customProxyGroups: customProxyGroups,
+      customRules: customRules,
       scriptId: scriptId,
       order: order,
     );
@@ -233,6 +271,8 @@ extension ProfilesCompanionExt on Profile {
       overwriteType: overwriteType,
       proxyChains: Value(proxyChains),
       profileProxies: Value(profileProxies),
+      customProxyGroups: Value(customProxyGroups),
+      customRules: Value(customRules),
       scriptId: Value(scriptId),
       order: Value(order ?? this.order),
     );

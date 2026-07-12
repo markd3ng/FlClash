@@ -69,16 +69,18 @@ class _HotKeyManagerState extends ConsumerState<HotKeyManager> {
     await Future.wait(hotkeyActionHandles);
   }
 
-  Shortcuts _buildShortcuts(Widget child) {
+  Shortcuts _buildCloseShortcuts(Widget child) {
     return Shortcuts(
       shortcuts: {
         utils.controlSingleActivator(LogicalKeyboardKey.keyW):
-            CloseWindowIntent(),
+            const CloseWindowIntent(),
       },
       child: Actions(
         actions: {
           CloseWindowIntent: CallbackAction<CloseWindowIntent>(
-            onInvoke: (_) => appController.handleBackOrExit(),
+            onInvoke: (_) => appController.handleBackOrExit(
+              forceBack: system.isMacOS,
+            ),
           ),
           DoNothingIntent: CallbackAction<DoNothingIntent>(
             onInvoke: (_) => null,
@@ -91,6 +93,6 @@ class _HotKeyManagerState extends ConsumerState<HotKeyManager> {
 
   @override
   Widget build(BuildContext context) {
-    return _buildShortcuts(widget.child);
+    return _buildCloseShortcuts(widget.child);
   }
 }

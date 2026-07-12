@@ -1,12 +1,11 @@
 import 'dart:async';
+import 'dart:ui' show Brightness, Size;
 
 import 'package:dio/dio.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
-import 'package:flutter/services.dart';
-
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'generated/app.g.dart';
@@ -251,15 +250,6 @@ class DelayDataSource extends _$DelayDataSource with NotifierMixin<DelayMap> {
   }
 }
 
-@Riverpod(keepAlive: true)
-class SystemUiOverlayStyleState extends _$SystemUiOverlayStyleState
-    with NotifierMixin<SystemUiOverlayStyle> {
-  @override
-  SystemUiOverlayStyle build() {
-    return SystemUiOverlayStyle();
-  }
-}
-
 @Riverpod(name: 'coreStatusProvider', keepAlive: true)
 class _CoreStatus extends _$CoreStatus with NotifierMixin<CoreStatus> {
   @override
@@ -409,9 +399,6 @@ List<Override> buildAppStateOverrides(AppState appState) {
     trafficsProvider.overrideWithBuild((_, _) => appState.traffics),
     totalTrafficProvider.overrideWithBuild((_, _) => appState.totalTraffic),
     realTunEnableProvider.overrideWithBuild((_, _) => appState.realTunEnable),
-    systemUiOverlayStyleStateProvider.overrideWithBuild(
-      (_, _) => appState.systemUiOverlayStyle,
-    ),
     coreStatusProvider.overrideWithBuild((_, _) => appState.coreStatus),
   ];
 }

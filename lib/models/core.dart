@@ -32,6 +32,8 @@ abstract class UpdateParams with _$UpdateParams {
     @JsonKey(name: 'external-controller') required String externalController,
     required String secret,
     @JsonKey(name: 'unified-delay') required bool unifiedDelay,
+    @Default(false) @JsonKey(name: 'geo-auto-update') bool geoAutoUpdate,
+    @Default(24) @JsonKey(name: 'geo-update-interval') int geoUpdateInterval,
   }) = _UpdateParams;
 
   factory UpdateParams.fromJson(Map<String, dynamic> json) =>
@@ -63,7 +65,9 @@ abstract class InitParams with _$InitParams {
     @JsonKey(name: 'home-dir') required String homeDir,
     required int version,
     @Default('') @JsonKey(name: 'profile-key') String profileKey,
-    @Default('') @JsonKey(name: 'config-age-secret-key') String configAgeSecretKey,
+    @Default('')
+    @JsonKey(name: 'config-age-secret-key')
+    String configAgeSecretKey,
   }) = _InitParams;
 
   factory InitParams.fromJson(Map<String, Object?> json) =>
@@ -86,6 +90,7 @@ abstract class UpdateGeoDataParams with _$UpdateGeoDataParams {
   const factory UpdateGeoDataParams({
     @JsonKey(name: 'geo-type') required String geoType,
     @JsonKey(name: 'geo-name') required String geoName,
+    required String url,
   }) = _UpdateGeoDataParams;
 
   factory UpdateGeoDataParams.fromJson(Map<String, Object?> json) =>

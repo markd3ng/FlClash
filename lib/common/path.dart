@@ -1,9 +1,13 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:fl_clash/common/common.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
+
+import 'constant.dart';
+import 'string.dart';
+import 'system.dart';
+import 'utils.dart';
 
 class AppPath {
   static AppPath? _instance;
@@ -64,6 +68,11 @@ class AppPath {
   Future<String> get databasePath async {
     final mHomeDirPath = await homeDirPath;
     return join(mHomeDirPath, 'database.sqlite');
+  }
+
+  Future<String> get durableConfigPath async {
+    final mHomeDirPath = await homeDirPath;
+    return join(mHomeDirPath, 'config.age');
   }
 
   Future<String> get backupFilePath async {

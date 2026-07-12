@@ -1,7 +1,10 @@
 package com.follow.clash
 
+import android.os.IBinder
+import android.os.RemoteException
 import com.follow.clash.common.GlobalState
 import com.follow.clash.common.ServiceDelegate
+import com.follow.clash.common.chunkedForAidl
 import com.follow.clash.common.formatString
 import com.follow.clash.common.intent
 import com.follow.clash.service.IAckInterface
@@ -9,15 +12,30 @@ import com.follow.clash.service.ICallbackInterface
 import com.follow.clash.service.IEventInterface
 import com.follow.clash.service.IRemoteInterface
 import com.follow.clash.service.IResultInterface
+import com.follow.clash.service.IValidatorInterface
 import com.follow.clash.service.IVoidInterface
 import com.follow.clash.service.RemoteService
+import com.follow.clash.service.ValidatorService
 import com.follow.clash.service.models.NotificationParams
 import com.follow.clash.service.models.VpnOptions
+import com.google.gson.JsonObject
+import com.google.gson.JsonParser
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withTimeoutOrNull
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
 object Service {
+    private const val INIT_METHOD = "initClash"
+    private val validationMethods = setOf("validateConfig", "validateConfigWithBytes")
+    private val validationMutex = Mutex()
+    @Volatile
+    private var validatorInitAction: String? = null
+
     private val delegate by lazy {
         ServiceDelegate<IRemoteInterface>(
             RemoteService::class.intent, ::handleServiceDisconnected
@@ -43,6 +61,14 @@ object Service {
     }
 
     suspend fun invokeAction(data: String, cb: ((result: String) -> Unit)?): Result<Unit> {
+        val method = runCatching {
+            JsonParser.parseString(data).asJsonObject.getAsJsonPrimitive("method").asString
+        }.getOrNull()
+        if (method in validationMethods) {
+            return validationMutex.withLock {
+                invokeValidatorAction(data, cb)
+            }
+        }
         val res = mutableListOf<ByteArray>()
         return delegate.useService {
             it.invokeAction(
@@ -53,13 +79,139 @@ object Service {
                         res.add(result ?: byteArrayOf())
                         ack?.onAck()
                         if (isSuccess) {
+                            val output = res.formatString()
+                            if (method == INIT_METHOD && isSuccessfulInit(output)) {
+                                validatorInitAction = data
+                            }
                             cb?.let { cb ->
-                                cb(res.formatString())
+                                cb(output)
                             }
                         }
                     }
                 })
         }
+    }
+
+    private suspend fun invokeValidatorAction(
+        data: String,
+        cb: ((result: String) -> Unit)?,
+    ): Result<Unit> {
+        val initAction = validatorInitAction
+            ?: return Result.failure(IllegalStateException("validator is not initialized"))
+        val validator = ServiceDelegate<IValidatorInterface>(
+            ValidatorService::class.intent,
+            interfaceCreator = { IValidatorInterface.Stub.asInterface(it) },
+        )
+        validator.bind()
+        var validatorService: IValidatorInterface? = null
+        return try {
+            validator.useService(timeoutMillis = 30_000) { service ->
+                validatorService = service
+                val binder = service.asBinder()
+                val response = CompletableDeferred<Unit>()
+                val responseChunks = mutableListOf<ByteArray>()
+                val deathRecipient = IBinder.DeathRecipient {
+                    response.completeExceptionally(
+                        IllegalStateException("validator process died"),
+                    )
+                }
+                binder.linkToDeath(deathRecipient, 0)
+                val callback = object : ICallbackInterface.Stub() {
+                    override fun onResult(
+                        result: ByteArray?,
+                        isSuccess: Boolean,
+                        ack: IAckInterface?,
+                    ) {
+                        responseChunks.add(result ?: byteArrayOf())
+                        ack?.onAck()
+                        if (isSuccess) {
+                            runCatching { cb?.invoke(responseChunks.formatString()) }
+                                .onSuccess { response.complete(Unit) }
+                                .onFailure(response::completeExceptionally)
+                        }
+                    }
+                }
+                try {
+                    awaitValidatorAck { ack -> service.begin(initAction, callback, ack) }
+                val requestChunks = data.chunkedForAidl()
+                for ((index, chunk) in requestChunks.withIndex()) {
+                    awaitValidatorAck { ack ->
+                        service.sendChunk(chunk, index == requestChunks.lastIndex, ack)
+                    }
+                }
+                    response.await()
+                } finally {
+                    runCatching { binder.unlinkToDeath(deathRecipient, 0) }
+                }
+            }
+        } finally {
+            validatorService?.let { service ->
+                withTimeoutOrNull(5_000) {
+                    shutdownValidator(service)
+                }
+            }
+            validator.unbind()
+        }
+    }
+
+    private suspend fun awaitValidatorAck(send: (IAckInterface) -> Unit) {
+        val acknowledged = withTimeoutOrNull(5_000) {
+            suspendCancellableCoroutine { continuation ->
+                try {
+                    send(object : IAckInterface.Stub() {
+                        override fun onAck() {
+                            if (continuation.isActive) continuation.resume(Unit)
+                        }
+                    })
+                } catch (error: Throwable) {
+                    if (continuation.isActive) continuation.resumeWithException(error)
+                }
+            }
+            true
+        }
+        if (acknowledged != true) {
+            throw IllegalStateException("validator request was not acknowledged")
+        }
+    }
+
+    private suspend fun shutdownValidator(service: IValidatorInterface) {
+        suspendCancellableCoroutine { continuation ->
+            val binder = service.asBinder()
+            val completed = AtomicBoolean(false)
+            lateinit var recipient: IBinder.DeathRecipient
+            fun finish() {
+                if (!completed.compareAndSet(false, true)) {
+                    return
+                }
+                runCatching { binder.unlinkToDeath(recipient, 0) }
+                if (continuation.isActive) {
+                    continuation.resume(Unit)
+                }
+            }
+            recipient = IBinder.DeathRecipient { finish() }
+            try {
+                binder.linkToDeath(recipient, 0)
+                service.shutdown()
+                if (!binder.isBinderAlive) {
+                    finish()
+                }
+            } catch (_: RemoteException) {
+                finish()
+            }
+            continuation.invokeOnCancellation {
+                if (completed.compareAndSet(false, true)) {
+                    runCatching { binder.unlinkToDeath(recipient, 0) }
+                }
+            }
+        }
+    }
+
+    private fun isSuccessfulInit(result: String): Boolean {
+        return runCatching {
+            JsonParser.parseString(result).asJsonObject
+                .getAsJsonPrimitive("data")
+                .asBoolean
+        }.getOrDefault(false)
     }
 
     suspend fun quickSetup(
@@ -68,6 +220,11 @@ object Service {
         onStarted: (() -> Unit)?,
         onResult: ((result: String) -> Unit)?,
     ): Result<Unit> {
+        validatorInitAction = JsonObject().apply {
+            addProperty("id", "validator-init")
+            addProperty("method", INIT_METHOD)
+            addProperty("data", initParamsString)
+        }.toString()
         val res = mutableListOf<ByteArray>()
         return delegate.useService {
             it.quickSetup(

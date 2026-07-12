@@ -34,7 +34,11 @@ class BackupAndRestore extends ConsumerWidget {
         if (path.isEmpty) {
           return false;
         }
-        return await client.backup(path);
+        try {
+          return await client.backup(path);
+        } finally {
+          await File(path).safeDelete();
+        }
       },
       tag: LoadingTag.backup_restore,
       title: appLocalizations.backup,
@@ -53,9 +57,13 @@ class BackupAndRestore extends ConsumerWidget {
   ) async {
     final res = await appController.loadingRun<bool>(
       () async {
-        await client.restore();
-        await appController.restore(option);
-        return true;
+        final path = await client.restore();
+        try {
+          await appController.restore(option, backupPath: path);
+          return true;
+        } finally {
+          await File(path).safeDelete();
+        }
       },
       tag: LoadingTag.backup_restore,
       title: appLocalizations.restore,
@@ -85,12 +93,16 @@ class BackupAndRestore extends ConsumerWidget {
         if (path.isEmpty) {
           return false;
         }
-        final value = await picker.saveFileWithPath(
-          utils.getBackupFileName(),
-          path,
-        );
-        if (value == null) return false;
-        return true;
+        try {
+          final value = await picker.saveFileWithPath(
+            utils.getBackupFileName(),
+            path,
+          );
+          if (value == null) return false;
+          return true;
+        } finally {
+          await File(path).safeDelete();
+        }
       },
       title: appLocalizations.backup,
       tag: LoadingTag.backup_restore,
@@ -106,10 +118,9 @@ class BackupAndRestore extends ConsumerWidget {
     final file = await picker.pickerFile(withData: false);
     final path = file?.path;
     if (path == null) return;
-    await File(path).safeCopy(await appPath.backupFilePath);
     final res = await appController.loadingRun<bool>(
       () async {
-        await appController.restore(option);
+        await appController.restore(option, backupPath: path);
         return true;
       },
       tag: LoadingTag.backup_restore,
@@ -131,7 +142,10 @@ class BackupAndRestore extends ConsumerWidget {
   }
 
   void _handleChange(String? value, WidgetRef ref) {
-    if (value == null) {
+    if (value == null || !isSafeDavFileName(value)) {
+      if (value != null) {
+        globalState.showNotifier(appLocalizations.invalidBackupFile);
+      }
       return;
     }
     ref
@@ -244,6 +258,7 @@ class BackupAndRestore extends ConsumerWidget {
                 title: appLocalizations.file,
                 value: dav.fileName,
                 resetValue: defaultDavFileName,
+                maxLength: TextInputLimits.fileName,
                 onChanged: (value) {
                   _handleChange(value, ref);
                 },
@@ -409,6 +424,7 @@ class _WebDAVFormDialogState extends ConsumerState<WebDAVFormDialog> {
           children: [
             TextFormField(
               controller: _uriController,
+              inputFormatters: TextInputLimits.limit(TextInputLimits.uri),
               maxLines: 5,
               minLines: 1,
               decoration: InputDecoration(
@@ -426,6 +442,7 @@ class _WebDAVFormDialogState extends ConsumerState<WebDAVFormDialog> {
             ),
             TextFormField(
               controller: _userController,
+              inputFormatters: TextInputLimits.limit(TextInputLimits.userName),
               decoration: InputDecoration(
                 prefixIcon: const Icon(Icons.account_circle),
                 border: const OutlineInputBorder(),
@@ -443,6 +460,9 @@ class _WebDAVFormDialogState extends ConsumerState<WebDAVFormDialog> {
               builder: (_, obscure, _) {
                 return TextFormField(
                   controller: _passwordController,
+                  inputFormatters: TextInputLimits.limit(
+                    TextInputLimits.password,
+                  ),
                   obscureText: obscure,
                   decoration: InputDecoration(
                     prefixIcon: const Icon(Icons.password),

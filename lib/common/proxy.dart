@@ -14,6 +14,7 @@ class SystemProxyController {
   final SystemProxyStopper? _stopProxy;
 
   bool _startedByFlClash = false;
+  bool _checkedPersistedState = false;
   Future<void> _task = Future.value();
 
   SystemProxyController({
@@ -24,43 +25,49 @@ class SystemProxyController {
 
   bool get startedByFlClash => _startedByFlClash;
 
-  Future<void> start(int port, List<String> bypassDomain) {
+  Future<bool> start(int port, List<String> bypassDomain) {
     final startProxy = _startProxy;
-    if (startProxy == null) return Future.value();
+    if (startProxy == null) return Future.value(true);
 
     return _queue(() async {
+      _checkedPersistedState = false;
       final success = await startProxy(port, bypassDomain);
       if (success == true) {
         _startedByFlClash = true;
+        _checkedPersistedState = true;
       }
+      return success == true;
     });
   }
 
-  Future<void> stopIfNeeded() {
+  Future<bool> stopIfNeeded() {
     final stopProxy = _stopProxy;
-    if (stopProxy == null) return Future.value();
+    if (stopProxy == null) return Future.value(true);
 
     return _queue(() async {
-      if (!_startedByFlClash) return;
+      if (!_startedByFlClash && _checkedPersistedState) return true;
 
       final success = await stopProxy();
       if (success == true) {
         _startedByFlClash = false;
+        _checkedPersistedState = true;
       }
+      return success == true;
     });
   }
 
-  Future<void> _queue(Future<void> Function() task) {
-    _task = _task.then((_) => task()).catchError((_) {});
-    return _task;
+  Future<T> _queue<T>(Future<T> Function() task) {
+    final operation = _task.then((_) => task());
+    _task = operation.then<void>((_) {}, onError: (_, _) {});
+    return operation;
   }
 }
 
-Future<void> startSystemProxy(int port, List<String> bypassDomain) {
+Future<bool> startSystemProxy(int port, List<String> bypassDomain) {
   return systemProxyController.start(port, bypassDomain);
 }
 
-Future<void> stopSystemProxyIfNeeded() {
+Future<bool> stopSystemProxyIfNeeded() {
   return systemProxyController.stopIfNeeded();
 }
 

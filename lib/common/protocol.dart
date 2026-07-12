@@ -2,6 +2,22 @@ import 'dart:io';
 
 import 'package:win32_registry/win32_registry.dart';
 
+class ProtocolRegistrationPlan {
+  final String scheme;
+  final String executable;
+
+  const ProtocolRegistrationPlan({
+    required this.scheme,
+    required this.executable,
+  });
+
+  String get protocolKey => 'Software\\Classes\\$scheme';
+
+  String get commandKey => 'shell\\open\\command';
+
+  String get command => '"$executable" "%1"';
+}
+
 class Protocol {
   static Protocol? _instance;
 
@@ -13,16 +29,22 @@ class Protocol {
   }
 
   void register(String scheme) {
-    String protocolRegKey = 'Software\\Classes\\$scheme';
-    RegistryValue protocolRegValue = RegistryValue.string('URL Protocol', '');
-    String protocolCmdRegKey = 'shell\\open\\command';
-    RegistryValue protocolCmdRegValue = RegistryValue.string(
-      '',
-      '"${Platform.resolvedExecutable}" "%1"',
+    final plan = ProtocolRegistrationPlan(
+      scheme: scheme,
+      executable: Platform.resolvedExecutable,
     );
-    final regKey = Registry.currentUser.createKey(protocolRegKey);
-    regKey.createValue(protocolRegValue);
-    regKey.createKey(protocolCmdRegKey).createValue(protocolCmdRegValue);
+    final regKey = Registry.currentUser.createKey(plan.protocolKey);
+    try {
+      regKey.createValue(const RegistryValue.string('URL Protocol', ''));
+      final commandKey = regKey.createKey(plan.commandKey);
+      try {
+        commandKey.createValue(RegistryValue.string('', plan.command));
+      } finally {
+        commandKey.close();
+      }
+    } finally {
+      regKey.close();
+    }
   }
 }
 

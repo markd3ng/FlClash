@@ -38,18 +38,23 @@ const desktopPlatforms = [
 ];
 
 enum GroupType {
+  @JsonValue('select')
   Selector,
+  @JsonValue('url-test')
   URLTest,
+  @JsonValue('fallback')
   Fallback,
+  @JsonValue('load-balance')
   LoadBalance,
+  @JsonValue('relay')
   Relay;
 
   static GroupType parseProfileType(String type) {
-    return switch (type) {
-      'url-test' => URLTest,
-      'select' => Selector,
+    return switch (type.trim().toLowerCase()) {
+      'url-test' || 'urltest' => URLTest,
+      'select' || 'selector' => Selector,
       'fallback' => Fallback,
-      'load-balance' => LoadBalance,
+      'load-balance' || 'loadbalance' => LoadBalance,
       'relay' => Relay,
       String() => throw UnimplementedError(),
     };
@@ -127,7 +132,7 @@ enum ResultType {
   error,
 }
 
-enum CoreEventType { log, delay, request, loaded, crash }
+enum CoreEventType { log, delay, request, loaded, crash, geoUpdate }
 
 enum InvokeMessageType { protect, process }
 
@@ -279,6 +284,7 @@ enum FunctionTag {
   requests,
   autoScrollToEnd,
   loadedProvider,
+  geoReload,
   saveSharedFile,
 }
 
@@ -318,6 +324,29 @@ enum DashboardWidget {
 }
 
 enum GeodataLoader { standard, memconservative }
+
+enum GeoResource {
+  MMDB,
+  ASN,
+  GEOIP,
+  GEOSITE;
+
+  static GeoResource fromJson(String value) {
+    return switch (value) {
+      'mmdb' => GeoResource.MMDB,
+      'asn' => GeoResource.ASN,
+      'geoip' || 'geo-ip' => GeoResource.GEOIP,
+      'geosite' || 'geo-site' => GeoResource.GEOSITE,
+      _ => throw ArgumentError.value(value, 'value'),
+    };
+  }
+}
+
+extension GeoResourceExt on GeoResource {
+  String get key => name.toLowerCase();
+
+  String get updatingKey => 'geo_resource_$name';
+}
 
 enum PageLabel {
   dashboard,
@@ -397,12 +426,7 @@ extension RuleActionExt on RuleAction {
 
 enum OverrideRuleType { override, added }
 
-enum OverwriteType {
-  // none,
-  standard,
-  script,
-  // custom,
-}
+enum OverwriteType { standard, script, custom }
 
 enum RuleTarget { DIRECT, REJECT, MATCH }
 

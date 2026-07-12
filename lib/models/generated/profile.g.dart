@@ -93,6 +93,16 @@ _Profile _$ProfileFromJson(Map<String, dynamic> json) => _Profile(
           ?.map((e) => ProfileProxy.fromJson(e as Map<String, dynamic>))
           .toList() ??
       const [],
+  customProxyGroups:
+      (json['customProxyGroups'] as List<dynamic>?)
+          ?.map((e) => ProxyGroup.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const [],
+  customRules:
+      (json['customRules'] as List<dynamic>?)
+          ?.map((e) => Rule.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const [],
   scriptId: (json['scriptId'] as num?)?.toInt(),
   order: (json['order'] as num?)?.toInt(),
 );
@@ -111,6 +121,8 @@ Map<String, dynamic> _$ProfileToJson(_Profile instance) => <String, dynamic>{
   'overwriteType': _$OverwriteTypeEnumMap[instance.overwriteType]!,
   'proxyChains': instance.proxyChains,
   'profileProxies': instance.profileProxies,
+  'customProxyGroups': instance.customProxyGroups,
+  'customRules': instance.customRules,
   'scriptId': instance.scriptId,
   'order': instance.order,
 };
@@ -118,6 +130,7 @@ Map<String, dynamic> _$ProfileToJson(_Profile instance) => <String, dynamic>{
 const _$OverwriteTypeEnumMap = {
   OverwriteType.standard: 'standard',
   OverwriteType.script: 'script',
+  OverwriteType.custom: 'custom',
 };
 
 _StandardOverwrite _$StandardOverwriteFromJson(Map<String, dynamic> json) =>

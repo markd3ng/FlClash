@@ -88,12 +88,7 @@ func handleAction(action *Action, result ActionResult) {
 			result.success(err.Error())
 			return
 		}
-		_, err = config.UnmarshalRawConfig(data)
-		if err != nil {
-			result.success(err.Error())
-		} else {
-			result.success("")
-		}
+		result.success(validateConfigData(data))
 		return
 	case updateConfigMethod:
 		data := []byte(action.Data.(string))
@@ -182,7 +177,8 @@ func handleAction(action *Action, result ActionResult) {
 		}
 		geoType := params["geo-type"]
 		geoName := params["geo-name"]
-		handleUpdateGeoData(geoType, geoName, func(value string) {
+		geoURL := params["url"]
+		handleUpdateGeoData(geoType, geoName, geoURL, func(value string) {
 			result.success(value)
 		})
 		return

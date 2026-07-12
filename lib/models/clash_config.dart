@@ -13,6 +13,8 @@ const defaultGeoXUrl = GeoXUrl();
 
 const defaultMixedPort = 7890;
 const defaultKeepAliveInterval = 30;
+const defaultGeoUpdateInterval = 24;
+const maxGeoUpdateInterval = 24 * 365;
 const defaultExternalControllerAddress = '127.0.0.1:9090';
 const defaultExternalControllerSecret = 'oixCloud';
 
@@ -20,6 +22,12 @@ const defaultExternalControllerSecret = 'oixCloud';
 // over-TLS legs) is shaped with a real browser ClientHello unless the profile
 // already pins its own value.
 const defaultGlobalClientFingerprint = 'chrome';
+
+int normalizeGeoUpdateInterval(int value) {
+  return value > 0 && value <= maxGeoUpdateInterval
+      ? value
+      : defaultGeoUpdateInterval;
+}
 
 bool isExternalControllerAddress(String address) {
   final value = address.trim();
@@ -62,7 +70,9 @@ const externalControllerDashboardBaseUrl =
     'https://metacubex.github.io/metacubexd';
 
 String resolveExternalControllerDashboardUrl(String address, String secret) {
-  final uri = Uri.tryParse('http://${resolveExternalControllerAddress(address)}');
+  final uri = Uri.tryParse(
+    'http://${resolveExternalControllerAddress(address)}',
+  );
   var host = uri?.host ?? '';
   if (host.isEmpty || host == '0.0.0.0' || host == '::') {
     host = '127.0.0.1';
@@ -178,6 +188,10 @@ int? _parseInt(dynamic value) {
 bool? _parseBool(dynamic value) {
   if (value == null) return null;
   if (value is bool) return value;
+  if (value is num) {
+    if (value == 1) return true;
+    if (value == 0) return false;
+  }
   if (value is String) {
     final normalized = value.toLowerCase();
     if (normalized == 'true') return true;
@@ -188,7 +202,12 @@ bool? _parseBool(dynamic value) {
 
 List<String>? _parseStringList(dynamic value) {
   if (value == null) return null;
-  if (value is List) return value.whereType<String>().toList();
+  if (value is List) {
+    return value
+        .where((item) => item != null)
+        .map((item) => item.toString())
+        .toList();
+  }
   return null;
 }
 
@@ -200,14 +219,22 @@ abstract class ProxyGroup with _$ProxyGroup {
     @JsonKey(fromJson: _parseStringList) List<String>? proxies,
     @JsonKey(fromJson: _parseStringList) List<String>? use,
     @JsonKey(fromJson: _parseInt) int? interval,
+    @JsonKey(fromJson: _parseInt) int? tolerance,
     @JsonKey(fromJson: _parseBool) bool? lazy,
+    @JsonKey(name: 'disable-udp', fromJson: _parseBool) bool? disableUdp,
     String? url,
     @JsonKey(fromJson: _parseInt) int? timeout,
     @JsonKey(name: 'max-failed-times', fromJson: _parseInt) int? maxFailedTimes,
     String? filter,
-    @JsonKey(name: 'expected-filter') String? excludeFilter,
+    @JsonKey(name: 'exclude-filter') String? excludeFilter,
     @JsonKey(name: 'exclude-type') String? excludeType,
     @JsonKey(name: 'expected-status') dynamic expectedStatus,
+    @JsonKey(name: 'include-all', fromJson: _parseBool) bool? includeAll,
+    @JsonKey(name: 'include-all-proxies', fromJson: _parseBool)
+    bool? includeAllProxies,
+    @JsonKey(name: 'include-all-providers', fromJson: _parseBool)
+    bool? includeAllProviders,
+    String? strategy,
     @JsonKey(fromJson: _parseBool) bool? hidden,
     String? icon,
   }) = _ProxyGroup;
@@ -414,9 +441,11 @@ abstract class ParsedRule with _$ParsedRule {
   }) = _ParsedRule;
 
   factory ParsedRule.parseString(String value) {
-    final splits = value.split(',');
+    final splits = value.split(',').map((item) => item.trim()).toList();
     final shortSplits = splits
-        .where((item) => !item.contains('src') && !item.contains('no-resolve'))
+        .where(
+          (item) => item.isNotEmpty && item != 'src' && item != 'no-resolve',
+        )
         .toList();
     final ruleAction = RuleAction.values.firstWhere(
       (item) => item.value == shortSplits.first,
@@ -462,7 +491,7 @@ extension ParsedRuleExt on ParsedRule {
         if (src) 'src',
         if (noResolve) 'no-resolve',
       ],
-    ].join(',');
+    ].whereType<String>().where((item) => item.isNotEmpty).join(',');
   }
 }
 
@@ -570,6 +599,10 @@ abstract class ClashConfig with _$ClashConfig {
     String externalControllerAddress,
     @Default(defaultExternalControllerSecret) String secret,
     @Default({}) Map<String, String> hosts,
+    @Default(false) @JsonKey(name: 'geo-auto-update') bool geoAutoUpdate,
+    @Default(defaultGeoUpdateInterval)
+    @JsonKey(name: 'geo-update-interval')
+    int geoUpdateInterval,
   }) = _ClashConfig;
 
   factory ClashConfig.fromJson(Map<String, Object?> json) =>

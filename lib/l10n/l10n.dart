@@ -889,6 +889,16 @@ class AppLocalizations {
     );
   }
 
+  /// `User-Agent`
+  String get userAgent {
+    return Intl.message('User-Agent', name: 'userAgent', desc: '', args: []);
+  }
+
+  /// `Custom`
+  String get custom {
+    return Intl.message('Custom', name: 'custom', desc: '', args: []);
+  }
+
   /// `Project`
   String get project {
     return Intl.message('Project', name: 'project', desc: '', args: []);
@@ -1677,6 +1687,111 @@ class AppLocalizations {
   /// ` entries`
   String get entries {
     return Intl.message(' entries', name: 'entries', desc: '', args: []);
+  }
+
+  /// `{count} seconds`
+  String secondsCount(Object count) {
+    return Intl.message(
+      '$count seconds',
+      name: 'secondsCount',
+      desc: '',
+      args: [count],
+    );
+  }
+
+  /// `{count} entries`
+  String entriesCount(Object count) {
+    return Intl.message(
+      '$count entries',
+      name: 'entriesCount',
+      desc: '',
+      args: [count],
+    );
+  }
+
+  /// `Geo Options`
+  String get geoOptions {
+    return Intl.message('Geo Options', name: 'geoOptions', desc: '', args: []);
+  }
+
+  /// `Auto Update`
+  String get geoAutoUpdate {
+    return Intl.message(
+      'Auto Update',
+      name: 'geoAutoUpdate',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Auto Update Interval`
+  String get geoAutoUpdateInterval {
+    return Intl.message(
+      'Auto Update Interval',
+      name: 'geoAutoUpdateInterval',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Auto update interval must be between 1 and 8760 hours`
+  String get geoAutoUpdateIntervalTip {
+    return Intl.message(
+      'Auto update interval must be between 1 and 8760 hours',
+      name: 'geoAutoUpdateIntervalTip',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `{count} hours`
+  String hoursCount(Object count) {
+    return Intl.message(
+      '$count hours',
+      name: 'hoursCount',
+      desc: '',
+      args: [count],
+    );
+  }
+
+  /// `Geo Resources`
+  String get geoResources {
+    return Intl.message(
+      'Geo Resources',
+      name: 'geoResources',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Updating {name}...`
+  String geoUpdating(Object name) {
+    return Intl.message(
+      'Updating $name...',
+      name: 'geoUpdating',
+      desc: '',
+      args: [name],
+    );
+  }
+
+  /// `{name} skipped`
+  String geoSkipped(Object name) {
+    return Intl.message(
+      '$name skipped',
+      name: 'geoSkipped',
+      desc: '',
+      args: [name],
+    );
+  }
+
+  /// `{name} updated`
+  String geoUpdated(Object name) {
+    return Intl.message(
+      '$name updated',
+      name: 'geoUpdated',
+      desc: '',
+      args: [name],
+    );
   }
 
   /// `Local`
@@ -3816,6 +3931,236 @@ class AppLocalizations {
       name: 'overwriteTypeCustomDesc',
       desc: '',
       args: [],
+    );
+  }
+
+  /// `Proxy group is empty`
+  String get proxyGroupEmpty {
+    return Intl.message(
+      'Proxy group is empty',
+      name: 'proxyGroupEmpty',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Proxy group name cannot be empty`
+  String get proxyGroupNameEmpty {
+    return Intl.message(
+      'Proxy group name cannot be empty',
+      name: 'proxyGroupNameEmpty',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Rule is empty`
+  String get ruleEmpty {
+    return Intl.message('Rule is empty', name: 'ruleEmpty', desc: '', args: []);
+  }
+
+  /// `Existing data will be overwritten after confirmation`
+  String get confirmOverwriteTip {
+    return Intl.message(
+      'Existing data will be overwritten after confirmation',
+      name: 'confirmOverwriteTip',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Data detected in configuration`
+  String get configDataDetected {
+    return Intl.message(
+      'Data detected in configuration',
+      name: 'configDataDetected',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Quick fill`
+  String get quickFill {
+    return Intl.message('Quick fill', name: 'quickFill', desc: '', args: []);
+  }
+
+  /// `Add proxy group`
+  String get addProxyGroup {
+    return Intl.message(
+      'Add proxy group',
+      name: 'addProxyGroup',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Edit proxy group`
+  String get editProxyGroup {
+    return Intl.message(
+      'Edit proxy group',
+      name: 'editProxyGroup',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Lazy loading`
+  String get lazy {
+    return Intl.message('Lazy loading', name: 'lazy', desc: '', args: []);
+  }
+
+  /// `Proxy filter`
+  String get proxyFilter {
+    return Intl.message(
+      'Proxy filter',
+      name: 'proxyFilter',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Exclude proxy filter`
+  String get excludeProxyFilter {
+    return Intl.message(
+      'Exclude proxy filter',
+      name: 'excludeProxyFilter',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Exclude type`
+  String get excludeType {
+    return Intl.message(
+      'Exclude type',
+      name: 'excludeType',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Expected status`
+  String get expectedStatus {
+    return Intl.message(
+      'Expected status',
+      name: 'expectedStatus',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Max failed times`
+  String get maxFailedTimes {
+    return Intl.message(
+      'Max failed times',
+      name: 'maxFailedTimes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Timeout`
+  String get timeout {
+    return Intl.message('Timeout', name: 'timeout', desc: '', args: []);
+  }
+
+  /// `Strategy`
+  String get strategy {
+    return Intl.message('Strategy', name: 'strategy', desc: '', args: []);
+  }
+
+  /// `Icon URL`
+  String get iconUrl {
+    return Intl.message('Icon URL', name: 'iconUrl', desc: '', args: []);
+  }
+
+  /// `Disable UDP`
+  String get disableUDP {
+    return Intl.message('Disable UDP', name: 'disableUDP', desc: '', args: []);
+  }
+
+  /// `Hide from list`
+  String get hideFromList {
+    return Intl.message(
+      'Hide from list',
+      name: 'hideFromList',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Include all proxies and providers`
+  String get includeAll {
+    return Intl.message(
+      'Include all proxies and providers',
+      name: 'includeAll',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Include all proxies`
+  String get includeAllProxies {
+    return Intl.message(
+      'Include all proxies',
+      name: 'includeAllProxies',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Include all proxy providers`
+  String get includeAllProxyProviders {
+    return Intl.message(
+      'Include all proxy providers',
+      name: 'includeAllProxyProviders',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Add a proxy, provider, or include-all option`
+  String get proxyGroupMembersEmpty {
+    return Intl.message(
+      'Add a proxy, provider, or include-all option',
+      name: 'proxyGroupMembersEmpty',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Tolerance`
+  String get tolerance {
+    return Intl.message('Tolerance', name: 'tolerance', desc: '', args: []);
+  }
+
+  /// `{name} is still referenced by a group, rule, or proxy chain`
+  String customOutboundInUse(Object name) {
+    return Intl.message(
+      '$name is still referenced by a group, rule, or proxy chain',
+      name: 'customOutboundInUse',
+      desc: '',
+      args: [name],
+    );
+  }
+
+  /// `Relay groups were removed by the core. Choose another type.`
+  String get relayGroupUnsupported {
+    return Intl.message(
+      'Relay groups were removed by the core. Choose another type.',
+      name: 'relayGroupUnsupported',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `{name} is referenced by the original configuration at {path}`
+  String rawOutboundInUse(Object name, Object path) {
+    return Intl.message(
+      '$name is referenced by the original configuration at $path',
+      name: 'rawOutboundInUse',
+      desc: '',
+      args: [name, path],
     );
   }
 

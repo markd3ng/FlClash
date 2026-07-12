@@ -35,6 +35,8 @@ _UpdateParams _$UpdateParamsFromJson(Map<String, dynamic> json) =>
       externalController: json['external-controller'] as String,
       secret: json['secret'] as String,
       unifiedDelay: json['unified-delay'] as bool,
+      geoAutoUpdate: json['geo-auto-update'] as bool? ?? false,
+      geoUpdateInterval: (json['geo-update-interval'] as num?)?.toInt() ?? 24,
     );
 
 Map<String, dynamic> _$UpdateParamsToJson(_UpdateParams instance) =>
@@ -50,6 +52,8 @@ Map<String, dynamic> _$UpdateParamsToJson(_UpdateParams instance) =>
       'external-controller': instance.externalController,
       'secret': instance.secret,
       'unified-delay': instance.unifiedDelay,
+      'geo-auto-update': instance.geoAutoUpdate,
+      'geo-update-interval': instance.geoUpdateInterval,
     };
 
 const _$FindProcessModeEnumMap = {
@@ -137,6 +141,7 @@ _UpdateGeoDataParams _$UpdateGeoDataParamsFromJson(Map<String, dynamic> json) =>
     _UpdateGeoDataParams(
       geoType: json['geo-type'] as String,
       geoName: json['geo-name'] as String,
+      url: json['url'] as String,
     );
 
 Map<String, dynamic> _$UpdateGeoDataParamsToJson(
@@ -144,6 +149,7 @@ Map<String, dynamic> _$UpdateGeoDataParamsToJson(
 ) => <String, dynamic>{
   'geo-type': instance.geoType,
   'geo-name': instance.geoName,
+  'url': instance.url,
 };
 
 _CoreEvent _$CoreEventFromJson(Map<String, dynamic> json) => _CoreEvent(
@@ -163,6 +169,7 @@ const _$CoreEventTypeEnumMap = {
   CoreEventType.request: 'request',
   CoreEventType.loaded: 'loaded',
   CoreEventType.crash: 'crash',
+  CoreEventType.geoUpdate: 'geoUpdate',
 };
 
 _InvokeMessage _$InvokeMessageFromJson(Map<String, dynamic> json) =>

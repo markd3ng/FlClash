@@ -35,7 +35,11 @@ class _ToolViewState extends ConsumerState<ToolsView> {
       subtitle: navigationItem.description != null
           ? Text(Intl.message(navigationItem.description!))
           : null,
-      delegate: OpenDelegate(widget: navigationItem.builder(context)),
+      delegate: OpenDelegate(
+        widget: navigationItem.builder(context),
+        maxWidth: 400,
+        forceFull: false,
+      ),
     );
   }
 

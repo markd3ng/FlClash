@@ -14,6 +14,8 @@ import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'custom_overwrite.dart';
+
 class OverwriteView extends ConsumerStatefulWidget {
   final int profileId;
 
@@ -59,7 +61,7 @@ class _Title extends ConsumerWidget {
     return switch (type) {
       OverwriteType.standard => appLocalizations.standard,
       OverwriteType.script => appLocalizations.script,
-      // OverwriteType.custom => appLocalizations.overwriteTypeCustom,
+      OverwriteType.custom => appLocalizations.overwriteTypeCustom,
     };
   }
 
@@ -67,7 +69,7 @@ class _Title extends ConsumerWidget {
     return switch (type) {
       OverwriteType.standard => Icons.stars,
       OverwriteType.script => Icons.rocket,
-      // OverwriteType.custom => Icons.dashboard_customize,
+      OverwriteType.custom => Icons.dashboard_customize,
     };
   }
 
@@ -75,7 +77,7 @@ class _Title extends ConsumerWidget {
     return switch (type) {
       OverwriteType.standard => appLocalizations.standardModeDesc,
       OverwriteType.script => appLocalizations.scriptModeDesc,
-      // OverwriteType.custom => appLocalizations.overwriteTypeCustomDesc,
+      OverwriteType.custom => appLocalizations.overwriteTypeCustomDesc,
     };
   }
 
@@ -148,7 +150,7 @@ class _Content extends ConsumerWidget {
     return switch (overwriteType) {
       OverwriteType.standard => _StandardContent(profileId),
       OverwriteType.script => _ScriptContent(profileId),
-      // OverwriteType.custom => SliverToBoxAdapter(),
+      OverwriteType.custom => CustomOverwriteContent(profileId: profileId),
     };
   }
 }

@@ -171,7 +171,7 @@ Map<String, dynamic> _$ProxyToJson(_Proxy instance) => <String, dynamic>{
 };
 
 _Group _$GroupFromJson(Map<String, dynamic> json) => _Group(
-  type: $enumDecode(_$GroupTypeEnumMap, json['type']),
+  type: GroupType.parseProfileType(json['type'] as String),
   all:
       (json['all'] as List<dynamic>?)
           ?.map((e) => Proxy.fromJson(e as Map<String, dynamic>))
@@ -195,11 +195,11 @@ Map<String, dynamic> _$GroupToJson(_Group instance) => <String, dynamic>{
 };
 
 const _$GroupTypeEnumMap = {
-  GroupType.Selector: 'Selector',
-  GroupType.URLTest: 'URLTest',
-  GroupType.Fallback: 'Fallback',
-  GroupType.LoadBalance: 'LoadBalance',
-  GroupType.Relay: 'Relay',
+  GroupType.Selector: 'select',
+  GroupType.URLTest: 'url-test',
+  GroupType.Fallback: 'fallback',
+  GroupType.LoadBalance: 'load-balance',
+  GroupType.Relay: 'relay',
 };
 
 _HotKeyAction _$HotKeyActionFromJson(Map<String, dynamic> json) =>

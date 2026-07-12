@@ -299,7 +299,7 @@ abstract class Proxy with _$Proxy {
 @freezed
 abstract class Group with _$Group {
   const factory Group({
-    required GroupType type,
+    @JsonKey(fromJson: GroupType.parseProfileType) required GroupType type,
     @Default([]) List<Proxy> all,
     String? now,
     bool? hidden,
@@ -545,21 +545,25 @@ extension ScriptExt on Script {
   }
 
   Future<Script> save(String content) async {
-    final file = File(await path);
-    if (!await file.exists()) {
-      await file.create(recursive: true);
-    }
-    await file.writeAsString(content);
-    return copyWith(lastUpdateTime: DateTime.now());
+    return storageLock.synchronized(() async {
+      final file = File(await path);
+      if (!await file.exists()) {
+        await file.create(recursive: true);
+      }
+      await file.writeAsString(content);
+      return copyWith(lastUpdateTime: DateTime.now());
+    });
   }
 
   Future<Script> saveWithPath(String copyPath) async {
-    final file = File(await path);
-    if (!await file.exists()) {
-      await file.create(recursive: true);
-    }
-    await File(copyPath).copy(copyPath);
-    return copyWith(lastUpdateTime: DateTime.now());
+    return storageLock.synchronized(() async {
+      final file = File(await path);
+      if (!await file.exists()) {
+        await file.create(recursive: true);
+      }
+      await File(copyPath).copy(file.path);
+      return copyWith(lastUpdateTime: DateTime.now());
+    });
   }
 }
 

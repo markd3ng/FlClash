@@ -14,6 +14,7 @@ import 'ipc_frame.dart';
 
 class CoreService extends CoreHandlerInterface {
   static const _coreStartTimeout = Duration(seconds: 10);
+  static const _coreStopTimeout = Duration(seconds: 5);
 
   static CoreService? _instance;
 
@@ -21,13 +22,13 @@ class CoreService extends CoreHandlerInterface {
 
   Completer<Socket> _socketCompleter = Completer();
 
-  Completer<bool> _shutdownCompleter = Completer();
-
   final Map<String, Completer> _callbackCompleterMap = {};
 
   Socket? _socket;
 
   Process? _process;
+  bool _startedByHelper = false;
+  Future<void> _lifecycleTail = Future.value();
 
   // Per-session key for the local core IPC socket. Handed to the core
   // out-of-band via the FLCLASH_IPC_KEY env var so it never crosses the socket.
@@ -110,9 +111,6 @@ class CoreService extends CoreHandlerInterface {
             _clearCompleter();
             _handleInvokeCrashEvent();
           }
-          if (!_shutdownCompleter.isCompleted) {
-            _shutdownCompleter.complete(true);
-          }
         });
     _socketCompleter.complete(socket);
     if (previous != null) {
@@ -135,9 +133,19 @@ class CoreService extends CoreHandlerInterface {
     );
   }
 
-  Future<void> start() async {
-    if (_process != null) {
-      await shutdown(false);
+  Future<T> _serializeLifecycle<T>(Future<T> Function() action) {
+    final operation = _lifecycleTail.then((_) => action());
+    _lifecycleTail = operation.then<void>((_) {}, onError: (_, _) {});
+    return operation;
+  }
+
+  Future<void> start() {
+    return _serializeLifecycle(_startUnlocked);
+  }
+
+  Future<void> _startUnlocked() async {
+    if (_process != null || _startedByHelper) {
+      await _shutdownUnlocked(false);
     }
     final serverSocket = await _serverCompleter.future;
     final arg = system.isWindows
@@ -149,8 +157,15 @@ class CoreService extends CoreHandlerInterface {
         base64.encode(_ipcKey),
       );
       if (isSuccess) {
-        await _waitForConnection();
-        return;
+        _startedByHelper = true;
+        try {
+          await _waitForConnection();
+          return;
+        } catch (_) {
+          final stopped = await request.stopCoreByHelper();
+          if (stopped) _startedByHelper = false;
+          rethrow;
+        }
       }
     }
     try {
@@ -179,8 +194,10 @@ class CoreService extends CoreHandlerInterface {
         logLevel: LogLevel.error,
       );
       _handleInvokeCrashEvent();
-      _process?.kill();
-      _process = null;
+      final failedProcess = _process;
+      if (failedProcess != null && await _stopLocalProcess(failedProcess)) {
+        if (identical(_process, failedProcess)) _process = null;
+      }
       rethrow;
     }
   }
@@ -236,23 +253,48 @@ class CoreService extends CoreHandlerInterface {
   }
 
   @override
-  Future<bool> shutdown(bool isUser) async {
-    if (!_socketCompleter.isCompleted && _process == null) {
+  Future<bool> shutdown(bool isUser) {
+    return _serializeLifecycle(() => _shutdownUnlocked(isUser));
+  }
+
+  Future<bool> _shutdownUnlocked(bool isUser) async {
+    if (!_socketCompleter.isCompleted &&
+        _process == null &&
+        !_startedByHelper) {
       return false;
     }
-    _shutdownCompleter = Completer();
+    final process = _process;
     await _destroySocket();
     _clearCompleter();
-    if (system.isWindows) {
-      await request.stopCoreByHelper();
+    if (system.isWindows && _startedByHelper) {
+      final stopped = await request.stopCoreByHelper();
+      if (stopped) _startedByHelper = false;
+      return stopped;
     }
-    _process?.kill();
-    _process = null;
-    if (isUser) {
-      return _shutdownCompleter.future;
-    } else {
-      return true;
+    if (process == null) {
+      return false;
     }
+    final stopped = await _stopLocalProcess(process);
+    if (!stopped) return false;
+    if (identical(_process, process)) {
+      _process = null;
+    }
+    return true;
+  }
+
+  Future<bool> _stopLocalProcess(Process process) async {
+    process.kill();
+    try {
+      await process.exitCode.timeout(_coreStopTimeout);
+    } on TimeoutException {
+      process.kill(ProcessSignal.sigkill);
+      try {
+        await process.exitCode.timeout(_coreStopTimeout);
+      } on TimeoutException {
+        return false;
+      }
+    }
+    return true;
   }
 
   void _clearCompleter() {

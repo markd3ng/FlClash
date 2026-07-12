@@ -17,7 +17,6 @@ import (
 	"github.com/metacubex/mihomo/common/observable"
 	"github.com/metacubex/mihomo/component/mmdb"
 	"github.com/metacubex/mihomo/component/resolver"
-	"github.com/metacubex/mihomo/component/updater"
 	"github.com/metacubex/mihomo/config"
 	"github.com/metacubex/mihomo/constant"
 	"github.com/metacubex/mihomo/constant/features"
@@ -45,12 +44,14 @@ func handleInitClash(paramsString string) bool {
 	}
 	version = params.Version
 	constant.SetHomeDir(params.HomeDir)
+	GlobalValidationSourceHome = params.ValidationSourceHome
 	if params.ProfileKey != "" {
 		GlobalProfileKey = params.ProfileKey
 	}
 	if params.ConfigAgeSecretKey != "" {
 		GlobalConfigAgeSecretKey = params.ConfigAgeSecretKey
 	}
+	resetGeoLifecycle()
 	isInit = true
 	return isInit
 }
@@ -86,11 +87,36 @@ func handleForceGC() {
 }
 
 func handleShutdown() bool {
+	stopGeoLifecycle()
+	runLock.Lock()
+	defer runLock.Unlock()
+	isRunning = false
 	listener.StopListener()
+	closeCurrentProviders()
 	executor.Shutdown()
 	handleForceGC()
 	isInit = false
 	return true
+}
+
+func closeCurrentProviders() {
+	for _, provider := range tunnel.Providers() {
+		closeProvider(provider)
+	}
+	for _, provider := range tunnel.RuleProviders() {
+		closeProvider(provider)
+	}
+	tunnel.UpdateProxies(
+		map[string]constant.Proxy{},
+		map[string]cp.ProxyProvider{},
+	)
+	tunnel.UpdateRules(nil, nil, map[string]cp.RuleProvider{})
+}
+
+func closeProvider(provider any) {
+	if closer, ok := provider.(interface{ Close() error }); ok {
+		_ = closer.Close()
+	}
 }
 
 func handleValidateConfig(path string) string {
@@ -101,11 +127,11 @@ func handleValidateConfig(path string) string {
 	if len(buf) == 0 {
 		return "empty config file or decryption failed"
 	}
-	_, err = config.UnmarshalRawConfig(buf)
-	if err != nil {
-		return "Parse Error: " + err.Error()
-	}
-	return ""
+	return validateConfigData(buf)
+}
+
+func validateConfigData(data []byte) string {
+	return isolatedValidateConfigData(data)
 }
 
 func handleGetProxies() ProxiesData {
@@ -352,26 +378,30 @@ func handleGetExternalProvider(externalProviderName string) string {
 	return string(data)
 }
 
-func handleUpdateGeoData(geoType string, geoName string, fn func(value string)) {
-	go func() {
-		path := constant.Path.Resolve(geoName)
-		var err error
-		switch geoType {
-		case "MMDB":
-			err = updater.UpdateMMDBWithPath(path)
-		case "ASN":
-			err = updater.UpdateASNWithPath(path)
-		case "GEOIP":
-			err = updater.UpdateGeoIpWithPath(path)
-		case "GEOSITE":
-			err = updater.UpdateGeoSiteWithPath(path)
+func handleUpdateGeoData(
+	geoType string,
+	geoName string,
+	geoURL string,
+	fn func(value string),
+) {
+	if !runLifecycleGeoTask(func(ctx context.Context) {
+		path, err := geoResourcePath(geoType, geoName)
+		if err == nil {
+			err = tryRunGeoUpdate(ctx, func(ctx context.Context) error {
+				return updateGeoDataLockedFromURL(ctx, geoType, path, geoURL)
+			})
 		}
 		if err != nil {
 			fn(err.Error())
 			return
 		}
 		fn("")
-	}()
+		if geoReloadNeeded.Swap(false) {
+			sendGeoReload()
+		}
+	}) {
+		fn(context.Canceled.Error())
+	}
 }
 
 func handleUpdateExternalProvider(providerName string, fn func(value string)) {

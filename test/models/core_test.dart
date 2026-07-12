@@ -1,10 +1,36 @@
 import 'dart:convert';
 
+import 'package:fl_clash/core/controller.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:test/test.dart';
 
 void main() {
+  test('normalizeCoreRawConfig normalizes tunnel JSON field names', () {
+    final normalized = normalizeCoreRawConfig({
+      'rule': ['MATCH,DIRECT'],
+      'tunnels': [
+        {
+          'Network': ['tcp'],
+          'Address': '127.0.0.1:1000',
+          'Target': 'example.com:443',
+          'Proxy': 'DIRECT',
+        },
+      ],
+    });
+
+    expect(normalized['rules'], ['MATCH,DIRECT']);
+    expect(normalized['rule'], isNull);
+    expect(normalized['tunnels'], [
+      {
+        'network': ['tcp'],
+        'address': '127.0.0.1:1000',
+        'target': 'example.com:443',
+        'proxy': 'DIRECT',
+      },
+    ]);
+  });
+
   group('SetupParams', () {
     test('fromJson uses snake-case keys', () {
       final json = {
@@ -47,6 +73,29 @@ void main() {
       expect(params.allowLan, true);
       expect(params.mode, Mode.rule);
       expect(params.logLevel, LogLevel.info);
+      expect(params.geoAutoUpdate, false);
+      expect(params.geoUpdateInterval, 24);
+    });
+
+    test('toJson uses geo update keys', () {
+      const params = UpdateParams(
+        tun: Tun(),
+        mixedPort: 7890,
+        allowLan: false,
+        findProcessMode: FindProcessMode.off,
+        mode: Mode.rule,
+        logLevel: LogLevel.error,
+        ipv6: false,
+        tcpConcurrent: true,
+        externalController: '',
+        secret: '',
+        unifiedDelay: true,
+        geoAutoUpdate: true,
+        geoUpdateInterval: 12,
+      );
+      final json = params.toJson();
+      expect(json['geo-auto-update'], true);
+      expect(json['geo-update-interval'], 12);
     });
   });
 
@@ -76,10 +125,15 @@ void main() {
 
   group('UpdateGeoDataParams', () {
     test('fromJson with snake-case keys', () {
-      final json = {'geo-type': 'mmdb', 'geo-name': 'Country'};
+      final json = {
+        'geo-type': 'mmdb',
+        'geo-name': 'Country',
+        'url': 'https://example.com/geo.mmdb',
+      };
       final params = UpdateGeoDataParams.fromJson(json);
       expect(params.geoType, 'mmdb');
       expect(params.geoName, 'Country');
+      expect(params.url, 'https://example.com/geo.mmdb');
     });
   });
 
@@ -167,6 +221,15 @@ void main() {
       final event = CoreEvent.fromJson({'type': 'log', 'data': 'test log'});
       expect(event.type, CoreEventType.log);
       expect(event.data, 'test log');
+    });
+
+    test('fromJson supports geo update events', () {
+      final event = CoreEvent.fromJson({
+        'type': 'geoUpdate',
+        'data': {'type': 'MMDB', 'updating': false, 'skipped': true},
+      });
+      expect(event.type, CoreEventType.geoUpdate);
+      expect(event.data['skipped'], true);
     });
   });
 

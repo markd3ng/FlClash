@@ -11,16 +11,18 @@ bool isOixCloudProfileUrl(String url) {
 
   final host = parsed?.host.trim().toLowerCase() ?? '';
   final path = parsed?.path.trim().toLowerCase() ?? '';
-  final cloudDomains = {
-    ...Secrets.apiDomains,
-    Secrets.primarySiteDomain.trim().toLowerCase(),
-    Secrets.spareSiteDomain.trim().toLowerCase(),
-  }..remove('');
+  final cloudDomains = <String>{};
+  try {
+    cloudDomains.addAll(Secrets.apiDomains);
+    cloudDomains.add(Secrets.primarySiteDomain.trim().toLowerCase());
+    cloudDomains.add(Secrets.spareSiteDomain.trim().toLowerCase());
+  } catch (_) {}
+  cloudDomains.remove('');
   final isManagedPath =
       path.contains('/managed/flclash') || path.contains('/api/v1/managed/');
   if (isManagedPath && cloudDomains.contains(host)) return true;
 
-  return Secrets.apiDomains.contains(host);
+  return cloudDomains.contains(host);
 }
 
 typedef ManagedProfileDeduplicator<T> = Future<void> Function(List<T> profiles);

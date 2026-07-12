@@ -9,7 +9,9 @@ import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/plugins/app.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/services/cloud_api_service.dart';
+import 'package:fl_clash/services/config_key_store.dart';
 import 'package:fl_clash/state.dart';
+import 'package:fl_clash/utils/safe_storage.dart';
 import 'package:fl_clash/views/cloud/cloud_login_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -26,13 +28,301 @@ const _persistentLogMaxBytes = 1024 * 1024;
 const _persistentLogKeepBytes = 768 * 1024;
 const _coreDisconnectedMessage = 'Core is not connected';
 
+class CandidateConfigValidationException implements Exception {
+  final String message;
+
+  const CandidateConfigValidationException(this.message);
+
+  @override
+  String toString() => message;
+}
+
+bool shouldStopCoreAfterApplyFailure({
+  required bool isRunning,
+  required bool candidateValidationFailed,
+}) {
+  return isRunning && !candidateValidationFailed;
+}
+
+Map<String, dynamic> createBackupConfigMap(Config config, int version) {
+  final configMap = Map<String, dynamic>.from(
+    jsonDecode(jsonEncode(sanitizeConfigForPreferences(config))) as Map,
+  );
+  configMap['version'] = version;
+  return configMap;
+}
+
+Future<void> validateRestoredProfileFiles(
+  List<VM2<String, String>> migrations,
+  String profilesPath,
+  Future<String> Function(String path) validate,
+) async {
+  final normalizedProfilesPath = p.absolute(p.normalize(profilesPath));
+  for (final migration in migrations) {
+    final target = p.absolute(p.normalize(migration.b));
+    if (p.dirname(target) != normalizedProfilesPath ||
+        p.extension(target).toLowerCase() != '.yaml') {
+      continue;
+    }
+    final source = File(migration.a);
+    if (!await source.exists()) {
+      throw const FormatException('restore profile source is missing');
+    }
+    final message = await validate(source.path);
+    if (message.isNotEmpty) {
+      throw FormatException('invalid restored profile: $message');
+    }
+  }
+}
+
+Future<String> validateProxyGroupFilters(
+  ProxyGroup group,
+  Future<String> Function(String data) validate,
+) async {
+  if ((group.filter?.isEmpty ?? true) &&
+      (group.excludeFilter?.isEmpty ?? true)) {
+    return '';
+  }
+  final validationGroup = <String, Object?>{
+    'name': 'Filter validation',
+    'type': 'select',
+    'proxies': ['DIRECT'],
+    if (group.filter?.isNotEmpty == true) 'filter': group.filter,
+    if (group.excludeFilter?.isNotEmpty == true)
+      'exclude-filter': group.excludeFilter,
+  };
+  final yaml = await encodeYamlTask({
+    'proxy-groups': [validationGroup],
+    'rules': ['MATCH,DIRECT'],
+  });
+  return validate(base64Encode(utf8.encode(yaml)));
+}
+
+Future<void> commitRestoredFiles(
+  List<VM2<String, String>> migrations,
+  Future<void> Function() commit, {
+  List<String> deletePaths = const [],
+  Future<void> Function(RestoreFilePlan plan)? prepare,
+  Future<void> Function()? rollbackCompleted,
+}) async {
+  final targets = <String>{};
+  for (final migration in migrations) {
+    final target = p.absolute(p.normalize(migration.b));
+    if (!targets.add(target)) {
+      throw const FormatException('duplicate restore target');
+    }
+  }
+  final normalizedDeletePaths = <String>{};
+  for (final path in deletePaths) {
+    final target = p.absolute(p.normalize(path));
+    if (!normalizedDeletePaths.add(target) ||
+        targets.any(
+          (migrationTarget) =>
+              migrationTarget == target ||
+              p.isWithin(target, migrationTarget) ||
+              p.isWithin(migrationTarget, target),
+        )) {
+      throw const FormatException('invalid restore deletion target');
+    }
+  }
+  final backups = <String, String?>{};
+  final deletedBackups = <String, ({String path, FileSystemEntityType type})>{};
+  final cleanupBackups = <String>{};
+  final temporaryFiles = <String>{};
+  final replacementPlans = <String, RestoreReplacementPlan>{};
+  for (final migration in migrations) {
+    final source = File(migration.a);
+    if (!await source.exists()) {
+      throw FileSystemException(
+        'Restore source file does not exist',
+        source.path,
+      );
+    }
+    final target = File(migration.b);
+    final type = await FileSystemEntity.type(target.path, followLinks: false);
+    if (type != FileSystemEntityType.notFound &&
+        type != FileSystemEntityType.file) {
+      throw const FormatException('unsupported restore replacement target');
+    }
+    replacementPlans[target.path] = RestoreReplacementPlan(
+      target: target.path,
+      backup: '${target.path}.restore-backup-${utils.id}',
+      temporary: '${target.path}.restore-new-${utils.id}',
+      existed: type == FileSystemEntityType.file,
+    );
+  }
+  final deletionPlans = <String, RestoreDeletionPlan>{};
+  for (final path in normalizedDeletePaths) {
+    final type = await FileSystemEntity.type(path, followLinks: false);
+    if (type == FileSystemEntityType.notFound) {
+      continue;
+    }
+    if (type != FileSystemEntityType.file &&
+        type != FileSystemEntityType.directory) {
+      throw const FormatException('unsupported restore deletion target');
+    }
+    deletionPlans[path] = RestoreDeletionPlan(
+      target: path,
+      backup: '$path.restore-delete-backup-${utils.id}',
+      isDirectory: type == FileSystemEntityType.directory,
+    );
+  }
+  await prepare?.call(
+    RestoreFilePlan(
+      replacements: replacementPlans.values.toList(),
+      deletions: deletionPlans.values.toList(),
+    ),
+  );
+  try {
+    for (final migration in migrations) {
+      final source = File(migration.a);
+      final target = File(migration.b);
+      final plan = replacementPlans[target.path]!;
+      await durableCreateDirectory(target.parent.path);
+      final temporary = File(plan.temporary);
+      temporaryFiles.add(temporary.path);
+      await source.openRead().pipe(temporary.openWrite());
+      final temporaryHandle = await temporary.open(mode: FileMode.append);
+      try {
+        await temporaryHandle.flush();
+      } finally {
+        await temporaryHandle.close();
+      }
+      String? backupPath;
+      if (plan.existed) {
+        backupPath = plan.backup;
+        backups[target.path] = backupPath;
+        await durableRename(target.path, backupPath);
+      } else {
+        backups[target.path] = null;
+      }
+      await durableRename(temporary.path, target.path);
+      temporaryFiles.remove(temporary.path);
+    }
+    for (final plan in deletionPlans.values) {
+      final type = plan.isDirectory
+          ? FileSystemEntityType.directory
+          : FileSystemEntityType.file;
+      deletedBackups[plan.target] = (path: plan.backup, type: type);
+      if (plan.isDirectory) {
+        await durableRenameDirectory(plan.target, plan.backup);
+      } else {
+        await durableRename(plan.target, plan.backup);
+      }
+    }
+    await commit();
+    cleanupBackups.addAll(backups.values.whereType<String>());
+    cleanupBackups.addAll(deletedBackups.values.map((backup) => backup.path));
+  } catch (error, stackTrace) {
+    Object? rollbackError;
+    for (final entry in deletedBackups.entries.toList().reversed) {
+      try {
+        final backup = entry.value;
+        final backupType = await FileSystemEntity.type(
+          backup.path,
+          followLinks: false,
+        );
+        if (backupType == FileSystemEntityType.notFound) {
+          if (await FileSystemEntity.type(entry.key, followLinks: false) !=
+              FileSystemEntityType.notFound) {
+            continue;
+          }
+          throw const FileSystemException('Restore deletion backup is missing');
+        }
+        await durableDeleteEntity(entry.key);
+        if (backup.type == FileSystemEntityType.file) {
+          await durableRename(backup.path, entry.key);
+        } else {
+          await durableRenameDirectory(backup.path, entry.key);
+        }
+        cleanupBackups.add(backup.path);
+      } catch (rollbackFailure) {
+        rollbackError ??= rollbackFailure;
+      }
+    }
+    for (final entry in backups.entries.toList().reversed) {
+      try {
+        final target = File(entry.key);
+        final backupPath = entry.value;
+        await durableDeleteFile(target.path);
+        if (backupPath == null) {
+          continue;
+        } else {
+          if (await File(backupPath).exists()) {
+            await durableRename(backupPath, target.path);
+          } else if (!await target.exists()) {
+            throw const FileSystemException(
+              'Restore replacement backup is missing',
+            );
+          }
+          cleanupBackups.add(backupPath);
+        }
+      } catch (rollbackFailure) {
+        rollbackError ??= rollbackFailure;
+      }
+    }
+    if (rollbackError != null) {
+      Error.throwWithStackTrace(
+        StateError('$error; restore rollback failed: $rollbackError'),
+        stackTrace,
+      );
+    }
+    await rollbackCompleted?.call();
+    Error.throwWithStackTrace(error, stackTrace);
+  } finally {
+    for (final temporaryPath in temporaryFiles) {
+      try {
+        await File(temporaryPath).safeDelete();
+      } catch (_) {}
+    }
+    for (final backupPath in cleanupBackups) {
+      try {
+        final type = await FileSystemEntity.type(
+          backupPath,
+          followLinks: false,
+        );
+        if (type == FileSystemEntityType.directory) {
+          await Directory(backupPath).safeDelete(recursive: true);
+        } else if (type != FileSystemEntityType.notFound) {
+          await File(backupPath).safeDelete();
+        }
+      } catch (_) {}
+    }
+  }
+}
+
+Future<void> runCleanupActions(
+  Iterable<FutureOr<void> Function()> actions,
+) async {
+  Object? firstError;
+  StackTrace? firstStackTrace;
+  for (final action in actions) {
+    try {
+      await action();
+    } catch (error, stackTrace) {
+      firstError ??= error;
+      firstStackTrace ??= stackTrace;
+    }
+  }
+  if (firstError != null) {
+    Error.throwWithStackTrace(
+      firstError,
+      firstStackTrace ?? StackTrace.current,
+    );
+  }
+}
+
 class AppController {
   late final BuildContext _context;
   late final WidgetRef _ref;
   Future<void> _logFileWrite = Future.value();
+  Future<void> _preferencesWriteTail = Future.value();
   File? _persistentLogFile;
   int _persistentLogLength = 0;
   Future<bool>? _coreReadyFuture;
+  Future<void> _coreLifecycleTail = Future.value();
+  bool _preferencesWritesSuspended = false;
+  bool _preferencesWriteRequestedWhileSuspended = false;
   bool isAttach = false;
   bool _isCloudLoginDialogShowing = false;
 
@@ -51,15 +341,109 @@ class AppController {
     await _init();
     isAttach = true;
   }
+
+  Future<bool> _saveConfigSerialized(Config value) {
+    final operation = _preferencesWriteTail.then(
+      (_) => preferences.saveConfig(value),
+    );
+    _preferencesWriteTail = operation.then<void>(
+      (_) {},
+      onError: (Object _, StackTrace __) {},
+    );
+    return operation;
+  }
+
+  Future<T> _serializeCoreLifecycle<T>(Future<T> Function() action) {
+    final operation = _coreLifecycleTail.then((_) => action());
+    _coreLifecycleTail = operation.then<void>((_) {}, onError: (_, _) {});
+    return operation;
+  }
+
+  void _synchronizeRestoredState({
+    required List<Profile> profiles,
+    required List<Script> scripts,
+    required Config config,
+    required bool restoreConfig,
+  }) {
+    _ref.read(profilesProvider.notifier).replaceFromDatabase(profiles);
+    _ref.read(scriptsProvider.notifier).replaceFromDatabase(scripts);
+    oixCloudConfigCache.clear();
+    globalState.lastSetupState = null;
+    _ref.invalidate(addedRuleStreamProvider);
+    _ref.invalidate(setupStateProvider);
+    _ref.read(currentProfileIdProvider.notifier).value =
+        config.currentProfileId;
+    if (!restoreConfig) {
+      return;
+    }
+    _ref.read(patchClashConfigProvider.notifier).value =
+        config.patchClashConfig;
+    _ref.read(appSettingProvider.notifier).value = config.appSettingProps;
+    _ref.read(davSettingProvider.notifier).value = config.davProps;
+    _ref.read(themeSettingProvider.notifier).value = config.themeProps;
+    _ref.read(windowSettingProvider.notifier).value = config.windowProps;
+    _ref.read(vpnSettingProvider.notifier).value = config.vpnProps;
+    _ref.read(proxiesStyleSettingProvider.notifier).value =
+        config.proxiesStyleProps;
+    _ref.read(overrideDnsProvider.notifier).value = config.overrideDns;
+    _ref.read(networkSettingProvider.notifier).value = config.networkProps;
+    _ref.read(hotKeyActionsProvider.notifier).value = config.hotKeyActions;
+  }
+}
+
+({String scheme, String host, int? port, String path, String query})?
+_normalizedDavEndpoint(String value) {
+  final uri = Uri.tryParse(value.trim());
+  if (uri == null || !uri.hasScheme || uri.host.isEmpty) {
+    return null;
+  }
+  var path = p.posix.normalize(uri.path);
+  if (path == '.') {
+    path = '/';
+  }
+  if (!path.startsWith('/')) {
+    path = '/$path';
+  }
+  if (path.length > 1 && path.endsWith('/')) {
+    path = path.substring(0, path.length - 1);
+  }
+  final scheme = uri.scheme.toLowerCase();
+  final defaultPort = switch (scheme) {
+    'http' => 80,
+    'https' => 443,
+    _ => null,
+  };
+  return (
+    scheme: scheme,
+    host: uri.host.toLowerCase(),
+    port: uri.hasPort ? uri.port : defaultPort,
+    path: path,
+    query: uri.query,
+  );
+}
+
+DAVProps? mergeRestoredDavProps(DAVProps? restored, DAVProps? previous) {
+  if (restored == null) {
+    return previous;
+  }
+  final restoredEndpoint = _normalizedDavEndpoint(restored.uri);
+  final canReusePassword =
+      previous != null &&
+      restored.user == previous.user &&
+      restoredEndpoint != null &&
+      restoredEndpoint == _normalizedDavEndpoint(previous.uri);
+  return restored.copyWith(password: canReusePassword ? previous.password : '');
 }
 
 extension InitControllerExt on AppController {
   Future<void> _init() async {
     FlutterError.onError = (details) {
-      commonPrint.log(
-        'exception: ${details.exception} stack: ${details.stack}',
-        logLevel: LogLevel.warning,
-      );
+      Future.microtask(() {
+        commonPrint.log(
+          'exception: ${details.exception} stack: ${details.stack}',
+          logLevel: LogLevel.warning,
+        );
+      });
     };
     WidgetsBinding.instance.platformDispatcher.onError = (error, stack) {
       commonPrint.log(
@@ -269,19 +653,21 @@ extension StateControllerExt on AppController {
 extension ProfilesControllerExt on AppController {
   Future<void> deleteProfile(int id) async {
     oixCloudConfigCache.remove(id);
-    _ref.read(profilesProvider.notifier).del(id);
-    await clearEffect(id);
-    final currentProfileId = _ref.read(currentProfileIdProvider);
-    if (currentProfileId == id) {
-      final profiles = _ref.read(profilesProvider);
-      if (profiles.isNotEmpty) {
-        final updateId = profiles.first.id;
-        _ref.read(currentProfileIdProvider.notifier).value = updateId;
-      } else {
-        _ref.read(currentProfileIdProvider.notifier).value = null;
-        updateStatus(false);
+    await storageLock.synchronized(() async {
+      await _ref.read(profilesProvider.notifier).del(id, reportOnWait: false);
+      await clearEffect(id);
+      final currentProfileId = _ref.read(currentProfileIdProvider);
+      if (currentProfileId == id) {
+        final profiles = _ref.read(profilesProvider);
+        if (profiles.isNotEmpty) {
+          final updateId = profiles.first.id;
+          _ref.read(currentProfileIdProvider.notifier).value = updateId;
+        } else {
+          _ref.read(currentProfileIdProvider.notifier).value = null;
+          updateStatus(false);
+        }
       }
-    }
+    });
   }
 
   Future<void> autoUpdateProfiles() async {
@@ -307,10 +693,55 @@ extension ProfilesControllerExt on AppController {
     }
   }
 
-  void putProfile(Profile profile) {
-    _ref.read(profilesProvider.notifier).put(profile);
+  Future<void> putProfile(Profile profile, {bool reportOnWait = true}) async {
+    await _ref
+        .read(profilesProvider.notifier)
+        .put(profile, reportOnWait: reportOnWait);
     if (_ref.read(currentProfileIdProvider) != null) return;
     _ref.read(currentProfileIdProvider.notifier).value = profile.id;
+  }
+
+  Future<Profile> persistProfile(
+    Profile profile,
+    Future<Profile> Function() update,
+  ) {
+    return storageLock.synchronized(() async {
+      final previousProfileId = _ref.read(currentProfileIdProvider);
+      Future<Profile> persist() async {
+        try {
+          final updatedProfile = await update();
+          await putProfile(updatedProfile, reportOnWait: false);
+          return updatedProfile;
+        } catch (_) {
+          _ref.read(currentProfileIdProvider.notifier).value =
+              previousProfileId;
+          rethrow;
+        }
+      }
+
+      if (profile.isoixCloudProfile && !profile.useEncryptedDiskStore) {
+        final hadCache = oixCloudConfigCache.containsKey(profile.id);
+        final cached = oixCloudConfigCache[profile.id];
+        try {
+          return await persist();
+        } catch (_) {
+          if (hadCache && cached != null) {
+            oixCloudConfigCache[profile.id] = Uint8List.fromList(cached);
+          } else {
+            oixCloudConfigCache.remove(profile.id);
+          }
+          rethrow;
+        }
+      }
+      return withFileRollback(
+        await appPath.getProfilePath(profile.id.toString()),
+        persist,
+      );
+    });
+  }
+
+  Future<Profile> saveProfileFile(Profile profile, Uint8List bytes) {
+    return persistProfile(profile, () => profile.saveFile(bytes));
   }
 
   Future<void> updateProfiles() async {
@@ -358,9 +789,7 @@ extension ProfilesControllerExt on AppController {
 
   Future<Profile> _updateProfileWithCertificateRetry(Profile profile) {
     return _runWithCertificateRetry(() async {
-      final newProfile = await profile.update();
-      _ref.read(profilesProvider.notifier).put(newProfile);
-      return newProfile;
+      return persistProfile(profile, profile.update);
     }, handleCloudUnauthorized: profile.isoixCloudProfile);
   }
 
@@ -416,8 +845,10 @@ extension ProfilesControllerExt on AppController {
         ),
       );
       if (res == true) {
-        updateStatus(true);
-        globalState.showNotifier(appLocalizations.startSuccess);
+        await updateStatus(true);
+        if (_ref.read(isStartProvider)) {
+          globalState.showNotifier(appLocalizations.startSuccess);
+        }
       }
     }
   }
@@ -428,40 +859,29 @@ extension ProfilesControllerExt on AppController {
     }
     toProfiles();
     final profile = await loadingRun(tag: LoadingTag.profiles, () async {
-      return _runWithCertificateRetry(
-        () => Profile.normal(url: url).update(),
-        handleCloudUnauthorized: isOixCloudProfileUrl(url),
-      );
+      return _runWithCertificateRetry(() {
+        final profile = Profile.normal(url: url);
+        return persistProfile(profile, profile.update);
+      }, handleCloudUnauthorized: isOixCloudProfileUrl(url));
     }, title: appLocalizations.addProfile);
     if (profile != null) {
-      putProfile(profile);
       globalState.showNotifier(appLocalizations.getProfileSuccess);
       await requestStartCore();
     }
     return profile;
   }
 
-  void setProfileAndAutoApply(Profile profile) {
-    _ref.read(profilesProvider.notifier).put(profile);
-    if (profile.id == _ref.read(currentProfileIdProvider)) {
-      applyProfileDebounce();
-    }
-  }
-
   Future<void> addProfileFormFile() async {
     final platformFile = await safeRun(picker.pickerFile);
-    final bytes = platformFile?.bytes;
-    if (bytes == null) {
-      return;
-    }
+    if (platformFile == null) return;
+    final bytes = await platformFile.readBytes();
     if (!_context.mounted) return;
     globalState.navigatorKey.currentState?.popUntil((route) => route.isFirst);
     toProfiles();
     final profile = await loadingRun(tag: LoadingTag.profiles, () async {
-      return Profile.normal(label: platformFile?.name).saveFile(bytes);
+      return saveProfileFile(Profile.normal(label: platformFile.name), bytes);
     }, title: appLocalizations.addProfile);
     if (profile != null) {
-      putProfile(profile);
       globalState.showNotifier(appLocalizations.getProfileSuccess);
       await requestStartCore();
     }
@@ -766,15 +1186,20 @@ extension SetupControllerExt on AppController {
           return;
         }
         await globalState.handleStart([updateRunTime, updateTraffic]);
-        applyProfileDebounce(force: true, silence: true);
+        if (!await applyProfile(force: true, silence: true)) {
+          await updateStatus(false);
+        }
       } else {
         globalState.needInitStatus = false;
-        await applyProfile(
+        final started = await applyProfile(
           force: true,
           preloadInvoke: () async {
             await globalState.handleStart([updateRunTime, updateTraffic]);
           },
         );
+        if (!started && _ref.read(isStartProvider)) {
+          await updateStatus(false);
+        }
       }
     } else {
       await globalState.handleStop();
@@ -797,6 +1222,62 @@ extension SetupControllerExt on AppController {
 
   Future<Profile> _refreshOixCloudProfile(Profile profile) async {
     return _updateProfileWithCertificateRetry(profile);
+  }
+
+  Future<Map<String, dynamic>> getRawProfileConfig(int profileId) async {
+    var profile = _ref.read(profilesProvider).getProfile(profileId);
+    var cachedBytes = _getCachedProfileBytes(profile);
+    String? existingPath;
+
+    if (profile != null && profile.isoixCloudProfile) {
+      if (profile.useEncryptedDiskStore) {
+        existingPath = await profile.getExistingFilePath();
+      }
+      if (cachedBytes == null && existingPath == null) {
+        profile = await _refreshOixCloudProfile(profile);
+        cachedBytes = _getCachedProfileBytes(profile);
+        if (profile.useEncryptedDiskStore) {
+          existingPath = await profile.getExistingFilePath();
+        }
+      }
+    }
+
+    if (cachedBytes != null) {
+      final raw = gzip.decode(cachedBytes);
+      return coreController.getConfigFromBytes(base64Encode(raw));
+    }
+
+    String path;
+    if (profile != null) {
+      existingPath ??=
+          profile.isoixCloudProfile && !profile.useEncryptedDiskStore
+          ? null
+          : await profile.getExistingFilePath();
+      if (existingPath != null) {
+        path = existingPath;
+      } else {
+        if (profile.isoixCloudProfile) {
+          throw Exception('oixCloud profile cache miss');
+        }
+        path = await appPath.getProfilePath(profileId.toString());
+      }
+    } else {
+      path = await appPath.getProfilePath(profileId.toString());
+    }
+    return coreController.getConfig(path);
+  }
+
+  Future<String?> findRawProfileOutboundReference(
+    int profileId,
+    String name, {
+    required bool includeTopLevelRules,
+  }) async {
+    final rawConfig = await getRawProfileConfig(profileId);
+    return findRawOutboundReference(
+      rawConfig,
+      name,
+      includeTopLevelRules: includeTopLevelRules,
+    );
   }
 
   Future<bool> needSetup() async {
@@ -824,6 +1305,7 @@ extension SetupControllerExt on AppController {
           updateParams.copyWith.tun(enable: realTunEnable),
         );
         if (message.isNotEmpty) throw message;
+        addCheckIp();
       });
     });
   }
@@ -885,19 +1367,25 @@ extension SetupControllerExt on AppController {
     });
   }
 
-  Future<void> applyProfile({
+  Future<bool> applyProfile({
     bool silence = false,
     bool force = false,
-    VoidCallback? preloadInvoke,
+    FutureOr<void> Function()? preloadInvoke,
   }) async {
     await autoUpdateIpv6();
     if (!force && !await needSetup()) {
-      return;
+      return true;
     }
+    var keepCurrentCore = false;
     final res = await loadingRun<bool>(
       () async {
-        if (!await _setupConfig(preloadInvoke)) {
-          return false;
+        try {
+          if (!await _setupConfig(preloadInvoke)) {
+            return false;
+          }
+        } on CandidateConfigValidationException {
+          keepCurrentCore = true;
+          rethrow;
         }
         await updateGroups();
         await updateProviders();
@@ -931,9 +1419,14 @@ extension SetupControllerExt on AppController {
       silence: true,
       tag: !silence ? LoadingTag.proxies : null,
     );
-    if (res != true && _ref.read(isStartProvider)) {
+    if (res != true &&
+        shouldStopCoreAfterApplyFailure(
+          isRunning: _ref.read(isStartProvider),
+          candidateValidationFailed: keepCurrentCore,
+        )) {
       updateStatus(false);
     }
+    return res == true;
   }
 
   Future<Map<String, dynamic>> getProfile({
@@ -953,55 +1446,17 @@ extension SetupControllerExt on AppController {
     final overrideDns = _ref.read(overrideDnsProvider);
     final appendSystemDns = networkVM2.a;
     final routeMode = networkVM2.b;
-    var profile = _ref.read(profilesProvider).getProfile(profileId);
-
-    Map<String, dynamic> configMap;
-    var cachedBytes = _getCachedProfileBytes(profile);
-    String? existingPath;
-
-    if (profile != null && profile.isoixCloudProfile) {
-      if (profile.useEncryptedDiskStore) {
-        existingPath = await profile.getExistingFilePath();
-      }
-
-      if (cachedBytes == null && existingPath == null) {
-        profile = await _refreshOixCloudProfile(profile);
-        cachedBytes = _getCachedProfileBytes(profile);
-        if (profile.useEncryptedDiskStore) {
-          existingPath = await profile.getExistingFilePath();
-        }
-      }
-    }
-
-    if (cachedBytes != null) {
-      final raw = gzip.decode(cachedBytes);
-      final base64String = base64Encode(raw);
-      configMap = await coreController.getConfigFromBytes(base64String);
-    } else {
-      String path;
-      if (profile != null) {
-        existingPath ??=
-            profile.isoixCloudProfile && !profile.useEncryptedDiskStore
-            ? null
-            : await profile.getExistingFilePath();
-        if (existingPath != null) {
-          path = existingPath;
-        } else {
-          if (profile.isoixCloudProfile) {
-            throw Exception('oixCloud profile cache miss');
-          }
-          path = await appPath.getProfilePath(profileId.toString());
-        }
-      } else {
-        path = await appPath.getProfilePath(profileId.toString());
-      }
-      configMap = await coreController.getConfig(path);
-    }
+    final configMap = await getRawProfileConfig(profileId);
     String? scriptContent;
     final List<Rule> addedRules = [];
+    final List<ProxyGroup> customProxyGroups = [];
+    final List<Rule> customRules = [];
     final proxyChains = List<ProxyChain>.from(setupState.proxyChains);
     if (setupState.overwriteType == OverwriteType.script) {
       scriptContent = await setupState.script?.content;
+    } else if (setupState.overwriteType == OverwriteType.custom) {
+      customProxyGroups.addAll(setupState.customProxyGroups);
+      customRules.addAll(setupState.customRules);
     } else {
       addedRules.addAll(setupState.addedRules);
     }
@@ -1018,12 +1473,15 @@ extension SetupControllerExt on AppController {
         profilesPath: directory,
         profileId: profileId,
         rawConfig: rawConfig,
+        overwriteType: setupState.overwriteType,
         realPatchConfig: realPatchConfig,
         overrideDns: overrideDns,
         appendSystemDns: appendSystemDns,
         addedRules: addedRules,
         proxyChains: proxyChains,
         profileProxies: setupState.profileProxies,
+        customProxyGroups: customProxyGroups,
+        customRules: customRules,
         defaultUA: defaultUA,
       ),
     );
@@ -1045,7 +1503,7 @@ extension SetupControllerExt on AppController {
     return res;
   }
 
-  Future<bool> _setupConfig([VoidCallback? preloadInvoke]) async {
+  Future<bool> _setupConfig([FutureOr<void> Function()? preloadInvoke]) async {
     commonPrint.log('setup ===>');
     if (!await ensureCoreReady()) {
       return false;
@@ -1056,7 +1514,9 @@ extension SetupControllerExt on AppController {
     );
     if (nextProfile != null) {
       profile = nextProfile;
-      _ref.read(profilesProvider.notifier).put(nextProfile);
+      await _ref
+          .read(profilesProvider.notifier)
+          .put(nextProfile, reportOnWait: false);
     }
     final patchConfig = _ref.read(patchClashConfigProvider);
     final res = await _requestAdmin(patchConfig.tun.enable);
@@ -1069,17 +1529,18 @@ extension SetupControllerExt on AppController {
     final realTunEnable = _ref.read(realTunEnableProvider);
     final realPatchConfig = patchConfig.copyWith.tun(enable: realTunEnable);
     final setupState = await _ref.read(setupStateProvider(profile?.id).future);
-    globalState.lastSetupState = setupState;
-    if (system.isAndroid) {
-      globalState.lastVpnState = _ref.read(vpnStateProvider);
-      preferences.saveShareState(this.sharedState);
-    }
     final config = await getProfile(
       setupState: setupState,
       patchConfig: realPatchConfig,
     );
     final configFilePath = await appPath.configFilePath;
     final yamlString = await encodeYamlTask(config);
+    final validationMessage = await coreController.validateConfigWithBytes(
+      base64Encode(utf8.encode(yamlString)),
+    );
+    if (validationMessage.isNotEmpty) {
+      throw CandidateConfigValidationException(validationMessage);
+    }
     final isOixCloud = profile?.isoixCloudProfile ?? false;
     if (isOixCloud && system.isAndroid) {
       final encryptedBytes = await ensureEncryptedProfileBytes(
@@ -1108,6 +1569,11 @@ extension SetupControllerExt on AppController {
     if (message.isNotEmpty) {
       throw message;
     }
+    globalState.lastSetupState = setupState;
+    if (system.isAndroid) {
+      globalState.lastVpnState = _ref.read(vpnStateProvider);
+      preferences.saveShareState(this.sharedState);
+    }
     addCheckIp();
     return true;
   }
@@ -1119,9 +1585,10 @@ extension CoreControllerExt on AppController {
   Future<void> _initCore() async {
     final isInit = await coreController.isInit;
     final version = _ref.read(versionProvider);
-    if (!isInit) {
-      await coreController.init(version);
-    } else {
+    if (!await coreController.init(version)) {
+      throw _coreDisconnectedMessage;
+    }
+    if (isInit) {
       await updateGroups();
     }
   }
@@ -1159,15 +1626,16 @@ extension CoreControllerExt on AppController {
   }
 
   Future<bool> _ensureCoreReady() async {
-    commonPrint.log('Core disconnected, reconnecting');
-    _ref.read(coreStatusProvider.notifier).value = CoreStatus.disconnected;
-    await coreController.shutdown(false);
-    await _connectCore();
-    if (!coreController.isCompleted) {
-      return false;
-    }
-    await _initCore();
-    return coreController.isCompleted;
+    return _serializeCoreLifecycle(() async {
+      if (coreController.isCompleted) return true;
+      commonPrint.log('Core disconnected, reconnecting');
+      _ref.read(coreStatusProvider.notifier).value = CoreStatus.disconnected;
+      await coreController.shutdown(false);
+      await _connectCore();
+      if (!coreController.isCompleted) return false;
+      await _initCore();
+      return coreController.isCompleted;
+    });
   }
 
   Future<Profile?> _checkAndUpdateProfileWithCertificateRetry(
@@ -1214,11 +1682,13 @@ extension CoreControllerExt on AppController {
   }
 
   Future<void> restartCore([bool start = false]) async {
-    _ref.read(coreStatusProvider.notifier).value = CoreStatus.disconnected;
-    await coreController.shutdown(true);
-    clearDelay();
-    await _connectCore();
-    await _initCore();
+    await _serializeCoreLifecycle(() async {
+      _ref.read(coreStatusProvider.notifier).value = CoreStatus.disconnected;
+      await coreController.shutdown(true);
+      clearDelay();
+      await _connectCore();
+      await _initCore();
+    });
     if (start || _ref.read(isStartProvider)) {
       await updateStatus(true, isInit: true);
     } else {
@@ -1252,30 +1722,31 @@ extension SystemControllerExt on AppController {
   }
 
   Future<void> handleExit([bool needSave = false]) async {
-    Future.delayed(const Duration(seconds: 3), () {
+    Future.delayed(const Duration(seconds: 20), () {
       system.exit();
     });
     try {
-      await Future.wait([
-        if (needSave) preferences.saveConfig(config),
-        if (macOS != null) macOS!.updateDns(true),
-        stopSystemProxyIfNeeded(),
-        if (tray != null) tray!.destroy(),
+      await runCleanupActions([
+        waitForPendingDatabaseWrites,
+        if (needSave) savePreferences,
+        if (macOS != null) () => macOS!.updateDns(true),
+        stopSystemProxyIfNeeded,
+        if (tray != null) () => tray!.destroy(),
+        coreController.destroy,
       ]);
-      await coreController.destroy();
       commonPrint.log('exit');
     } finally {
       system.exit();
     }
   }
 
-  Future<void> handleBackOrExit() async {
-    if (_ref.read(backBlockProvider)) {
+  Future<void> handleBackOrExit({bool forceBack = false}) async {
+    if (!system.isDesktop && _ref.read(backBlockProvider)) {
       return;
     }
-    if (_ref.read(appSettingProvider).minimizeOnExit) {
+    if (_ref.read(appSettingProvider).minimizeOnExit || forceBack) {
       if (system.isDesktop) {
-        await preferences.saveConfig(config);
+        await savePreferences();
       }
       await system.back();
     } else {
@@ -1404,68 +1875,428 @@ extension BackupControllerExt on AppController {
   }
 
   Future<String> backup() async {
-    final profileFileNames = _ref.read(
-      profilesProvider.select(
-        (state) => state
-            .where((item) => !item.isoixCloudProfile)
-            .map((item) => item.fileName),
-      ),
-    );
-    final scriptFileNames = await _ref.read(
-      scriptsProvider.future.select(
-        (state) async => (await state).map((item) => item.fileName),
-      ),
-    );
-    final configMap = _ref.read(configProvider).toJson();
-    configMap['version'] = await preferences.getVersion();
-    return backupTask(configMap, [...profileFileNames, ...scriptFileNames]);
+    final backupData = await storageLock.synchronized(() async {
+      final currentConfig = _ref.read(configProvider);
+      final configMap = createBackupConfigMap(
+        currentConfig,
+        await preferences.getVersion(),
+      );
+      final storageSnapshotPath = await runExclusiveDatabaseOperation(() async {
+        final snapshotPath = await appPath.tempFilePath;
+        final snapshotDir = Directory(snapshotPath);
+        try {
+          await snapshotDir.create(recursive: true);
+          final profiles = await database.profilesDao.all().get();
+          final scripts = await database.scriptsDao.all().get();
+          await database.createSnapshot(
+            p.join(snapshotPath, backupDatabaseName),
+          );
+          for (final profile in profiles.where(
+            (item) => item.includeInPortableBackup,
+          )) {
+            final source = File(
+              await appPath.getProfilePath(profile.id.toString()),
+            );
+            final target = File(
+              p.join(snapshotPath, profilesDirectoryName, profile.fileName),
+            );
+            await target.parent.create(recursive: true);
+            await source.safeCopy(target.path);
+          }
+          for (final script in scripts) {
+            final source = File(
+              await appPath.getScriptPath(script.id.toString()),
+            );
+            final target = File(
+              p.join(snapshotPath, 'scripts', script.fileName),
+            );
+            await target.parent.create(recursive: true);
+            await source.safeCopy(target.path);
+          }
+          return snapshotPath;
+        } catch (_) {
+          await snapshotDir.safeDelete(recursive: true);
+          rethrow;
+        }
+      });
+      return VM2(configMap, storageSnapshotPath);
+    });
+    return backupTask(backupData.a, backupData.b);
   }
 
-  Future<void> restore(RestoreOption option) async {
+  Future<void> restore(RestoreOption option, {String? backupPath}) async {
     // Note: When restoring a backup, oixCloud profiles might be reloaded.
     // Since oixCloud cache is empty and tokens are not backed up (they reside in SharedPreferences),
     // restoring might prompt the user to login again when standard update fails.
     // This is an intended security design.
-    final restoreDirPath = await appPath.restoreDirPath;
-    final restoreDir = Directory(restoreDirPath);
     final restoreStrategy = _ref.read(
       appSettingProvider.select((state) => state.restoreStrategy),
     );
     final isOverride = restoreStrategy == RestoreStrategy.override;
+    final wasRunning = _ref.read(isStartProvider);
+    final wasCoreConnected = coreController.isCompleted;
+    int? restoredProfileId;
+    int? previousProfileId;
+    var coreQuiesced = false;
+    var restoreCommitted = false;
+    var stateSynchronized = false;
+    Config? committedConfig;
+    var restoredAllSettings = false;
+    Object? stateSynchronizationError;
+    Object? restoreError;
+    StackTrace? restoreStackTrace;
+    RestoreJournal? restoreJournal;
+    var recoveryRequired = false;
     try {
-      final migrationData = await restoreTask();
-      if (!await restoreDir.exists()) {
-        throw appLocalizations.restoreException;
+      await storageLock.synchronized(() async {
+        final restoreDirPath = await appPath.tempFilePath;
+        final restoreDir = Directory(restoreDirPath);
+        try {
+          _preferencesWritesSuspended = true;
+          debouncer.cancel(FunctionTag.savePreferences);
+          await _preferencesWriteTail;
+          await suspendDatabaseWrites();
+          final migrationData = await restoreTask(
+            backupPath ?? await appPath.backupFilePath,
+            restoreDirPath,
+            await appPath.homeDirPath,
+          );
+          if (!await restoreDir.exists()) {
+            throw appLocalizations.restoreException;
+          }
+          final configMap = migrationData.configMap;
+          final restoredConfig =
+              option == RestoreOption.all && configMap != null
+              ? Config.fromJson(configMap)
+              : null;
+          await ensureCoreReadyOrThrow();
+          await validateRestoredProfileFiles(
+            migrationData.fileMigrations,
+            await appPath.profilesPath,
+            coreController.validateConfig,
+          );
+          final previousConfig = config;
+          previousProfileId = previousConfig.currentProfileId;
+          final previousProfiles = await database.profilesDao.all().get();
+          final previousScripts = await database.scriptsDao.all().get();
+          final previousRules = await database.select(database.rules).map((
+            row,
+          ) {
+            return row.toRule();
+          }).get();
+          final previousLinks = await database
+              .select(database.profileRuleLinks)
+              .map((row) => row.toLink())
+              .get();
+          await preferences.saveDurableConfig(previousConfig);
+          restoreJournal = await RestoreJournal.begin(
+            homePath: await appPath.homeDirPath,
+            durableConfigPath: await appPath.durableConfigPath,
+            createDatabaseSnapshot: database.createSnapshot,
+          );
+          final deletePaths = <String>[];
+          if (isOverride) {
+            final restoredProfileFiles = migrationData.fileMigrations
+                .map((migration) => p.absolute(p.normalize(migration.b)))
+                .toSet();
+            for (final profile in previousProfiles) {
+              final profilePath = await appPath.getProfilePath(
+                profile.id.toString(),
+              );
+              deletePaths.addAll([
+                await appPath.getProfilePath('.${profile.id}'),
+                await appPath.getProvidersDirPath(profile.id.toString()),
+              ]);
+              if (!restoredProfileFiles.contains(
+                p.absolute(p.normalize(profilePath)),
+              )) {
+                deletePaths.add(profilePath);
+              }
+            }
+            final restoredScriptIds = migrationData.scripts
+                .map((script) => script.id)
+                .toSet();
+            for (final script in previousScripts) {
+              if (!restoredScriptIds.contains(script.id)) {
+                deletePaths.add(
+                  await appPath.getScriptPath(script.id.toString()),
+                );
+              }
+            }
+          }
+          coreQuiesced = true;
+          if (wasRunning) {
+            await updateStatus(false);
+          }
+          if (!await stopSystemProxyIfNeeded()) {
+            throw StateError('failed to restore system proxy');
+          }
+          if (coreController.isCompleted) {
+            if (!await coreController.shutdown(true)) {
+              throw StateError('failed to stop core before restore');
+            }
+          }
+          late Config configToApply;
+          int? currentProfileId;
+          var durableMutationStarted = false;
+          var durableRollbackConfirmed = false;
+          await runExclusiveDatabaseOperation(
+            () => commitRestoredFiles(
+              migrationData.fileMigrations,
+              () async {
+                durableMutationStarted = true;
+                var databaseChanged = false;
+                try {
+                  await database.transaction(() async {
+                    await database.restore(
+                      migrationData.profiles,
+                      migrationData.scripts,
+                      migrationData.rules,
+                      migrationData.links,
+                      isOverride: isOverride,
+                    );
+                  });
+                  databaseChanged = true;
+                  final profileIds = (await database.profilesDao.all().get())
+                      .map((profile) => profile.id)
+                      .toSet();
+                  if (wasRunning && profileIds.isEmpty) {
+                    throw StateError(
+                      'cannot restore an empty profile set while the core is running',
+                    );
+                  }
+                  final requestedProfileId =
+                      restoredConfig?.currentProfileId ??
+                      previousConfig.currentProfileId;
+                  currentProfileId = profileIds.contains(requestedProfileId)
+                      ? requestedProfileId
+                      : profileIds.firstOrNull;
+                  if (restoredConfig == null) {
+                    configToApply = previousConfig.copyWith(
+                      currentProfileId: currentProfileId,
+                    );
+                  } else {
+                    configToApply = restoredConfig.copyWith(
+                      currentProfileId: currentProfileId,
+                      patchClashConfig:
+                          restoredConfig.patchClashConfig.secret.isEmpty
+                          ? restoredConfig.patchClashConfig.copyWith(
+                              secret: previousConfig.patchClashConfig.secret,
+                            )
+                          : restoredConfig.patchClashConfig,
+                      davProps: mergeRestoredDavProps(
+                        restoredConfig.davProps,
+                        previousConfig.davProps,
+                      ),
+                    );
+                  }
+                  if (!await _saveConfigSerialized(configToApply)) {
+                    throw appLocalizations.restoreException;
+                  }
+                  await restoreJournal!.markCommitted();
+                } catch (error, stackTrace) {
+                  Object? rollbackError;
+                  if (databaseChanged) {
+                    try {
+                      await database.transaction(() async {
+                        await database.restore(
+                          previousProfiles,
+                          previousScripts,
+                          previousRules,
+                          previousLinks,
+                          isOverride: true,
+                        );
+                      });
+                    } catch (failure) {
+                      rollbackError = failure;
+                    }
+                  }
+                  try {
+                    if (!await _saveConfigSerialized(previousConfig)) {
+                      rollbackError ??= StateError(
+                        'failed to restore preferences',
+                      );
+                    }
+                  } catch (failure) {
+                    rollbackError ??= failure;
+                  }
+                  if (rollbackError != null) {
+                    Error.throwWithStackTrace(
+                      StateError(
+                        '$error; restore rollback failed: $rollbackError',
+                      ),
+                      stackTrace,
+                    );
+                  }
+                  durableRollbackConfirmed = true;
+                  Error.throwWithStackTrace(error, stackTrace);
+                }
+              },
+              deletePaths: deletePaths,
+              prepare: (plan) => restoreJournal!.prepare(plan),
+              rollbackCompleted: () async {
+                if (!durableMutationStarted || durableRollbackConfirmed) {
+                  await restoreJournal!.clearAfterRollback();
+                  restoreJournal = null;
+                }
+              },
+            ),
+          );
+          restoreCommitted = true;
+          try {
+            await restoreJournal!.clearAfterCommit();
+            restoreJournal = null;
+          } catch (error) {
+            commonPrint.log(
+              'restore journal cleanup failed: $error',
+              logLevel: LogLevel.warning,
+            );
+          }
+          restoredProfileId = currentProfileId;
+          committedConfig = configToApply;
+          restoredAllSettings = restoredConfig != null;
+          final restoredProfiles = await database.profilesDao.all().get();
+          final restoredScripts = await database.scriptsDao.all().get();
+          try {
+            _synchronizeRestoredState(
+              profiles: restoredProfiles,
+              scripts: restoredScripts,
+              config: configToApply,
+              restoreConfig: restoredAllSettings,
+            );
+            stateSynchronized = true;
+          } catch (error) {
+            stateSynchronizationError = error;
+          }
+        } finally {
+          try {
+            if (restoreCommitted &&
+                !stateSynchronized &&
+                committedConfig != null) {
+              final profiles = await database.profilesDao.all().get();
+              final scripts = await database.scriptsDao.all().get();
+              try {
+                _synchronizeRestoredState(
+                  profiles: profiles,
+                  scripts: scripts,
+                  config: committedConfig!,
+                  restoreConfig: restoredAllSettings,
+                );
+                stateSynchronized = true;
+                stateSynchronizationError = null;
+              } catch (error) {
+                stateSynchronizationError = error;
+              }
+            } else if (!stateSynchronized) {
+              _ref
+                  .read(profilesProvider.notifier)
+                  .replaceFromDatabase(await database.profilesDao.all().get());
+              _ref
+                  .read(scriptsProvider.notifier)
+                  .replaceFromDatabase(await database.scriptsDao.all().get());
+              _ref.invalidate(addedRuleStreamProvider);
+              _ref.invalidate(setupStateProvider);
+            }
+            await restoreDir.safeDelete(recursive: true);
+          } finally {
+            recoveryRequired = restoreJournal?.hasPendingRollback == true;
+            if (!recoveryRequired) {
+              resumeDatabaseWrites();
+              _preferencesWritesSuspended = false;
+              if (_preferencesWriteRequestedWhileSuspended) {
+                _preferencesWriteRequestedWhileSuspended = false;
+                savePreferencesDebounce();
+              }
+            }
+          }
+        }
+      });
+    } catch (error, stackTrace) {
+      restoreError = error;
+      restoreStackTrace = stackTrace;
+      try {
+        await restoreJournal?.clearIfUnprepared();
+      } catch (_) {}
+      recoveryRequired = restoreJournal?.hasPendingRollback == true;
+    }
+    Object? coreRecoveryError;
+    if (!recoveryRequired && coreQuiesced && (wasCoreConnected || wasRunning)) {
+      try {
+        if (!restoreCommitted) {
+          _ref.read(currentProfileIdProvider.notifier).value =
+              previousProfileId;
+        }
+        if (!coreController.isCompleted) {
+          await _connectCore();
+        }
+        if (!coreController.isCompleted) {
+          throw _coreDisconnectedMessage;
+        }
+        await _initCore();
+        if (!restoreCommitted || stateSynchronized) {
+          final profileId = restoreCommitted
+              ? restoredProfileId
+              : previousProfileId;
+          if (profileId == null && wasRunning) {
+            throw StateError('no profile is available after restore');
+          }
+          if (profileId != null) {
+            bool activated;
+            if (wasRunning) {
+              await updateStatus(true, isInit: true);
+              activated = _ref.read(isStartProvider);
+            } else {
+              activated = await applyProfile(force: true);
+            }
+            if (!activated) {
+              throw appLocalizations.restoreException;
+            }
+          } else {
+            _ref.read(groupsProvider.notifier).value = [];
+            _ref.read(providersProvider.notifier).value = [];
+            clearDelay();
+          }
+        }
+      } catch (error) {
+        coreRecoveryError = error;
       }
-      await database.restore(
-        migrationData.profiles,
-        migrationData.scripts,
-        migrationData.rules,
-        migrationData.links,
-        isOverride: isOverride,
+    } else if (recoveryRequired && coreController.isCompleted) {
+      try {
+        await coreController.shutdown(false);
+      } catch (_) {}
+    } else if (!wasCoreConnected && coreController.isCompleted) {
+      try {
+        if (!await coreController.shutdown(false)) {
+          throw StateError('failed to restore disconnected core state');
+        }
+      } catch (error) {
+        coreRecoveryError = error;
+      }
+    }
+    if (stateSynchronizationError != null) {
+      restoreError = StateError(
+        'restore committed but state synchronization failed: '
+        '$stateSynchronizationError',
       );
-      final configMap = migrationData.configMap;
-      if (option == RestoreOption.onlyProfiles || configMap == null) {
-        return;
-      }
-      final config = Config.fromJson(configMap);
-      _ref.read(patchClashConfigProvider.notifier).value =
-          config.patchClashConfig;
-      _ref.read(appSettingProvider.notifier).value = config.appSettingProps;
-      _ref.read(currentProfileIdProvider.notifier).value =
-          config.currentProfileId;
-      _ref.read(davSettingProvider.notifier).value = config.davProps;
-      _ref.read(themeSettingProvider.notifier).value = config.themeProps;
-      _ref.read(windowSettingProvider.notifier).value = config.windowProps;
-      _ref.read(vpnSettingProvider.notifier).value = config.vpnProps;
-      _ref.read(proxiesStyleSettingProvider.notifier).value =
-          config.proxiesStyleProps;
-      _ref.read(overrideDnsProvider.notifier).value = config.overrideDns;
-      _ref.read(networkSettingProvider.notifier).value = config.networkProps;
-      _ref.read(hotKeyActionsProvider.notifier).value = config.hotKeyActions;
-      return;
-    } finally {
-      await restoreDir.safeDelete(recursive: true);
+      restoreStackTrace ??= StackTrace.current;
+    }
+    if (recoveryRequired) {
+      throw StateError(
+        'restore recovery is required before the application can continue',
+      );
+    }
+    if (restoreError != null) {
+      final error = coreRecoveryError == null
+          ? restoreError
+          : StateError(
+              '$restoreError; core recovery failed: $coreRecoveryError',
+            );
+      Error.throwWithStackTrace(error, restoreStackTrace ?? StackTrace.current);
+    }
+    if (coreRecoveryError != null) {
+      throw StateError(
+        'restore committed but core activation failed: $coreRecoveryError',
+      );
     }
   }
 }
@@ -1482,26 +2313,45 @@ extension BackBlockControllExt on AppController {
 
 extension StoreControllerExt on AppController {
   void savePreferencesDebounce() {
+    if (_preferencesWritesSuspended) {
+      _preferencesWriteRequestedWhileSuspended = true;
+      return;
+    }
     debouncer.call(FunctionTag.savePreferences, () async {
-      await preferences.saveConfig(config);
+      if (!_preferencesWritesSuspended) {
+        await _saveConfigSerialized(config);
+      }
     });
   }
 
   Future<void> savePreferences() async {
-    await preferences.saveConfig(config);
+    if (_preferencesWritesSuspended) {
+      _preferencesWriteRequestedWhileSuspended = true;
+      return;
+    }
+    await _saveConfigSerialized(config);
   }
 
   Future handleClear() async {
-    oixCloudConfigCache.clear();
-    await preferences.clearPreferences();
-    commonPrint.log('clear preferences');
-    await database.close();
-    await File(await appPath.databasePath).safeDelete(recursive: true);
-    final homeDir = Directory(await appPath.profilesPath);
-    await for (final file in homeDir.list(recursive: true)) {
-      await coreController.deleteFile(file.path);
-    }
-    await preferences.clearPreferences();
+    await storageLock.synchronized(() async {
+      _preferencesWritesSuspended = true;
+      debouncer.cancel(FunctionTag.savePreferences);
+      final homePath = await appPath.homeDirPath;
+      await discardPendingRestore(homePath);
+      oixCloudConfigCache.clear();
+      await preferences.clearPreferences();
+      await SafeStorage.delete('cloud_token');
+      await ConfigKeyStore.clear();
+      commonPrint.log('clear preferences');
+      await database.close();
+      await File(await appPath.databasePath).safeDelete(recursive: true);
+      final homeDir = Directory(await appPath.profilesPath);
+      if (await homeDir.exists()) {
+        await for (final file in homeDir.list(recursive: true)) {
+          await coreController.deleteFile(file.path);
+        }
+      }
+    });
     handleExit(false);
   }
 }

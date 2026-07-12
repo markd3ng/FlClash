@@ -14,6 +14,7 @@ import (
 	"github.com/metacubex/mihomo/adapter/provider"
 	"github.com/metacubex/mihomo/component/dialer"
 	"github.com/metacubex/mihomo/component/resolver"
+	"github.com/metacubex/mihomo/component/updater"
 	"github.com/metacubex/mihomo/config"
 	"github.com/metacubex/mihomo/constant"
 	"github.com/metacubex/mihomo/constant/features"
@@ -194,6 +195,12 @@ func updateConfig(params *UpdateParams) {
 	runLock.Lock()
 	defer runLock.Unlock()
 	general := currentConfig.General
+	restartGeo :=
+		(params.GeoAutoUpdate != nil && *params.GeoAutoUpdate != general.GeoAutoUpdate) ||
+			(params.GeoUpdateInterval != nil && *params.GeoUpdateInterval != general.GeoUpdateInterval)
+	if restartGeo {
+		stopGeoScheduler()
+	}
 	if params.MixedPort != nil {
 		general.MixedPort = *params.MixedPort
 	}
@@ -219,6 +226,14 @@ func updateConfig(params *UpdateParams) {
 	if params.UnifiedDelay != nil {
 		general.UnifiedDelay = *params.UnifiedDelay
 		adapter.UnifiedDelay.Store(general.UnifiedDelay)
+	}
+	if params.GeoAutoUpdate != nil {
+		general.GeoAutoUpdate = *params.GeoAutoUpdate
+		updater.SetGeoAutoUpdate(general.GeoAutoUpdate)
+	}
+	if params.GeoUpdateInterval != nil {
+		general.GeoUpdateInterval = *params.GeoUpdateInterval
+		updater.SetGeoUpdateInterval(general.GeoUpdateInterval)
 	}
 	if params.Mode != nil {
 		general.Mode = *params.Mode
@@ -255,11 +270,15 @@ func updateConfig(params *UpdateParams) {
 	}
 
 	updateListeners()
+	if restartGeo {
+		restartGeoScheduler()
+	}
 }
 
 func applyConfig(params *SetupParams) error {
 	runLock.Lock()
 	defer runLock.Unlock()
+	stopGeoScheduler()
 	var err error
 	isOixConfig := params.RawConfig != ""
 	constant.DefaultTestURL = params.TestURL
@@ -277,6 +296,7 @@ func applyConfig(params *SetupParams) error {
 	installDNSAuthResolver()
 	patchSelectGroup(params.SelectedMap)
 	updateListeners()
+	restartGeoScheduler()
 	return err
 }
 

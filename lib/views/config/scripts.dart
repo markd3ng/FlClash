@@ -1,10 +1,13 @@
 import 'dart:io';
 
 import 'package:fl_clash/common/common.dart';
+import 'package:fl_clash/controller.dart';
+import 'package:fl_clash/database/database.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/pages/editor.dart';
 import 'package:fl_clash/providers/app.dart';
+import 'package:fl_clash/providers/config.dart';
 import 'package:fl_clash/providers/database.dart';
 import 'package:fl_clash/providers/state.dart';
 import 'package:fl_clash/state.dart';
@@ -36,14 +39,26 @@ class _ScriptsViewState extends ConsumerState<ScriptsView> {
     if (res != true) {
       return;
     }
-    ref.read(scriptsProvider.notifier).del(id);
+    List<int> affectedProfileIds = const [];
+    await storageLock.synchronized(() async {
+      final path = await appPath.getScriptPath(id.toString());
+      await withFileRollback(path, () async {
+        await File(path).safeDelete();
+        affectedProfileIds = await runExclusiveDatabaseOperation(
+          () => database.deleteScriptAndClearReferences(id),
+        );
+      });
+      ref
+          .read(profilesProvider.notifier)
+          .replaceFromDatabase(await database.profilesDao.all().get());
+      ref
+          .read(scriptsProvider.notifier)
+          .replaceFromDatabase(await database.scriptsDao.all().get());
+    });
     ref.read(selectedItemProvider(_key).notifier).value = null;
-    _clearEffect(id);
-  }
-
-  Future<void> _clearEffect(int id) async {
-    final path = await appPath.getScriptPath(id.toString());
-    await File(path).safeDelete();
+    if (affectedProfileIds.contains(ref.read(currentProfileIdProvider))) {
+      await appController.applyProfile(force: true);
+    }
   }
 
   void _handleSelected(int id) {
@@ -93,13 +108,13 @@ class _ScriptsViewState extends ConsumerState<ScriptsView> {
   }) async {
     Script newScript =
         (script?.copyWith(label: title) ?? Script.create(label: title));
-    newScript = await newScript.save(content);
     if (newScript.label.isEmpty) {
       final res = await globalState.showCommonDialog<String>(
         child: InputDialog(
           title: appLocalizations.save,
           value: '',
           hintText: appLocalizations.pleaseEnterScriptName,
+          inputFormatters: TextInputLimits.limit(TextInputLimits.name),
           validator: (value) {
             if (value == null || value.isEmpty) {
               return appLocalizations.emptyTip(appLocalizations.name);
@@ -132,7 +147,17 @@ class _ScriptsViewState extends ConsumerState<ScriptsView> {
         return;
       }
     }
-    ref.read(scriptsProvider.notifier).put(newScript);
+    await storageLock.synchronized(() async {
+      await withFileRollback(
+        await appPath.getScriptPath(newScript.id.toString()),
+        () async {
+          newScript = await newScript.save(content);
+          await ref
+              .read(scriptsProvider.notifier)
+              .put(newScript, reportOnWait: false);
+        },
+      );
+    });
     if (mounted) {
       Navigator.of(context).pop();
     }

@@ -35,6 +35,7 @@ void main() {
       expect(restored.minimizeOnExit, true);
       expect(restored.restoreStrategy, RestoreStrategy.compatible);
       expect(restored.testUrl, defaultTestUrl);
+      expect(restored.customUserAgent, '');
     });
 
     test('custom values survive round-trip', () {
@@ -44,6 +45,7 @@ void main() {
         autoLaunch: true,
         closeConnections: false,
         testUrl: 'https://custom.test',
+        customUserAgent: 'CustomUA/1.0',
       );
       final restored = roundTrip(
         () => props.toJson(),
@@ -54,6 +56,7 @@ void main() {
       expect(restored.autoLaunch, true);
       expect(restored.closeConnections, false);
       expect(restored.testUrl, 'https://custom.test');
+      expect(restored.customUserAgent, 'CustomUA/1.0');
     });
 
     test('safeFromJson returns default on null', () {
@@ -232,6 +235,31 @@ void main() {
         rejectList: ['app3', 'app4'],
       );
       expect(props.currentList, ['app3', 'app4']);
+    });
+  });
+
+  group('ClashConfig Geo update JSON', () {
+    test('normalizes unsafe update intervals', () {
+      expect(normalizeGeoUpdateInterval(1), 1);
+      expect(normalizeGeoUpdateInterval(maxGeoUpdateInterval), 8760);
+      expect(normalizeGeoUpdateInterval(0), defaultGeoUpdateInterval);
+      expect(normalizeGeoUpdateInterval(8761), defaultGeoUpdateInterval);
+      expect(normalizeGeoUpdateInterval(2562048), defaultGeoUpdateInterval);
+    });
+
+    test('uses backward-compatible defaults', () {
+      final config = ClashConfig.fromJson({});
+      expect(config.geoAutoUpdate, false);
+      expect(config.geoUpdateInterval, 24);
+    });
+
+    test('custom values survive round-trip', () {
+      const config = ClashConfig(geoAutoUpdate: true, geoUpdateInterval: 6);
+      final restored = roundTrip(() => config.toJson(), ClashConfig.fromJson);
+      expect(restored.geoAutoUpdate, true);
+      expect(restored.geoUpdateInterval, 6);
+      expect(config.toJson()['geo-auto-update'], true);
+      expect(config.toJson()['geo-update-interval'], 6);
     });
   });
 

@@ -7,7 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 class Picker {
-  Future<PlatformFile?> pickerFile({bool withData = true}) async {
+  Future<PlatformFile?> pickerFile({bool withData = false}) async {
     final filePickerResult = await FilePicker.pickFiles(
       withData: withData,
       allowMultiple: false,
@@ -68,6 +68,18 @@ class Picker {
     } finally {
       await controller.dispose();
     }
+  }
+}
+
+extension PlatformFileExt on PlatformFile {
+  Future<Uint8List> readBytes() async {
+    final data = bytes;
+    if (data != null) return data;
+    final filePath = path;
+    if (filePath == null) {
+      throw StateError('Selected file has neither bytes nor a readable path');
+    }
+    return File(filePath).readAsBytes();
   }
 }
 

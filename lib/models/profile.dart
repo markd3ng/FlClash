@@ -26,6 +26,15 @@ final Map<int, Uint8List> oixCloudConfigCache = {};
 
 const _flclashEncryptedVersion = 0x02;
 
+const reservedOutboundNames = {
+  'DIRECT',
+  'REJECT',
+  'REJECT-DROP',
+  'PASS',
+  'COMPATIBLE',
+  'GLOBAL',
+};
+
 bool _isUnauthorizedError(Object error) {
   final message = error.toString().toLowerCase();
   return message.contains('unauthorized') || message.contains('401');
@@ -477,7 +486,10 @@ String? _findProxyChainEntryTargetName(Iterable<ProxyChain> proxyChains) {
   return null;
 }
 
-String? findProxyChainConflictName(Iterable<ProxyChain> proxyChains) {
+String? findProxyChainConflictName(
+  Iterable<ProxyChain> proxyChains, {
+  Map<String, String> existingRelations = const {},
+}) {
   final duplicateExitName = _findProxyChainDuplicateExitName(proxyChains);
   if (duplicateExitName != null) {
     return duplicateExitName;
@@ -486,7 +498,11 @@ String? findProxyChainConflictName(Iterable<ProxyChain> proxyChains) {
   if (entryTargetName != null) {
     return entryTargetName;
   }
-  final targetDialerMap = <String, String>{};
+  final targetDialerMap = Map<String, String>.from(existingRelations);
+  for (final target in targetDialerMap.keys) {
+    final cycleName = _findProxyChainCycleName(targetDialerMap, target);
+    if (cycleName != null) return cycleName;
+  }
   for (final proxyChain in proxyChains.where((item) => item.isValid)) {
     for (final entry in proxyChain.dialerProxyRelations.entries) {
       final target = entry.key;
@@ -521,6 +537,8 @@ abstract class Profile with _$Profile {
     @Default(OverwriteType.standard) OverwriteType overwriteType,
     @Default([]) List<ProxyChain> proxyChains,
     @Default([]) List<ProfileProxy> profileProxies,
+    @Default([]) List<ProxyGroup> customProxyGroups,
+    @Default([]) List<Rule> customRules,
     int? scriptId,
     int? order,
   }) = _Profile;
@@ -537,6 +555,381 @@ abstract class Profile with _$Profile {
       autoUpdateDuration: defaultUpdateDuration,
     );
   }
+}
+
+extension ProfileCustomOverwriteExt on Profile {
+  Profile copyAndPutCustomProxyGroup(
+    ProxyGroup proxyGroup, {
+    ProxyGroup? previous,
+  }) {
+    final previousName = previous?.name;
+    final nextName = proxyGroup.name;
+    final groups = List<ProxyGroup>.from(customProxyGroups);
+    if (previous == null) {
+      groups.add(proxyGroup);
+    } else {
+      final index = groups.indexOf(previous);
+      if (index == -1) {
+        return this;
+      }
+      groups[index] = proxyGroup;
+    }
+    return copyWith(
+      customProxyGroups: groups,
+    ).copyAndRenameOutboundReferences(previousName, nextName);
+  }
+
+  Profile copyAndRenameOutboundReferences(
+    String? previousName,
+    String nextName,
+  ) {
+    if (previousName == null ||
+        previousName.isEmpty ||
+        previousName == nextName) {
+      return this;
+    }
+    final renamedGroups = customProxyGroups.map((group) {
+      final proxies = group.proxies;
+      if (proxies == null || !proxies.contains(previousName)) {
+        return group;
+      }
+      return group.copyWith(
+        proxies: proxies
+            .map((name) => name == previousName ? nextName : name)
+            .toList(),
+      );
+    }).toList();
+    final renamedRules = customRules.map((rule) {
+      return rule.copyWith(
+        value: renameRuleTarget(rule.value, previousName, nextName),
+      );
+    }).toList();
+    final renamedSelectedMap = <String, String>{};
+    for (final entry in selectedMap.entries) {
+      final key = entry.key == previousName ? nextName : entry.key;
+      final value = entry.value == previousName ? nextName : entry.value;
+      renamedSelectedMap[key] = value;
+    }
+    final renamedUnfoldSet = unfoldSet
+        .map((name) => name == previousName ? nextName : name)
+        .toSet();
+
+    return copyWith(
+      currentGroupName: currentGroupName == previousName
+          ? nextName
+          : currentGroupName,
+      selectedMap: renamedSelectedMap,
+      unfoldSet: renamedUnfoldSet,
+      proxyChains: proxyChains.copyAndRenameProxy(previousName, nextName),
+      customProxyGroups: renamedGroups,
+      customRules: renamedRules,
+    );
+  }
+
+  bool hasCustomOutboundReferences(
+    String name, {
+    ProxyGroup? excludingGroup,
+    bool includeProxyChains = true,
+  }) {
+    final groupReference = customProxyGroups.any((group) {
+      return group != excludingGroup &&
+          (group.proxies?.contains(name) ?? false);
+    });
+    final ruleReference = customRules.any(
+      (rule) => ruleTarget(rule.value) == name,
+    );
+    final chainReference =
+        includeProxyChains &&
+        proxyChains.any((chain) => chain.normalizedProxies.contains(name));
+    return groupReference || ruleReference || chainReference;
+  }
+
+  Profile copyAndRemoveCustomProxyGroup(ProxyGroup group) {
+    final name = group.name;
+    return copyWith(
+      customProxyGroups: customProxyGroups
+          .where((item) => item != group)
+          .toList(),
+    ).copyAndRemoveOutboundCaches({name});
+  }
+
+  Profile copyAndRemoveOutboundCaches(Set<String> names) {
+    if (names.isEmpty) {
+      return this;
+    }
+    final nextSelectedMap = Map<String, String>.from(selectedMap)
+      ..removeWhere(
+        (key, value) => names.contains(key) || names.contains(value),
+      );
+    return copyWith(
+      currentGroupName: names.contains(currentGroupName)
+          ? null
+          : currentGroupName,
+      selectedMap: nextSelectedMap,
+      unfoldSet: unfoldSet.where((item) => !names.contains(item)).toSet(),
+    );
+  }
+}
+
+String? findProxyGroupCycle(List<ProxyGroup> groups) {
+  final names = groups.map((group) => group.name).toSet();
+  final dependencies = <String, Set<String>>{
+    for (final group in groups)
+      group.name: {...?group.proxies?.where(names.contains)},
+  };
+  final visiting = <String>{};
+  final visited = <String>{};
+
+  String? visit(String name) {
+    if (visiting.contains(name)) {
+      return name;
+    }
+    if (!visited.add(name)) {
+      return null;
+    }
+    visiting.add(name);
+    for (final dependency in dependencies[name] ?? const <String>{}) {
+      final cycle = visit(dependency);
+      if (cycle != null) {
+        return cycle;
+      }
+    }
+    visiting.remove(name);
+    return null;
+  }
+
+  for (final name in names) {
+    final cycle = visit(name);
+    if (cycle != null) {
+      return cycle;
+    }
+  }
+  return null;
+}
+
+String renameRuleTarget(String value, String previousName, String nextName) {
+  final parts = value.split(',');
+  final targetIndex = _ruleTargetIndex(parts);
+  if (targetIndex < 0 || parts[targetIndex].trim() != previousName) {
+    return value;
+  }
+  final target = parts[targetIndex];
+  final leadingLength = target.length - target.trimLeft().length;
+  final trailingLength = target.length - target.trimRight().length;
+  parts[targetIndex] =
+      '${target.substring(0, leadingLength)}$nextName${target.substring(target.length - trailingLength)}';
+  return parts.join(',');
+}
+
+String? ruleTarget(String value) {
+  final parts = value.split(',');
+  final targetIndex = _ruleTargetIndex(parts);
+  return targetIndex < 0 ? null : parts[targetIndex].trim();
+}
+
+String? findRawOutboundReference(
+  Map<String, dynamic> rawConfig,
+  String name, {
+  bool includeTopLevelRules = true,
+}) {
+  String? scanMapField(Object? value, String key, String path) {
+    if (value is Map && value[key]?.toString() == name) {
+      return '$path.$key';
+    }
+    return null;
+  }
+
+  String? scanRules(Object? value, String path) {
+    if (value is! List) {
+      return null;
+    }
+    for (var index = 0; index < value.length; index++) {
+      final rule = value[index];
+      if (rule is String && ruleTarget(rule) == name) {
+        return '$path[$index]';
+      }
+    }
+    return null;
+  }
+
+  String? scanDnsServers(Object? value, String path) {
+    Iterable<Object?> values;
+    if (value is List) {
+      values = value;
+    } else if (value is Map) {
+      values = value.values.expand(
+        (item) => item is List ? item : <Object?>[item],
+      );
+    } else {
+      return null;
+    }
+    var index = 0;
+    for (final item in values) {
+      if (item is String) {
+        final fragment = Uri.tryParse(item)?.fragment;
+        if (fragment != null &&
+            fragment.isNotEmpty &&
+            Uri.decodeComponent(fragment) == name) {
+          return '$path[$index]';
+        }
+      }
+      index++;
+    }
+    return null;
+  }
+
+  final proxies = rawConfig['proxies'];
+  if (proxies is List) {
+    for (var index = 0; index < proxies.length; index++) {
+      final path = scanMapField(
+        proxies[index],
+        'dialer-proxy',
+        'proxies[$index]',
+      );
+      if (path != null) {
+        return path;
+      }
+    }
+  }
+
+  final providers = rawConfig['proxy-providers'];
+  if (providers is Map) {
+    for (final entry in providers.entries) {
+      final providerPath = 'proxy-providers.${entry.key}';
+      for (final key in const ['proxy', 'dialer-proxy']) {
+        final path = scanMapField(entry.value, key, providerPath);
+        if (path != null) {
+          return path;
+        }
+      }
+      if (entry.value is Map) {
+        final provider = entry.value as Map;
+        final overridePath = scanMapField(
+          provider['override'],
+          'dialer-proxy',
+          '$providerPath.override',
+        );
+        if (overridePath != null) {
+          return overridePath;
+        }
+        final payload = provider['payload'];
+        if (payload is List) {
+          for (var index = 0; index < payload.length; index++) {
+            final path = scanMapField(
+              payload[index],
+              'dialer-proxy',
+              '$providerPath.payload[$index]',
+            );
+            if (path != null) {
+              return path;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  final ruleProviders = rawConfig['rule-providers'];
+  if (ruleProviders is Map) {
+    for (final entry in ruleProviders.entries) {
+      final path = scanMapField(
+        entry.value,
+        'proxy',
+        'rule-providers.${entry.key}',
+      );
+      if (path != null) {
+        return path;
+      }
+    }
+  }
+
+  final ntpPath = scanMapField(rawConfig['ntp'], 'dialer-proxy', 'ntp');
+  if (ntpPath != null) {
+    return ntpPath;
+  }
+
+  final dns = rawConfig['dns'];
+  if (dns is Map) {
+    for (final key in const [
+      'nameserver',
+      'fallback',
+      'default-nameserver',
+      'proxy-server-nameserver',
+      'direct-nameserver',
+      'nameserver-policy',
+      'proxy-server-nameserver-policy',
+    ]) {
+      final path = scanDnsServers(dns[key], 'dns.$key');
+      if (path != null) return path;
+    }
+  }
+
+  final listeners = rawConfig['listeners'];
+  if (listeners is List) {
+    for (var index = 0; index < listeners.length; index++) {
+      final path = scanMapField(listeners[index], 'proxy', 'listeners[$index]');
+      if (path != null) {
+        return path;
+      }
+    }
+  }
+
+  final subRules = rawConfig['sub-rules'];
+  if (subRules is Map) {
+    for (final entry in subRules.entries) {
+      final path = scanRules(entry.value, 'sub-rules.${entry.key}');
+      if (path != null) {
+        return path;
+      }
+    }
+  }
+
+  return includeTopLevelRules ? scanRules(rawConfig['rules'], 'rules') : null;
+}
+
+int _ruleTargetIndex(List<String> parts) {
+  if (parts.length < 2) {
+    return -1;
+  }
+  return switch (parts.first.trim().toUpperCase()) {
+    'MATCH' => 1,
+    'NOT' ||
+    'OR' ||
+    'AND' ||
+    'DOMAIN-REGEX' ||
+    'PROCESS-NAME-REGEX' ||
+    'PROCESS-PATH-REGEX' => parts.length - 1,
+    'DOMAIN' ||
+    'DOMAIN-SUFFIX' ||
+    'DOMAIN-KEYWORD' ||
+    'DOMAIN-WILDCARD' ||
+    'GEOSITE' ||
+    'GEOIP' ||
+    'SRC-GEOIP' ||
+    'IP-ASN' ||
+    'SRC-IP-ASN' ||
+    'IP-CIDR' ||
+    'IP-CIDR6' ||
+    'SRC-IP-CIDR' ||
+    'IP-SUFFIX' ||
+    'SRC-IP-SUFFIX' ||
+    'SRC-PORT' ||
+    'DST-PORT' ||
+    'IN-PORT' ||
+    'DSCP' ||
+    'PROCESS-NAME' ||
+    'PROCESS-PATH' ||
+    'PROCESS-NAME-WILDCARD' ||
+    'PROCESS-PATH-WILDCARD' ||
+    'NETWORK' ||
+    'SNIFF-PROTOCOL' ||
+    'UID' ||
+    'IN-TYPE' ||
+    'IN-USER' ||
+    'IN-NAME' ||
+    'RULE-SET' => parts.length > 2 ? 2 : -1,
+    _ => -1,
+  };
 }
 
 @freezed
@@ -645,6 +1038,8 @@ extension ProfileExtension on Profile {
   String get updatingKey => 'profile_$id';
 
   bool get useEncryptedDiskStore => isoixCloudProfile && system.isAndroid;
+
+  bool get includeInPortableBackup => !isoixCloudProfile;
 
   Future<bool> hasLocalConfigSnapshot() async {
     if (isoixCloudProfile && !useEncryptedDiskStore) {
@@ -777,6 +1172,10 @@ extension ProfileExtension on Profile {
   }
 
   Future<Profile> saveFile(Uint8List bytes) async {
+    return storageLock.synchronized(() => _saveFileUnlocked(bytes));
+  }
+
+  Future<Profile> _saveFileUnlocked(Uint8List bytes) async {
     if (isoixCloudProfile) {
       final base64String = base64Encode(bytes);
       final message = await coreController.validateConfigWithBytes(
@@ -800,26 +1199,31 @@ extension ProfileExtension on Profile {
 
     final path = await appPath.tempFilePath;
     final tempFile = File(path);
-    await tempFile.safeWriteAsBytes(bytes);
-    commonPrint.log('====== saveFile bytes length: ${bytes.length}');
-    final message = await coreController.validateConfig(path);
-    if (message.isNotEmpty) {
-      commonPrint.log('====== validateConfig Message: $message');
-      throw message;
+    try {
+      await tempFile.safeWriteAsBytes(bytes);
+      commonPrint.log('====== saveFile bytes length: ${bytes.length}');
+      final message = await coreController.validateConfig(path);
+      if (message.isNotEmpty) {
+        commonPrint.log('====== validateConfig Message: $message');
+        throw message;
+      }
+      final mFile = await file;
+      await tempFile.copy(mFile.path);
+      return copyWith(lastUpdateDate: DateTime.now());
+    } finally {
+      await tempFile.safeDelete();
     }
-    final mFile = await file;
-    await tempFile.copy(mFile.path);
-    await tempFile.safeDelete();
-    return copyWith(lastUpdateDate: DateTime.now());
   }
 
   Future<Profile> saveFileWithPath(String path) async {
-    final message = await coreController.validateConfig(path);
-    if (message.isNotEmpty) {
-      throw message;
-    }
-    final mFile = await file;
-    await File(path).copy(mFile.path);
-    return copyWith(lastUpdateDate: DateTime.now());
+    return storageLock.synchronized(() async {
+      final message = await coreController.validateConfig(path);
+      if (message.isNotEmpty) {
+        throw message;
+      }
+      final mFile = await file;
+      await File(path).copy(mFile.path);
+      return copyWith(lastUpdateDate: DateTime.now());
+    });
   }
 }

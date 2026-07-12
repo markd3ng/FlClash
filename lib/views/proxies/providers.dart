@@ -90,8 +90,8 @@ class ProviderItem extends StatelessWidget {
   Future<void> _handleSideLoadProvider() async {
     await appController.safeRun<void>(() async {
       final platformFile = await picker.pickerFile();
-      final bytes = platformFile?.bytes;
-      if (bytes == null || provider.path == null) return;
+      if (platformFile == null || provider.path == null) return;
+      final bytes = await platformFile.readBytes();
       await File(provider.path!).safeWriteAsBytes(bytes);
       final providerName = provider.name;
       var message = await coreController.sideLoadExternalProvider(
@@ -112,7 +112,7 @@ class ProviderItem extends StatelessWidget {
     final count = provider.count;
     return switch (count == 0) {
       true => baseInfo,
-      false => '$baseInfo  ·  $count${appLocalizations.entries}',
+      false => '$baseInfo  ·  ${appLocalizations.entriesCount(count)}',
     };
   }
 
