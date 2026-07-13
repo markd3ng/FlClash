@@ -319,8 +319,11 @@ class AppController {
   Future<void> _preferencesWriteTail = Future.value();
   File? _persistentLogFile;
   int _persistentLogLength = 0;
+  bool _persistentLogWritesSuspended = false;
   Future<bool>? _coreReadyFuture;
   Future<void> _coreLifecycleTail = Future.value();
+  final Object _coreLifecycleZoneKey = Object();
+  Object? _activeCoreLifecycleToken;
   bool _preferencesWritesSuspended = false;
   bool _preferencesWriteRequestedWhileSuspended = false;
   bool isAttach = false;
@@ -354,7 +357,25 @@ class AppController {
   }
 
   Future<T> _serializeCoreLifecycle<T>(Future<T> Function() action) {
-    final operation = _coreLifecycleTail.then((_) => action());
+    final inheritedToken = Zone.current[_coreLifecycleZoneKey];
+    if (inheritedToken != null &&
+        identical(inheritedToken, _activeCoreLifecycleToken)) {
+      return action();
+    }
+    final token = Object();
+    final operation = _coreLifecycleTail.then((_) async {
+      _activeCoreLifecycleToken = token;
+      try {
+        return await runZoned(
+          action,
+          zoneValues: {_coreLifecycleZoneKey: token},
+        );
+      } finally {
+        if (identical(_activeCoreLifecycleToken, token)) {
+          _activeCoreLifecycleToken = null;
+        }
+      }
+    });
     _coreLifecycleTail = operation.then<void>((_) {}, onError: (_, _) {});
     return operation;
   }
@@ -937,6 +958,9 @@ extension LogsControllerExt on AppController {
   }
 
   void writePersistentLog(Log log) {
+    if (_persistentLogWritesSuspended) {
+      return;
+    }
     _logFileWrite = _logFileWrite
         .then((_) => _appendPersistentLog(log))
         .catchError((error) {
@@ -1924,7 +1948,16 @@ extension BackupControllerExt on AppController {
     return backupTask(backupData.a, backupData.b);
   }
 
-  Future<void> restore(RestoreOption option, {String? backupPath}) async {
+  Future<void> restore(RestoreOption option, {String? backupPath}) {
+    return _serializeCoreLifecycle(
+      () => _restoreUnlocked(option, backupPath: backupPath),
+    );
+  }
+
+  Future<void> _restoreUnlocked(
+    RestoreOption option, {
+    String? backupPath,
+  }) async {
     // Note: When restoring a backup, oixCloud profiles might be reloaded.
     // Since oixCloud cache is empty and tokens are not backed up (they reside in SharedPreferences),
     // restoring might prompt the user to login again when standard update fails.
@@ -2333,26 +2366,87 @@ extension StoreControllerExt on AppController {
   }
 
   Future handleClear() async {
-    await storageLock.synchronized(() async {
-      _preferencesWritesSuspended = true;
-      debouncer.cancel(FunctionTag.savePreferences);
-      final homePath = await appPath.homeDirPath;
-      await discardPendingRestore(homePath);
-      oixCloudConfigCache.clear();
-      await preferences.clearPreferences();
-      await SafeStorage.delete('cloud_token');
-      await ConfigKeyStore.clear();
-      commonPrint.log('clear preferences');
-      await database.close();
-      await File(await appPath.databasePath).safeDelete(recursive: true);
-      final homeDir = Directory(await appPath.profilesPath);
-      if (await homeDir.exists()) {
-        await for (final file in homeDir.list(recursive: true)) {
-          await coreController.deleteFile(file.path);
-        }
+    var irreversibleClearStarted = false;
+    try {
+      await _serializeCoreLifecycle(
+        () => storageLock.synchronized(() async {
+          _preferencesWritesSuspended = true;
+          _persistentLogWritesSuspended = true;
+          debouncer.cancel(FunctionTag.savePreferences);
+          try {
+            await _preferencesWriteTail;
+            await suspendDatabaseWrites();
+            await _logFileWrite;
+            await globalState.handleStop();
+            if (!await stopSystemProxyIfNeeded()) {
+              throw StateError('failed to restore system proxy before clear');
+            }
+            if (coreController.isCompleted &&
+                !await coreController.shutdown(true)) {
+              throw StateError('failed to stop core before clear');
+            }
+            _ref.read(coreStatusProvider.notifier).value =
+                CoreStatus.disconnected;
+
+            irreversibleClearStarted = true;
+            oixCloudConfigCache.clear();
+            _persistentLogFile = null;
+            _persistentLogLength = 0;
+            await runCleanupActions([
+              () => SafeStorage.delete('cloud_token'),
+              ConfigKeyStore.clear,
+              () => preferences.clearPreferences(
+                preserveKeys: {
+                  SafeStorage.deletionMarkerKey('cloud_token'),
+                  SafeStorage.deletionMarkerKey('config_age_seed'),
+                },
+              ),
+              database.close,
+              () async => deleteApplicationSupportData(
+                await appPath.homeDirPath,
+                preservePaths: {
+                  await appPath.lockFilePath,
+                  await appPath.sharedPreferencesPath,
+                },
+              ),
+            ]);
+          } finally {
+            if (!irreversibleClearStarted) {
+              resumeDatabaseWrites();
+              _preferencesWritesSuspended = false;
+              _persistentLogWritesSuspended = false;
+              if (_preferencesWriteRequestedWhileSuspended) {
+                _preferencesWriteRequestedWhileSuspended = false;
+                savePreferencesDebounce();
+              }
+            }
+          }
+        }),
+      );
+    } finally {
+      if (irreversibleClearStarted) {
+        await handleExit(false);
       }
-    });
-    handleExit(false);
+    }
+  }
+}
+
+Future<void> deleteApplicationSupportData(
+  String homePath, {
+  required Set<String> preservePaths,
+}) async {
+  final homeDirectory = Directory(homePath);
+  if (!await homeDirectory.exists()) {
+    return;
+  }
+  final normalizedPreservePaths = preservePaths
+      .map((path) => p.absolute(p.normalize(path)))
+      .toSet();
+  await for (final entry in homeDirectory.list(followLinks: false)) {
+    if (normalizedPreservePaths.contains(p.absolute(p.normalize(entry.path)))) {
+      continue;
+    }
+    await durableDeleteEntity(entry.path);
   }
 }
 

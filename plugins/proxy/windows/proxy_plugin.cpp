@@ -124,7 +124,6 @@ struct ProxyRestoreSnapshot
 {
   std::vector<ConnectionRestoreState> states;
   bool needsNotify = false;
-  bool legacy = false;
 };
 
 std::optional<ProxyRestoreSnapshot> restoreSnapshot;
@@ -387,7 +386,6 @@ PersistedRestoreResult LoadRestoreSnapshotAtPath(
     RegCloseKey(key);
     return PersistedRestoreResult::invalid;
   }
-  snapshot.legacy = legacy;
   snapshot.needsNotify = needsNotify == 1;
   std::unordered_set<std::wstring> targetNames;
   bool hasDefault = false;
@@ -940,8 +938,7 @@ bool startProxy(const int port, const flutter::EncodableList& bypassDomain)
       }
       auto* current = FindConnectionState(
           currentStates, restoreState.before.target);
-      if (current == nullptr ||
-          !SameConnectionState(*current, restoreState.applied))
+    if (current == nullptr)
       {
         auto abandoned = restoreState;
         abandoned.pending.reset();
@@ -950,8 +947,51 @@ bool startProxy(const int port, const flutter::EncodableList& bypassDomain)
         continue;
       }
       auto next = restoreState;
-      next.pending = ManagedConnectionState(
+      const bool ownsFlags =
+          current->flags == restoreState.applied.flags;
+      const bool ownsServer =
+          current->proxyServer == restoreState.applied.proxyServer;
+      const bool ownsBypass =
+          current->proxyBypass == restoreState.applied.proxyBypass;
+      if (!proxy::internal::HasOwnedField(
+              ownsFlags, ownsServer, ownsBypass))
+      {
+        next.pending.reset();
+        next.abandoned = true;
+        transition.states.push_back(std::move(next));
+        continue;
+      }
+      const auto managed = ManagedConnectionState(
           restoreState.before.target, server, bypassList);
+      auto pending = *current;
+      if (ownsFlags)
+      {
+        pending.flags = managed.flags;
+      }
+      else
+      {
+        next.before.flags = current->flags;
+        next.applied.flags = current->flags;
+      }
+      if (ownsServer)
+      {
+        pending.proxyServer = managed.proxyServer;
+      }
+      else
+      {
+        next.before.proxyServer = current->proxyServer;
+        next.applied.proxyServer = current->proxyServer;
+      }
+      if (ownsBypass)
+      {
+        pending.proxyBypass = managed.proxyBypass;
+      }
+      else
+      {
+        next.before.proxyBypass = current->proxyBypass;
+        next.applied.proxyBypass = current->proxyBypass;
+      }
+      next.pending = std::move(pending);
       transition.states.push_back(std::move(next));
     }
     for (const auto& current : currentStates)

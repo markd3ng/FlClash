@@ -12,9 +12,26 @@ import 'interface.dart';
 import 'ipc_cipher.dart';
 import 'ipc_frame.dart';
 
+class CoreTransportException implements Exception {
+  final String message;
+
+  const CoreTransportException(this.message);
+
+  @override
+  String toString() => 'CoreTransportException: $message';
+}
+
+class _PendingInvocation {
+  final Socket socket;
+  final Completer<Object?> completer;
+
+  const _PendingInvocation(this.socket, this.completer);
+}
+
 class CoreService extends CoreHandlerInterface {
   static const _coreStartTimeout = Duration(seconds: 10);
   static const _coreStopTimeout = Duration(seconds: 5);
+  static const _ipcReadyMessage = 'flclash-ipc-ready-v1';
 
   static CoreService? _instance;
 
@@ -22,7 +39,7 @@ class CoreService extends CoreHandlerInterface {
 
   Completer<Socket> _socketCompleter = Completer();
 
-  final Map<String, Completer> _callbackCompleterMap = {};
+  final Map<String, _PendingInvocation> _pendingInvocations = {};
 
   Socket? _socket;
 
@@ -44,16 +61,23 @@ class CoreService extends CoreHandlerInterface {
     _initServer();
   }
 
-  Future<void> handleResult(ActionResult result) async {
-    final completer = _callbackCompleterMap[result.id];
-    final data = await parasResult(result);
+  Future<void> handleResult(ActionResult result, Socket socket) async {
     if (result.id?.isEmpty == true) {
       coreEventManager.sendEvent(CoreEvent.fromJson(result.data));
-    }
-    if (completer?.isCompleted == true) {
       return;
     }
-    completer?.complete(data);
+    final pending = _pendingInvocations[result.id];
+    if (pending == null ||
+        !identical(pending.socket, socket) ||
+        pending.completer.isCompleted) {
+      return;
+    }
+    _pendingInvocations.remove(result.id);
+    try {
+      pending.completer.complete(await parasResult(result));
+    } catch (error, stackTrace) {
+      pending.completer.completeError(error, stackTrace);
+    }
   }
 
   Future<void> _initServer() async {
@@ -82,39 +106,67 @@ class CoreService extends CoreHandlerInterface {
   }
 
   Future<void> _attachSocket(Socket socket) async {
+    final decoder = IpcFrameDecoder();
+    var authenticated = false;
+    final authenticationTimeout = Timer(_coreStartTimeout, socket.destroy);
+    try {
+      await for (final chunk in socket) {
+        final List<Uint8List> frames;
+        try {
+          frames = decoder.add(chunk);
+        } on FormatException {
+          socket.destroy();
+          return;
+        }
+        for (final frame in frames) {
+          final plain = await _ipc.decodeFrame(frame);
+          if (plain == null) {
+            socket.destroy();
+            return;
+          }
+          if (!authenticated) {
+            if (plain != _ipcReadyMessage) {
+              socket.destroy();
+              return;
+            }
+            authenticated = true;
+            authenticationTimeout.cancel();
+            _promoteSocket(socket);
+            continue;
+          }
+          if (!identical(_socket, socket)) {
+            socket.destroy();
+            return;
+          }
+          final dataJson = await plain.commonToJSON<dynamic>();
+          await handleResult(ActionResult.fromJson(dataJson), socket);
+        }
+      }
+    } finally {
+      authenticationTimeout.cancel();
+      if (_resetSocketIfCurrent(socket)) {
+        _failPendingForSocket(
+          socket,
+          const CoreTransportException('core IPC connection closed'),
+        );
+        _handleInvokeCrashEvent();
+      }
+    }
+  }
+
+  void _promoteSocket(Socket socket) {
     final previous = _socket;
     _socket = socket;
     if (_socketCompleter.isCompleted) {
       _socketCompleter = Completer();
     }
-    final decoder = IpcFrameDecoder();
-    socket
-        .listen((chunk) async {
-          final List<Uint8List> frames;
-          try {
-            frames = decoder.add(chunk);
-          } on FormatException {
-            socket.destroy();
-            return;
-          }
-          for (final frame in frames) {
-            final plain = await _ipc.decodeFrame(frame);
-            if (plain == null) {
-              continue;
-            }
-            final dataJson = await plain.commonToJSON<dynamic>();
-            handleResult(ActionResult.fromJson(dataJson));
-          }
-        })
-        .onDone(() {
-          if (_resetSocketIfCurrent(socket)) {
-            _clearCompleter();
-            _handleInvokeCrashEvent();
-          }
-        });
     _socketCompleter.complete(socket);
     if (previous != null) {
-      await previous.close();
+      _failPendingForSocket(
+        previous,
+        const CoreTransportException('core IPC connection was replaced'),
+      );
+      previous.destroy();
     }
   }
 
@@ -229,11 +281,6 @@ class CoreService extends CoreHandlerInterface {
     return true;
   }
 
-  Future<void> sendMessage(String message) async {
-    final socket = await _socketCompleter.future;
-    socket.add(encodeIpcFrame(await _ipc.encodeFrame(message)));
-  }
-
   Future<void> _deleteSocketFile() async {
     if (!system.isWindows) {
       final file = File(unixSocketPath);
@@ -265,7 +312,7 @@ class CoreService extends CoreHandlerInterface {
     }
     final process = _process;
     await _destroySocket();
-    _clearCompleter();
+    _failAllPending(const CoreTransportException('core IPC service stopped'));
     if (system.isWindows && _startedByHelper) {
       final stopped = await request.stopCoreByHelper();
       if (stopped) _startedByHelper = false;
@@ -297,9 +344,26 @@ class CoreService extends CoreHandlerInterface {
     return true;
   }
 
-  void _clearCompleter() {
-    for (final completer in _callbackCompleterMap.values) {
-      completer.safeCompleter(null);
+  void _failPendingForSocket(Socket socket, Object error) {
+    final ids = _pendingInvocations.entries
+        .where((entry) => identical(entry.value.socket, socket))
+        .map((entry) => entry.key)
+        .toList();
+    for (final id in ids) {
+      final pending = _pendingInvocations.remove(id);
+      if (pending != null && !pending.completer.isCompleted) {
+        pending.completer.completeError(error);
+      }
+    }
+  }
+
+  void _failAllPending(Object error) {
+    final pending = _pendingInvocations.values.toList();
+    _pendingInvocations.clear();
+    for (final invocation in pending) {
+      if (!invocation.completer.isCompleted) {
+        invocation.completer.completeError(error);
+      }
     }
   }
 
@@ -321,18 +385,31 @@ class CoreService extends CoreHandlerInterface {
     Duration? timeout,
   }) async {
     final id = '${method.name}#${utils.id}';
-    _callbackCompleterMap[id] = Completer<T?>();
-    sendMessage(json.encode(Action(id: id, method: method, data: data)));
-    return (_callbackCompleterMap[id] as Completer<T?>).future.withTimeout(
-      timeout: timeout,
-      onLast: () {
-        final completer = _callbackCompleterMap[id];
-        completer?.safeCompleter(null);
-        _callbackCompleterMap.remove(id);
-      },
-      tag: id,
-      onTimeout: () => null,
+    final frame = encodeIpcFrame(
+      await _ipc.encodeFrame(
+        json.encode(Action(id: id, method: method, data: data)),
+      ),
     );
+    final socket = await _socketCompleter.future;
+    if (!identical(_socket, socket)) {
+      throw const CoreTransportException('core IPC connection changed');
+    }
+    final completer = Completer<Object?>();
+    final pending = _PendingInvocation(socket, completer);
+    _pendingInvocations[id] = pending;
+    try {
+      socket.add(frame);
+      return await completer.future.timeout(
+            timeout ?? const Duration(minutes: 3),
+            onTimeout: () =>
+                throw TimeoutException('Core invoke $id timed out'),
+          )
+          as T?;
+    } finally {
+      if (identical(_pendingInvocations[id], pending)) {
+        _pendingInvocations.remove(id);
+      }
+    }
   }
 
   @override

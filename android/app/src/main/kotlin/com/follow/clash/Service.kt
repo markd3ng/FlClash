@@ -7,6 +7,7 @@ import com.follow.clash.common.ServiceDelegate
 import com.follow.clash.common.chunkedForAidl
 import com.follow.clash.common.formatString
 import com.follow.clash.common.intent
+import com.follow.clash.common.maxValidationMessageBytes
 import com.follow.clash.service.IAckInterface
 import com.follow.clash.service.ICallbackInterface
 import com.follow.clash.service.IEventInterface
@@ -110,6 +111,7 @@ object Service {
                 val binder = service.asBinder()
                 val response = CompletableDeferred<Unit>()
                 val responseChunks = mutableListOf<ByteArray>()
+                var responseBytes = 0
                 val deathRecipient = IBinder.DeathRecipient {
                     response.completeExceptionally(
                         IllegalStateException("validator process died"),
@@ -122,7 +124,16 @@ object Service {
                         isSuccess: Boolean,
                         ack: IAckInterface?,
                     ) {
-                        responseChunks.add(result ?: byteArrayOf())
+                        val chunk = result ?: byteArrayOf()
+                        if (responseBytes > maxValidationMessageBytes - chunk.size) {
+                            ack?.onAck()
+                            response.completeExceptionally(
+                                IllegalStateException("validator response is too large"),
+                            )
+                            return
+                        }
+                        responseBytes += chunk.size
+                        responseChunks.add(chunk)
                         ack?.onAck()
                         if (isSuccess) {
                             runCatching { cb?.invoke(responseChunks.formatString()) }
@@ -133,12 +144,14 @@ object Service {
                 }
                 try {
                     awaitValidatorAck { ack -> service.begin(initAction, callback, ack) }
-                val requestChunks = data.chunkedForAidl()
-                for ((index, chunk) in requestChunks.withIndex()) {
-                    awaitValidatorAck { ack ->
-                        service.sendChunk(chunk, index == requestChunks.lastIndex, ack)
+                    val requestChunks = data.chunkedForAidl(
+                        maxTotalBytes = maxValidationMessageBytes,
+                    )
+                    for ((index, chunk) in requestChunks.withIndex()) {
+                        awaitValidatorAck { ack ->
+                            service.sendChunk(chunk, index == requestChunks.lastIndex, ack)
+                        }
                     }
-                }
                     response.await()
                 } finally {
                     runCatching { binder.unlinkToDeath(deathRecipient, 0) }

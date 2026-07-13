@@ -18,7 +18,9 @@ _AppSettingProps _$AppSettingPropsFromJson(Map<String, dynamic> json) =>
       autoRun: json['autoRun'] as bool? ?? false,
       openLogs: json['openLogs'] as bool? ?? false,
       closeConnections: json['closeConnections'] as bool? ?? true,
-      testUrl: json['testUrl'] as String? ?? defaultTestUrl,
+      testUrl: json['testUrl'] == null
+          ? defaultTestUrl
+          : testUrlFromJson(json['testUrl'] as String?),
       isAnimateToPage: json['isAnimateToPage'] as bool? ?? false,
       showLabel: json['showLabel'] as bool? ?? false,
       disclaimerAccepted: json['disclaimerAccepted'] as bool? ?? false,

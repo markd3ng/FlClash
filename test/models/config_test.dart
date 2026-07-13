@@ -59,6 +59,15 @@ void main() {
       expect(restored.customUserAgent, 'CustomUA/1.0');
     });
 
+    test('legacy HTTP default upgrades to HTTPS', () {
+      final restored = AppSettingProps.fromJson({
+        'testUrl': legacyDefaultTestUrl,
+      });
+
+      expect(restored.testUrl, defaultTestUrl);
+      expect(Uri.parse(restored.testUrl).scheme, 'https');
+    });
+
     test('safeFromJson returns default on null', () {
       final result = AppSettingProps.safeFromJson(null);
       expect(result, isA<AppSettingProps>());

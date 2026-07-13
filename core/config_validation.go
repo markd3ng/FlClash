@@ -12,6 +12,7 @@ import (
 
 	adapterProvider "github.com/metacubex/mihomo/adapter/provider"
 	mihomoYaml "github.com/metacubex/mihomo/common/yaml"
+	metaAge "github.com/metacubex/mihomo/component/age"
 	"github.com/metacubex/mihomo/config"
 	"github.com/metacubex/mihomo/constant"
 	providerConstant "github.com/metacubex/mihomo/constant/provider"
@@ -111,6 +112,11 @@ func prepareValidationConfig(data []byte) (*config.RawConfig, error) {
 		maxEntries    = 4096
 	)
 	paths := map[string]struct{}{}
+	sourceRoot, err := os.OpenRoot(sourceHome)
+	if err != nil {
+		return nil, err
+	}
+	defer sourceRoot.Close()
 	if err := collectValidationGeoPaths(sourceHome, paths); err != nil {
 		return nil, err
 	}
@@ -145,7 +151,8 @@ func prepareValidationConfig(data []byte) (*config.RawConfig, error) {
 				return err
 			}
 			if err := copyValidationResource(
-				source,
+				sourceRoot,
+				relative,
 				filepath.Join(targetHome, relative),
 				&entries,
 				&totalBytes,
@@ -212,12 +219,17 @@ func collectFileProviderResourcePaths(
 		if err != nil {
 			return err
 		}
+		ageSecretKey, _ := mapping["age-secret-key"].(string)
+		data, err = metaAge.DecryptBytes(data, ageSecretKey)
+		if err != nil {
+			return fmt.Errorf("decrypt proxy provider %s: %w", path, err)
+		}
 		var document map[string]any
 		if err := mihomoYaml.Unmarshal(data, &document); err != nil {
 			continue
 		}
-		proxies := asProxyMappings(document["proxies"])
-		if len(proxies) == 0 {
+		proxies, valid := strictProxyMappings(document["proxies"])
+		if !valid {
 			continue
 		}
 		if err := collectOutboundResourcePaths(proxies, sourceHome, paths); err != nil {
@@ -233,6 +245,25 @@ func collectFileProviderResourcePaths(
 		}
 	}
 	return nil
+}
+
+func strictProxyMappings(value any) ([]map[string]any, bool) {
+	if mappings, ok := value.([]map[string]any); ok {
+		return mappings, len(mappings) > 0
+	}
+	items, ok := value.([]any)
+	if !ok || len(items) == 0 {
+		return nil, false
+	}
+	mappings := make([]map[string]any, 0, len(items))
+	for _, item := range items {
+		mapping, ok := item.(map[string]any)
+		if !ok {
+			return nil, false
+		}
+		mappings = append(mappings, mapping)
+	}
+	return mappings, true
 }
 
 func collectValidationResourcePaths(
@@ -487,7 +518,8 @@ func validationPathHasSymlink(root, relative string) (bool, error) {
 }
 
 func copyValidationResource(
-	source string,
+	sourceRoot *os.Root,
+	relative string,
 	target string,
 	entries *int,
 	totalBytes *int64,
@@ -496,12 +528,17 @@ func copyValidationResource(
 	maxTotalBytes int64,
 	visited map[string]struct{},
 ) error {
-	cleanSource := filepath.Clean(source)
+	cleanSource := filepath.Clean(relative)
 	if _, exists := visited[cleanSource]; exists {
 		return nil
 	}
 	visited[cleanSource] = struct{}{}
-	info, err := os.Lstat(source)
+	input, err := sourceRoot.Open(relative)
+	if err != nil {
+		return err
+	}
+	defer input.Close()
+	info, err := input.Stat()
 	if err != nil {
 		return err
 	}
@@ -510,16 +547,16 @@ func copyValidationResource(
 		return fmt.Errorf("validation resources have too many entries")
 	}
 	if info.Mode()&os.ModeSymlink != 0 {
-		return fmt.Errorf("validation resource cannot be a symbolic link: %s", source)
+		return fmt.Errorf("validation resource cannot be a symbolic link: %s", relative)
 	}
 	if info.IsDir() {
-		return fmt.Errorf("validation resource must be a regular file: %s", source)
+		return fmt.Errorf("validation resource must be a regular file: %s", relative)
 	}
 	if !info.Mode().IsRegular() {
 		return nil
 	}
 	if info.Size() > maxFileBytes {
-		return fmt.Errorf("validation resource is too large: %s", source)
+		return fmt.Errorf("validation resource is too large: %s", relative)
 	}
 	remaining := maxTotalBytes - *totalBytes
 	if remaining < 0 {
@@ -528,11 +565,6 @@ func copyValidationResource(
 	if err := os.MkdirAll(filepath.Dir(target), 0o700); err != nil {
 		return err
 	}
-	input, err := os.Open(source)
-	if err != nil {
-		return err
-	}
-	defer input.Close()
 	output, err := os.OpenFile(target, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o600)
 	if err != nil {
 		return err
@@ -545,7 +577,7 @@ func copyValidationResource(
 	}
 	if written > limit {
 		_ = os.Remove(target)
-		return fmt.Errorf("validation resources exceed size limit: %s", source)
+		return fmt.Errorf("validation resources exceed size limit: %s", relative)
 	}
 	*totalBytes += written
 	return closeErr

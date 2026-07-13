@@ -21,7 +21,12 @@ class DurableConfigStore {
     if (!candidateExists.any((exists) => exists)) {
       return null;
     }
-    final identity = await _identityProvider();
+    late final AgeIdentity identity;
+    try {
+      identity = await _identityProvider();
+    } catch (_) {
+      return null;
+    }
     for (final candidate in candidates) {
       if (!await candidate.exists()) {
         continue;

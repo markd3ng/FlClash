@@ -825,14 +825,14 @@ bool hasDuplicateProfileProxyName(
 }
 
 bool hasProfileProxyGroupNameConflict(
-  Iterable<Group> groups,
+  Map rawConfig,
   ProfileProxy profileProxy,
 ) {
   final name = profileProxy.name;
   if (name.isEmpty) {
     return false;
   }
-  return groups.any((item) => item.name == name);
+  return rawProxyGroupNames(rawConfig).contains(name);
 }
 
 bool hasProfileProxyCustomNameConflict(
@@ -1095,10 +1095,25 @@ class _ProfileProxiesContentState extends ConsumerState<ProfileProxiesContent> {
       );
       return;
     }
-    if (hasProfileProxyGroupNameConflict(ref.read(groupsProvider), res)) {
-      context.showNotifier(
-        appLocalizations.proxyChainUnavailableNodeTip(res.name),
+    try {
+      final rawConfig = await appController.getRawProfileConfig(
+        widget.profileId,
       );
+      if (hasProfileProxyGroupNameConflict(rawConfig, res)) {
+        if (mounted) {
+          context.showNotifier(
+            appLocalizations.proxyChainUnavailableNodeTip(res.name),
+          );
+        }
+        return;
+      }
+    } catch (error) {
+      if (mounted) {
+        context.showNotifier(error.toString());
+      }
+      return;
+    }
+    if (!mounted) {
       return;
     }
     final previousName = profileProxy?.name;

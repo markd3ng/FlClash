@@ -20,6 +20,7 @@ import (
 )
 
 const maxIPCFrameLength = 64 * 1024 * 1024
+const ipcReadyMessage = "flclash-ipc-ready-v1"
 
 var (
 	conn   net.Conn
@@ -155,6 +156,15 @@ func startServer(arg string) {
 	defer func() {
 		_ = conn.Close()
 	}()
+	readyFrame, err := encodeFrame([]byte(ipcReadyMessage))
+	if err != nil {
+		log.Println("IPC authentication failed:", err)
+		return
+	}
+	if err := writeFrame(conn, readyFrame); err != nil {
+		log.Println("IPC authentication write failed:", err)
+		return
+	}
 
 	for {
 		data, err := readFrame(conn)

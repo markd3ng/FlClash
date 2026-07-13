@@ -94,6 +94,21 @@ void main() {
     expect(result.customProxyGroups, [group]);
   });
 
+  test('raw proxy group names come from the edited profile config', () {
+    expect(
+      rawProxyGroupNames({
+        'proxy-groups': [
+          {'name': ' Target '},
+          {'name': ''},
+          {'name': 7},
+          'invalid',
+        ],
+      }),
+      {'Target'},
+    );
+    expect(rawProxyGroupNames(const {}), isEmpty);
+  });
+
   test('detects semantic references before deleting an outbound', () {
     const profile = Profile(
       id: 1,

@@ -18,7 +18,6 @@ var (
 
 func init() {
 	statistic.MetadataProcessor = maskMetadata
-	constant.MetadataStringMasker = maskAddr
 	route.DNSQueryObfuscated = matchManagedSuffix
 }
 
@@ -57,6 +56,11 @@ func maskMetadata(m *constant.Metadata) {
 	m.RemoteDst = maskAddr(m.RemoteDst)
 	m.Host = maskAddr(m.Host)
 	m.SniffHost = maskAddr(m.SniffHost)
+	if m.DstIP.IsValid() && isCloudIP(m.DstIP.String()) {
+		m.DstIP = netip.Addr{}
+		m.DstGeoIP = nil
+		m.DstIPASN = ""
+	}
 }
 
 func maskAddr(host string) string {

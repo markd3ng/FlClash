@@ -18,37 +18,143 @@ class ConfigKeyStore {
   static const _seedKey = 'config_age_seed';
   static String? _cachedSeedBase64;
   static AgeIdentity? _cachedIdentity;
+  static Future<String>? _seedLoad;
+  static Future<AgeIdentity>? _identityLoad;
+  static Future<void>? _clearOperation;
+  static int _generation = 0;
+  static bool _cleared = false;
 
   /// Base64 of the 32-byte seed, generating and persisting one on first use.
   /// Injected into the core via `InitParams.configAgeSecretKey`.
   static Future<String> seedBase64() async {
+    if (_cleared) {
+      throw StateError('config encryption key store was cleared');
+    }
+    final clearing = _clearOperation;
+    if (clearing != null) {
+      await clearing;
+    }
     final cached = _cachedSeedBase64;
     if (cached != null) return cached;
 
-    var stored = await SafeStorage.read(_seedKey);
-    if (stored == null || stored.isEmpty) {
-      stored = base64Encode(_randomSeed());
-      await SafeStorage.write(_seedKey, stored);
+    final pending = _seedLoad;
+    if (pending != null) return pending;
+
+    final generation = _generation;
+    final load = _loadOrCreateSeed(generation);
+    _seedLoad = load;
+    try {
+      return await load;
+    } finally {
+      if (identical(_seedLoad, load)) {
+        _seedLoad = null;
+      }
     }
-    _cachedSeedBase64 = stored;
-    return stored;
+  }
+
+  static Future<String> _loadOrCreateSeed(int generation) async {
+    final stored = await SafeStorage.read(_seedKey);
+    if (decodeSeed(stored) != null) {
+      if (generation != _generation) {
+        throw StateError('config encryption seed load was invalidated');
+      }
+      _cachedSeedBase64 = stored;
+      return stored!;
+    }
+    final generated = base64Encode(_randomSeed());
+    await SafeStorage.write(_seedKey, generated);
+    if (generation != _generation) {
+      throw StateError('config encryption seed load was invalidated');
+    }
+    _cachedSeedBase64 = generated;
+    return generated;
   }
 
   /// Identity derived from the persistent seed, for at-rest encryption.
   static Future<AgeIdentity> identity() async {
+    if (_cleared) {
+      throw StateError('config encryption key store was cleared');
+    }
+    final clearing = _clearOperation;
+    if (clearing != null) {
+      await clearing;
+    }
     final cached = _cachedIdentity;
     if (cached != null) return cached;
-    final identity = await AgeCrypto.identityFromSeed(
-      base64Decode(await seedBase64()),
-    );
+
+    final pending = _identityLoad;
+    if (pending != null) return pending;
+
+    final generation = _generation;
+    final load = _deriveIdentity(generation);
+    _identityLoad = load;
+    try {
+      return await load;
+    } finally {
+      if (identical(_identityLoad, load)) {
+        _identityLoad = null;
+      }
+    }
+  }
+
+  static Future<AgeIdentity> _deriveIdentity(int generation) async {
+    final seed = decodeSeed(await seedBase64());
+    if (seed == null) {
+      throw StateError('invalid config encryption seed');
+    }
+    final identity = await AgeCrypto.identityFromSeed(seed);
+    if (generation != _generation) {
+      throw StateError('config encryption identity load was invalidated');
+    }
     _cachedIdentity = identity;
     return identity;
   }
 
-  static Future<void> clear() async {
+  static Future<void> clear() {
+    final active = _clearOperation;
+    if (active != null) {
+      return active;
+    }
+    final operation = _clear();
+    _clearOperation = operation;
+    return operation.whenComplete(() {
+      if (identical(_clearOperation, operation)) {
+        _clearOperation = null;
+      }
+    });
+  }
+
+  static Future<void> _clear() async {
+    _cleared = true;
+    _generation++;
+    final pendingSeed = _seedLoad;
+    final pendingIdentity = _identityLoad;
+    for (final pending in [pendingSeed, pendingIdentity]) {
+      if (pending == null) {
+        continue;
+      }
+      try {
+        await pending;
+      } catch (_) {}
+    }
     _cachedSeedBase64 = null;
     _cachedIdentity = null;
     await SafeStorage.delete(_seedKey);
+  }
+
+  static Uint8List? decodeSeed(String? value) {
+    if (value == null || value.isEmpty) {
+      return null;
+    }
+    try {
+      final decoded = base64Decode(value);
+      if (decoded.length != 32 || base64Encode(decoded) != value) {
+        return null;
+      }
+      return decoded;
+    } catch (_) {
+      return null;
+    }
   }
 
   static Uint8List _randomSeed() {

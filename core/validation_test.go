@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	metaAge "github.com/metacubex/mihomo/component/age"
 	"github.com/metacubex/mihomo/component/ca"
 	"github.com/metacubex/mihomo/constant"
 	"github.com/metacubex/mihomo/tunnel"
@@ -328,6 +329,55 @@ func TestPrepareValidationResourcesCopiesProviderProxyResources(t *testing.T) {
 	}
 }
 
+func TestPrepareValidationResourcesDecryptsProviderProxyResources(t *testing.T) {
+	source := t.TempDir()
+	target := t.TempDir()
+	providerPath := filepath.Join(source, "providers", "local.age")
+	keyPath := filepath.Join(source, "keys", "id_ed25519")
+	if err := os.MkdirAll(filepath.Dir(providerPath), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Dir(keyPath), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	secretKey, publicKey, err := metaAge.GenX25519KeyPair()
+	if err != nil {
+		t.Fatal(err)
+	}
+	encrypted, err := metaAge.EncryptBytes(
+		[]byte("proxies:\n  - name: SSH\n    type: ssh\n    server: example.com\n    port: 22\n    username: user\n    private-key: keys/id_ed25519\n"),
+		publicKey,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(providerPath, encrypted, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(keyPath, []byte("private"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	oldHome := constant.Path.HomeDir()
+	oldSourceHome := GlobalValidationSourceHome
+	constant.SetHomeDir(target)
+	GlobalValidationSourceHome = source
+	t.Cleanup(func() {
+		constant.SetHomeDir(oldHome)
+		GlobalValidationSourceHome = oldSourceHome
+	})
+	config := []byte(fmt.Sprintf(
+		"proxy-providers:\n  Local:\n    type: file\n    path: providers/local.age\n    age-secret-key: %q\n",
+		secretKey,
+	))
+	if err := prepareValidationResources(config); err != nil {
+		t.Fatal(err)
+	}
+	data, err := os.ReadFile(filepath.Join(target, "keys", "id_ed25519"))
+	if err != nil || string(data) != "private" {
+		t.Fatalf("copied encrypted provider resource = %q, err = %v", data, err)
+	}
+}
+
 func TestCollectOutboundResourcePathsKeepsInlineKeyPairInline(t *testing.T) {
 	certificate, privateKey, _, err := ca.NewRandomTLSKeyPair(ca.KeyPairTypeP256)
 	if err != nil {
@@ -375,6 +425,37 @@ func TestParseAndValidateConfigDataRejectsInvalidFileProvider(t *testing.T) {
 		"  - MATCH,Proxy\n"
 	if err := parseAndValidateConfigData([]byte(config)); err == nil {
 		t.Fatal("parseAndValidateConfigData() accepted an invalid file provider")
+	}
+}
+
+func TestParseAndValidateConfigDataDoesNotFilterInvalidProviderEntries(t *testing.T) {
+	home := t.TempDir()
+	oldHome := constant.Path.HomeDir()
+	constant.SetHomeDir(home)
+	t.Cleanup(func() { constant.SetHomeDir(oldHome) })
+	providerPath := filepath.Join(home, "providers", "mixed.yaml")
+	if err := os.MkdirAll(filepath.Dir(providerPath), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(
+		providerPath,
+		[]byte("proxies:\n  - name: Direct\n    type: direct\n  - invalid\n"),
+		0o600,
+	); err != nil {
+		t.Fatal(err)
+	}
+	config := "proxy-providers:\n" +
+		"  Local:\n" +
+		"    type: file\n" +
+		"    path: ./providers/mixed.yaml\n" +
+		"proxy-groups:\n" +
+		"  - name: Proxy\n" +
+		"    type: select\n" +
+		"    use: [Local]\n" +
+		"rules:\n" +
+		"  - MATCH,Proxy\n"
+	if err := parseAndValidateConfigData([]byte(config)); err == nil {
+		t.Fatal("parseAndValidateConfigData() filtered an invalid provider entry")
 	}
 }
 

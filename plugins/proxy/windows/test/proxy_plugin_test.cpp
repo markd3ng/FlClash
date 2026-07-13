@@ -51,12 +51,6 @@ TEST(ProxyPlugin, StartProxyRejectsMissingArguments) {
 }
 
 TEST(ProxyRestoreDecision, RestoresOnlyOwnedState) {
-  EXPECT_FALSE(internal::ShouldRestoreOwnedState(false, false, false, false));
-  EXPECT_FALSE(internal::ShouldRestoreOwnedState(true, true, false, false));
-  EXPECT_TRUE(internal::ShouldRestoreOwnedState(true, false, true, false));
-  EXPECT_TRUE(internal::ShouldRestoreOwnedState(true, false, false, true));
-  EXPECT_FALSE(internal::ShouldRestoreOwnedState(true, false, false, false));
-
   EXPECT_TRUE(internal::ShouldCommitPending(false, true));
   EXPECT_FALSE(internal::ShouldCommitPending(true, true));
   EXPECT_FALSE(internal::ShouldCommitPending(false, false));
@@ -65,6 +59,11 @@ TEST(ProxyRestoreDecision, RestoresOnlyOwnedState) {
   EXPECT_TRUE(internal::ShouldRestoreOwnedField(false, false, true));
   EXPECT_FALSE(internal::ShouldRestoreOwnedField(true, true, true));
   EXPECT_FALSE(internal::ShouldRestoreOwnedField(false, false, false));
+
+  EXPECT_TRUE(internal::HasOwnedField(true, false, false));
+  EXPECT_TRUE(internal::HasOwnedField(false, true, false));
+  EXPECT_TRUE(internal::HasOwnedField(false, false, true));
+  EXPECT_FALSE(internal::HasOwnedField(false, false, false));
 }
 
 TEST(ProxyPlugin, StartProxyRejectsInvalidArguments) {

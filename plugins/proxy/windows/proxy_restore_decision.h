@@ -3,17 +3,15 @@
 
 namespace proxy::internal {
 
-inline bool ShouldRestoreOwnedState(
-    bool current_exists,
-    bool matches_before,
-    bool matches_applied,
-    bool matches_pending) {
-  return current_exists && !matches_before &&
-      (matches_applied || matches_pending);
-}
-
 inline bool ShouldCommitPending(bool abandoned, bool has_pending) {
   return !abandoned && has_pending;
+}
+
+inline bool HasOwnedField(
+    bool owns_flags,
+    bool owns_server,
+    bool owns_bypass) {
+  return owns_flags || owns_server || owns_bypass;
 }
 
 inline bool ShouldRestoreOwnedField(

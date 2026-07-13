@@ -4,6 +4,7 @@ import 'package:fl_clash/controller.dart';
 import 'package:fl_clash/common/preferences.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
+import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 
 void main() {
@@ -293,5 +294,42 @@ void main() {
     );
 
     expect(events, ['first', 'second', 'third']);
+  });
+
+  test('deleteApplicationSupportData keeps lock and tombstones', () async {
+    final root = await Directory.systemTemp.createTemp('clear_data_');
+    addTearDown(() => root.delete(recursive: true));
+    final lock = File('${root.path}/FlClash.lock')..writeAsStringSync('lock');
+    final preferences = File('${root.path}/shared_preferences.json')
+      ..writeAsStringSync('tombstones');
+    for (final path in [
+      'database.sqlite',
+      'database.sqlite-wal',
+      'database.sqlite-shm',
+      'config.yaml',
+      'config.age',
+      'profiles/provider/cache',
+      'scripts/1.js',
+      'logs/app.log',
+      'restore/journal.json',
+    ]) {
+      File('${root.path}/$path')
+        ..createSync(recursive: true)
+        ..writeAsStringSync('data');
+    }
+
+    await deleteApplicationSupportData(
+      root.path,
+      preservePaths: {lock.path, preferences.path},
+    );
+
+    expect(await lock.readAsString(), 'lock');
+    expect(await preferences.readAsString(), 'tombstones');
+    final remaining = await root
+        .list(followLinks: false)
+        .map((entry) => p.basename(entry.path))
+        .toList();
+    expect(remaining, containsAll(['FlClash.lock', 'shared_preferences.json']));
+    expect(remaining, hasLength(2));
   });
 }

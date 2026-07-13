@@ -671,6 +671,20 @@ extension ProfileCustomOverwriteExt on Profile {
   }
 }
 
+Set<String> rawProxyGroupNames(Map rawConfig) {
+  final groups = rawConfig['proxy-groups'];
+  if (groups is! List) {
+    return const {};
+  }
+  return groups
+      .whereType<Map>()
+      .map((group) => group['name'])
+      .whereType<String>()
+      .map((name) => name.trim())
+      .where((name) => name.isNotEmpty)
+      .toSet();
+}
+
 String? findProxyGroupCycle(List<ProxyGroup> groups) {
   final names = groups.map((group) => group.name).toSet();
   final dependencies = <String, Set<String>>{

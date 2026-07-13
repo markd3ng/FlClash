@@ -39,6 +39,7 @@ export 'render.dart';
 export 'restore_journal.dart';
 export 'request.dart';
 export 'scroll.dart';
+export 'script_deletion.dart';
 export 'snowflake.dart';
 export 'string.dart';
 export 'system.dart';

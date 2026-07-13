@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:ffi';
 import 'dart:io';
 
+import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 
@@ -410,7 +412,11 @@ class Proxy extends ProxyPlatform {
           !_validateRestoreCommands(pendingCommands)) {
         return false;
       }
+      final directoryExisted = await file.parent.exists();
       await file.parent.create(recursive: true);
+      if (!directoryExisted) {
+        await _syncDirectory(file.parent.parent.path);
+      }
       if (!await _setPermissions(file.parent.path, '700')) {
         return false;
       }
@@ -443,7 +449,7 @@ class Proxy extends ProxyPlatform {
         await temporary.delete();
         return false;
       }
-      await temporary.rename(path);
+      await _durableRename(temporary.path, path);
       return true;
     } catch (_) {
       if (await temporary.exists()) {
@@ -755,7 +761,7 @@ class Proxy extends ProxyPlatform {
     try {
       final file = File(path);
       if (await file.exists()) {
-        await file.delete();
+        await _durableDeleteFile(path);
       }
       return true;
     } catch (_) {
@@ -817,6 +823,42 @@ class Proxy extends ProxyPlatform {
       return result.exitCode == 0;
     } catch (_) {
       return false;
+    }
+  }
+
+  static Future<void> _durableRename(String source, String target) async {
+    await File(source).rename(target);
+    await _syncDirectory(dirname(source));
+    if (dirname(source) != dirname(target)) {
+      await _syncDirectory(dirname(target));
+    }
+  }
+
+  static Future<void> _durableDeleteFile(String path) async {
+    await File(path).delete();
+    await _syncDirectory(dirname(path));
+  }
+
+  static Future<void> _syncDirectory(String path) async {
+    if (Platform.isWindows) {
+      return;
+    }
+    final bindings = _UnixFileBindings.instance;
+    final pathPointer = path.toNativeUtf8();
+    try {
+      final descriptor = bindings.open(pathPointer, 0);
+      if (descriptor < 0) {
+        throw FileSystemException('Unable to open directory for sync', path);
+      }
+      try {
+        if (bindings.fsync(descriptor) != 0) {
+          throw FileSystemException('Unable to sync directory', path);
+        }
+      } finally {
+        bindings.close(descriptor);
+      }
+    } finally {
+      calloc.free(pathPointer);
     }
   }
 
@@ -1517,4 +1559,25 @@ class Proxy extends ProxyPlatform {
   ) {
     return _buildMacosProxyBypassCommand(service, bypassDomain);
   }
+}
+
+class _UnixFileBindings {
+  final int Function(Pointer<Utf8>, int) open;
+  final int Function(int) fsync;
+  final int Function(int) close;
+
+  _UnixFileBindings._(DynamicLibrary library)
+    : open = library
+          .lookupFunction<
+            Int32 Function(Pointer<Utf8>, Int32),
+            int Function(Pointer<Utf8>, int)
+          >('open'),
+      fsync = library.lookupFunction<Int32 Function(Int32), int Function(int)>(
+        'fsync',
+      ),
+      close = library.lookupFunction<Int32 Function(Int32), int Function(int)>(
+        'close',
+      );
+
+  static final instance = _UnixFileBindings._(DynamicLibrary.process());
 }

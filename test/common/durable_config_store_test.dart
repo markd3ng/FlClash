@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:fl_clash/services/age_crypto.dart';
+import 'package:fl_clash/services/config_key_store.dart';
 import 'package:fl_clash/services/durable_config_store.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
@@ -63,5 +64,32 @@ void main() {
     for (final suffix in ['', '.tmp', '.old']) {
       expect(await File('$path$suffix').exists(), false);
     }
+  });
+
+  test(
+    'identity provider failure makes encrypted config unavailable',
+    () async {
+      final directory = await Directory.systemTemp.createTemp('config_store_');
+      addTearDown(() => directory.delete(recursive: true));
+      final path = p.join(directory.path, 'config.age');
+      await File(path).writeAsString('encrypted');
+      final unavailableStore = DurableConfigStore(
+        identityProvider: () => throw StateError('invalid seed'),
+      );
+
+      expect(await unavailableStore.read(path), isNull);
+    },
+  );
+
+  test('config seed accepts only canonical 32-byte base64', () {
+    final valid = base64Encode(List<int>.generate(32, (index) => index));
+
+    expect(ConfigKeyStore.decodeSeed(valid), hasLength(32));
+    expect(ConfigKeyStore.decodeSeed('not-base64'), isNull);
+    expect(
+      ConfigKeyStore.decodeSeed(base64Encode(List<int>.filled(31, 0))),
+      isNull,
+    );
+    expect(ConfigKeyStore.decodeSeed('$valid\n'), isNull);
   });
 }

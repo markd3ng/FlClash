@@ -4,6 +4,7 @@ import android.app.Service
 import android.content.Intent
 import android.os.IBinder
 import com.follow.clash.common.chunkedForAidl
+import com.follow.clash.common.maxValidationMessageBytes
 import com.follow.clash.core.Core
 import com.google.gson.JsonParser
 import kotlinx.coroutines.CoroutineScope
@@ -37,7 +38,9 @@ class ValidatorService : Service(),
 
         override fun sendChunk(data: ByteArray, isLast: Boolean, ack: IAckInterface) {
             val buffer = requestBuffer
-            if (buffer == null || buffer.size() + data.size > maxValidationRequestBytes) {
+            if (buffer == null ||
+                buffer.size() > maxValidationMessageBytes - data.size
+            ) {
                 throw IllegalStateException("invalid validator request")
             }
             buffer.write(data)
@@ -135,10 +138,6 @@ class ValidatorService : Service(),
         validatorHome = null
     }
 
-    companion object {
-        private const val maxValidationRequestBytes = 64 * 1024 * 1024
-    }
-
     private fun validationError(action: String, message: String): String {
         return runCatching {
             JsonParser.parseString(action).asJsonObject.apply {
@@ -153,7 +152,9 @@ class ValidatorService : Service(),
     private fun deliverAndFinish(result: String, callback: ICallbackInterface) {
         launch {
             runCatching {
-                val chunks = result.chunkedForAidl()
+                val chunks = result.chunkedForAidl(
+                    maxTotalBytes = maxValidationMessageBytes,
+                )
                 for ((index, chunk) in chunks.withIndex()) {
                     val acknowledged = withTimeoutOrNull(5_000) {
                         suspendCancellableCoroutine { continuation ->

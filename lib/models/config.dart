@@ -59,6 +59,12 @@ List<DashboardWidget> dashboardWidgetsSafeFormJson(
   }
 }
 
+String testUrlFromJson(String? value) {
+  return value == null || value == legacyDefaultTestUrl
+      ? defaultTestUrl
+      : value;
+}
+
 @freezed
 abstract class AppSettingProps with _$AppSettingProps {
   const factory AppSettingProps({
@@ -72,7 +78,7 @@ abstract class AppSettingProps with _$AppSettingProps {
     @Default(false) bool autoRun,
     @Default(false) bool openLogs,
     @Default(true) bool closeConnections,
-    @Default(defaultTestUrl) String testUrl,
+    @Default(defaultTestUrl) @JsonKey(fromJson: testUrlFromJson) String testUrl,
     @Default(false) bool isAnimateToPage,
     @Default(false) bool showLabel,
     @Default(false) bool disclaimerAccepted,

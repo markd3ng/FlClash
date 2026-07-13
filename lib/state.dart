@@ -96,6 +96,11 @@ class GlobalState {
       databasePath: await appPath.databasePath,
       durableConfigPath: await appPath.durableConfigPath,
     );
+    await recoverPendingScriptDeletions(
+      scriptsPath: await appPath.scriptsDirPath,
+      scriptExists: (scriptId) async =>
+          await database.scriptsDao.get(scriptId).getSingleOrNull() != null,
+    );
     final configMap = await preferences.getConfigMap();
     final config = await migration.migrationIfNeeded(
       configMap,

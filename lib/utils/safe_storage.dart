@@ -68,6 +68,8 @@ class SafeStorage {
     }
   }
 
+  static String deletionMarkerKey(String key) => _deletionKey(key);
+
   static String _migrationKey(String key) => '__safe_storage_migrated_$key';
   static String _deletionKey(String key) => '__safe_storage_deleted_$key';
 

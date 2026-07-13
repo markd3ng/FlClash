@@ -107,9 +107,18 @@ class Preferences {
     await durableConfigStore.write(await appPath.durableConfigPath, config);
   }
 
-  Future<void> clearPreferences() async {
+  Future<void> clearPreferences({Set<String> preserveKeys = const {}}) async {
     final sharedPreferencesIns = await sharedPreferencesCompleter.future;
-    await sharedPreferencesIns?.clear();
+    if (sharedPreferencesIns != null) {
+      for (final key in sharedPreferencesIns.getKeys()) {
+        if (preserveKeys.contains(key)) {
+          continue;
+        }
+        if (!await sharedPreferencesIns.remove(key)) {
+          throw StateError('failed to clear preference: $key');
+        }
+      }
+    }
     await durableConfigStore.clear(await appPath.durableConfigPath);
   }
 }

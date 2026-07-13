@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/controller.dart';
 import 'package:fl_clash/database/database.dart';
@@ -42,12 +40,13 @@ class _ScriptsViewState extends ConsumerState<ScriptsView> {
     List<int> affectedProfileIds = const [];
     await storageLock.synchronized(() async {
       final path = await appPath.getScriptPath(id.toString());
-      await withFileRollback(path, () async {
-        await File(path).safeDelete();
-        affectedProfileIds = await runExclusiveDatabaseOperation(
+      affectedProfileIds = await commitScriptDeletion(
+        scriptPath: path,
+        scriptId: id,
+        commit: () => runExclusiveDatabaseOperation(
           () => database.deleteScriptAndClearReferences(id),
-        );
-      });
+        ),
+      );
       ref
           .read(profilesProvider.notifier)
           .replaceFromDatabase(await database.profilesDao.all().get());

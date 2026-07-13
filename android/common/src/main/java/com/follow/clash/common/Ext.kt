@@ -217,9 +217,15 @@ val Long.formatBytes: String
         }
     }
 
-fun String.chunkedForAidl(charset: Charset = Charsets.UTF_8): List<ByteArray> {
+const val maxValidationMessageBytes = 64 * 1024 * 1024
+
+fun String.chunkedForAidl(
+    charset: Charset = Charsets.UTF_8,
+    maxTotalBytes: Int = Int.MAX_VALUE,
+): List<ByteArray> {
     val allBytes = toByteArray(charset)
     val total = allBytes.size
+    require(total <= maxTotalBytes) { "AIDL message exceeds byte limit" }
     if (total == 0) {
         return listOf(byteArrayOf())
     }

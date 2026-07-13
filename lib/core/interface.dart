@@ -106,7 +106,7 @@ abstract class CoreHandlerInterface with CoreInterface {
         'Invoke pre ${method.name} timeout $e',
         logLevel: LogLevel.error,
       );
-      return null;
+      throw TimeoutException('Core connection timed out for ${method.name}');
     }
     if (kDebugMode && watchExecution) {
       commonPrint.log(
