@@ -2,34 +2,6 @@ import 'package:animations/animations.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:flutter/material.dart';
 
-class FadeBox extends StatelessWidget {
-  final Widget child;
-  final AlignmentGeometry? alignment;
-
-  const FadeBox({super.key, required this.child, this.alignment});
-
-  @override
-  Widget build(BuildContext context) {
-    final realAlignment = alignment ?? Alignment.center;
-    return AnimatedSwitcher(
-      switchInCurve: Curves.easeOut,
-      switchOutCurve: Curves.easeIn,
-      layoutBuilder: (currentChild, previousChildren) => Align(
-        alignment: realAlignment,
-        child: Stack(
-          alignment: realAlignment,
-          children: <Widget>[...previousChildren, ?currentChild],
-        ),
-      ),
-      transitionBuilder: (child, animation) {
-        return FadeTransition(opacity: animation, child: child);
-      },
-      duration: commonDuration,
-      child: child,
-    );
-  }
-}
-
 class FadeThroughBox extends StatelessWidget {
   final Widget child;
   final AlignmentGeometry? alignment;

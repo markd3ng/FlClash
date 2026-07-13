@@ -103,7 +103,3 @@ class FloatingActionButtonExtendedBuilder extends StatelessWidget {
     return builder(isExtended);
   }
 }
-
-typedef StateWidgetBuilder<T> = Widget Function(T state);
-
-typedef StateAndChildWidgetBuilder<T> = Widget Function(T state, Widget? child);
