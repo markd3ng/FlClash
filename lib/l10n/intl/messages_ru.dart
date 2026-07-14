@@ -73,7 +73,7 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m22(name) => "Узел ${name} недоступен для этой позиции";
 
-  static String m23(time) => "Время покупки ${time}";
+  static String m23(time) => "Куплено: ${time}";
 
   static String m24(name, path) =>
       "${name} используется исходной конфигурацией в ${path}";
@@ -224,7 +224,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "autoUpdateInterval": MessageLookupByLibrary.simpleMessage(
       "Интервал автообновления (минуты)",
     ),
-    "availablePlans": MessageLookupByLibrary.simpleMessage("Доступные тарифы"),
+    "availablePlans": MessageLookupByLibrary.simpleMessage("Выберите тариф"),
     "backup": MessageLookupByLibrary.simpleMessage("Резервное копирование"),
     "backupAndRestore": MessageLookupByLibrary.simpleMessage(
       "Резервное копирование и восстановление",
@@ -245,7 +245,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Режим черного списка",
     ),
     "buyWithBalance": MessageLookupByLibrary.simpleMessage(
-      "Оплатить с баланса",
+      "Использовать баланс",
     ),
     "bypassDomain": MessageLookupByLibrary.simpleMessage("Обход домена"),
     "bypassDomainDesc": MessageLookupByLibrary.simpleMessage(
@@ -720,7 +720,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "months": MessageLookupByLibrary.simpleMessage("Месяцев"),
     "monthsAgo": m16,
     "more": MessageLookupByLibrary.simpleMessage("Еще"),
-    "myOrders": MessageLookupByLibrary.simpleMessage("Мои заказы"),
+    "myOrders": MessageLookupByLibrary.simpleMessage("Купленные тарифы"),
     "name": MessageLookupByLibrary.simpleMessage("Имя"),
     "nameSort": MessageLookupByLibrary.simpleMessage("Сортировка по имени"),
     "nameserver": MessageLookupByLibrary.simpleMessage("Сервер имен"),
@@ -780,7 +780,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Пожалуйста, создайте профиль или добавьте действительный профиль",
     ),
     "noPurchaseRecords": MessageLookupByLibrary.simpleMessage(
-      "Нет записей о покупках",
+      "Купленных тарифов пока нет",
     ),
     "noResolve": MessageLookupByLibrary.simpleMessage("Не разрешать IP"),
     "noUpgradablePlans": MessageLookupByLibrary.simpleMessage(
@@ -822,7 +822,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Дополнительные параметры",
     ),
     "options": MessageLookupByLibrary.simpleMessage("Опции"),
-    "orderAndPay": MessageLookupByLibrary.simpleMessage("Заказать и оплатить"),
+    "orderAndPay": MessageLookupByLibrary.simpleMessage("Оплатить онлайн"),
     "other": MessageLookupByLibrary.simpleMessage("Другое"),
     "otherContributors": MessageLookupByLibrary.simpleMessage(
       "Другие участники",
@@ -889,7 +889,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "planEnded": MessageLookupByLibrary.simpleMessage("Завершён"),
     "planInUse": MessageLookupByLibrary.simpleMessage("Используется"),
-    "planNotActivated": MessageLookupByLibrary.simpleMessage("Не активирован"),
+    "planNotActivated": MessageLookupByLibrary.simpleMessage(
+      "Ожидает активации",
+    ),
     "planNumber": m19,
     "pleaseBindWebDAV": MessageLookupByLibrary.simpleMessage(
       "Пожалуйста, привяжите WebDAV",

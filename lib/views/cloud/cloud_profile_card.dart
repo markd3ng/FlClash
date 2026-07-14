@@ -59,7 +59,11 @@ class _CloudProfileCardState extends ConsumerState<CloudProfileCard> {
   @override
   Widget build(BuildContext context) {
     final profile = widget.profile;
-    final tier = SubscriptionTier.fromServer(profile.subscription);
+    final tier = SubscriptionTier.fromServer(
+      profile.subscription,
+      planCode: profile.planCode,
+      planRank: profile.planRank,
+    );
     final clashProfile = ref
         .watch(profilesProvider)
         .where((p) => p.isoixCloudProfile)
@@ -210,8 +214,7 @@ class _CloudProfileCardState extends ConsumerState<CloudProfileCard> {
 
   /// Restore the level/type to the tier's defaults, preserving switches and extras.
   OixParams _restoreDefault(SubscriptionTier tier) {
-    final defaults = tier.defaultParams;
-    return _params.copyWith(level: defaults.level, type: defaults.type);
+    return _params.applyingTierDefaults(tier.defaultParams);
   }
 
   Widget _buildInfo(

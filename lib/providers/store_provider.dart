@@ -77,6 +77,10 @@ class StoreNotifier extends Notifier<StoreState> {
     state = state.copyWith(paymentMethods: methods);
     return methods;
   }
+
+  void reset() {
+    state = const StoreState();
+  }
 }
 
 final storeProvider = NotifierProvider<StoreNotifier, StoreState>(

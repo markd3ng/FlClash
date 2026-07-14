@@ -74,7 +74,7 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m22(name) => "Node ${name} is not available in this position";
 
-  static String m23(time) => "Purchase time ${time}";
+  static String m23(time) => "Purchased ${time}";
 
   static String m24(name, path) =>
       "${name} is referenced by the original configuration at ${path}";
@@ -210,8 +210,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "autoLaunchDesc": MessageLookupByLibrary.simpleMessage(
       "Follow the system self startup",
     ),
-    "autoRenewOff": MessageLookupByLibrary.simpleMessage("Auto-renew: Off"),
-    "autoRenewOn": MessageLookupByLibrary.simpleMessage("Auto-renew: On"),
+    "autoRenewOff": MessageLookupByLibrary.simpleMessage("Auto-renew off"),
+    "autoRenewOn": MessageLookupByLibrary.simpleMessage("Auto-renew on"),
     "autoRun": MessageLookupByLibrary.simpleMessage("AutoRun"),
     "autoRunDesc": MessageLookupByLibrary.simpleMessage(
       "Auto run when the application is opened",
@@ -223,7 +223,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "autoUpdateInterval": MessageLookupByLibrary.simpleMessage(
       "Auto update interval (minutes)",
     ),
-    "availablePlans": MessageLookupByLibrary.simpleMessage("Available Plans"),
+    "availablePlans": MessageLookupByLibrary.simpleMessage("Choose a Plan"),
     "backup": MessageLookupByLibrary.simpleMessage("Backup"),
     "backupAndRestore": MessageLookupByLibrary.simpleMessage(
       "Backup and Restore",
@@ -239,7 +239,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "bind": MessageLookupByLibrary.simpleMessage("Bind"),
     "blacklistMode": MessageLookupByLibrary.simpleMessage("Blacklist mode"),
-    "buyWithBalance": MessageLookupByLibrary.simpleMessage("Pay with balance"),
+    "buyWithBalance": MessageLookupByLibrary.simpleMessage("Use balance"),
     "bypassDomain": MessageLookupByLibrary.simpleMessage("Bypass domain"),
     "bypassDomainDesc": MessageLookupByLibrary.simpleMessage(
       "Only takes effect when the system proxy is enabled",
@@ -677,7 +677,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "months": MessageLookupByLibrary.simpleMessage("Months"),
     "monthsAgo": m16,
     "more": MessageLookupByLibrary.simpleMessage("More"),
-    "myOrders": MessageLookupByLibrary.simpleMessage("My Orders"),
+    "myOrders": MessageLookupByLibrary.simpleMessage("Purchased Plans"),
     "name": MessageLookupByLibrary.simpleMessage("Name"),
     "nameSort": MessageLookupByLibrary.simpleMessage("Sort by name"),
     "nameserver": MessageLookupByLibrary.simpleMessage("Nameserver"),
@@ -735,7 +735,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Please create a profile or add a valid profile",
     ),
     "noPurchaseRecords": MessageLookupByLibrary.simpleMessage(
-      "No purchase records",
+      "No purchased plans yet",
     ),
     "noResolve": MessageLookupByLibrary.simpleMessage("No resolve IP"),
     "noUpgradablePlans": MessageLookupByLibrary.simpleMessage(
@@ -775,7 +775,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Optional Parameters",
     ),
     "options": MessageLookupByLibrary.simpleMessage("Options"),
-    "orderAndPay": MessageLookupByLibrary.simpleMessage("Order & Pay"),
+    "orderAndPay": MessageLookupByLibrary.simpleMessage("Pay online"),
     "other": MessageLookupByLibrary.simpleMessage("Other"),
     "otherContributors": MessageLookupByLibrary.simpleMessage(
       "Other contributors",
@@ -834,7 +834,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "planEnded": MessageLookupByLibrary.simpleMessage("Ended"),
     "planInUse": MessageLookupByLibrary.simpleMessage("In use"),
-    "planNotActivated": MessageLookupByLibrary.simpleMessage("Inactive"),
+    "planNotActivated": MessageLookupByLibrary.simpleMessage(
+      "Pending activation",
+    ),
     "planNumber": m19,
     "pleaseBindWebDAV": MessageLookupByLibrary.simpleMessage(
       "Please bind WebDAV",

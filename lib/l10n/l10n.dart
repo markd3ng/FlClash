@@ -5104,10 +5104,10 @@ class AppLocalizations {
     return Intl.message('Recharge', name: 'recharge', desc: '', args: []);
   }
 
-  /// `Available Plans`
+  /// `Choose a Plan`
   String get availablePlans {
     return Intl.message(
-      'Available Plans',
+      'Choose a Plan',
       name: 'availablePlans',
       desc: '',
       args: [],
@@ -5124,15 +5124,20 @@ class AppLocalizations {
     );
   }
 
-  /// `My Orders`
+  /// `Purchased Plans`
   String get myOrders {
-    return Intl.message('My Orders', name: 'myOrders', desc: '', args: []);
+    return Intl.message(
+      'Purchased Plans',
+      name: 'myOrders',
+      desc: '',
+      args: [],
+    );
   }
 
-  /// `No purchase records`
+  /// `No purchased plans yet`
   String get noPurchaseRecords {
     return Intl.message(
-      'No purchase records',
+      'No purchased plans yet',
       name: 'noPurchaseRecords',
       desc: '',
       args: [],
@@ -5179,19 +5184,19 @@ class AppLocalizations {
     );
   }
 
-  /// `Pay with balance`
+  /// `Use balance`
   String get buyWithBalance {
     return Intl.message(
-      'Pay with balance',
+      'Use balance',
       name: 'buyWithBalance',
       desc: '',
       args: [],
     );
   }
 
-  /// `Order & Pay`
+  /// `Pay online`
   String get orderAndPay {
-    return Intl.message('Order & Pay', name: 'orderAndPay', desc: '', args: []);
+    return Intl.message('Pay online', name: 'orderAndPay', desc: '', args: []);
   }
 
   /// `May not be suitable for networks in mainland China`
@@ -5209,10 +5214,10 @@ class AppLocalizations {
     return Intl.message('In use', name: 'planInUse', desc: '', args: []);
   }
 
-  /// `Inactive`
+  /// `Pending activation`
   String get planNotActivated {
     return Intl.message(
-      'Inactive',
+      'Pending activation',
       name: 'planNotActivated',
       desc: '',
       args: [],
@@ -5229,10 +5234,10 @@ class AppLocalizations {
     return Intl.message('Plan #$id', name: 'planNumber', desc: '', args: [id]);
   }
 
-  /// `Purchase time {time}`
+  /// `Purchased {time}`
   String purchaseTime(Object time) {
     return Intl.message(
-      'Purchase time $time',
+      'Purchased $time',
       name: 'purchaseTime',
       desc: '',
       args: [time],
@@ -5254,20 +5259,20 @@ class AppLocalizations {
     );
   }
 
-  /// `Auto-renew: On`
+  /// `Auto-renew on`
   String get autoRenewOn {
     return Intl.message(
-      'Auto-renew: On',
+      'Auto-renew on',
       name: 'autoRenewOn',
       desc: '',
       args: [],
     );
   }
 
-  /// `Auto-renew: Off`
+  /// `Auto-renew off`
   String get autoRenewOff {
     return Intl.message(
-      'Auto-renew: Off',
+      'Auto-renew off',
       name: 'autoRenewOff',
       desc: '',
       args: [],

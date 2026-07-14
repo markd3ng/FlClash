@@ -195,6 +195,15 @@ class Build {
     r'(-X\s+main\.GlobalDNSAuth(?:PrivateKey|Domains)=)\S+',
   );
 
+  static void requireEnvironment(Iterable<String> keys) {
+    final missing = keys
+        .where((key) => Platform.environment[key]?.trim().isNotEmpty != true)
+        .toList();
+    if (missing.isNotEmpty) {
+      throw 'Missing required build environment: ${missing.join(', ')}';
+    }
+  }
+
   static String _redactSensitive(String value) {
     return value
         .replaceAllMapped(
@@ -674,6 +683,21 @@ class BuildCommand extends Command {
 
     if (arch == null && target != Target.android) {
       throw 'Invalid arch parameter';
+    }
+
+    Build.requireEnvironment(const [
+      'DNS_AUTH_PRIVATE_KEY',
+      'DNS_AUTH_DOMAINS',
+    ]);
+    if (out == 'app') {
+      Build.requireEnvironment(const [
+        'PROFILE_KEY',
+        'BASE_DOMAIN',
+        'SPARE_DOMAIN',
+        'API_DOMAIN',
+        'SPARE_API_DOMAIN',
+        'FLCLASH_APP_SECRET',
+      ]);
     }
 
     final corePaths = await Build.buildCore(

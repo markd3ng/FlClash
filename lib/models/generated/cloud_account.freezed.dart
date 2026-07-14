@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$CloudProfile {
 
- String get subscription; DateTime get expireTime; String get todayUsed; String get totalUsed; String get totalTraffic; double get usageProgress; String get remaining; String get balance; String get commission; String get points;
+ String get subscription; String get planCode; int? get planRank; List<String> get nodeAccess; DateTime get expireTime; String get todayUsed; String get totalUsed; String get totalTraffic; double get usageProgress; String get remaining; String get balance; String get commission; String get points;
 /// Create a copy of CloudProfile
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $CloudProfileCopyWith<CloudProfile> get copyWith => _$CloudProfileCopyWithImpl<C
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CloudProfile&&(identical(other.subscription, subscription) || other.subscription == subscription)&&(identical(other.expireTime, expireTime) || other.expireTime == expireTime)&&(identical(other.todayUsed, todayUsed) || other.todayUsed == todayUsed)&&(identical(other.totalUsed, totalUsed) || other.totalUsed == totalUsed)&&(identical(other.totalTraffic, totalTraffic) || other.totalTraffic == totalTraffic)&&(identical(other.usageProgress, usageProgress) || other.usageProgress == usageProgress)&&(identical(other.remaining, remaining) || other.remaining == remaining)&&(identical(other.balance, balance) || other.balance == balance)&&(identical(other.commission, commission) || other.commission == commission)&&(identical(other.points, points) || other.points == points));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CloudProfile&&(identical(other.subscription, subscription) || other.subscription == subscription)&&(identical(other.planCode, planCode) || other.planCode == planCode)&&(identical(other.planRank, planRank) || other.planRank == planRank)&&const DeepCollectionEquality().equals(other.nodeAccess, nodeAccess)&&(identical(other.expireTime, expireTime) || other.expireTime == expireTime)&&(identical(other.todayUsed, todayUsed) || other.todayUsed == todayUsed)&&(identical(other.totalUsed, totalUsed) || other.totalUsed == totalUsed)&&(identical(other.totalTraffic, totalTraffic) || other.totalTraffic == totalTraffic)&&(identical(other.usageProgress, usageProgress) || other.usageProgress == usageProgress)&&(identical(other.remaining, remaining) || other.remaining == remaining)&&(identical(other.balance, balance) || other.balance == balance)&&(identical(other.commission, commission) || other.commission == commission)&&(identical(other.points, points) || other.points == points));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,subscription,expireTime,todayUsed,totalUsed,totalTraffic,usageProgress,remaining,balance,commission,points);
+int get hashCode => Object.hash(runtimeType,subscription,planCode,planRank,const DeepCollectionEquality().hash(nodeAccess),expireTime,todayUsed,totalUsed,totalTraffic,usageProgress,remaining,balance,commission,points);
 
 @override
 String toString() {
-  return 'CloudProfile(subscription: $subscription, expireTime: $expireTime, todayUsed: $todayUsed, totalUsed: $totalUsed, totalTraffic: $totalTraffic, usageProgress: $usageProgress, remaining: $remaining, balance: $balance, commission: $commission, points: $points)';
+  return 'CloudProfile(subscription: $subscription, planCode: $planCode, planRank: $planRank, nodeAccess: $nodeAccess, expireTime: $expireTime, todayUsed: $todayUsed, totalUsed: $totalUsed, totalTraffic: $totalTraffic, usageProgress: $usageProgress, remaining: $remaining, balance: $balance, commission: $commission, points: $points)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $CloudProfileCopyWith<$Res>  {
   factory $CloudProfileCopyWith(CloudProfile value, $Res Function(CloudProfile) _then) = _$CloudProfileCopyWithImpl;
 @useResult
 $Res call({
- String subscription, DateTime expireTime, String todayUsed, String totalUsed, String totalTraffic, double usageProgress, String remaining, String balance, String commission, String points
+ String subscription, String planCode, int? planRank, List<String> nodeAccess, DateTime expireTime, String todayUsed, String totalUsed, String totalTraffic, double usageProgress, String remaining, String balance, String commission, String points
 });
 
 
@@ -65,10 +65,13 @@ class _$CloudProfileCopyWithImpl<$Res>
 
 /// Create a copy of CloudProfile
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? subscription = null,Object? expireTime = null,Object? todayUsed = null,Object? totalUsed = null,Object? totalTraffic = null,Object? usageProgress = null,Object? remaining = null,Object? balance = null,Object? commission = null,Object? points = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? subscription = null,Object? planCode = null,Object? planRank = freezed,Object? nodeAccess = null,Object? expireTime = null,Object? todayUsed = null,Object? totalUsed = null,Object? totalTraffic = null,Object? usageProgress = null,Object? remaining = null,Object? balance = null,Object? commission = null,Object? points = null,}) {
   return _then(_self.copyWith(
 subscription: null == subscription ? _self.subscription : subscription // ignore: cast_nullable_to_non_nullable
-as String,expireTime: null == expireTime ? _self.expireTime : expireTime // ignore: cast_nullable_to_non_nullable
+as String,planCode: null == planCode ? _self.planCode : planCode // ignore: cast_nullable_to_non_nullable
+as String,planRank: freezed == planRank ? _self.planRank : planRank // ignore: cast_nullable_to_non_nullable
+as int?,nodeAccess: null == nodeAccess ? _self.nodeAccess : nodeAccess // ignore: cast_nullable_to_non_nullable
+as List<String>,expireTime: null == expireTime ? _self.expireTime : expireTime // ignore: cast_nullable_to_non_nullable
 as DateTime,todayUsed: null == todayUsed ? _self.todayUsed : todayUsed // ignore: cast_nullable_to_non_nullable
 as String,totalUsed: null == totalUsed ? _self.totalUsed : totalUsed // ignore: cast_nullable_to_non_nullable
 as String,totalTraffic: null == totalTraffic ? _self.totalTraffic : totalTraffic // ignore: cast_nullable_to_non_nullable
@@ -162,10 +165,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String subscription,  DateTime expireTime,  String todayUsed,  String totalUsed,  String totalTraffic,  double usageProgress,  String remaining,  String balance,  String commission,  String points)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String subscription,  String planCode,  int? planRank,  List<String> nodeAccess,  DateTime expireTime,  String todayUsed,  String totalUsed,  String totalTraffic,  double usageProgress,  String remaining,  String balance,  String commission,  String points)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _CloudProfile() when $default != null:
-return $default(_that.subscription,_that.expireTime,_that.todayUsed,_that.totalUsed,_that.totalTraffic,_that.usageProgress,_that.remaining,_that.balance,_that.commission,_that.points);case _:
+return $default(_that.subscription,_that.planCode,_that.planRank,_that.nodeAccess,_that.expireTime,_that.todayUsed,_that.totalUsed,_that.totalTraffic,_that.usageProgress,_that.remaining,_that.balance,_that.commission,_that.points);case _:
   return orElse();
 
 }
@@ -183,10 +186,10 @@ return $default(_that.subscription,_that.expireTime,_that.todayUsed,_that.totalU
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String subscription,  DateTime expireTime,  String todayUsed,  String totalUsed,  String totalTraffic,  double usageProgress,  String remaining,  String balance,  String commission,  String points)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String subscription,  String planCode,  int? planRank,  List<String> nodeAccess,  DateTime expireTime,  String todayUsed,  String totalUsed,  String totalTraffic,  double usageProgress,  String remaining,  String balance,  String commission,  String points)  $default,) {final _that = this;
 switch (_that) {
 case _CloudProfile():
-return $default(_that.subscription,_that.expireTime,_that.todayUsed,_that.totalUsed,_that.totalTraffic,_that.usageProgress,_that.remaining,_that.balance,_that.commission,_that.points);case _:
+return $default(_that.subscription,_that.planCode,_that.planRank,_that.nodeAccess,_that.expireTime,_that.todayUsed,_that.totalUsed,_that.totalTraffic,_that.usageProgress,_that.remaining,_that.balance,_that.commission,_that.points);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -203,10 +206,10 @@ return $default(_that.subscription,_that.expireTime,_that.todayUsed,_that.totalU
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String subscription,  DateTime expireTime,  String todayUsed,  String totalUsed,  String totalTraffic,  double usageProgress,  String remaining,  String balance,  String commission,  String points)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String subscription,  String planCode,  int? planRank,  List<String> nodeAccess,  DateTime expireTime,  String todayUsed,  String totalUsed,  String totalTraffic,  double usageProgress,  String remaining,  String balance,  String commission,  String points)?  $default,) {final _that = this;
 switch (_that) {
 case _CloudProfile() when $default != null:
-return $default(_that.subscription,_that.expireTime,_that.todayUsed,_that.totalUsed,_that.totalTraffic,_that.usageProgress,_that.remaining,_that.balance,_that.commission,_that.points);case _:
+return $default(_that.subscription,_that.planCode,_that.planRank,_that.nodeAccess,_that.expireTime,_that.todayUsed,_that.totalUsed,_that.totalTraffic,_that.usageProgress,_that.remaining,_that.balance,_that.commission,_that.points);case _:
   return null;
 
 }
@@ -218,10 +221,19 @@ return $default(_that.subscription,_that.expireTime,_that.todayUsed,_that.totalU
 @JsonSerializable()
 
 class _CloudProfile implements CloudProfile {
-  const _CloudProfile({required this.subscription, required this.expireTime, required this.todayUsed, required this.totalUsed, required this.totalTraffic, required this.usageProgress, required this.remaining, required this.balance, required this.commission, required this.points});
+  const _CloudProfile({required this.subscription, this.planCode = '', this.planRank, final  List<String> nodeAccess = const <String>[], required this.expireTime, required this.todayUsed, required this.totalUsed, required this.totalTraffic, required this.usageProgress, required this.remaining, required this.balance, required this.commission, required this.points}): _nodeAccess = nodeAccess;
   factory _CloudProfile.fromJson(Map<String, dynamic> json) => _$CloudProfileFromJson(json);
 
 @override final  String subscription;
+@override@JsonKey() final  String planCode;
+@override final  int? planRank;
+ final  List<String> _nodeAccess;
+@override@JsonKey() List<String> get nodeAccess {
+  if (_nodeAccess is EqualUnmodifiableListView) return _nodeAccess;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_nodeAccess);
+}
+
 @override final  DateTime expireTime;
 @override final  String todayUsed;
 @override final  String totalUsed;
@@ -245,16 +257,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CloudProfile&&(identical(other.subscription, subscription) || other.subscription == subscription)&&(identical(other.expireTime, expireTime) || other.expireTime == expireTime)&&(identical(other.todayUsed, todayUsed) || other.todayUsed == todayUsed)&&(identical(other.totalUsed, totalUsed) || other.totalUsed == totalUsed)&&(identical(other.totalTraffic, totalTraffic) || other.totalTraffic == totalTraffic)&&(identical(other.usageProgress, usageProgress) || other.usageProgress == usageProgress)&&(identical(other.remaining, remaining) || other.remaining == remaining)&&(identical(other.balance, balance) || other.balance == balance)&&(identical(other.commission, commission) || other.commission == commission)&&(identical(other.points, points) || other.points == points));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CloudProfile&&(identical(other.subscription, subscription) || other.subscription == subscription)&&(identical(other.planCode, planCode) || other.planCode == planCode)&&(identical(other.planRank, planRank) || other.planRank == planRank)&&const DeepCollectionEquality().equals(other._nodeAccess, _nodeAccess)&&(identical(other.expireTime, expireTime) || other.expireTime == expireTime)&&(identical(other.todayUsed, todayUsed) || other.todayUsed == todayUsed)&&(identical(other.totalUsed, totalUsed) || other.totalUsed == totalUsed)&&(identical(other.totalTraffic, totalTraffic) || other.totalTraffic == totalTraffic)&&(identical(other.usageProgress, usageProgress) || other.usageProgress == usageProgress)&&(identical(other.remaining, remaining) || other.remaining == remaining)&&(identical(other.balance, balance) || other.balance == balance)&&(identical(other.commission, commission) || other.commission == commission)&&(identical(other.points, points) || other.points == points));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,subscription,expireTime,todayUsed,totalUsed,totalTraffic,usageProgress,remaining,balance,commission,points);
+int get hashCode => Object.hash(runtimeType,subscription,planCode,planRank,const DeepCollectionEquality().hash(_nodeAccess),expireTime,todayUsed,totalUsed,totalTraffic,usageProgress,remaining,balance,commission,points);
 
 @override
 String toString() {
-  return 'CloudProfile(subscription: $subscription, expireTime: $expireTime, todayUsed: $todayUsed, totalUsed: $totalUsed, totalTraffic: $totalTraffic, usageProgress: $usageProgress, remaining: $remaining, balance: $balance, commission: $commission, points: $points)';
+  return 'CloudProfile(subscription: $subscription, planCode: $planCode, planRank: $planRank, nodeAccess: $nodeAccess, expireTime: $expireTime, todayUsed: $todayUsed, totalUsed: $totalUsed, totalTraffic: $totalTraffic, usageProgress: $usageProgress, remaining: $remaining, balance: $balance, commission: $commission, points: $points)';
 }
 
 
@@ -265,7 +277,7 @@ abstract mixin class _$CloudProfileCopyWith<$Res> implements $CloudProfileCopyWi
   factory _$CloudProfileCopyWith(_CloudProfile value, $Res Function(_CloudProfile) _then) = __$CloudProfileCopyWithImpl;
 @override @useResult
 $Res call({
- String subscription, DateTime expireTime, String todayUsed, String totalUsed, String totalTraffic, double usageProgress, String remaining, String balance, String commission, String points
+ String subscription, String planCode, int? planRank, List<String> nodeAccess, DateTime expireTime, String todayUsed, String totalUsed, String totalTraffic, double usageProgress, String remaining, String balance, String commission, String points
 });
 
 
@@ -282,10 +294,13 @@ class __$CloudProfileCopyWithImpl<$Res>
 
 /// Create a copy of CloudProfile
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? subscription = null,Object? expireTime = null,Object? todayUsed = null,Object? totalUsed = null,Object? totalTraffic = null,Object? usageProgress = null,Object? remaining = null,Object? balance = null,Object? commission = null,Object? points = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? subscription = null,Object? planCode = null,Object? planRank = freezed,Object? nodeAccess = null,Object? expireTime = null,Object? todayUsed = null,Object? totalUsed = null,Object? totalTraffic = null,Object? usageProgress = null,Object? remaining = null,Object? balance = null,Object? commission = null,Object? points = null,}) {
   return _then(_CloudProfile(
 subscription: null == subscription ? _self.subscription : subscription // ignore: cast_nullable_to_non_nullable
-as String,expireTime: null == expireTime ? _self.expireTime : expireTime // ignore: cast_nullable_to_non_nullable
+as String,planCode: null == planCode ? _self.planCode : planCode // ignore: cast_nullable_to_non_nullable
+as String,planRank: freezed == planRank ? _self.planRank : planRank // ignore: cast_nullable_to_non_nullable
+as int?,nodeAccess: null == nodeAccess ? _self._nodeAccess : nodeAccess // ignore: cast_nullable_to_non_nullable
+as List<String>,expireTime: null == expireTime ? _self.expireTime : expireTime // ignore: cast_nullable_to_non_nullable
 as DateTime,todayUsed: null == todayUsed ? _self.todayUsed : todayUsed // ignore: cast_nullable_to_non_nullable
 as String,totalUsed: null == totalUsed ? _self.totalUsed : totalUsed // ignore: cast_nullable_to_non_nullable
 as String,totalTraffic: null == totalTraffic ? _self.totalTraffic : totalTraffic // ignore: cast_nullable_to_non_nullable

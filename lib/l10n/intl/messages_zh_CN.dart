@@ -66,7 +66,7 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m22(name) => "节点 ${name} 当前不可用于此位置";
 
-  static String m23(time) => "购买时间 ${time}";
+  static String m23(time) => "购买于 ${time}";
 
   static String m24(name, path) => "${name} 仍被原始配置中的 ${path} 引用";
 
@@ -157,14 +157,14 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "autoLaunch": MessageLookupByLibrary.simpleMessage("自启动"),
     "autoLaunchDesc": MessageLookupByLibrary.simpleMessage("跟随系统自启动"),
-    "autoRenewOff": MessageLookupByLibrary.simpleMessage("自动续费:关"),
-    "autoRenewOn": MessageLookupByLibrary.simpleMessage("自动续费:开"),
+    "autoRenewOff": MessageLookupByLibrary.simpleMessage("自动续费：关闭"),
+    "autoRenewOn": MessageLookupByLibrary.simpleMessage("自动续费：开启"),
     "autoRun": MessageLookupByLibrary.simpleMessage("自动运行"),
     "autoRunDesc": MessageLookupByLibrary.simpleMessage("应用打开时自动运行"),
     "autoSetSystemDns": MessageLookupByLibrary.simpleMessage("自动设置系统DNS"),
     "autoUpdate": MessageLookupByLibrary.simpleMessage("自动更新"),
     "autoUpdateInterval": MessageLookupByLibrary.simpleMessage("自动更新间隔（分钟）"),
-    "availablePlans": MessageLookupByLibrary.simpleMessage("可购套餐"),
+    "availablePlans": MessageLookupByLibrary.simpleMessage("选择套餐"),
     "backup": MessageLookupByLibrary.simpleMessage("备份"),
     "backupAndRestore": MessageLookupByLibrary.simpleMessage("备份与恢复"),
     "backupAndRestoreDesc": MessageLookupByLibrary.simpleMessage(
@@ -176,7 +176,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "basicConfigDesc": MessageLookupByLibrary.simpleMessage("全局修改基本配置"),
     "bind": MessageLookupByLibrary.simpleMessage("绑定"),
     "blacklistMode": MessageLookupByLibrary.simpleMessage("黑名单模式"),
-    "buyWithBalance": MessageLookupByLibrary.simpleMessage("余额购买"),
+    "buyWithBalance": MessageLookupByLibrary.simpleMessage("使用余额"),
     "bypassDomain": MessageLookupByLibrary.simpleMessage("排除域名"),
     "bypassDomainDesc": MessageLookupByLibrary.simpleMessage("仅在系统代理启用时生效"),
     "cacheCorrupt": MessageLookupByLibrary.simpleMessage("缓存已损坏，是否清空？"),
@@ -464,7 +464,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "months": MessageLookupByLibrary.simpleMessage("月"),
     "monthsAgo": m16,
     "more": MessageLookupByLibrary.simpleMessage("更多"),
-    "myOrders": MessageLookupByLibrary.simpleMessage("我的订单"),
+    "myOrders": MessageLookupByLibrary.simpleMessage("已购套餐"),
     "name": MessageLookupByLibrary.simpleMessage("名称"),
     "nameSort": MessageLookupByLibrary.simpleMessage("按名称排序"),
     "nameserver": MessageLookupByLibrary.simpleMessage("域名服务器"),
@@ -485,7 +485,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "nicknameHint": MessageLookupByLibrary.simpleMessage("字母与数字，最多 12 个字符"),
     "nicknameLabel": MessageLookupByLibrary.simpleMessage("昵称"),
     "nicknameValidation": MessageLookupByLibrary.simpleMessage("请输入昵称"),
-    "noAvailablePlans": MessageLookupByLibrary.simpleMessage("暂无可购套餐"),
+    "noAvailablePlans": MessageLookupByLibrary.simpleMessage("暂无可选套餐"),
     "noData": MessageLookupByLibrary.simpleMessage("暂无数据"),
     "noHotKey": MessageLookupByLibrary.simpleMessage("暂无快捷键"),
     "noIcon": MessageLookupByLibrary.simpleMessage("无图标"),
@@ -497,7 +497,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "noPaymentMethods": MessageLookupByLibrary.simpleMessage("暂无可用支付方式"),
     "noProxy": MessageLookupByLibrary.simpleMessage("暂无代理"),
     "noProxyDesc": MessageLookupByLibrary.simpleMessage("请创建配置文件或者添加有效配置文件"),
-    "noPurchaseRecords": MessageLookupByLibrary.simpleMessage("暂无购买记录"),
+    "noPurchaseRecords": MessageLookupByLibrary.simpleMessage("暂未购买套餐"),
     "noResolve": MessageLookupByLibrary.simpleMessage("不解析IP"),
     "noUpgradablePlans": MessageLookupByLibrary.simpleMessage("暂无可升级的套餐"),
     "none": MessageLookupByLibrary.simpleMessage("无"),
@@ -522,7 +522,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "operationSuccess": MessageLookupByLibrary.simpleMessage("操作成功"),
     "optionalParameters": MessageLookupByLibrary.simpleMessage("可选项参数"),
     "options": MessageLookupByLibrary.simpleMessage("选项"),
-    "orderAndPay": MessageLookupByLibrary.simpleMessage("下单支付"),
+    "orderAndPay": MessageLookupByLibrary.simpleMessage("在线支付"),
     "other": MessageLookupByLibrary.simpleMessage("其他"),
     "otherContributors": MessageLookupByLibrary.simpleMessage("其他贡献者"),
     "outboundMode": MessageLookupByLibrary.simpleMessage("出站模式"),
@@ -563,7 +563,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "planEnded": MessageLookupByLibrary.simpleMessage("已结束"),
     "planInUse": MessageLookupByLibrary.simpleMessage("使用中"),
-    "planNotActivated": MessageLookupByLibrary.simpleMessage("未激活"),
+    "planNotActivated": MessageLookupByLibrary.simpleMessage("待激活"),
     "planNumber": m19,
     "pleaseBindWebDAV": MessageLookupByLibrary.simpleMessage("请绑定WebDAV"),
     "pleaseEnterScriptName": MessageLookupByLibrary.simpleMessage("请输入脚本名称"),

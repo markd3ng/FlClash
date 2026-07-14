@@ -360,18 +360,13 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
 
     state = state.copyWith(isRefreshing: true, error: null);
     try {
-      final oldSubscription = state.profile?.subscription;
       final userInfo = await CloudApiService().getUserInfo();
       _lastRefreshTime = DateTime.now();
       await _saveCache(
         userInfo.profile,
         userInfo.announcement ?? state.latestNotification,
       );
-
-      if (oldSubscription != null &&
-          oldSubscription != userInfo.profile.subscription) {
-        await _injectDefaultParams(userInfo.profile);
-      }
+      await _injectDefaultParams(userInfo.profile);
 
       state = state.copyWith(
         isRefreshing: false,
@@ -396,7 +391,11 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
   }
 
   Future<void> _injectDefaultParams(CloudProfile profile) async {
-    final tier = SubscriptionTier.fromServer(profile.subscription);
+    final tier = SubscriptionTier.fromServer(
+      profile.subscription,
+      planCode: profile.planCode,
+      planRank: profile.planRank,
+    );
     final newDefault = tier.defaultParams;
 
     final oldDefaultRaw = await OixParamsStorage.loadDefaultRaw();
@@ -416,7 +415,7 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
     if (!hasUserParams ||
         (userParams.encodeDefaultComparable() == oldDefaultRaw &&
             oldDefaultRaw != newDefaultEncoded)) {
-      effective = newDefault;
+      effective = userParams.applyingTierDefaults(newDefault);
     }
 
     effective = effective.stripEmergencyIfUnsupported(tier);
@@ -550,6 +549,7 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
 
     oixCloudConfigCache.clear();
     state = const CloudAccountState();
+    ref.read(storeProvider.notifier).reset();
     await _clearManagedProfiles();
   }
 

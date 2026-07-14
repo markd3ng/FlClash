@@ -7,6 +7,9 @@ part 'generated/cloud_account.g.dart';
 abstract class CloudProfile with _$CloudProfile {
   const factory CloudProfile({
     required String subscription,
+    @Default('') String planCode,
+    int? planRank,
+    @Default(<String>[]) List<String> nodeAccess,
     required DateTime expireTime,
     required String todayUsed,
     required String totalUsed,

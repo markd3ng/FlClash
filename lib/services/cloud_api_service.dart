@@ -355,7 +355,15 @@ class CloudApiService {
         : 0.0;
 
     final profile = CloudProfile(
-      subscription: info['plan']?.toString() ?? 'Default',
+      subscription: info['plan']?.toString() ?? '',
+      planCode: info['plan_code']?.toString() ?? '',
+      planRank: int.tryParse(info['plan_rank']?.toString() ?? ''),
+      nodeAccess:
+          (info['node_access'] as List?)
+              ?.map((value) => value?.toString() ?? '')
+              .where((value) => value.isNotEmpty)
+              .toList() ??
+          const [],
       expireTime: expireTime,
       todayUsed: info['today_used']?.toString() ?? '0',
       totalUsed: info['used']?.toString() ?? '0',
@@ -758,17 +766,24 @@ class CloudApiService {
     _ensureAuthorized(res.statusCode, dto.ret);
     return (
       success: dto.isSuccess,
-      message: dto.msg ?? (dto.isSuccess ? appLocalizations.operationSuccess : appLocalizations.operationFailed),
+      message:
+          dto.msg ??
+          (dto.isSuccess
+              ? appLocalizations.operationSuccess
+              : appLocalizations.operationFailed),
     );
   }
 
   Future<({bool success, String message})> buyPlanWithBalance(
     int shopId, {
+    String? billingPeriod,
     String? coupon,
     bool autoRenew = false,
   }) {
     return _postShopAction('/shop/buy', {
       'shop': shopId,
+      if (billingPeriod != null && billingPeriod.isNotEmpty)
+        'billing_period': billingPeriod,
       if (coupon != null && coupon.isNotEmpty) 'coupon_code': coupon,
       'autorenew': autoRenew ? 1 : 0,
     });
@@ -825,6 +840,7 @@ class CloudApiService {
   Future<PaymentInitiation> createOrder({
     required int shopId,
     required String payment,
+    String? billingPeriod,
     String? type,
     String? coin,
     String? coupon,
@@ -834,6 +850,8 @@ class CloudApiService {
       'shop': shopId,
       'payment': payment,
       'autorenew': autoRenew ? 1 : 0,
+      if (billingPeriod != null && billingPeriod.isNotEmpty)
+        'billing_period': billingPeriod,
       if (type != null && type.isNotEmpty) 'type': type,
       if (coin != null && coin.isNotEmpty) 'coin': coin,
       if (coupon != null && coupon.isNotEmpty) 'coupon_code': coupon,
@@ -856,8 +874,7 @@ class CloudApiService {
         ),
       ),
     );
-    if (res.statusCode == 401 ||
-        (res.data is Map && res.data['ret'] == 401)) {
+    if (res.statusCode == 401 || (res.data is Map && res.data['ret'] == 401)) {
       setToken(null);
       throw const CloudApiException('Unauthorized');
     }
@@ -869,7 +886,10 @@ class CloudApiService {
   }
 
   /// 查询支付订单状态：返回 true 表示已支付。
-  Future<bool> queryPaymentPaid(String pid, {String payment = 'cryptapi'}) async {
+  Future<bool> queryPaymentPaid(
+    String pid, {
+    String payment = 'cryptapi',
+  }) async {
     final res = await _client.post(
       '/pay/status',
       data: FormData.fromMap({'pid': pid, 'payment': payment}),

@@ -9,6 +9,13 @@ part of '../cloud_account.dart';
 _CloudProfile _$CloudProfileFromJson(Map<String, dynamic> json) =>
     _CloudProfile(
       subscription: json['subscription'] as String,
+      planCode: json['planCode'] as String? ?? '',
+      planRank: (json['planRank'] as num?)?.toInt(),
+      nodeAccess:
+          (json['nodeAccess'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const <String>[],
       expireTime: DateTime.parse(json['expireTime'] as String),
       todayUsed: json['todayUsed'] as String,
       totalUsed: json['totalUsed'] as String,
@@ -23,6 +30,9 @@ _CloudProfile _$CloudProfileFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$CloudProfileToJson(_CloudProfile instance) =>
     <String, dynamic>{
       'subscription': instance.subscription,
+      'planCode': instance.planCode,
+      'planRank': instance.planRank,
+      'nodeAccess': instance.nodeAccess,
       'expireTime': instance.expireTime.toIso8601String(),
       'todayUsed': instance.todayUsed,
       'totalUsed': instance.totalUsed,

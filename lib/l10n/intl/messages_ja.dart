@@ -67,7 +67,7 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m22(name) => "ノード ${name} はこの位置では使用できません";
 
-  static String m23(time) => "購入時間 ${time}";
+  static String m23(time) => "${time} に購入";
 
   static String m24(name, path) => "${name} は元の設定の ${path} で参照されています";
 
@@ -165,14 +165,14 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "autoLaunch": MessageLookupByLibrary.simpleMessage("自動起動"),
     "autoLaunchDesc": MessageLookupByLibrary.simpleMessage("システムの自動起動に従う"),
-    "autoRenewOff": MessageLookupByLibrary.simpleMessage("自動更新:オフ"),
-    "autoRenewOn": MessageLookupByLibrary.simpleMessage("自動更新:オン"),
+    "autoRenewOff": MessageLookupByLibrary.simpleMessage("自動更新：オフ"),
+    "autoRenewOn": MessageLookupByLibrary.simpleMessage("自動更新：オン"),
     "autoRun": MessageLookupByLibrary.simpleMessage("自動実行"),
     "autoRunDesc": MessageLookupByLibrary.simpleMessage("アプリ起動時に自動実行"),
     "autoSetSystemDns": MessageLookupByLibrary.simpleMessage("オートセットシステムDNS"),
     "autoUpdate": MessageLookupByLibrary.simpleMessage("自動更新"),
     "autoUpdateInterval": MessageLookupByLibrary.simpleMessage("自動更新間隔（分）"),
-    "availablePlans": MessageLookupByLibrary.simpleMessage("購入可能なプラン"),
+    "availablePlans": MessageLookupByLibrary.simpleMessage("プランを選択"),
     "backup": MessageLookupByLibrary.simpleMessage("バックアップ"),
     "backupAndRestore": MessageLookupByLibrary.simpleMessage("バックアップと復元"),
     "backupAndRestoreDesc": MessageLookupByLibrary.simpleMessage(
@@ -184,7 +184,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "basicConfigDesc": MessageLookupByLibrary.simpleMessage("基本設定をグローバルに変更"),
     "bind": MessageLookupByLibrary.simpleMessage("バインド"),
     "blacklistMode": MessageLookupByLibrary.simpleMessage("ブラックリストモード"),
-    "buyWithBalance": MessageLookupByLibrary.simpleMessage("残高で購入"),
+    "buyWithBalance": MessageLookupByLibrary.simpleMessage("残高を使用"),
     "bypassDomain": MessageLookupByLibrary.simpleMessage("バイパスドメイン"),
     "bypassDomainDesc": MessageLookupByLibrary.simpleMessage("システムプロキシ有効時のみ適用"),
     "cacheCorrupt": MessageLookupByLibrary.simpleMessage(
@@ -524,7 +524,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "months": MessageLookupByLibrary.simpleMessage("月"),
     "monthsAgo": m16,
     "more": MessageLookupByLibrary.simpleMessage("詳細"),
-    "myOrders": MessageLookupByLibrary.simpleMessage("マイオーダー"),
+    "myOrders": MessageLookupByLibrary.simpleMessage("購入済みプラン"),
     "name": MessageLookupByLibrary.simpleMessage("名前"),
     "nameSort": MessageLookupByLibrary.simpleMessage("名前順"),
     "nameserver": MessageLookupByLibrary.simpleMessage("ネームサーバー"),
@@ -551,7 +551,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "nicknameValidation": MessageLookupByLibrary.simpleMessage(
       "ニックネームを入力してください",
     ),
-    "noAvailablePlans": MessageLookupByLibrary.simpleMessage("購入可能なプランがありません"),
+    "noAvailablePlans": MessageLookupByLibrary.simpleMessage("利用可能なプランがありません"),
     "noData": MessageLookupByLibrary.simpleMessage("データなし"),
     "noHotKey": MessageLookupByLibrary.simpleMessage("ホットキーなし"),
     "noIcon": MessageLookupByLibrary.simpleMessage("なし"),
@@ -567,7 +567,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "noProxyDesc": MessageLookupByLibrary.simpleMessage(
       "プロファイルを作成するか、有効なプロファイルを追加してください",
     ),
-    "noPurchaseRecords": MessageLookupByLibrary.simpleMessage("購入履歴がありません"),
+    "noPurchaseRecords": MessageLookupByLibrary.simpleMessage("購入済みのプランはありません"),
     "noResolve": MessageLookupByLibrary.simpleMessage("IPを解決しない"),
     "noUpgradablePlans": MessageLookupByLibrary.simpleMessage(
       "アップグレード可能なプランがありません",
@@ -598,7 +598,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "operationSuccess": MessageLookupByLibrary.simpleMessage("操作に成功しました"),
     "optionalParameters": MessageLookupByLibrary.simpleMessage("オプションパラメータ"),
     "options": MessageLookupByLibrary.simpleMessage("オプション"),
-    "orderAndPay": MessageLookupByLibrary.simpleMessage("注文して支払う"),
+    "orderAndPay": MessageLookupByLibrary.simpleMessage("オンライン決済"),
     "other": MessageLookupByLibrary.simpleMessage("その他"),
     "otherContributors": MessageLookupByLibrary.simpleMessage("その他の貢献者"),
     "outboundMode": MessageLookupByLibrary.simpleMessage("アウトバウンドモード"),
@@ -647,7 +647,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "planEnded": MessageLookupByLibrary.simpleMessage("終了"),
     "planInUse": MessageLookupByLibrary.simpleMessage("使用中"),
-    "planNotActivated": MessageLookupByLibrary.simpleMessage("未アクティブ"),
+    "planNotActivated": MessageLookupByLibrary.simpleMessage("有効化待ち"),
     "planNumber": m19,
     "pleaseBindWebDAV": MessageLookupByLibrary.simpleMessage(
       "WebDAVをバインドしてください",

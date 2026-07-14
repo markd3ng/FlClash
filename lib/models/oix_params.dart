@@ -1,12 +1,44 @@
 enum SubscriptionTier {
   none,
-  bronze,
+  alu,
   premium;
 
-  static SubscriptionTier fromServer(String? raw) {
-    final s = raw?.trim() ?? '';
-    if (s.isEmpty || s == 'null' || s == 'Pass Iron') return none;
-    if (s == 'Pass Bronze') return bronze;
+  static SubscriptionTier fromServer(
+    String? raw, {
+    String? planCode,
+    int? planRank,
+  }) {
+    if (planRank != null) {
+      if (planRank >= 30) return premium;
+      if (planRank >= 20) return alu;
+      return none;
+    }
+
+    switch (planCode?.toLowerCase()) {
+      case 'alu':
+        return alu;
+      case 'bronze':
+      case 'silver':
+      case 'gold':
+      case 'platinum':
+      case 'diamond':
+      case 'developer':
+      case 'team':
+      case 'enterprise':
+      case 'realtime':
+      case 'titanium':
+        return premium;
+      case 'no_plan':
+      case 'iron':
+        return none;
+    }
+
+    final s = raw?.trim().toLowerCase() ?? '';
+    if (s.isEmpty || s == 'null' || s == 'no plan' || s == 'default') {
+      return none;
+    }
+    if (s == 'pass iron') return none;
+    if (s == 'pass alu' || s == 'pass bronze') return alu;
     return premium;
   }
 
@@ -14,7 +46,7 @@ enum SubscriptionTier {
 
   OixParams get defaultParams => switch (this) {
     none => const OixParams(),
-    bronze => const OixParams(level: NetworkLevel.emergency),
+    alu => const OixParams(level: NetworkLevel.emergency),
     premium => const OixParams(type: 'love'),
   };
 }
@@ -63,15 +95,15 @@ class OixParams {
       if (pair.isEmpty) continue;
       final eq = pair.indexOf('=');
       if (eq < 0) {
-        extras[pair] = '';
+        final key = _decodeQueryComponent(pair);
+        if (!_isReservedKey(key)) extras[key] = '';
         continue;
       }
-      final k = pair.substring(0, eq);
-      final v = pair.substring(eq + 1);
-      switch (k) {
+      final k = _decodeQueryComponent(pair.substring(0, eq));
+      final v = _decodeQueryComponent(pair.substring(eq + 1));
+      switch (k.toLowerCase()) {
         case 'lv':
           level = NetworkLevel.fromValue(v);
-          if (level == null) extras[k] = v;
         case 'type':
           type = v;
         case 'tfo':
@@ -96,12 +128,16 @@ class OixParams {
   String encode() {
     final segments = <String>[];
     if (level != null) segments.add('lv=${level!.value}');
-    if (type != null && type!.isNotEmpty) segments.add('type=$type');
+    if (type != null && type!.isNotEmpty) {
+      segments.add('type=${Uri.encodeQueryComponent(type!)}');
+    }
     if (tfo != null) segments.add('tfo=$tfo');
     if (simplerules) segments.add('simplerules=true');
     extras.forEach((k, v) {
-      if (k.isEmpty) return;
-      segments.add(v.isEmpty ? k : '$k=$v');
+      if (k.isEmpty || _isReservedKey(k)) return;
+      final encodedKey = Uri.encodeQueryComponent(k);
+      final encodedValue = Uri.encodeQueryComponent(v);
+      segments.add(v.isEmpty ? encodedKey : '$encodedKey=$encodedValue');
     });
     if (segments.isEmpty) return '';
     return '&${segments.join('&')}';
@@ -134,18 +170,21 @@ class OixParams {
 
   /// Encoded form excluding independent switches. Used to compare with tier
   /// defaults, which only own routing params like level/type.
-  String encodeDefaultComparable() => copyWith(
-    tfo: null,
-    simplerules: false,
-  ).encode();
+  String encodeDefaultComparable() =>
+      OixParams(level: level, type: type).encode();
 
-  String encodeEditableOptions() => encodeDefaultComparable();
+  String encodeEditableOptions() =>
+      copyWith(tfo: null, simplerules: false).encode();
+
+  OixParams applyingTierDefaults(OixParams defaults) {
+    return copyWith(level: defaults.level, type: defaults.type);
+  }
 
   /// Strip emergency mode if the current [tier] cannot support it.
   OixParams stripEmergencyIfUnsupported(SubscriptionTier tier) {
     if (level == NetworkLevel.emergency &&
         !tier.canUseEmergency &&
-        tier != SubscriptionTier.bronze) {
+        tier != SubscriptionTier.alu) {
       return copyWith(level: null);
     }
     return this;
@@ -182,6 +221,23 @@ class OixParams {
       extras.length,
       extrasHash,
     );
+  }
+
+  static String _decodeQueryComponent(String value) {
+    try {
+      return Uri.decodeQueryComponent(value);
+    } on FormatException {
+      return value;
+    }
+  }
+
+  static bool _isReservedKey(String key) {
+    return const {
+      'lv',
+      'type',
+      'tfo',
+      'simplerules',
+    }.contains(key.toLowerCase());
   }
 }
 
