@@ -11,9 +11,8 @@ import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/state.dart';
 import 'package:flutter/cupertino.dart';
 
-String formatRemoteVersion(String version) {
-  final normalized = version.trim();
-  return normalized.startsWith('v') ? normalized : 'v$normalized';
+String formatRemoteVersion(String remoteBuildNumber, String packageVersion) {
+  return 'v${packageVersion.trim()}+${remoteBuildNumber.trim()}';
 }
 
 class Request {
@@ -238,7 +237,10 @@ class Request {
 
         if (!hasUpdate) return null;
 
-        return formatRemoteVersion(remoteVersion);
+        return formatRemoteVersion(
+          remoteVersion,
+          globalState.packageInfo.version,
+        );
       } catch (_) {
         commonPrint.log(
           'checkForUpdate failed for $domain',
