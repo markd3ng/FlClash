@@ -25,6 +25,15 @@ abstract class CloudProfile with _$CloudProfile {
       _$CloudProfileFromJson(json);
 }
 
+extension CloudProfileManagedConfigAccess on CloudProfile {
+  bool get canFetchManagedConfig {
+    return planCode.trim().toLowerCase() != 'no_plan' &&
+        (planRank ?? 0) > 0 &&
+        nodeAccess.isNotEmpty &&
+        expireTime.isAfter(DateTime.now());
+  }
+}
+
 @freezed
 abstract class CloudNotification with _$CloudNotification {
   const factory CloudNotification({

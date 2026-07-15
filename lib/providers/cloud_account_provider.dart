@@ -23,6 +23,11 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
   Future<void>? _unauthorizedFuture;
   Future<void>? _refreshFuture;
 
+  bool get _canFetchManagedConfig {
+    return _lastRefreshTime != null &&
+        state.profile?.canFetchManagedConfig == true;
+  }
+
   String _requireNormalizedToken(String token) {
     final normalizedToken = CloudApiService.normalizeToken(token);
     if (normalizedToken == null) {
@@ -52,6 +57,7 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
   CloudAccountState build() {
     _initFuture = _init();
     registerEnsureCloudReady(ensureReady);
+    registerCanFetchManagedConfig(() => _canFetchManagedConfig);
     return const CloudAccountState();
   }
 
@@ -84,7 +90,7 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
       latestNotification: cached.notification,
     );
 
-    refreshProfile();
+    await refreshProfile(force: true);
   }
 
   ({CloudProfile? profile, CloudNotification? notification}) _readCachedProfile(
@@ -192,6 +198,8 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
   }
 
   Future<void> _addManagedProfile(String url) async {
+    if (!_canFetchManagedConfig) return;
+
     final profile = await appController.addProfileFormURL(url);
     if (profile != null) {
       await _activateManagedProfile(profile, requestStartIfNeeded: false);
@@ -327,13 +335,17 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
     _lastRefreshTime = DateTime.now();
     await _saveCache(profile, announcement);
     await _injectDefaultParams(profile);
-    await importManagedProfile(oixCloudManagedProfileUrl);
     state = state.copyWith(
       isLoading: false,
       isLoggedIn: true,
       profile: profile,
       latestNotification: announcement,
     );
+    if (_canFetchManagedConfig) {
+      await importManagedProfile(oixCloudManagedProfileUrl);
+    } else {
+      await _clearManagedProfiles();
+    }
     globalState.showNotifier(AppLocalizations.current.loginSuccess);
   }
 
@@ -373,6 +385,9 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
         profile: userInfo.profile,
         latestNotification: userInfo.announcement ?? state.latestNotification,
       );
+      if (!_canFetchManagedConfig) {
+        await _clearManagedProfiles();
+      }
     } catch (e) {
       if (CloudApiException.isHandledUnauthorized(e)) {
         return;
@@ -429,6 +444,10 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
 
   Future<void> syncManagedConfig() async {
     if (!state.isLoggedIn) return;
+    if (!_canFetchManagedConfig) {
+      await _clearManagedProfiles();
+      return;
+    }
 
     await _runManagedProfileTask(() async {
       state = state.copyWith(isSyncing: true, error: null);
@@ -462,6 +481,11 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
   }
 
   Future<void> importManagedProfile(String url) async {
+    if (!_canFetchManagedConfig) {
+      await _clearManagedProfiles();
+      return;
+    }
+
     await _runManagedProfileTask(() async {
       final existing = await _existingOixProfiles();
       if (existing.isEmpty) {

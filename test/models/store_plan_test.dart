@@ -260,6 +260,7 @@ void main() {
       expect(profile.planCode, '');
       expect(profile.planRank, isNull);
       expect(profile.nodeAccess, isEmpty);
+      expect(profile.canFetchManagedConfig, false);
       expect(
         SubscriptionTier.fromServer(
           profile.subscription,
@@ -278,6 +279,42 @@ void main() {
       expect(
         SubscriptionTier.fromServer('Pass Iron', planCode: 'iron', planRank: 0),
         SubscriptionTier.none,
+      );
+    });
+
+    test('managed config requires an active plan with node access', () {
+      CloudProfile profile({
+        String planCode = 'bronze',
+        int? planRank = 30,
+        List<String> nodeAccess = const ['edge', 'cia', 'ixp'],
+        DateTime? expireTime,
+      }) {
+        return CloudProfile(
+          subscription: 'Pass Bronze',
+          planCode: planCode,
+          planRank: planRank,
+          nodeAccess: nodeAccess,
+          expireTime: expireTime ?? DateTime.now().add(const Duration(days: 1)),
+          todayUsed: '0 B',
+          totalUsed: '0 B',
+          totalTraffic: '1 GB',
+          usageProgress: 0,
+          remaining: '1 GB',
+          balance: '0.00',
+          commission: '0.00',
+          points: '0',
+        );
+      }
+
+      expect(profile().canFetchManagedConfig, true);
+      expect(profile(planCode: 'no_plan').canFetchManagedConfig, false);
+      expect(profile(planRank: 0).canFetchManagedConfig, false);
+      expect(profile(nodeAccess: const []).canFetchManagedConfig, false);
+      expect(
+        profile(
+          expireTime: DateTime.now().subtract(const Duration(seconds: 1)),
+        ).canFetchManagedConfig,
+        false,
       );
     });
   });

@@ -18,6 +18,7 @@ part 'generated/profile.g.dart';
 typedef FetchManagedConfigCallback =
     Future<(Uint8List, String?)> Function(String paramString);
 FetchManagedConfigCallback? _fetchManagedConfigCallback;
+bool Function()? _canFetchManagedConfigCallback;
 
 /// Hook the cloud-account layer registers so [Profile.update] can wait for
 /// token bootstrap to finish before issuing a managed-config fetch.
@@ -71,6 +72,10 @@ Future<Uint8List> ensureEncryptedProfileBytes(Uint8List bytes) async {
 
 void registerFetchManagedConfig(FetchManagedConfigCallback callback) {
   _fetchManagedConfigCallback = callback;
+}
+
+void registerCanFetchManagedConfig(bool Function() callback) {
+  _canFetchManagedConfigCallback = callback;
 }
 
 void registerEnsureCloudReady(Future<void> Function() ensure) {
@@ -1144,6 +1149,9 @@ extension ProfileExtension on Profile {
 
         // Wait for cloud-account bootstrap so the API client has its token.
         await _ensureCloudReady?.call();
+        if (!(_canFetchManagedConfigCallback?.call() ?? true)) {
+          return this;
+        }
 
         final params = await OixParamsStorage.load();
         final paramWithTfo = params.encodeWithTfo();
