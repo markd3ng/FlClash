@@ -134,11 +134,10 @@ class GlobalState {
       utils.getLocaleForString(config.appSettingProps.locale) ??
           WidgetsBinding.instance.platformDispatcher.locale,
     );
-    await window?.init(
-      version,
-      config.windowProps,
-      silentLaunch: config.appSettingProps.silentLaunch,
+    final silentLaunch = shouldLaunchSilently(
+      enabled: config.appSettingProps.silentLaunch,
     );
+    await window?.init(version, config.windowProps, silentLaunch: silentLaunch);
     if (system.isAndroid) {
       await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     }

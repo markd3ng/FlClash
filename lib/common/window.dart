@@ -95,6 +95,7 @@ class Window {
   }
 
   Future<void> show() async {
+    await windowManager.ensureInitialized();
     render?.resume();
     await windowManager.show();
     await windowManager.focus();

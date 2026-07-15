@@ -7,6 +7,15 @@ import 'package:launch_at_startup/launch_at_startup.dart';
 import 'constant.dart';
 import 'system.dart';
 
+const silentLaunchArgument = '--silent-launch';
+
+bool shouldLaunchSilently({required bool enabled, List<String>? arguments}) {
+  return enabled &&
+      (arguments ?? Platform.executableArguments).contains(
+        silentLaunchArgument,
+      );
+}
+
 class AutoLaunch {
   static AutoLaunch? _instance;
 
@@ -14,6 +23,7 @@ class AutoLaunch {
     launchAtStartup.setup(
       appName: appName,
       appPath: Platform.resolvedExecutable,
+      args: const [silentLaunchArgument],
     );
   }
 

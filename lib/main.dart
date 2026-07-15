@@ -31,10 +31,20 @@ Future<void> main() async {
     );
   } catch (e, s) {
     commonPrint.log('init failed: $e stack: $s', logLevel: LogLevel.error);
-    return runApp(
+    runApp(
       MaterialApp(
         home: InitErrorScreen(error: e, stack: s),
       ),
     );
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        await window?.show();
+      } catch (showError, showStack) {
+        commonPrint.log(
+          'show init error window failed: $showError stack: $showStack',
+          logLevel: LogLevel.error,
+        );
+      }
+    });
   }
 }

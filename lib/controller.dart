@@ -476,10 +476,13 @@ extension InitControllerExt on AppController {
     updateTray();
     checkUpdate();
     autoLaunch?.updateStatus(_ref.read(appSettingProvider).autoLaunch);
-    if (!_ref.read(appSettingProvider).silentLaunch) {
-      window?.show();
+    final silentLaunch = shouldLaunchSilently(
+      enabled: _ref.read(appSettingProvider).silentLaunch,
+    );
+    if (!silentLaunch) {
+      await window?.show();
     } else {
-      window?.hide();
+      await window?.hide();
     }
     await _handleFailedPreference();
     await _connectCore();
