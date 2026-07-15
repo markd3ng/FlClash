@@ -1512,6 +1512,15 @@ extension SetupControllerExt on AppController {
     return res;
   }
 
+  Future<Map<String, dynamic>> getProxyChainProfileConfig(int profileId) async {
+    final setupState = await _ref.read(setupStateProvider(profileId).future);
+    final patchClashConfig = _ref.read(patchClashConfigProvider);
+    return getProfile(
+      setupState: setupState.copyWith(proxyChains: const []),
+      patchConfig: patchClashConfig,
+    );
+  }
+
   Future<Map> getProfileWithId(int profileId) async {
     var res = {};
     try {

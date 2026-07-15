@@ -575,12 +575,11 @@ class ProfileProxyChainsContent extends ConsumerStatefulWidget {
 class _ProfileProxyChainsContentState
     extends ConsumerState<ProfileProxyChainsContent> {
   final _proxyChainKey = utils.id;
-  Map<String, dynamic>? _rawConfig;
 
   Future<ProxyChainRawContext> _loadRawContext({
     Iterable<String> extra = const [],
   }) async {
-    final rawConfig = _rawConfig ??= await appController.getRawProfileConfig(
+    final rawConfig = await appController.getProxyChainProfileConfig(
       widget.profileId,
     );
     return buildProxyChainRawContext(
@@ -600,11 +599,10 @@ class _ProfileProxyChainsContentState
   }
 
   Future<void> _handleAddOrUpdateProxyChain([ProxyChain? proxyChain]) async {
-    final rawConfig = _rawConfig ??= await appController.getRawProfileConfig(
+    final rawConfig = await appController.getProxyChainProfileConfig(
       widget.profileId,
     );
     if (!mounted) return;
-    _rawConfig = rawConfig;
     final profileProxies =
         ref.read(profileProvider(widget.profileId))?.profileProxies ?? [];
     final rawContext = buildProxyChainRawContext(
@@ -664,16 +662,12 @@ class _ProfileProxyChainsContentState
       ref.read(currentProfileIdProvider) == widget.profileId;
 
   bool _canPutProxyChains(
-    List<ProxyChain> proxyChains, [
-    Map<String, String>? existingRelations,
-  ]) {
+    List<ProxyChain> proxyChains,
+    Map<String, String> existingRelations,
+  ) {
     final conflictName = findProxyChainConflictName(
       proxyChains,
-      existingRelations:
-          existingRelations ??
-          buildProxyChainRawContext(
-            rawConfig: _rawConfig ?? const {},
-          ).existingRelations,
+      existingRelations: existingRelations,
     );
     if (conflictName == null) {
       return true;
