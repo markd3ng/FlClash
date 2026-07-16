@@ -138,7 +138,40 @@ func patchSelectGroup(mapping map[string]string) {
 			continue
 		}
 
+		if proxySelector, ok := outbound.ProxyAdapter.(*outboundgroup.Selector); ok {
+			restoreSelectorSelection(proxySelector, selected)
+			continue
+		}
 		selector.ForceSet(selected)
+	}
+}
+
+type selectorState interface {
+	outboundgroup.SelectAble
+	Now() string
+}
+
+func restoreSelectorSelection(selector selectorState, selected string) {
+	if err := selector.Set(selected); err != nil {
+		normalizeSelectorSelection(selector)
+	}
+}
+
+func normalizeSelectorSelection(selector selectorState) {
+	selector.ForceSet(selector.Now())
+}
+
+func normalizeSelectorSelections() {
+	for _, proxy := range tunnel.AllProxies() {
+		outbound, ok := proxy.(*adapter.Proxy)
+		if !ok {
+			continue
+		}
+		selector, ok := outbound.ProxyAdapter.(*outboundgroup.Selector)
+		if !ok {
+			continue
+		}
+		normalizeSelectorSelection(selector)
 	}
 }
 

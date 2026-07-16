@@ -138,6 +138,7 @@ func handleGetProxies() ProxiesData {
 	runLock.Lock()
 	defer runLock.Unlock()
 
+	normalizeSelectorSelections()
 	nameList := config.GetProxyNameList()
 
 	proxies := make(map[string]constant.Proxy)

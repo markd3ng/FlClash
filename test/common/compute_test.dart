@@ -315,11 +315,15 @@ void main() {
       expect(group.getCurrentSelectedName(''), '');
     });
 
-    test('Selector group returns proxyName when non-empty', () {
+    test('Selector group returns proxyName when it still exists', () {
       const group = Group(
         name: 'sel',
         type: GroupType.Selector,
         now: 'proxy-now',
+        all: [
+          Proxy(name: 'proxy-now', type: 'Shadowsocks'),
+          Proxy(name: 'proxy-selected', type: 'Shadowsocks'),
+        ],
       );
       expect(group.getCurrentSelectedName('proxy-selected'), 'proxy-selected');
     });
@@ -331,6 +335,31 @@ void main() {
         now: 'proxy-now',
       );
       expect(group.getCurrentSelectedName(''), 'proxy-now');
+    });
+
+    test('Selector group falls back when selected proxy no longer exists', () {
+      const group = Group(
+        name: 'sel',
+        type: GroupType.Selector,
+        now: 'proxy-first',
+        all: [
+          Proxy(name: 'proxy-first', type: 'Shadowsocks'),
+          Proxy(name: 'proxy-second', type: 'Shadowsocks'),
+        ],
+      );
+      expect(group.getCurrentSelectedName('proxy-removed'), 'proxy-first');
+    });
+
+    test('Selector group does not infer selection from display order', () {
+      const group = Group(
+        name: 'sel',
+        type: GroupType.Selector,
+        all: [
+          Proxy(name: 'proxy-first', type: 'Shadowsocks'),
+          Proxy(name: 'proxy-second', type: 'Shadowsocks'),
+        ],
+      );
+      expect(group.getCurrentSelectedName('proxy-removed'), '');
     });
 
     test('Selector group returns empty when both empty', () {

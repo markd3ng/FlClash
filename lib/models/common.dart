@@ -325,6 +325,11 @@ extension GroupExt on Group {
     if (type.isComputedSelected) {
       return realNow.isNotEmpty ? realNow : proxyName;
     }
+    if (type == GroupType.Selector &&
+        proxyName.isNotEmpty &&
+        !all.any((proxy) => proxy.name == proxyName)) {
+      return realNow;
+    }
     return proxyName.isNotEmpty ? proxyName : realNow;
   }
 }

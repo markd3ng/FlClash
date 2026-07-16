@@ -44,6 +44,45 @@ bool shouldStopCoreAfterApplyFailure({
   return isRunning && !candidateValidationFailed;
 }
 
+bool canPublishGroupsForProfile(int? profileId, SetupState? appliedState) {
+  return profileId != null && appliedState?.profileId == profileId;
+}
+
+Profile mergeRefreshedProfile(Profile current, Profile refreshed) {
+  return current.copyWith(
+    label: current.label.isNotEmpty ? current.label : refreshed.label,
+    lastUpdateDate: refreshed.lastUpdateDate,
+    subscriptionInfo: refreshed.subscriptionInfo,
+  );
+}
+
+class ProfileApplyIntent {
+  bool _requiresForce = false;
+  FutureOr<void> Function()? _preloadInvoke;
+  Future<void>? _preloadFuture;
+
+  bool get requiresForce => _requiresForce || _preloadInvoke != null;
+
+  FutureOr<void> Function()? get preloadInvoke {
+    return _preloadInvoke == null ? null : _invokePreloadOnce;
+  }
+
+  Future<void> _invokePreloadOnce() {
+    return _preloadFuture ??= Future.sync(_preloadInvoke!);
+  }
+
+  void merge({required bool force, FutureOr<void> Function()? preloadInvoke}) {
+    _requiresForce = _requiresForce || force;
+    _preloadInvoke ??= preloadInvoke;
+  }
+
+  void clear() {
+    _requiresForce = false;
+    _preloadInvoke = null;
+    _preloadFuture = null;
+  }
+}
+
 Map<String, dynamic> createBackupConfigMap(Config config, int version) {
   final configMap = Map<String, dynamic>.from(
     jsonDecode(jsonEncode(sanitizeConfigForPreferences(config))) as Map,
@@ -326,6 +365,10 @@ class AppController {
   Object? _activeCoreLifecycleToken;
   bool _preferencesWritesSuspended = false;
   bool _preferencesWriteRequestedWhileSuspended = false;
+  int _groupsUpdateGeneration = 0;
+  int _profileApplyGeneration = 0;
+  int _pendingProfileApplies = 0;
+  final ProfileApplyIntent _profileApplyIntent = ProfileApplyIntent();
   bool isAttach = false;
   bool _isCloudLoginDialogShowing = false;
 
@@ -1018,9 +1061,21 @@ extension ProxiesControllerExt on AppController {
     debouncer.call(FunctionTag.updateGroups, updateGroups, duration: duration);
   }
 
-  void _syncCurrentProfileSelectedMap(List<Group> groups) {
+  bool _isCurrentGroupsUpdate(int? profileId, int generation) {
+    return generation == _groupsUpdateGeneration &&
+        profileId == _ref.read(currentProfileIdProvider) &&
+        canPublishGroupsForProfile(profileId, globalState.lastSetupState);
+  }
+
+  Future<void> _syncCurrentProfileSelectedMap(
+    List<Group> groups,
+    int? profileId,
+    int generation,
+  ) async {
     final currentProfile = _ref.read(currentProfileProvider);
-    if (currentProfile == null) {
+    if (currentProfile == null ||
+        currentProfile.id != profileId ||
+        !_isCurrentGroupsUpdate(profileId, generation)) {
       return;
     }
     final nextSelectedMap = <String, String>{};
@@ -1034,15 +1089,21 @@ extension ProxiesControllerExt on AppController {
         nextSelectedMap[entry.key] = proxyName;
       }
     }
+    if (!_isCurrentGroupsUpdate(profileId, generation)) {
+      return;
+    }
     if (stringAndStringMapEquality.equals(
       currentProfile.selectedMap,
       nextSelectedMap,
     )) {
       return;
     }
-    _ref
+    await _ref
         .read(profilesProvider.notifier)
-        .put(currentProfile.copyWith(selectedMap: nextSelectedMap));
+        .put(
+          currentProfile.copyWith(selectedMap: nextSelectedMap),
+          reportOnWait: false,
+        );
   }
 
   void changeProxyDebounce(String groupName, String proxyName) {
@@ -1056,11 +1117,21 @@ extension ProxiesControllerExt on AppController {
   }
 
   Future<void> updateGroups() async {
+    if (_pendingProfileApplies > 0) {
+      return;
+    }
+    await _updateGroups(_ref.read(currentProfileIdProvider));
+  }
+
+  Future<bool> _updateGroups(int? profileId) async {
+    final generation = ++_groupsUpdateGeneration;
+    if (!_isCurrentGroupsUpdate(profileId, generation)) {
+      return false;
+    }
     try {
       commonPrint.log('updateGroups');
       if (!await ensureCoreReady()) {
-        _ref.read(groupsProvider.notifier).value = [];
-        return;
+        return false;
       }
       final groups = await retry(
         task: () async {
@@ -1083,11 +1154,19 @@ extension ProxiesControllerExt on AppController {
         },
         retryIf: (res) => res.isEmpty,
       );
+      if (groups.isEmpty || !_isCurrentGroupsUpdate(profileId, generation)) {
+        return false;
+      }
       _ref.read(groupsProvider.notifier).value = groups;
-      _syncCurrentProfileSelectedMap(groups);
+      try {
+        await _syncCurrentProfileSelectedMap(groups, profileId, generation);
+      } catch (e) {
+        commonPrint.log('sync selected map error: $e');
+      }
+      return true;
     } catch (e) {
       commonPrint.log('updateGroups error: $e');
-      _ref.read(groupsProvider.notifier).value = [];
+      return false;
     }
   }
 
@@ -1398,23 +1477,66 @@ extension SetupControllerExt on AppController {
     bool silence = false,
     bool force = false,
     FutureOr<void> Function()? preloadInvoke,
+  }) {
+    _profileApplyIntent.merge(force: force, preloadInvoke: preloadInvoke);
+    final generation = ++_profileApplyGeneration;
+    _groupsUpdateGeneration++;
+    _pendingProfileApplies++;
+    return _serializeCoreLifecycle(
+      () => _applyProfileUnlocked(
+        generation: generation,
+        silence: silence,
+        preloadInvoke: _profileApplyIntent.preloadInvoke,
+      ),
+    ).whenComplete(() => _pendingProfileApplies--);
+  }
+
+  Future<bool> _applyProfileUnlocked({
+    required int generation,
+    required bool silence,
+    FutureOr<void> Function()? preloadInvoke,
   }) async {
     await autoUpdateIpv6();
-    if (!force && !await needSetup()) {
+    final profileId = _ref.read(currentProfileIdProvider);
+    bool isCurrentApply() {
+      return generation == _profileApplyGeneration &&
+          profileId == _ref.read(currentProfileIdProvider);
+    }
+
+    if (!isCurrentApply()) {
+      return true;
+    }
+    if (!_profileApplyIntent.requiresForce && !await needSetup()) {
+      return true;
+    }
+    if (!isCurrentApply()) {
       return true;
     }
     var keepCurrentCore = false;
     final res = await loadingRun<bool>(
       () async {
         try {
-          if (!await _setupConfig(preloadInvoke)) {
-            return false;
+          if (!await _setupConfig(profileId, generation, preloadInvoke)) {
+            return !isCurrentApply();
           }
         } on CandidateConfigValidationException {
           keepCurrentCore = true;
           rethrow;
         }
-        await updateGroups();
+        if (!isCurrentApply()) {
+          return true;
+        }
+        if (!await _updateGroups(profileId)) {
+          if (!isCurrentApply()) {
+            return true;
+          }
+          _ref.read(groupsProvider.notifier).value = [];
+          if (!_ref.read(initProvider)) return false;
+          throw appLocalizations.noProxy;
+        }
+        if (!isCurrentApply()) {
+          return true;
+        }
         await updateProviders();
 
         final groups = _ref.read(groupsProvider);
@@ -1446,12 +1568,16 @@ extension SetupControllerExt on AppController {
       silence: true,
       tag: !silence ? LoadingTag.proxies : null,
     );
+    if (!isCurrentApply()) {
+      return true;
+    }
+    _profileApplyIntent.clear();
     if (res != true &&
         shouldStopCoreAfterApplyFailure(
           isRunning: _ref.read(isStartProvider),
           candidateValidationFailed: keepCurrentCore,
         )) {
-      updateStatus(false);
+      await updateStatus(false);
     }
     return res == true;
   }
@@ -1539,20 +1665,40 @@ extension SetupControllerExt on AppController {
     return res;
   }
 
-  Future<bool> _setupConfig([FutureOr<void> Function()? preloadInvoke]) async {
+  Future<bool> _setupConfig(
+    int? profileId,
+    int generation, [
+    FutureOr<void> Function()? preloadInvoke,
+  ]) async {
+    bool isCurrentApply() {
+      return generation == _profileApplyGeneration &&
+          profileId == _ref.read(currentProfileIdProvider);
+    }
+
     commonPrint.log('setup ===>');
     if (!await ensureCoreReady()) {
       return false;
     }
-    var profile = _ref.read(currentProfileProvider);
-    final nextProfile = await _checkAndUpdateProfileWithCertificateRetry(
-      profile,
-    );
-    if (nextProfile != null) {
-      profile = nextProfile;
+    var profile = _ref.read(profilesProvider).getProfile(profileId);
+    await storageLock.synchronized(() async {
+      profile = _ref.read(profilesProvider).getProfile(profileId);
+      final nextProfile = await _checkAndUpdateProfileWithCertificateRetry(
+        profile,
+      );
+      if (nextProfile == null || !isCurrentApply()) {
+        return;
+      }
+      final currentProfile = _ref.read(profilesProvider).getProfile(profileId);
+      if (currentProfile == null) {
+        return;
+      }
+      profile = mergeRefreshedProfile(currentProfile, nextProfile);
       await _ref
           .read(profilesProvider.notifier)
-          .put(nextProfile, reportOnWait: false);
+          .put(profile!, reportOnWait: false);
+    });
+    if (!isCurrentApply()) {
+      return false;
     }
     final patchConfig = _ref.read(patchClashConfigProvider);
     final res = await _requestAdmin(patchConfig.tun.enable);
@@ -1577,6 +1723,9 @@ extension SetupControllerExt on AppController {
     if (validationMessage.isNotEmpty) {
       throw CandidateConfigValidationException(validationMessage);
     }
+    if (!isCurrentApply()) {
+      return false;
+    }
     final isOixCloud = profile?.isoixCloudProfile ?? false;
     if (isOixCloud && system.isAndroid) {
       final encryptedBytes = await ensureEncryptedProfileBytes(
@@ -1587,9 +1736,16 @@ extension SetupControllerExt on AppController {
       await File(configFilePath).safeWriteAsString(yamlString);
     }
 
-    final updatedSetupParams = setupParams.copyWith(
+    final latestProfile = _ref.read(profilesProvider).getProfile(profileId);
+    final updatedSetupParams = SetupParams(
+      selectedMap: latestProfile?.selectedMap ?? const {},
+      testUrl: _ref.read(appSettingProvider).testUrl,
       rawConfig: isOixCloud ? yamlString : '',
     );
+
+    if (!isCurrentApply()) {
+      return false;
+    }
 
     // WARNING: Do not print `updatedSetupParams.rawConfig` directly here.
     // It contains the full YAML plaintext and logging it would leak sensitive node information.
@@ -1604,6 +1760,9 @@ extension SetupControllerExt on AppController {
     );
     if (message.isNotEmpty) {
       throw message;
+    }
+    if (!isCurrentApply()) {
+      return false;
     }
     globalState.lastSetupState = setupState;
     if (system.isAndroid) {

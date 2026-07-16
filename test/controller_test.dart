@@ -10,9 +10,9 @@ import 'package:test/test.dart';
 void main() {
   test('backup config excludes WebDAV passwords', () {
     const secret = 'do-not-back-up-this-password';
-    final config = Config(
+    const config = Config(
       themeProps: defaultThemeProps,
-      davProps: const DAVProps(
+      davProps: DAVProps(
         uri: 'https://dav.example.com',
         user: 'user',
         password: secret,
@@ -137,6 +137,83 @@ void main() {
       );
     });
   });
+
+  group('canPublishGroupsForProfile', () {
+    const appliedState = SetupState(
+      profileId: 7,
+      profileLastUpdateDate: null,
+      overwriteType: OverwriteType.standard,
+      addedRules: [],
+      proxyChains: [],
+      profileProxies: [],
+      customProxyGroups: [],
+      customRules: [],
+      script: null,
+      overrideDns: false,
+      dns: Dns(),
+    );
+
+    test('accepts only the profile loaded by the core', () {
+      expect(canPublishGroupsForProfile(7, appliedState), true);
+      expect(canPublishGroupsForProfile(8, appliedState), false);
+      expect(canPublishGroupsForProfile(7, null), false);
+      expect(canPublishGroupsForProfile(null, null), false);
+    });
+  });
+
+  test('mergeRefreshedProfile preserves concurrent profile state', () {
+    final current = Profile.normal(label: 'Current', url: 'current-url')
+        .copyWith(
+          selectedMap: {'Group': 'Current Proxy'},
+          unfoldSet: {'Group'},
+          autoUpdate: false,
+        );
+    final refreshed = current.copyWith(
+      label: 'Remote',
+      url: 'old-url',
+      lastUpdateDate: DateTime(2026, 7, 16),
+      subscriptionInfo: const SubscriptionInfo(total: 100),
+      selectedMap: {'Group': 'Old Proxy'},
+      unfoldSet: const {},
+      autoUpdate: true,
+    );
+
+    final merged = mergeRefreshedProfile(current, refreshed);
+
+    expect(merged.label, 'Current');
+    expect(merged.url, 'current-url');
+    expect(merged.selectedMap, {'Group': 'Current Proxy'});
+    expect(merged.unfoldSet, {'Group'});
+    expect(merged.autoUpdate, false);
+    expect(merged.lastUpdateDate, refreshed.lastUpdateDate);
+    expect(merged.subscriptionInfo, refreshed.subscriptionInfo);
+  });
+
+  test(
+    'ProfileApplyIntent carries force and preload into a newer apply',
+    () async {
+      var preloadCalls = 0;
+      Future<void> preload() async => preloadCalls++;
+      final intent = ProfileApplyIntent()
+        ..merge(force: true, preloadInvoke: preload)
+        ..merge(force: false);
+
+      expect(intent.requiresForce, true);
+      expect(intent.preloadInvoke, isNotNull);
+
+      await Future.wait([
+        Future.sync(intent.preloadInvoke!),
+        Future.sync(intent.preloadInvoke!),
+      ]);
+      intent.merge(force: true);
+      await intent.preloadInvoke!();
+      expect(preloadCalls, 1);
+
+      intent.clear();
+      expect(intent.requiresForce, false);
+      expect(intent.preloadInvoke, isNull);
+    },
+  );
 
   group('commitRestoredFiles', () {
     test('commits staged files before database commit', () async {
