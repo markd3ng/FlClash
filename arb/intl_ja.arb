@@ -114,6 +114,7 @@
   "port": "ポート",
   "logLevel": "ログレベル",
   "show": "表示",
+  "hide": "非表示",
   "exit": "終了",
   "systemProxy": "システムプロキシ",
   "userAgent": "ユーザーエージェント",
@@ -681,5 +682,15 @@
   "fetchPlansFailed": "プランの取得に失敗しました",
   "fetchOrdersFailed": "購入履歴の取得に失敗しました",
   "storeSubtitle": "プラン購入 · チャージ · 更新とアップグレード",
-  "paymentUnknownResponse": "支払いエンドポイントが不明な形式を返しました"
+  "paymentUnknownResponse": "支払いエンドポイントが不明な形式を返しました",
+  "configParseErrorAtLine": "設定ファイルの {line} 行目の形式が正しくありません。",
+  "configTypeMismatch": "{expected} が必要ですが、{actual} が指定されています。",
+  "configYamlFormatHint": "この行付近のインデントと \"-\" のリスト記号を確認してください。",
+  "configValueTypeList": "リスト",
+  "configValueTypeObject": "オブジェクト",
+  "configValueTypeText": "テキスト",
+  "configValueTypeBoolean": "真偽値",
+  "configValueTypeInteger": "整数",
+  "configValueTypeNumber": "数値",
+  "configValueTypeNull": "空の値"
 }

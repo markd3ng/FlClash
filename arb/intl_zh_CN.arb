@@ -115,6 +115,7 @@
   "port": "端口",
   "logLevel": "日志等级",
   "show": "显示",
+  "hide": "隐藏",
   "exit": "退出",
   "systemProxy": "系统代理",
   "userAgent": "用户代理",
@@ -683,5 +684,15 @@
   "fetchPlansFailed": "获取套餐失败",
   "fetchOrdersFailed": "获取购买记录失败",
   "storeSubtitle": "购买套餐 · 充值 · 续费升级",
-  "paymentUnknownResponse": "支付接口返回未知格式"
+  "paymentUnknownResponse": "支付接口返回未知格式",
+  "configParseErrorAtLine": "第 {line} 行的配置格式不正确。",
+  "configTypeMismatch": "此处应为{expected}，但实际为{actual}。",
+  "configYamlFormatHint": "请检查该行附近的缩进和 \"-\" 列表标记。",
+  "configValueTypeList": "列表",
+  "configValueTypeObject": "对象",
+  "configValueTypeText": "文本",
+  "configValueTypeBoolean": "布尔值",
+  "configValueTypeInteger": "整数",
+  "configValueTypeNumber": "数字",
+  "configValueTypeNull": "空值"
 }

@@ -3,6 +3,7 @@ import 'package:fl_clash/l10n/l10n.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/services/cloud_api_service.dart';
 import 'package:fl_clash/state.dart';
+import 'package:fl_clash/widgets/input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -28,6 +29,7 @@ class _CloudLoginPageState extends ConsumerState<CloudLoginPage> {
 
   var _loginMode = _LoginMode.token;
   var _obscurePassword = true;
+  var _obscureToken = true;
   var _isSubmitting = false;
 
   @override
@@ -193,14 +195,14 @@ class _CloudLoginPageState extends ConsumerState<CloudLoginPage> {
           controller: _passwordController,
           enabled: !isLoading,
           obscureText: _obscurePassword,
+          enableSuggestions: false,
+          autocorrect: false,
           decoration: InputDecoration(
             labelText: AppLocalizations.current.passwordLabel,
             prefixIcon: const Icon(Icons.lock_outline),
             border: const OutlineInputBorder(),
-            suffixIcon: IconButton(
-              icon: Icon(
-                _obscurePassword ? Icons.visibility_off : Icons.visibility,
-              ),
+            suffixIcon: VisibilityToggleButton(
+              obscureText: _obscurePassword,
               onPressed: isLoading
                   ? null
                   : () => setState(() => _obscurePassword = !_obscurePassword),
@@ -240,18 +242,18 @@ class _CloudLoginPageState extends ConsumerState<CloudLoginPage> {
     return TextFormField(
       controller: _tokenController,
       enabled: !isLoading,
-      maxLines: _obscurePassword ? 1 : 4,
-      obscureText: _obscurePassword,
+      maxLines: _obscureToken ? 1 : 4,
+      obscureText: _obscureToken,
+      enableSuggestions: false,
+      autocorrect: false,
       decoration: InputDecoration(
         labelText: AppLocalizations.current.tokenLabel,
         border: const OutlineInputBorder(),
-        suffixIcon: IconButton(
-          icon: Icon(
-            _obscurePassword ? Icons.visibility_off : Icons.visibility,
-          ),
+        suffixIcon: VisibilityToggleButton(
+          obscureText: _obscureToken,
           onPressed: isLoading
               ? null
-              : () => setState(() => _obscurePassword = !_obscurePassword),
+              : () => setState(() => _obscureToken = !_obscureToken),
         ),
       ),
       validator: (v) =>
@@ -281,6 +283,7 @@ class _ForgotPasswordDialogState extends State<_ForgotPasswordDialog> {
 
   var _emailSent = false;
   var _obscurePassword = true;
+  var _obscureToken = true;
   var _isSubmitting = false;
 
   @override
@@ -368,10 +371,21 @@ class _ForgotPasswordDialogState extends State<_ForgotPasswordDialog> {
                 TextFormField(
                   controller: _tokenController,
                   enabled: !_isSubmitting,
+                  maxLines: _obscureToken ? 1 : 4,
+                  obscureText: _obscureToken,
+                  enableSuggestions: false,
+                  autocorrect: false,
                   decoration: InputDecoration(
                     labelText: AppLocalizations.current.resetTokenLabel,
                     prefixIcon: const Icon(Icons.key),
                     border: const OutlineInputBorder(),
+                    suffixIcon: VisibilityToggleButton(
+                      obscureText: _obscureToken,
+                      onPressed: _isSubmitting
+                          ? null
+                          : () =>
+                                setState(() => _obscureToken = !_obscureToken),
+                    ),
                   ),
                   validator: (v) => v?.trim().isEmpty == true
                       ? AppLocalizations.current.resetTokenValidation
@@ -382,16 +396,14 @@ class _ForgotPasswordDialogState extends State<_ForgotPasswordDialog> {
                   controller: _passwordController,
                   enabled: !_isSubmitting,
                   obscureText: _obscurePassword,
+                  enableSuggestions: false,
+                  autocorrect: false,
                   decoration: InputDecoration(
                     labelText: AppLocalizations.current.newPasswordLabel,
                     prefixIcon: const Icon(Icons.lock_outline),
                     border: const OutlineInputBorder(),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility_off
-                            : Icons.visibility,
-                      ),
+                    suffixIcon: VisibilityToggleButton(
+                      obscureText: _obscurePassword,
                       onPressed: _isSubmitting
                           ? null
                           : () => setState(

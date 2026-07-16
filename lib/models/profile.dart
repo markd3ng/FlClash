@@ -1206,7 +1206,7 @@ extension ProfileExtension on Profile {
       commonPrint.log('validateConfigWithBytes result: "$message"');
       if (message.isNotEmpty) {
         commonPrint.log('validateConfig failed', logLevel: LogLevel.warning);
-        throw message;
+        throw ConfigValidationException(message);
       }
 
       if (useEncryptedDiskStore) {
@@ -1227,7 +1227,7 @@ extension ProfileExtension on Profile {
       final message = await coreController.validateConfig(path);
       if (message.isNotEmpty) {
         commonPrint.log('====== validateConfig Message: $message');
-        throw message;
+        throw ConfigValidationException(message);
       }
       final mFile = await file;
       await tempFile.copy(mFile.path);
@@ -1241,7 +1241,7 @@ extension ProfileExtension on Profile {
     return storageLock.synchronized(() async {
       final message = await coreController.validateConfig(path);
       if (message.isNotEmpty) {
-        throw message;
+        throw ConfigValidationException(message);
       }
       final mFile = await file;
       await File(path).copy(mFile.path);

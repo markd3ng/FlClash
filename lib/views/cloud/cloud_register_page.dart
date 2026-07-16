@@ -6,6 +6,7 @@ import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/services/cloud_api_service.dart';
 import 'package:fl_clash/state.dart';
+import 'package:fl_clash/widgets/input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -37,6 +38,7 @@ class _CloudRegisterPageState extends ConsumerState<CloudRegisterPage> {
   String? _configError;
   bool _isSubmitting = false;
   bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
   bool _sendingCode = false;
   int _resendCountdown = 0;
   Timer? _resendTimer;
@@ -309,23 +311,21 @@ class _CloudRegisterPageState extends ConsumerState<CloudRegisterPage> {
                   controller: _passwordController,
                   enabled: !isLoading,
                   obscureText: _obscurePassword,
+                  enableSuggestions: false,
+                  autocorrect: false,
                   decoration: InputDecoration(
                     labelText: AppLocalizations.current.passwordLabel,
                     helperText: AppLocalizations.current.passwordRuleHint,
                     helperMaxLines: 2,
                     prefixIcon: const Icon(Icons.lock_outline),
                     border: const OutlineInputBorder(),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility_off
-                            : Icons.visibility,
-                      ),
+                    suffixIcon: VisibilityToggleButton(
+                      obscureText: _obscurePassword,
                       onPressed: isLoading
                           ? null
                           : () => setState(
-                                () => _obscurePassword = !_obscurePassword,
-                              ),
+                              () => _obscurePassword = !_obscurePassword,
+                            ),
                     ),
                   ),
                   validator: (v) => v?.isEmpty == true
@@ -336,12 +336,23 @@ class _CloudRegisterPageState extends ConsumerState<CloudRegisterPage> {
                 TextFormField(
                   controller: _confirmPasswordController,
                   enabled: !isLoading,
-                  obscureText: _obscurePassword,
+                  obscureText: _obscureConfirmPassword,
+                  enableSuggestions: false,
+                  autocorrect: false,
                   decoration: InputDecoration(
                     labelText: AppLocalizations.current.confirmPasswordLabel,
                     hintText: AppLocalizations.current.confirmPasswordHint,
                     prefixIcon: const Icon(Icons.lock_outline),
                     border: const OutlineInputBorder(),
+                    suffixIcon: VisibilityToggleButton(
+                      obscureText: _obscureConfirmPassword,
+                      onPressed: isLoading
+                          ? null
+                          : () => setState(
+                              () => _obscureConfirmPassword =
+                                  !_obscureConfirmPassword,
+                            ),
+                    ),
                   ),
                   validator: (v) {
                     if (v?.isEmpty == true) {

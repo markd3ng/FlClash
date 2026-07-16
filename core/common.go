@@ -6,6 +6,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"runtime"
 	"sync"
 
 	"github.com/metacubex/mihomo/adapter"
@@ -117,6 +118,7 @@ func updateListeners() {
 	listener.ReCreateVmess(general.VmessConfig, tunnel.Tunnel)
 	listener.ReCreateTuic(general.TuicServer, tunnel.Tunnel)
 	if !features.Android {
+		general.Tun.Device = normalizeTunDeviceName(general.Tun.Device, runtime.GOOS)
 		listener.ReCreateTun(general.Tun, tunnel.Tunnel)
 	}
 }

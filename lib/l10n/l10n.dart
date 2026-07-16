@@ -834,10 +834,10 @@ class AppLocalizations {
     );
   }
 
-  /// `profile parse error`
+  /// `Profile parse error`
   String get profileParseErrorDesc {
     return Intl.message(
-      'profile parse error',
+      'Profile parse error',
       name: 'profileParseErrorDesc',
       desc: '',
       args: [],
@@ -872,6 +872,11 @@ class AppLocalizations {
   /// `Show`
   String get show {
     return Intl.message('Show', name: 'show', desc: '', args: []);
+  }
+
+  /// `Hide`
+  String get hide {
+    return Intl.message('Hide', name: 'hide', desc: '', args: []);
   }
 
   /// `Exit`
@@ -5579,6 +5584,106 @@ class AppLocalizations {
     return Intl.message(
       'Payment endpoint returned an unknown format',
       name: 'paymentUnknownResponse',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The configuration format is invalid at line {line}.`
+  String configParseErrorAtLine(Object line) {
+    return Intl.message(
+      'The configuration format is invalid at line $line.',
+      name: 'configParseErrorAtLine',
+      desc: '',
+      args: [line],
+    );
+  }
+
+  /// `Expected {expected}, but found {actual}.`
+  String configTypeMismatch(Object expected, Object actual) {
+    return Intl.message(
+      'Expected $expected, but found $actual.',
+      name: 'configTypeMismatch',
+      desc: '',
+      args: [expected, actual],
+    );
+  }
+
+  /// `Check the indentation and "-" list markers near this line.`
+  String get configYamlFormatHint {
+    return Intl.message(
+      'Check the indentation and "-" list markers near this line.',
+      name: 'configYamlFormatHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `a list`
+  String get configValueTypeList {
+    return Intl.message(
+      'a list',
+      name: 'configValueTypeList',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `an object`
+  String get configValueTypeObject {
+    return Intl.message(
+      'an object',
+      name: 'configValueTypeObject',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `text`
+  String get configValueTypeText {
+    return Intl.message(
+      'text',
+      name: 'configValueTypeText',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `a boolean`
+  String get configValueTypeBoolean {
+    return Intl.message(
+      'a boolean',
+      name: 'configValueTypeBoolean',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `an integer`
+  String get configValueTypeInteger {
+    return Intl.message(
+      'an integer',
+      name: 'configValueTypeInteger',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `a number`
+  String get configValueTypeNumber {
+    return Intl.message(
+      'a number',
+      name: 'configValueTypeNumber',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `an empty value`
+  String get configValueTypeNull {
+    return Intl.message(
+      'an empty value',
+      name: 'configValueTypeNull',
       desc: '',
       args: [],
     );

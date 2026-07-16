@@ -6,6 +6,7 @@ import 'dart:typed_data';
 
 import 'package:fl_clash/core/core.dart';
 import 'package:fl_clash/enum/enum.dart';
+import 'package:fl_clash/l10n/l10n.dart';
 import 'package:fl_clash/plugins/app.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/services/cloud_api_service.dart';
@@ -28,13 +29,83 @@ const _persistentLogMaxBytes = 1024 * 1024;
 const _persistentLogKeepBytes = 768 * 1024;
 const _coreDisconnectedMessage = 'Core is not connected';
 
-class CandidateConfigValidationException implements Exception {
-  final String message;
+class CandidateConfigValidationException extends ConfigValidationException {
+  const CandidateConfigValidationException(super.message);
+}
 
-  const CandidateConfigValidationException(this.message);
+String formatConfigValidationMessage(
+  String message,
+  AppLocalizations localizations,
+) {
+  final normalized = message
+      .trim()
+      .replaceFirst(RegExp(r'^Parse Error:\s*', caseSensitive: false), '');
+  final typeMismatchPattern = RegExp(
+    r'line\s+(\d+):\s+cannot unmarshal\s+(!![a-z]+)(?:\s+.*)?\s+into\s+([^\r\n]+)',
+    caseSensitive: false,
+  );
+  final matches = typeMismatchPattern.allMatches(normalized).toList();
+  if (matches.isNotEmpty) {
+    final issues = <String>[];
+    for (final match in matches) {
+      final actualType = _configValueTypeLabel(match.group(2)!, localizations);
+      final expectedType = _configValueTypeLabel(
+        match.group(3)!,
+        localizations,
+      );
+      if (actualType == null || expectedType == null) {
+        return normalized;
+      }
+      issues.add(
+        '${localizations.configParseErrorAtLine(match.group(1)!)}\n'
+        '${localizations.configTypeMismatch(expectedType, actualType)}',
+      );
+    }
+    return '${issues.join('\n\n')}\n\n${localizations.configYamlFormatHint}';
+  }
 
-  @override
-  String toString() => message;
+  final lineMatch = RegExp(
+    r'(?:yaml:\s*)?line\s+(\d+):\s*(.+)',
+    caseSensitive: false,
+    multiLine: true,
+  ).firstMatch(normalized);
+  if (lineMatch == null) {
+    return normalized;
+  }
+  return '${localizations.configParseErrorAtLine(lineMatch.group(1)!)}\n\n'
+      '${lineMatch.group(2)!.trim()}\n\n'
+      '${localizations.configYamlFormatHint}';
+}
+
+String? _configValueTypeLabel(
+  String rawType,
+  AppLocalizations localizations,
+) {
+  final type = rawType.trim().toLowerCase();
+  if (type.startsWith('[]') || type == '!!seq') {
+    return localizations.configValueTypeList;
+  }
+  if (type.startsWith('map[') || type == '!!map') {
+    return localizations.configValueTypeObject;
+  }
+  if (type == 'string' || type == '!!str') {
+    return localizations.configValueTypeText;
+  }
+  if (type == 'bool' || type == 'boolean' || type == '!!bool') {
+    return localizations.configValueTypeBoolean;
+  }
+  if (type.startsWith('int') ||
+      type.startsWith('uint') ||
+      type == '!!int') {
+    return localizations.configValueTypeInteger;
+  }
+  if (type.startsWith('float') || type == '!!float') {
+    return localizations.configValueTypeNumber;
+  }
+  if (type == 'nil' || type == 'null' || type == '!!null') {
+    return localizations.configValueTypeNull;
+  }
+  return null;
 }
 
 bool shouldStopCoreAfterApplyFailure({
@@ -2740,12 +2811,19 @@ extension CommonControllerExt on AppController {
         return null;
       }
       commonPrint.log('$title ===> $e, $s', logLevel: LogLevel.warning);
+      final isConfigValidationError = e is ConfigValidationException;
+      final message = isConfigValidationError
+          ? formatConfigValidationMessage(e.message, appLocalizations)
+          : e.toString();
       if (silence) {
-        globalState.showNotifier(e.toString());
+        globalState.showNotifier(message);
       } else {
         globalState.showMessage(
-          title: title ?? appLocalizations.tip,
-          message: TextSpan(text: e.toString()),
+          title: isConfigValidationError
+              ? appLocalizations.profileParseErrorDesc
+              : title ?? appLocalizations.tip,
+          message: TextSpan(text: message),
+          cancelable: !isConfigValidationError,
         );
       }
       return null;

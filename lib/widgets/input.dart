@@ -16,6 +16,30 @@ import 'effect.dart';
 import 'list.dart';
 import 'theme.dart';
 
+class VisibilityToggleButton extends StatelessWidget {
+  final bool obscureText;
+  final VoidCallback? onPressed;
+
+  const VisibilityToggleButton({
+    super.key,
+    required this.obscureText,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      tooltip: obscureText
+          ? context.appLocalizations.show
+          : context.appLocalizations.hide,
+      icon: Icon(
+        obscureText ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+      ),
+      onPressed: onPressed,
+    );
+  }
+}
+
 class OptionsDialog<T> extends StatelessWidget {
   final String title;
   final List<T> options;
@@ -130,6 +154,7 @@ class _InputDialogState extends State<InputDialog> {
   final _formKey = GlobalKey<FormState>();
 
   late TextEditingController _textController;
+  late bool _obscureText;
 
   String get value => widget.value;
 
@@ -141,6 +166,7 @@ class _InputDialogState extends State<InputDialog> {
   void initState() {
     super.initState();
     _textController = TextEditingController(text: value);
+    _obscureText = widget.obscureText ?? false;
   }
 
   Future<void> _handleUpdate() async {
@@ -195,7 +221,9 @@ class _InputDialogState extends State<InputDialog> {
             TextFormField(
               maxLength: widget.maxLength,
               inputFormatters: widget.inputFormatters,
-              obscureText: widget.obscureText ?? false,
+              obscureText: _obscureText,
+              enableSuggestions: widget.obscureText != true,
+              autocorrect: widget.obscureText != true,
               keyboardType: widget.keyboardType ?? TextInputType.url,
               maxLines: widget.obscureText == true ? 1 : 5,
               minLines: 1,
@@ -206,6 +234,14 @@ class _InputDialogState extends State<InputDialog> {
               decoration: InputDecoration(
                 border: const OutlineInputBorder(),
                 suffixText: suffixText,
+                suffixIcon: widget.obscureText == true
+                    ? VisibilityToggleButton(
+                        obscureText: _obscureText,
+                        onPressed: () {
+                          setState(() => _obscureText = !_obscureText);
+                        },
+                      )
+                    : null,
                 hintText: widget.hintText,
                 labelText: widget.labelText,
               ),

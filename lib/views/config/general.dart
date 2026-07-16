@@ -746,6 +746,7 @@ class _ExternalControllerDialogState
 
   late final TextEditingController _addressController;
   late final TextEditingController _secretController;
+  bool _obscureSecret = true;
 
   @override
   void initState() {
@@ -884,12 +885,21 @@ class _ExternalControllerDialogState
                 maxLines: 1,
                 minLines: 1,
                 controller: _secretController,
+                obscureText: _obscureSecret,
+                enableSuggestions: false,
+                autocorrect: false,
                 onFieldSubmitted: (_) {
                   _handleUpdate();
                 },
                 decoration: InputDecoration(
                   border: const OutlineInputBorder(),
                   labelText: appLocalizations.password,
+                  suffixIcon: VisibilityToggleButton(
+                    obscureText: _obscureSecret,
+                    onPressed: () {
+                      setState(() => _obscureSecret = !_obscureSecret);
+                    },
+                  ),
                 ),
               ),
             ],

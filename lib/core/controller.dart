@@ -11,6 +11,15 @@ import 'package:fl_clash/services/config_key_store.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart';
 
+class ConfigValidationException implements Exception {
+  final String message;
+
+  const ConfigValidationException(this.message);
+
+  @override
+  String toString() => message;
+}
+
 class CoreController {
   static CoreController? _instance;
   late CoreHandlerInterface _interface;

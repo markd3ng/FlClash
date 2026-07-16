@@ -373,7 +373,7 @@ class _WebDAVFormDialogState extends ConsumerState<WebDAVFormDialog> {
   late TextEditingController _uriController;
   late TextEditingController _userController;
   late TextEditingController _passwordController;
-  final _obscureController = ValueNotifier<bool>(true);
+  bool _obscurePassword = true;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   @override
@@ -401,7 +401,6 @@ class _WebDAVFormDialogState extends ConsumerState<WebDAVFormDialog> {
 
   @override
   void dispose() {
-    _obscureController.dispose();
     _uriController.dispose();
     _userController.dispose();
     _passwordController.dispose();
@@ -455,37 +454,28 @@ class _WebDAVFormDialogState extends ConsumerState<WebDAVFormDialog> {
                 return null;
               },
             ),
-            ValueListenableBuilder(
-              valueListenable: _obscureController,
-              builder: (_, obscure, _) {
-                return TextFormField(
-                  controller: _passwordController,
-                  inputFormatters: TextInputLimits.limit(
-                    TextInputLimits.password,
-                  ),
-                  obscureText: obscure,
-                  decoration: InputDecoration(
-                    prefixIcon: const Icon(Icons.password),
-                    border: const OutlineInputBorder(),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        obscure ? Icons.visibility : Icons.visibility_off,
-                      ),
-                      onPressed: () {
-                        _obscureController.value = !obscure;
-                      },
-                    ),
-                    labelText: appLocalizations.password,
-                  ),
-                  validator: (String? value) {
-                    if (value == null || value.isEmpty) {
-                      return appLocalizations.emptyTip(
-                        appLocalizations.password,
-                      );
-                    }
-                    return null;
+            TextFormField(
+              controller: _passwordController,
+              inputFormatters: TextInputLimits.limit(TextInputLimits.password),
+              obscureText: _obscurePassword,
+              enableSuggestions: false,
+              autocorrect: false,
+              decoration: InputDecoration(
+                prefixIcon: const Icon(Icons.password),
+                border: const OutlineInputBorder(),
+                suffixIcon: VisibilityToggleButton(
+                  obscureText: _obscurePassword,
+                  onPressed: () {
+                    setState(() => _obscurePassword = !_obscurePassword);
                   },
-                );
+                ),
+                labelText: appLocalizations.password,
+              ),
+              validator: (String? value) {
+                if (value == null || value.isEmpty) {
+                  return appLocalizations.emptyTip(appLocalizations.password);
+                }
+                return null;
               },
             ),
           ],

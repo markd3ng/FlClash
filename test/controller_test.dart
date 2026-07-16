@@ -3,11 +3,43 @@ import 'dart:io';
 import 'package:fl_clash/controller.dart';
 import 'package:fl_clash/common/preferences.dart';
 import 'package:fl_clash/enum/enum.dart';
+import 'package:fl_clash/l10n/l10n.dart';
 import 'package:fl_clash/models/models.dart';
+import 'package:flutter/widgets.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 
 void main() {
+  test('formats YAML type mismatch for the profile error dialog', () async {
+    final localizations = await AppLocalizations.load(
+      const Locale('zh', 'CN'),
+    );
+
+    final message = formatConfigValidationMessage(
+      'Parse Error: yaml: unmarshal errors:\n'
+      '  line 16: cannot unmarshal !!map into []map[string]interface {}',
+      localizations,
+    );
+
+    expect(
+      message,
+      '第 16 行的配置格式不正确。\n'
+      '此处应为列表，但实际为对象。\n\n'
+      '请检查该行附近的缩进和 "-" 列表标记。',
+    );
+
+    expect(
+      formatConfigValidationMessage(
+        "Parse Error: yaml: unmarshal errors:\n"
+        "  line 8: cannot unmarshal !!str 'abc' into int",
+        localizations,
+      ),
+      '第 8 行的配置格式不正确。\n'
+      '此处应为整数，但实际为文本。\n\n'
+      '请检查该行附近的缩进和 "-" 列表标记。',
+    );
+  });
+
   test('backup config excludes WebDAV passwords', () {
     const secret = 'do-not-back-up-this-password';
     const config = Config(
