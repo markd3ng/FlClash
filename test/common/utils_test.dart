@@ -58,8 +58,19 @@ void main() {
       expect(utils.getTimeText(3661000), '01:01:01');
     });
 
-    test('caps at 99:59:59', () {
-      expect(utils.getTimeText(100 * 3600 * 1000), '99:59:59');
+    test('omits seconds when hours exceed two digits', () {
+      expect(
+        utils.getTimeText(
+          const Duration(hours: 99, minutes: 59, seconds: 59).inMilliseconds,
+        ),
+        '99:59:59',
+      );
+      expect(
+        utils.getTimeText(
+          const Duration(hours: 100, minutes: 2, seconds: 5).inMilliseconds,
+        ),
+        '100:02',
+      );
     });
   });
 

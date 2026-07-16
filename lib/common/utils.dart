@@ -75,19 +75,20 @@ class Utils {
     return '${hex.substring(0, 8)}-${hex.substring(8, 12)}-${hex.substring(12, 16)}-${hex.substring(16, 20)}-${hex.substring(20, 32)}';
   }
 
-  String getTimeText(int? timeStamp) {
-    if (timeStamp == null) {
+  String getTimeText(int? milliseconds) {
+    if (milliseconds == null) {
       return '00:00:00';
     }
-    final diff = timeStamp / 1000;
-    final inHours = (diff / 3600).floor();
+    final duration = Duration(milliseconds: milliseconds);
+    final inHours = duration.inHours;
+    final inMinutes = duration.inMinutes % 60;
+    final hoursText = inHours.toString().padLeft(2, '0');
     if (inHours > 99) {
-      return '99:59:59';
+      return '$hoursText:${getDateStringLast2(inMinutes)}';
     }
-    final inMinutes = (diff / 60 % 60).floor();
-    final inSeconds = (diff % 60).floor();
+    final inSeconds = duration.inSeconds % 60;
 
-    return '${getDateStringLast2(inHours)}:${getDateStringLast2(inMinutes)}:${getDateStringLast2(inSeconds)}';
+    return '$hoursText:${getDateStringLast2(inMinutes)}:${getDateStringLast2(inSeconds)}';
   }
 
   Locale? getLocaleForString(String? localString) {
@@ -141,11 +142,6 @@ class Utils {
     }
   }
 
-  String get traySuffix {
-    final suffix = system.isWindows ? 'ico' : 'png';
-    return 'assets/images/icon/status_2.$suffix';
-  }
-
   int compareVersions(String version1, String version2) {
     final v1 = version1.split('+')[0].split('.');
     final v2 = version2.split('+')[0].split('.');
@@ -172,12 +168,6 @@ class Utils {
         : 0;
     return build1.compareTo(build2);
   }
-
-  // String getPinyin(String value) {
-  //   return value.isNotEmpty
-  //       ? PinyinHelper.getFirstWordPinyin(value.substring(0, 1))
-  //       : '';
-  // }
 
   String? getFileNameForDisposition(String? disposition) {
     if (disposition == null) return null;
