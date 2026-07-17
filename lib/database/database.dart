@@ -38,16 +38,30 @@ class Database extends _$Database {
         await customStatement('PRAGMA foreign_keys = ON');
       },
       onUpgrade: (m, from, to) async {
+        final profileColumns = await _profileColumnNames();
         if (from < 2) {
-          await m.addColumn(profiles, profiles.proxyChains);
-          await m.addColumn(profiles, profiles.profileProxies);
+          if (profileColumns.add('proxy_chains')) {
+            await m.addColumn(profiles, profiles.proxyChains);
+          }
+          if (profileColumns.add('profile_proxies')) {
+            await m.addColumn(profiles, profiles.profileProxies);
+          }
         }
         if (from < 3) {
-          await m.addColumn(profiles, profiles.customProxyGroups);
-          await m.addColumn(profiles, profiles.customRules);
+          if (profileColumns.add('custom_proxy_groups')) {
+            await m.addColumn(profiles, profiles.customProxyGroups);
+          }
+          if (profileColumns.add('custom_rules')) {
+            await m.addColumn(profiles, profiles.customRules);
+          }
         }
       },
     );
+  }
+
+  Future<Set<String>> _profileColumnNames() async {
+    final rows = await customSelect('PRAGMA table_info("profiles")').get();
+    return rows.map((row) => row.read<String>('name')).toSet();
   }
 
   static LazyDatabase _openConnection() {
