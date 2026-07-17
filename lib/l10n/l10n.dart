@@ -4639,11 +4639,31 @@ class AppLocalizations {
     return Intl.message('Logout', name: 'logoutTitle', desc: '', args: []);
   }
 
-  /// `Are you sure you want to logout?`
+  /// `The token is removed from this device either way. Deleting it from oixCloud may sign out other devices using the same token.`
   String get logoutContent {
     return Intl.message(
-      'Are you sure you want to logout?',
+      'The token is removed from this device either way. Deleting it from oixCloud may sign out other devices using the same token.',
       name: 'logoutContent',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Sign Out Only`
+  String get logoutLocalOnly {
+    return Intl.message(
+      'Sign Out Only',
+      name: 'logoutLocalOnly',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Sign Out and Delete Token`
+  String get logoutAndDeleteToken {
+    return Intl.message(
+      'Sign Out and Delete Token',
+      name: 'logoutAndDeleteToken',
       desc: '',
       args: [],
     );

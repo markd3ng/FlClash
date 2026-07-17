@@ -566,7 +566,15 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
     }
   }
 
-  Future<void> signOut() async {
+  Future<bool> signOut({bool revokeToken = false}) async {
+    if (revokeToken) {
+      try {
+        await CloudApiService().logout();
+      } catch (e) {
+        state = state.copyWith(error: CloudApiException.clean(e));
+        return false;
+      }
+    }
     _lastRefreshTime = null;
     await _clearStoredToken();
     await _clearCache();
@@ -575,6 +583,7 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
     state = const CloudAccountState();
     ref.read(storeProvider.notifier).reset();
     await _clearManagedProfiles();
+    return true;
   }
 
   Future<void> handleUnauthorized() {

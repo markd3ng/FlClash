@@ -5,6 +5,7 @@ import 'package:fl_clash/l10n/l10n.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/services/cloud_api_service.dart';
+import 'package:fl_clash/state.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
@@ -15,6 +16,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'cloud_profile_card.dart';
 import 'cloud_register_page.dart';
 import 'store_page.dart';
+
+enum _LogoutChoice { localOnly, deleteToken }
 
 class CloudAccountPage extends ConsumerStatefulWidget {
   const CloudAccountPage({super.key});
@@ -183,20 +186,15 @@ class _CloudAccountPageState extends ConsumerState<CloudAccountPage> {
           const SizedBox(height: 16),
           CommonCard(
             onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const CloudStorePage(),
-                ),
-              );
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const CloudStorePage()));
             },
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.storefront,
-                    color: context.colorScheme.primary,
-                  ),
+                  Icon(Icons.storefront, color: context.colorScheme.primary),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -340,25 +338,39 @@ class _CloudAccountPageState extends ConsumerState<CloudAccountPage> {
   }
 
   Future<void> _handleLogout() async {
-    final res = await showDialog<bool>(
+    final choice = await showDialog<_LogoutChoice>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(AppLocalizations.current.logoutTitle),
         content: Text(AppLocalizations.current.logoutContent),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(context),
             child: Text(AppLocalizations.current.cancel),
           ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, _LogoutChoice.localOnly),
+            child: Text(AppLocalizations.current.logoutLocalOnly),
+          ),
           FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(AppLocalizations.current.confirm),
+            onPressed: () => Navigator.pop(context, _LogoutChoice.deleteToken),
+            child: Text(AppLocalizations.current.logoutAndDeleteToken),
           ),
         ],
       ),
     );
-    if (res == true) {
-      ref.read(cloudAccountProvider.notifier).signOut();
+    if (choice == null) return;
+    final success = await ref
+        .read(cloudAccountProvider.notifier)
+        .signOut(revokeToken: choice == _LogoutChoice.deleteToken);
+    if (!success) {
+      final error = ref.read(cloudAccountProvider).error;
+      globalState.showMessage(
+        title: AppLocalizations.current.operationFailed,
+        message: TextSpan(
+          text: error ?? AppLocalizations.current.operationFailed,
+        ),
+      );
     }
   }
 }

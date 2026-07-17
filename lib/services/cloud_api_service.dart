@@ -588,6 +588,19 @@ class CloudApiService {
     return _parseUserInfo(responseDto.data!);
   }
 
+  Future<void> logout() async {
+    if (_cachedToken == null || _cachedToken!.isEmpty) return;
+    final res = await _client.post('/logout');
+    final responseDto = CloudApiResponse<dynamic>.fromJson(res.data);
+    if (res.statusCode == 401 || responseDto.ret == 401) {
+      setToken(null);
+      return;
+    }
+    if (!responseDto.isSuccess) {
+      throw CloudApiException(responseDto.msg ?? 'Failed to revoke token');
+    }
+  }
+
   String _flclashTimestamp() {
     return (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString();
   }

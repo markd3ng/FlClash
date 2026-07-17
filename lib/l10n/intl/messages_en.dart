@@ -660,9 +660,13 @@ class MessageLookup extends MessageLookupByLibrary {
     "loginFailed": MessageLookupByLibrary.simpleMessage("Login Failed"),
     "loginSuccess": MessageLookupByLibrary.simpleMessage("Login Successful"),
     "loginTitle": MessageLookupByLibrary.simpleMessage("Login"),
-    "logoutContent": MessageLookupByLibrary.simpleMessage(
-      "Are you sure you want to logout?",
+    "logoutAndDeleteToken": MessageLookupByLibrary.simpleMessage(
+      "Sign Out and Delete Token",
     ),
+    "logoutContent": MessageLookupByLibrary.simpleMessage(
+      "The token is removed from this device either way. Deleting it from oixCloud may sign out other devices using the same token.",
+    ),
+    "logoutLocalOnly": MessageLookupByLibrary.simpleMessage("Sign Out Only"),
     "logoutTitle": MessageLookupByLibrary.simpleMessage("Logout"),
     "logs": MessageLookupByLibrary.simpleMessage("Logs"),
     "logsDesc": MessageLookupByLibrary.simpleMessage("Log capture records"),

@@ -698,9 +698,13 @@ class MessageLookup extends MessageLookupByLibrary {
       "Вход выполнен успешно",
     ),
     "loginTitle": MessageLookupByLibrary.simpleMessage("Вход"),
-    "logoutContent": MessageLookupByLibrary.simpleMessage(
-      "Вы уверены, что хотите выйти?",
+    "logoutAndDeleteToken": MessageLookupByLibrary.simpleMessage(
+      "Выйти и удалить токен",
     ),
+    "logoutContent": MessageLookupByLibrary.simpleMessage(
+      "В любом случае токен будет удален с этого устройства. Его удаление из oixCloud может привести к выходу на других устройствах, использующих тот же токен.",
+    ),
+    "logoutLocalOnly": MessageLookupByLibrary.simpleMessage("Только выйти"),
     "logoutTitle": MessageLookupByLibrary.simpleMessage("Выход"),
     "logs": MessageLookupByLibrary.simpleMessage("Логи"),
     "logsDesc": MessageLookupByLibrary.simpleMessage("Записи захвата логов"),

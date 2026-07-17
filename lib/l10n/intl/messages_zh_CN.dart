@@ -451,7 +451,11 @@ class MessageLookup extends MessageLookupByLibrary {
     "loginFailed": MessageLookupByLibrary.simpleMessage("登录失败"),
     "loginSuccess": MessageLookupByLibrary.simpleMessage("登录成功"),
     "loginTitle": MessageLookupByLibrary.simpleMessage("登录"),
-    "logoutContent": MessageLookupByLibrary.simpleMessage("确定要退出账号吗？"),
+    "logoutAndDeleteToken": MessageLookupByLibrary.simpleMessage("退出并删除 Token"),
+    "logoutContent": MessageLookupByLibrary.simpleMessage(
+      "无论选择哪种方式，都会从本机移除 Token。从 oixCloud 删除 Token 可能会让使用同一 Token 的其他设备退出登录。",
+    ),
+    "logoutLocalOnly": MessageLookupByLibrary.simpleMessage("仅退出登录"),
     "logoutTitle": MessageLookupByLibrary.simpleMessage("退出登录"),
     "logs": MessageLookupByLibrary.simpleMessage("日志"),
     "logsDesc": MessageLookupByLibrary.simpleMessage("日志捕获记录"),
