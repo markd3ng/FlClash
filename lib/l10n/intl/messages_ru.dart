@@ -179,7 +179,6 @@ class MessageLookup extends MessageLookupByLibrary {
       "Временно разрешить",
     ),
     "announcement": MessageLookupByLibrary.simpleMessage("Объявление"),
-    "annualPlan": MessageLookupByLibrary.simpleMessage("Годовой"),
     "apiAvailable": MessageLookupByLibrary.simpleMessage(
       "API-сервис работает нормально",
     ),
@@ -394,6 +393,19 @@ class MessageLookup extends MessageLookupByLibrary {
     "delaySort": MessageLookupByLibrary.simpleMessage("Сортировка по задержке"),
     "delayTest": MessageLookupByLibrary.simpleMessage("Тест задержки"),
     "delete": MessageLookupByLibrary.simpleMessage("Удалить"),
+    "deleteAccount": MessageLookupByLibrary.simpleMessage("Удалить аккаунт"),
+    "deleteAccountAcknowledgement": MessageLookupByLibrary.simpleMessage(
+      "Я понимаю, что мой аккаунт будет удалён безвозвратно",
+    ),
+    "deleteAccountFailed": MessageLookupByLibrary.simpleMessage(
+      "Не удалось удалить аккаунт",
+    ),
+    "deleteAccountSuccess": MessageLookupByLibrary.simpleMessage(
+      "Аккаунт удалён",
+    ),
+    "deleteAccountWarning": MessageLookupByLibrary.simpleMessage(
+      "Безвозвратное удаление аккаунта удалит аккаунт, активные тарифы, баланс, историю покупок и связанные облачные данные. Это действие нельзя отменить.",
+    ),
     "deleteMultipTip": m5,
     "deleteTip": m6,
     "desc": MessageLookupByLibrary.simpleMessage(
@@ -1284,7 +1296,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "tcpFastOpenDesc": MessageLookupByLibrary.simpleMessage(
       "Включите эту опцию для ускорения установки TCP-соединения",
     ),
-    "teamPlan": MessageLookupByLibrary.simpleMessage("Команда"),
     "testUrl": MessageLookupByLibrary.simpleMessage("Тест URL"),
     "textScale": MessageLookupByLibrary.simpleMessage("Масштабирование текста"),
     "theme": MessageLookupByLibrary.simpleMessage("Тема"),
@@ -1325,6 +1336,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "turnOff": MessageLookupByLibrary.simpleMessage("Выключить"),
     "turnOn": MessageLookupByLibrary.simpleMessage("Включить"),
     "twoColumns": MessageLookupByLibrary.simpleMessage("Два столбца"),
+    "twoFactorCodeOptional": MessageLookupByLibrary.simpleMessage(
+      "Код двухфакторной аутентификации (если включена)",
+    ),
     "unableToUpdateCurrentProfileDesc": MessageLookupByLibrary.simpleMessage(
       "невозможно обновить текущий профиль",
     ),

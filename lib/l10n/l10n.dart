@@ -5189,16 +5189,6 @@ class AppLocalizations {
     return Intl.message('Sold out', name: 'soldOut', desc: '', args: []);
   }
 
-  /// `Annual`
-  String get annualPlan {
-    return Intl.message('Annual', name: 'annualPlan', desc: '', args: []);
-  }
-
-  /// `Team`
-  String get teamPlan {
-    return Intl.message('Team', name: 'teamPlan', desc: '', args: []);
-  }
-
   /// `Only {count} left`
   String remainingStock(Object count) {
     return Intl.message(
@@ -5604,6 +5594,66 @@ class AppLocalizations {
     return Intl.message(
       'Payment endpoint returned an unknown format',
       name: 'paymentUnknownResponse',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Delete account`
+  String get deleteAccount {
+    return Intl.message(
+      'Delete account',
+      name: 'deleteAccount',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Permanently deleting your account removes the account, active plans, balance, purchase history, and associated cloud data. This action cannot be undone.`
+  String get deleteAccountWarning {
+    return Intl.message(
+      'Permanently deleting your account removes the account, active plans, balance, purchase history, and associated cloud data. This action cannot be undone.',
+      name: 'deleteAccountWarning',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `I understand that this permanently deletes my account`
+  String get deleteAccountAcknowledgement {
+    return Intl.message(
+      'I understand that this permanently deletes my account',
+      name: 'deleteAccountAcknowledgement',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Two-factor code (if enabled)`
+  String get twoFactorCodeOptional {
+    return Intl.message(
+      'Two-factor code (if enabled)',
+      name: 'twoFactorCodeOptional',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Failed to delete account`
+  String get deleteAccountFailed {
+    return Intl.message(
+      'Failed to delete account',
+      name: 'deleteAccountFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Account deleted`
+  String get deleteAccountSuccess {
+    return Intl.message(
+      'Account deleted',
+      name: 'deleteAccountSuccess',
       desc: '',
       args: [],
     );

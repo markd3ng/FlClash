@@ -179,7 +179,6 @@ class MessageLookup extends MessageLookupByLibrary {
       "Allow Temporarily",
     ),
     "announcement": MessageLookupByLibrary.simpleMessage("Announcement"),
-    "annualPlan": MessageLookupByLibrary.simpleMessage("Annual"),
     "apiAvailable": MessageLookupByLibrary.simpleMessage(
       "API service is operational",
     ),
@@ -376,6 +375,19 @@ class MessageLookup extends MessageLookupByLibrary {
     "delaySort": MessageLookupByLibrary.simpleMessage("Sort by delay"),
     "delayTest": MessageLookupByLibrary.simpleMessage("Delay Test"),
     "delete": MessageLookupByLibrary.simpleMessage("Delete"),
+    "deleteAccount": MessageLookupByLibrary.simpleMessage("Delete account"),
+    "deleteAccountAcknowledgement": MessageLookupByLibrary.simpleMessage(
+      "I understand that this permanently deletes my account",
+    ),
+    "deleteAccountFailed": MessageLookupByLibrary.simpleMessage(
+      "Failed to delete account",
+    ),
+    "deleteAccountSuccess": MessageLookupByLibrary.simpleMessage(
+      "Account deleted",
+    ),
+    "deleteAccountWarning": MessageLookupByLibrary.simpleMessage(
+      "Permanently deleting your account removes the account, active plans, balance, purchase history, and associated cloud data. This action cannot be undone.",
+    ),
     "deleteMultipTip": m5,
     "deleteTip": m6,
     "desc": MessageLookupByLibrary.simpleMessage(
@@ -1215,7 +1227,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "tcpFastOpenDesc": MessageLookupByLibrary.simpleMessage(
       "Enable this option to accelerate TCP connection establishment",
     ),
-    "teamPlan": MessageLookupByLibrary.simpleMessage("Team"),
     "testUrl": MessageLookupByLibrary.simpleMessage("Test url"),
     "textScale": MessageLookupByLibrary.simpleMessage("Text Scaling"),
     "theme": MessageLookupByLibrary.simpleMessage("Theme"),
@@ -1254,6 +1265,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "turnOff": MessageLookupByLibrary.simpleMessage("Turn Off"),
     "turnOn": MessageLookupByLibrary.simpleMessage("Turn On"),
     "twoColumns": MessageLookupByLibrary.simpleMessage("Two columns"),
+    "twoFactorCodeOptional": MessageLookupByLibrary.simpleMessage(
+      "Two-factor code (if enabled)",
+    ),
     "unableToUpdateCurrentProfileDesc": MessageLookupByLibrary.simpleMessage(
       "unable to update current profile",
     ),

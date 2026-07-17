@@ -140,7 +140,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "allowLanDesc": MessageLookupByLibrary.simpleMessage("允许通过局域网访问代理"),
     "allowTemporarily": MessageLookupByLibrary.simpleMessage("临时允许"),
     "announcement": MessageLookupByLibrary.simpleMessage("公告"),
-    "annualPlan": MessageLookupByLibrary.simpleMessage("年付"),
     "apiAvailable": MessageLookupByLibrary.simpleMessage("API 服务正常"),
     "apiUnavailable": MessageLookupByLibrary.simpleMessage("API 异常"),
     "app": MessageLookupByLibrary.simpleMessage("应用"),
@@ -271,6 +270,15 @@ class MessageLookup extends MessageLookupByLibrary {
     "delaySort": MessageLookupByLibrary.simpleMessage("按延迟排序"),
     "delayTest": MessageLookupByLibrary.simpleMessage("延迟测试"),
     "delete": MessageLookupByLibrary.simpleMessage("删除"),
+    "deleteAccount": MessageLookupByLibrary.simpleMessage("删除账户"),
+    "deleteAccountAcknowledgement": MessageLookupByLibrary.simpleMessage(
+      "我了解此操作将永久删除我的账户",
+    ),
+    "deleteAccountFailed": MessageLookupByLibrary.simpleMessage("删除账户失败"),
+    "deleteAccountSuccess": MessageLookupByLibrary.simpleMessage("账户已删除"),
+    "deleteAccountWarning": MessageLookupByLibrary.simpleMessage(
+      "永久删除账户将移除你的账户、有效套餐、余额、购买记录及相关云端数据。此操作无法撤销",
+    ),
     "deleteMultipTip": m5,
     "deleteTip": m6,
     "desc": MessageLookupByLibrary.simpleMessage(
@@ -836,7 +844,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "tcpFastOpenDesc": MessageLookupByLibrary.simpleMessage(
       "开启此选项以加速 TCP 连接建立",
     ),
-    "teamPlan": MessageLookupByLibrary.simpleMessage("团队"),
     "testUrl": MessageLookupByLibrary.simpleMessage("测速链接"),
     "textScale": MessageLookupByLibrary.simpleMessage("文本缩放"),
     "theme": MessageLookupByLibrary.simpleMessage("主题"),
@@ -869,6 +876,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "turnOff": MessageLookupByLibrary.simpleMessage("关闭"),
     "turnOn": MessageLookupByLibrary.simpleMessage("开启"),
     "twoColumns": MessageLookupByLibrary.simpleMessage("两列"),
+    "twoFactorCodeOptional": MessageLookupByLibrary.simpleMessage(
+      "双重验证码（如已启用）",
+    ),
     "unableToUpdateCurrentProfileDesc": MessageLookupByLibrary.simpleMessage(
       "无法更新当前配置文件",
     ),

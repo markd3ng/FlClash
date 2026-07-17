@@ -22,26 +22,46 @@ class CloudStorePage extends ConsumerStatefulWidget {
 
 class _CloudStorePageState extends ConsumerState<CloudStorePage> {
   bool _busy = false;
+  _StoreSection _section = _StoreSection.plans;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(storeProvider.notifier).load();
+      if (!mounted) return;
+      _loadStore();
     });
   }
 
+  Future<bool> _loadStore() async {
+    final accountNotifier = ref.read(cloudAccountProvider.notifier);
+    try {
+      await ref.read(storeProvider.notifier).load();
+      return mounted;
+    } catch (e) {
+      if (!CloudApiException.isUnauthorized(e)) rethrow;
+      await accountNotifier.handleUnauthorized();
+      return false;
+    }
+  }
+
   Future<void> _refresh() async {
-    await ref.read(storeProvider.notifier).load();
+    if (!await _loadStore() || !mounted) return;
     await ref.read(cloudAccountProvider.notifier).refreshProfile(force: true);
   }
 
   Future<void> _runGuarded(Future<void> Function() action) async {
     if (_busy) return;
+    final accountNotifier = ref.read(cloudAccountProvider.notifier);
     setState(() => _busy = true);
     try {
       await action();
     } catch (e) {
+      if (CloudApiException.isHandledUnauthorized(e)) return;
+      if (CloudApiException.isUnauthorized(e)) {
+        await accountNotifier.handleUnauthorized();
+        return;
+      }
       globalState.showNotifier(CloudApiException.clean(e));
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -81,31 +101,25 @@ class _CloudStorePageState extends ConsumerState<CloudStorePage> {
                     _buildErrorCard(storeState.error!),
                   ],
                   const SizedBox(height: 16),
-                  _buildSectionTitle(
-                    appLocalizations.availablePlans,
-                    storeState.plans.length,
-                  ),
-                  const SizedBox(height: 8),
-                  if (storeState.plans.isEmpty)
-                    _buildEmptyHint(
-                      appLocalizations.noAvailablePlans,
-                      Icons.inventory_2_outlined,
-                    )
-                  else
-                    ...storeState.plans.map(_buildPlanCard),
-                  const SizedBox(height: 24),
-                  _buildSectionTitle(
-                    appLocalizations.myOrders,
-                    storeState.bought.length,
-                  ),
-                  const SizedBox(height: 8),
-                  if (storeState.bought.isEmpty)
-                    _buildEmptyHint(
-                      appLocalizations.noPurchaseRecords,
-                      Icons.receipt_long_outlined,
-                    )
-                  else
-                    ...storeState.bought.map(_buildBoughtCard),
+                  _buildSectionPicker(),
+                  const SizedBox(height: 12),
+                  if (_section == _StoreSection.plans) ...[
+                    if (storeState.plans.isEmpty)
+                      _buildEmptyHint(
+                        appLocalizations.noAvailablePlans,
+                        Icons.inventory_2_outlined,
+                      )
+                    else
+                      ...storeState.plans.map(_buildPlanCard),
+                  ] else ...[
+                    if (storeState.bought.isEmpty)
+                      _buildEmptyHint(
+                        appLocalizations.noPurchaseRecords,
+                        Icons.receipt_long_outlined,
+                      )
+                    else
+                      ...storeState.bought.map(_buildBoughtCard),
+                  ],
                   const SizedBox(height: 32),
                 ],
               ),
@@ -113,34 +127,29 @@ class _CloudStorePageState extends ConsumerState<CloudStorePage> {
     );
   }
 
-  Widget _buildSectionTitle(String title, int count) {
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            title,
-            style: context.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
+  Widget _buildSectionPicker() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final showIcons = constraints.maxWidth >= 420;
+        return SegmentedButton<_StoreSection>(
+          selected: {_section},
+          showSelectedIcon: false,
+          onSelectionChanged: (selection) =>
+              setState(() => _section = selection.first),
+          segments: [
+            ButtonSegment(
+              value: _StoreSection.plans,
+              icon: showIcons ? const Icon(Icons.inventory_2_outlined) : null,
+              label: Text(appLocalizations.availablePlans),
             ),
-          ),
-        ),
-        Container(
-          constraints: const BoxConstraints(minWidth: 28),
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-          decoration: BoxDecoration(
-            color: context.colorScheme.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            '$count',
-            textAlign: TextAlign.center,
-            style: context.textTheme.labelMedium?.copyWith(
-              color: context.colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.w600,
+            ButtonSegment(
+              value: _StoreSection.orders,
+              icon: showIcons ? const Icon(Icons.receipt_long_outlined) : null,
+              label: Text(appLocalizations.myOrders),
             ),
-          ),
-        ),
-      ],
+          ],
+        );
+      },
     );
   }
 
@@ -193,6 +202,11 @@ class _CloudStorePageState extends ConsumerState<CloudStorePage> {
             Icon(Icons.error_outline, color: context.colorScheme.error),
             const SizedBox(width: 12),
             Expanded(child: Text(error)),
+            IconButton(
+              onPressed: _busy ? null : () => _runGuarded(_refresh),
+              icon: const Icon(Icons.refresh),
+              tooltip: appLocalizations.refresh,
+            ),
           ],
         ),
       ),
@@ -251,16 +265,14 @@ class _CloudStorePageState extends ConsumerState<CloudStorePage> {
     final defaultPeriod = plan.defaultPeriod;
     final displayPrice = defaultPeriod?.price ?? plan.price;
     final priceText = _priceText(displayPrice);
-    final metas = <Widget>[
-      for (final tag in plan.tags) _planMetaChip(_iconForFeatureTag(tag), tag),
-    ];
+    final summary = compactStorePlanSummary(plan.tags);
     final lowStock = !plan.soldOut && plan.inventory > 0 && plan.inventory <= 5;
 
     final card = Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 8),
       child: CommonCard(
         child: Padding(
-          padding: const EdgeInsets.all(18),
+          padding: const EdgeInsets.all(14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -298,9 +310,16 @@ class _CloudStorePageState extends ConsumerState<CloudStorePage> {
                   ),
                 ],
               ),
-              if (metas.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                Wrap(spacing: 8, runSpacing: 8, children: metas),
+              if (summary.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Text(
+                  summary,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.textTheme.bodySmall?.copyWith(
+                    color: context.colorScheme.onSurfaceVariant,
+                  ),
+                ),
               ],
               if (plan.planCode == 'iron') ...[
                 const SizedBox(height: 10),
@@ -345,7 +364,7 @@ class _CloudStorePageState extends ConsumerState<CloudStorePage> {
                   ],
                 ),
               ],
-              const SizedBox(height: 16),
+              const SizedBox(height: 10),
               if (plan.soldOut)
                 SizedBox(
                   width: double.infinity,
@@ -365,36 +384,6 @@ class _CloudStorePageState extends ConsumerState<CloudStorePage> {
     return plan.soldOut ? Opacity(opacity: 0.55, child: card) : card;
   }
 
-  Widget _planMetaChip(
-    IconData icon,
-    String label, {
-    Color? color,
-    bool emphasize = false,
-  }) {
-    final c = color ?? context.colorScheme.onSurfaceVariant;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: c.withValues(alpha: emphasize ? 0.16 : 0.10),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: c),
-          const SizedBox(width: 5),
-          Text(
-            label,
-            style: context.textTheme.labelMedium?.copyWith(
-              color: c,
-              fontWeight: emphasize ? FontWeight.w600 : FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildPurchaseActions(StorePlan plan) {
     final balanceButton = OutlinedButton.icon(
       onPressed: (plan.canBuy && !_busy)
@@ -411,49 +400,15 @@ class _CloudStorePageState extends ConsumerState<CloudStorePage> {
       label: Text(appLocalizations.orderAndPay),
     );
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        if (constraints.maxWidth < 400) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [balanceButton, const SizedBox(height: 8), onlineButton],
-          );
-        }
-        return Row(
-          children: [
-            Expanded(child: balanceButton),
-            const SizedBox(width: 12),
-            Expanded(child: onlineButton),
-          ],
-        );
-      },
+    return Align(
+      alignment: Alignment.centerRight,
+      child: Wrap(
+        alignment: WrapAlignment.end,
+        spacing: 8,
+        runSpacing: 8,
+        children: [balanceButton, onlineButton],
+      ),
     );
-  }
-
-  IconData _iconForFeatureTag(String tag) {
-    if (tag.contains('流量') || tag.contains('GiB') || tag.contains('GB')) {
-      return Icons.data_usage;
-    }
-    if (tag.contains('Mbps') ||
-        tag.contains('速率') ||
-        tag.contains('速度') ||
-        tag.contains('限速')) {
-      return Icons.speed;
-    }
-    if (tag.contains('有效期') || tag.contains('天') || tag.contains('日')) {
-      return Icons.schedule;
-    }
-    if (tag.contains('临界') || tag.contains('连接') || tag.contains('设备')) {
-      return Icons.devices;
-    }
-    if (tag.contains('服务单') || tag.contains('工单')) {
-      return Icons.confirmation_number;
-    }
-    if (tag.contains('团队')) return Icons.groups;
-    if (tag.contains('按量')) return Icons.paid;
-    if (tag.contains('开发者')) return Icons.code;
-    if (tag.contains('重置')) return Icons.refresh;
-    return Icons.label_outline;
   }
 
   Icon _paymentIcon(PaymentMethodOption m) {
@@ -614,7 +569,7 @@ class _CloudStorePageState extends ConsumerState<CloudStorePage> {
       );
     }
 
-    if (bought.canUpgrade) {
+    if (storeUpgradeTargets(bought, ref.read(storeProvider).plans).isNotEmpty) {
       actions.add(
         OutlinedButton.icon(
           onPressed: _busy
@@ -708,15 +663,7 @@ class _CloudStorePageState extends ConsumerState<CloudStorePage> {
   }
 
   Future<void> _upgradeFlow(BoughtRecord bought) async {
-    final plans = ref.read(storeProvider).plans;
-    final current = plans.where((p) => p.id == bought.shopId).firstOrNull;
-    final allowedIds = bought.upgradeShopIds.toSet();
-    final currentRank = bought.planRank ?? current?.planRank ?? 0;
-    final targets = plans.where((plan) {
-      if (plan.soldOut || plan.id == bought.shopId) return false;
-      if (allowedIds.isNotEmpty) return allowedIds.contains(plan.id);
-      return plan.supportsAnnual && plan.planRank > currentRank;
-    }).toList();
+    final targets = storeUpgradeTargets(bought, ref.read(storeProvider).plans);
 
     if (targets.isEmpty) {
       globalState.showNotifier(appLocalizations.noUpgradablePlans);
@@ -1150,6 +1097,8 @@ class _CloudStorePageState extends ConsumerState<CloudStorePage> {
   }
 }
 
+enum _StoreSection { plans, orders }
+
 class _PurchaseChoice {
   final String? billingPeriod;
   final String coupon;
@@ -1178,17 +1127,18 @@ class _RechargeChoice {
   });
 }
 
-class _CryptoPaymentDialog extends StatefulWidget {
+class _CryptoPaymentDialog extends ConsumerStatefulWidget {
   final PaymentInitiation init;
   final String payment;
 
   const _CryptoPaymentDialog({required this.init, required this.payment});
 
   @override
-  State<_CryptoPaymentDialog> createState() => _CryptoPaymentDialogState();
+  ConsumerState<_CryptoPaymentDialog> createState() =>
+      _CryptoPaymentDialogState();
 }
 
-class _CryptoPaymentDialogState extends State<_CryptoPaymentDialog> {
+class _CryptoPaymentDialogState extends ConsumerState<_CryptoPaymentDialog> {
   Timer? _timer;
   bool _checking = false;
 
@@ -1207,9 +1157,10 @@ class _CryptoPaymentDialogState extends State<_CryptoPaymentDialog> {
     super.dispose();
   }
 
-  Future<void> _check() async {
+  Future<void> _check({bool reportError = false}) async {
     final pid = widget.init.pid;
     if (pid == null || pid.isEmpty || _checking) return;
+    final accountNotifier = ref.read(cloudAccountProvider.notifier);
     setState(() => _checking = true);
     try {
       final paid = await CloudApiService().queryPaymentPaid(
@@ -1220,7 +1171,15 @@ class _CryptoPaymentDialogState extends State<_CryptoPaymentDialog> {
         _timer?.cancel();
         Navigator.of(context).pop(true);
       }
-    } catch (_) {
+    } catch (e) {
+      if (CloudApiException.isUnauthorized(e)) {
+        if (mounted) Navigator.of(context).pop(false);
+        await accountNotifier.handleUnauthorized();
+        return;
+      }
+      if (reportError) {
+        globalState.showNotifier(CloudApiException.clean(e));
+      }
     } finally {
       if (mounted) setState(() => _checking = false);
     }
@@ -1230,7 +1189,8 @@ class _CryptoPaymentDialogState extends State<_CryptoPaymentDialog> {
   Widget build(BuildContext context) {
     final init = widget.init;
     final isUrl = init.kind == PaymentInitiationKind.externalUrl;
-    final qrData = isUrl ? init.url : init.address;
+    final hasPaymentId = init.pid != null && init.pid!.isNotEmpty;
+    final qrData = isUrl ? (init.renderQrcode ? init.url : null) : init.address;
     return CommonDialog(
       title: appLocalizations.scanOrTransferPay,
       actions: [
@@ -1243,14 +1203,15 @@ class _CryptoPaymentDialogState extends State<_CryptoPaymentDialog> {
             onPressed: () => globalState.openUrl(init.url!),
             child: Text(appLocalizations.openInBrowser),
           ),
-        TextButton(
-          onPressed: _checking ? null : _check,
-          child: Text(
-            _checking
-                ? appLocalizations.checkingPayment
-                : appLocalizations.iHavePaid,
+        if (hasPaymentId)
+          TextButton(
+            onPressed: _checking ? null : () => _check(reportError: true),
+            child: Text(
+              _checking
+                  ? appLocalizations.checkingPayment
+                  : appLocalizations.iHavePaid,
+            ),
           ),
-        ),
       ],
       child: SizedBox(
         width: 320,
@@ -1291,7 +1252,9 @@ class _CryptoPaymentDialogState extends State<_CryptoPaymentDialog> {
             ],
             if (isUrl) ...[
               Text(
-                appLocalizations.scanToPayNotice,
+                init.renderQrcode
+                    ? appLocalizations.scanToPayNotice
+                    : appLocalizations.refreshAfterPayment,
                 style: Theme.of(context).textTheme.bodySmall,
                 textAlign: TextAlign.center,
               ),

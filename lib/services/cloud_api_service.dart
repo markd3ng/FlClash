@@ -9,6 +9,7 @@ import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/services/age_crypto.dart';
 import 'package:fl_clash/state.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
 
 // -- Constants --
@@ -21,6 +22,20 @@ const int _httpServerError = 500;
 // requests must never be hedged to a spare domain or retried, otherwise a slow
 // backend response could be processed twice (e.g. double charge).
 const String _nonIdempotentExtraKey = 'flclash_non_idempotent';
+
+@visibleForTesting
+Map<String, dynamic> buildDeleteAccountRequestData({
+  required String password,
+  String? twoFactorCode,
+}) {
+  final normalizedCode = twoFactorCode?.trim();
+  return {
+    'passwd': password,
+    'confirmation': 'DELETE',
+    if (normalizedCode != null && normalizedCode.isNotEmpty)
+      'code': normalizedCode,
+  };
+}
 
 String _apiRootUrl(String domain) {
   final normalizedDomain = domain.trim();
@@ -601,6 +616,32 @@ class CloudApiService {
     }
   }
 
+  Future<void> deleteAccount({
+    required String password,
+    String? twoFactorCode,
+  }) async {
+    if (_cachedToken == null || _cachedToken!.isEmpty) {
+      throw const CloudApiException('Unauthorized');
+    }
+    final res = await _client.post(
+      '/delete',
+      data: FormData.fromMap(
+        buildDeleteAccountRequestData(
+          password: password,
+          twoFactorCode: twoFactorCode,
+        ),
+      ),
+      options: _writeOptions(),
+    );
+    final responseDto = CloudApiResponse<dynamic>.fromJson(res.data);
+    _ensureAuthorized(res.statusCode, responseDto.ret);
+    if (!responseDto.isSuccess) {
+      throw CloudApiException(
+        responseDto.msg ?? appLocalizations.deleteAccountFailed,
+      );
+    }
+  }
+
   String _flclashTimestamp() {
     return (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString();
   }
@@ -732,8 +773,7 @@ class CloudApiService {
     if (!dto.isSuccess || dto.data == null) {
       throw CloudApiException(dto.msg ?? appLocalizations.fetchPlansFailed);
     }
-    final list = (dto.data!['shops'] as List?) ?? const [];
-    return list.whereType<Map>().map((e) => StorePlan.fromJson(e)).toList();
+    return decodeStorePlans(dto.data!['shops']);
   }
 
   Future<List<BoughtRecord>> fetchBought() async {
@@ -743,8 +783,7 @@ class CloudApiService {
     if (!dto.isSuccess || dto.data == null) {
       throw CloudApiException(dto.msg ?? appLocalizations.fetchOrdersFailed);
     }
-    final list = (dto.data!['boughts'] as List?) ?? const [];
-    return list.whereType<Map>().map((e) => BoughtRecord.fromJson(e)).toList();
+    return decodeBoughtRecords(dto.data!['boughts']);
   }
 
   Future<List<PaymentMethodOption>> fetchPaymentMethods() async {
@@ -812,10 +851,6 @@ class CloudApiService {
       'target_shop_id': targetShopId,
       if (coupon != null && coupon.isNotEmpty) 'coupon_code': coupon,
     });
-  }
-
-  Future<({bool success, String message})> toggleAutoRenew(int boughtId) {
-    return _postShopAction('/shop/renew', {'id': boughtId});
   }
 
   Future<({bool success, String message})> activatePlan(int boughtId) {
@@ -907,6 +942,8 @@ class CloudApiService {
       '/pay/status',
       data: FormData.fromMap({'pid': pid, 'payment': payment}),
     );
+    final dto = CloudApiResponse<dynamic>.fromJson(res.data);
+    _ensureAuthorized(res.statusCode, dto.ret);
     dynamic data = res.data;
     if (data is String) {
       try {

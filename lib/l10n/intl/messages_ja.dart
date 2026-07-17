@@ -147,7 +147,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "allowLanDesc": MessageLookupByLibrary.simpleMessage("LAN経由でのプロキシアクセスを許可"),
     "allowTemporarily": MessageLookupByLibrary.simpleMessage("一時的に許可"),
     "announcement": MessageLookupByLibrary.simpleMessage("お知らせ"),
-    "annualPlan": MessageLookupByLibrary.simpleMessage("年額"),
     "apiAvailable": MessageLookupByLibrary.simpleMessage("APIサービスは正常です"),
     "apiUnavailable": MessageLookupByLibrary.simpleMessage("API利用不可"),
     "app": MessageLookupByLibrary.simpleMessage("アプリ"),
@@ -298,6 +297,19 @@ class MessageLookup extends MessageLookupByLibrary {
     "delaySort": MessageLookupByLibrary.simpleMessage("遅延順"),
     "delayTest": MessageLookupByLibrary.simpleMessage("遅延テスト"),
     "delete": MessageLookupByLibrary.simpleMessage("削除"),
+    "deleteAccount": MessageLookupByLibrary.simpleMessage("アカウントを削除"),
+    "deleteAccountAcknowledgement": MessageLookupByLibrary.simpleMessage(
+      "この操作でアカウントが完全に削除されることを理解しました",
+    ),
+    "deleteAccountFailed": MessageLookupByLibrary.simpleMessage(
+      "アカウントを削除できませんでした",
+    ),
+    "deleteAccountSuccess": MessageLookupByLibrary.simpleMessage(
+      "アカウントを削除しました",
+    ),
+    "deleteAccountWarning": MessageLookupByLibrary.simpleMessage(
+      "アカウントを完全に削除すると、アカウント、有効なプラン、残高、購入履歴、関連するクラウドデータが削除されます。この操作は取り消せません。",
+    ),
     "deleteMultipTip": m5,
     "deleteTip": m6,
     "desc": MessageLookupByLibrary.simpleMessage(
@@ -948,7 +960,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "tcpFastOpenDesc": MessageLookupByLibrary.simpleMessage(
       "TCPの接続確立を高速化するには、このオプションをオンにしてください",
     ),
-    "teamPlan": MessageLookupByLibrary.simpleMessage("チーム"),
     "testUrl": MessageLookupByLibrary.simpleMessage("URLテスト"),
     "textScale": MessageLookupByLibrary.simpleMessage("テキストスケーリング"),
     "theme": MessageLookupByLibrary.simpleMessage("テーマ"),
@@ -983,6 +994,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "turnOff": MessageLookupByLibrary.simpleMessage("オフ"),
     "turnOn": MessageLookupByLibrary.simpleMessage("オン"),
     "twoColumns": MessageLookupByLibrary.simpleMessage("2列"),
+    "twoFactorCodeOptional": MessageLookupByLibrary.simpleMessage(
+      "2段階認証コード（有効な場合）",
+    ),
     "unableToUpdateCurrentProfileDesc": MessageLookupByLibrary.simpleMessage(
       "現在のプロファイルを更新できません",
     ),

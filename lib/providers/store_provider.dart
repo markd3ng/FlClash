@@ -7,7 +7,6 @@ class StoreState {
   final List<StorePlan> plans;
   final List<BoughtRecord> bought;
   final List<PaymentMethodOption> paymentMethods;
-  final List<int> upgradeShopIds;
   final String? error;
 
   const StoreState({
@@ -15,7 +14,6 @@ class StoreState {
     this.plans = const [],
     this.bought = const [],
     this.paymentMethods = const [],
-    this.upgradeShopIds = const [],
     this.error,
   });
 
@@ -24,7 +22,6 @@ class StoreState {
     List<StorePlan>? plans,
     List<BoughtRecord>? bought,
     List<PaymentMethodOption>? paymentMethods,
-    List<int>? upgradeShopIds,
     String? error,
     bool clearError = false,
   }) {
@@ -33,7 +30,6 @@ class StoreState {
       plans: plans ?? this.plans,
       bought: bought ?? this.bought,
       paymentMethods: paymentMethods ?? this.paymentMethods,
-      upgradeShopIds: upgradeShopIds ?? this.upgradeShopIds,
       error: clearError ? null : (error ?? this.error),
     );
   }
@@ -43,10 +39,8 @@ class StoreNotifier extends Notifier<StoreState> {
   @override
   StoreState build() => const StoreState();
 
-  Future<void> load({bool silent = false}) async {
-    if (!silent) {
-      state = state.copyWith(isLoading: true, clearError: true);
-    }
+  Future<void> load() async {
+    state = state.copyWith(isLoading: true, clearError: true);
     try {
       final plans = await CloudApiService().fetchPlans();
       final bought = await CloudApiService().fetchBought();
@@ -58,12 +52,14 @@ class StoreNotifier extends Notifier<StoreState> {
       );
     } catch (e) {
       if (CloudApiException.isHandledUnauthorized(e)) {
+        state = state.copyWith(isLoading: false);
         return;
       }
       state = state.copyWith(
         isLoading: false,
         error: CloudApiException.clean(e),
       );
+      if (CloudApiException.isUnauthorized(e)) rethrow;
     }
   }
 

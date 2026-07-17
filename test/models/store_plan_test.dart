@@ -58,7 +58,6 @@ void main() {
 
       expect(plan.planCode, 'alu');
       expect(plan.planRank, 20);
-      expect(plan.nodeAccess, ['edge', 'cia', 'ixp']);
       expect(plan.enabledBillingPeriods.map((period) => period.key), [
         'monthly',
         'quarterly',
@@ -69,9 +68,6 @@ void main() {
       expect(plan.defaultPeriod?.price, 27);
       expect(plan.defaultPeriod?.bandwidth, 280);
       expect(plan.defaultPeriod?.discountLabel, '9折');
-      expect(plan.defaultPeriod?.discountPercent, 10);
-      expect(plan.defaultPeriod?.listPrice, 30);
-      expect(plan.defaultPeriod?.savings, 3);
       expect(plan.supportsAnnual, true);
     });
 
@@ -129,11 +125,8 @@ void main() {
         'upgrade_shop_ids': [20, '21'],
       });
 
-      expect(bought.planCode, 'alu');
       expect(bought.planRank, 20);
-      expect(bought.billingPeriod, 'quarterly');
       expect(bought.billingPeriodText, '季付');
-      expect(bought.durationMinutes, 129600);
       expect(bought.upgradeShopIds, [20, 21]);
     });
 
@@ -147,6 +140,157 @@ void main() {
 
       expect(explicitZero.planRank, 0);
       expect(missing.planRank, isNull);
+    });
+
+    test('explicit empty upgrade targets do not use fallback', () {
+      final bought = BoughtRecord.fromJson({
+        'id': 1,
+        'shop_id': 1,
+        'plan_rank': 10,
+        'upgrade_shop_ids': [],
+      });
+      final plans = [
+        StorePlan.fromJson({
+          'id': 1,
+          'plan_rank': 10,
+          'supports_annual': 1,
+          'inventory': 1,
+        }),
+        StorePlan.fromJson({
+          'id': 2,
+          'plan_rank': 20,
+          'supports_annual': 1,
+          'inventory': 1,
+        }),
+      ];
+
+      expect(storeUpgradeTargets(bought, plans), isEmpty);
+    });
+
+    test('upgrade targets prefer server flags and support legacy fallback', () {
+      final bought = BoughtRecord.fromJson({
+        'id': 1,
+        'shop_id': 1,
+        'plan_rank': 10,
+      });
+      final modernPlans = [
+        StorePlan.fromJson({
+          'id': 1,
+          'plan_rank': 10,
+          'can_upgrade_to': 0,
+          'supports_annual': 1,
+          'inventory': 1,
+        }),
+        StorePlan.fromJson({
+          'id': 2,
+          'plan_rank': 20,
+          'can_upgrade_to': 1,
+          'supports_annual': 1,
+          'inventory': 1,
+        }),
+        StorePlan.fromJson({
+          'id': 3,
+          'plan_rank': 30,
+          'can_upgrade_to': 0,
+          'supports_annual': 1,
+          'inventory': 1,
+        }),
+      ];
+      final legacyPlans = [
+        StorePlan.fromJson({
+          'id': 1,
+          'plan_rank': 10,
+          'supports_annual': 1,
+          'inventory': 1,
+        }),
+        StorePlan.fromJson({
+          'id': 2,
+          'plan_rank': 20,
+          'supports_annual': 1,
+          'inventory': 1,
+        }),
+        StorePlan.fromJson({
+          'id': 3,
+          'plan_rank': 5,
+          'supports_annual': 1,
+          'inventory': 1,
+        }),
+      ];
+
+      expect(storeUpgradeTargets(bought, modernPlans).map((plan) => plan.id), [
+        2,
+      ]);
+      expect(storeUpgradeTargets(bought, legacyPlans).map((plan) => plan.id), [
+        2,
+      ]);
+    });
+
+    test('compact summary drops billing period tags', () {
+      expect(
+        compactStorePlanSummary([
+          '流量 2000 GiB',
+          '500Mbps 速率',
+          '周期 月付 / 季付 / 半年付 / 年付',
+          '团队',
+        ]),
+        '流量 2000 GiB · 500Mbps 速率 · 团队',
+      );
+    });
+
+    test('store lists skip malformed elements', () {
+      final plans = decodeStorePlans([
+        {
+          'id': 1,
+          'billing_periods': [
+            {'price': 1, 'enabled': true},
+            {'key': 'monthly', 'price': 10, 'enabled': true},
+          ],
+        },
+        false,
+        {},
+        {'id': 0},
+        {'id': '2'},
+      ]);
+      final bought = decodeBoughtRecords([
+        {
+          'id': 1,
+          'shop_id': 1,
+          'upgrade_shop_ids': [1, 'bad', 2, 0],
+        },
+        null,
+        {},
+        {'id': 0, 'shop_id': 2},
+        {'id': 2, 'shop_id': 0},
+        {'id': '3', 'shop_id': '2'},
+      ]);
+
+      expect(plans.map((plan) => plan.id), [1, 2]);
+      expect(plans.first.billingPeriods.map((period) => period.key), [
+        'monthly',
+      ]);
+      expect(bought.map((record) => record.id), [1, 3]);
+      expect(bought.first.upgradeShopIds, [1, 2]);
+    });
+
+    test('payment response only renders QR when requested', () {
+      final browser = PaymentInitiation.parse({
+        'url': 'https://pay.example/order',
+        'tradeno': 'browser-order',
+      });
+      final explicitQr = PaymentInitiation.parse({
+        'url': 'https://pay.example/qr',
+        'render_qrcode': 1,
+      });
+      final qrcodeField = PaymentInitiation.parse({
+        'url': '',
+        'qrcode': 'https://pay.example/qrcode',
+      });
+
+      expect(browser.kind, PaymentInitiationKind.externalUrl);
+      expect(browser.renderQrcode, false);
+      expect(explicitQr.renderQrcode, true);
+      expect(qrcodeField.url, 'https://pay.example/qrcode');
+      expect(qrcodeField.renderQrcode, true);
     });
   });
 

@@ -6,42 +6,27 @@ import 'package:fl_clash/l10n/l10n.dart';
 class BillingPeriod {
   final String key;
   final String label;
-  final int days;
-  final int minutes;
   final double price;
   final int bandwidth;
   final String discountLabel;
-  final int discountPercent;
-  final double listPrice;
-  final double savings;
   final bool enabled;
 
   const BillingPeriod({
     required this.key,
     required this.label,
-    required this.days,
-    required this.minutes,
     required this.price,
     required this.bandwidth,
     required this.discountLabel,
-    required this.discountPercent,
-    required this.listPrice,
-    required this.savings,
     required this.enabled,
   });
 
   factory BillingPeriod.fromJson(Map<dynamic, dynamic> json) {
     return BillingPeriod(
-      key: json['key']?.toString() ?? '',
+      key: json['key']?.toString().trim() ?? '',
       label: json['label']?.toString() ?? '',
-      days: _asInt(json['days']),
-      minutes: _asInt(json['minutes']),
       price: _asDouble(json['price']),
       bandwidth: _asInt(json['bandwidth']),
       discountLabel: json['discount_label']?.toString() ?? '',
-      discountPercent: _asInt(json['discount_percent']),
-      listPrice: _asDouble(json['list_price']),
-      savings: _asDouble(json['savings']),
       enabled: _asBool(json['enabled']),
     );
   }
@@ -52,21 +37,14 @@ class StorePlan {
   final int id;
   final String name;
   final double price;
-  final String content;
-  final int bandwidth;
   final String planCode;
   final int planRank;
-  final List<String> nodeAccess;
-  final int classExpireDays;
   final String defaultBillingPeriod;
   final List<BillingPeriod> billingPeriods;
   final int autoRenew;
-  final bool realtimePay;
-  final bool isTeamPackage;
-  final bool isAnnual;
   final bool supportsAnnual;
   final bool canBuy;
-  final bool canUpgradeTo;
+  final bool? canUpgradeTo;
   final int inventory;
   final List<String> tags;
 
@@ -74,18 +52,11 @@ class StorePlan {
     required this.id,
     required this.name,
     required this.price,
-    required this.content,
-    required this.bandwidth,
     required this.planCode,
     required this.planRank,
-    required this.nodeAccess,
-    required this.classExpireDays,
     required this.defaultBillingPeriod,
     required this.billingPeriods,
     required this.autoRenew,
-    required this.realtimePay,
-    required this.isTeamPackage,
-    required this.isAnnual,
     required this.supportsAnnual,
     required this.canBuy,
     required this.canUpgradeTo,
@@ -111,31 +82,27 @@ class StorePlan {
     final legacyClass = _asInt(json['class']);
     final stablePlanCode = json['plan_code']?.toString();
     final planCode = stablePlanCode ?? _legacyPlanCode(legacyClass);
-    final periods = _asMapList(
-      json['billing_periods'],
-    ).map(BillingPeriod.fromJson).toList();
+    final periods = _asMapList(json['billing_periods'])
+        .map(BillingPeriod.fromJson)
+        .where((period) => period.key.isNotEmpty)
+        .toList();
     final isAnnual = _asBool(json['is_annual']);
     return StorePlan(
       id: _asInt(json['id']),
       name: json['name']?.toString() ?? '',
       price: _asDouble(json['price']),
-      content: json['content']?.toString() ?? '',
-      bandwidth: _asInt(json['bandwidth']),
       planCode: planCode,
       planRank: json['plan_rank'] != null
           ? _asInt(json['plan_rank'])
           : _planRank(planCode) ?? _legacyPlanRank(legacyClass),
-      nodeAccess: _asStringList(json['node_access']),
-      classExpireDays: _asInt(json['class_expire_days']),
       defaultBillingPeriod: json['default_billing_period']?.toString() ?? '',
       billingPeriods: periods,
       autoRenew: _asInt(json['auto_renew']),
-      realtimePay: _asBool(json['realtime_pay']),
-      isTeamPackage: _asBool(json['is_team_package']),
-      isAnnual: isAnnual,
       supportsAnnual: _asBool(json['supports_annual']) || isAnnual,
       canBuy: _asBool(json['can_buy']),
-      canUpgradeTo: _asBool(json['can_upgrade_to']),
+      canUpgradeTo: json.containsKey('can_upgrade_to')
+          ? _asBool(json['can_upgrade_to'])
+          : null,
       inventory: _asInt(json['inventory']),
       tags: _asStringList(json['tags']),
     );
@@ -147,87 +114,103 @@ class BoughtRecord {
   final int id;
   final int shopId;
   final String shopName;
-  final String planCode;
   final int? planRank;
-  final double buyPrice;
-  final double renewPrice;
-  final int bandwidth;
-  final String coupon;
   final bool autoRenew;
-  final int renewState;
   final int status;
   final String buyTime;
-  final String billingPeriod;
   final String billingPeriodText;
-  final int durationMinutes;
-  final bool canUpgrade;
   final bool canActivate;
-  final bool canToggleRenew;
   final bool canEarlyRenew;
-  final bool canRefund;
-  final List<int> upgradeShopIds;
+  final List<int>? upgradeShopIds;
 
   const BoughtRecord({
     required this.id,
     required this.shopId,
     required this.shopName,
-    required this.planCode,
     required this.planRank,
-    required this.buyPrice,
-    required this.renewPrice,
-    required this.bandwidth,
-    required this.coupon,
     required this.autoRenew,
-    required this.renewState,
     required this.status,
     required this.buyTime,
-    required this.billingPeriod,
     required this.billingPeriodText,
-    required this.durationMinutes,
-    required this.canUpgrade,
     required this.canActivate,
-    required this.canToggleRenew,
     required this.canEarlyRenew,
-    required this.canRefund,
     required this.upgradeShopIds,
   });
 
   bool get isActive => status == 1;
   bool get isPending => status == 0;
-  bool get isExpired => status == -1;
 
   factory BoughtRecord.fromJson(Map<dynamic, dynamic> json) {
     return BoughtRecord(
       id: _asInt(json['id']),
       shopId: _asInt(json['shop_id']),
       shopName: json['shop_name']?.toString() ?? '',
-      planCode: json['plan_code']?.toString() ?? '',
       planRank: json['plan_rank'] == null ? null : _asInt(json['plan_rank']),
-      buyPrice: _asDouble(json['buy_price']),
-      renewPrice: _asDouble(json['renew_price']),
-      bandwidth: _asInt(json['bandwidth']),
-      coupon: json['coupon']?.toString() ?? '',
       autoRenew: _asBool(json['auto_renew']),
-        renewState: json['renew_state'] == null
-          ? (_asBool(json['auto_renew']) ? 1 : 0)
-          : _asInt(json['renew_state']),
       status: _asInt(json['status']),
       buyTime: json['buy_time']?.toString() ?? '',
-      billingPeriod: json['billing_period']?.toString() ?? '',
       billingPeriodText: json['billing_period_text']?.toString() ?? '',
-      durationMinutes: _asInt(json['duration_minutes']),
-      canUpgrade: _asBool(json['can_upgrade']),
-        canActivate: json['can_activate'] == null
+      canActivate: json['can_activate'] == null
           ? _asInt(json['status']) == 0
           : _asBool(json['can_activate']),
-        canToggleRenew: _asBool(json['can_toggle_renew']),
-        canEarlyRenew: json['can_early_renew'] == null
+      canEarlyRenew: json['can_early_renew'] == null
           ? _asInt(json['status']) != -1 && _asBool(json['auto_renew'])
           : _asBool(json['can_early_renew']),
-        canRefund: _asBool(json['can_refund']),
-      upgradeShopIds: _asIntList(json['upgrade_shop_ids']),
+      upgradeShopIds: json.containsKey('upgrade_shop_ids')
+          ? _asIntList(json['upgrade_shop_ids'])
+          : null,
     );
   }
+}
+
+List<StorePlan> decodeStorePlans(dynamic value) {
+  return _asMapList(value)
+      .where((json) => (_tryAsInt(json['id']) ?? 0) > 0)
+      .map(StorePlan.fromJson)
+      .toList();
+}
+
+List<BoughtRecord> decodeBoughtRecords(dynamic value) {
+  return _asMapList(value)
+      .where(
+        (json) =>
+            (_tryAsInt(json['id']) ?? 0) > 0 &&
+            (_tryAsInt(json['shop_id']) ?? 0) > 0,
+      )
+      .map(BoughtRecord.fromJson)
+      .toList();
+}
+
+String compactStorePlanSummary(List<String> tags) {
+  return tags.where((tag) => !tag.trim().startsWith('周期')).join(' · ');
+}
+
+List<StorePlan> storeUpgradeTargets(
+  BoughtRecord bought,
+  List<StorePlan> plans,
+) {
+  final exactIds = bought.upgradeShopIds;
+  if (exactIds != null) {
+    final allowedIds = exactIds.toSet();
+    return plans
+        .where((plan) => allowedIds.contains(plan.id) && !plan.soldOut)
+        .toList();
+  }
+
+  if (plans.any((plan) => plan.canUpgradeTo != null)) {
+    return plans
+        .where((plan) => plan.canUpgradeTo == true && !plan.soldOut)
+        .toList();
+  }
+
+  final current = plans.where((plan) => plan.id == bought.shopId).firstOrNull;
+  final currentRank = bought.planRank ?? current?.planRank ?? 0;
+  return plans.where((plan) {
+    return plan.supportsAnnual &&
+        !plan.soldOut &&
+        plan.id != bought.shopId &&
+        plan.planRank > currentRank;
+  }).toList();
 }
 
 /// 支付方式（对应 /api/v1/pay/methods 返回项）
@@ -329,13 +312,15 @@ class PaymentInitiation {
       );
     }
 
-    final rawUrl = (decoded['url'] ?? decoded['qrcode'])?.toString();
+    final url = decoded['url']?.toString();
+    final qrcode = decoded['qrcode']?.toString();
+    final rawUrl = url != null && url.isNotEmpty ? url : qrcode;
     if (rawUrl != null && rawUrl.isNotEmpty) {
       final pid = decoded['tradeno']?.toString();
       final amount = decoded['amount']?.toString();
       final render =
-          decoded['render_qrcode'] == true ||
-          decoded['render_qrcode'] == 'true';
+          (qrcode != null && qrcode.isNotEmpty) ||
+          _asBool(decoded['render_qrcode']);
       final isAddress =
           !(rawUrl.startsWith('http://') || rawUrl.startsWith('https://'));
       if (isAddress) {
@@ -375,11 +360,7 @@ class PaymentInitiation {
   }
 }
 
-int _asInt(dynamic v) {
-  if (v is int) return v;
-  if (v is num) return v.toInt();
-  return int.tryParse(v?.toString() ?? '') ?? 0;
-}
+int _asInt(dynamic value) => _tryAsInt(value) ?? 0;
 
 double _asDouble(dynamic v) {
   if (v is double) return v;
@@ -405,8 +386,20 @@ List<String> _asStringList(dynamic v) {
 }
 
 List<int> _asIntList(dynamic v) {
-  if (v is List) return v.map(_asInt).toList();
+  if (v is List) {
+    return v
+        .map(_tryAsInt)
+        .whereType<int>()
+        .where((value) => value > 0)
+        .toList();
+  }
   return const [];
+}
+
+int? _tryAsInt(dynamic value) {
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  return int.tryParse(value?.toString() ?? '');
 }
 
 List<Map<dynamic, dynamic>> _asMapList(dynamic value) {

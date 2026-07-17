@@ -11,6 +11,7 @@ import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/services/cloud_api_service.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/utils/safe_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -43,9 +44,24 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
 
   Future<void> _clearStoredToken() async {
     CloudApiService().setToken(null);
-    await SafeStorage.delete('cloud_token');
-    final prefs = await _safePrefs;
-    await prefs.remove('cloud_token');
+    Object? cleanupError;
+    StackTrace? cleanupStack;
+    try {
+      await SafeStorage.delete('cloud_token');
+    } catch (e, stack) {
+      cleanupError = e;
+      cleanupStack = stack;
+    }
+    try {
+      final prefs = await _safePrefs;
+      await prefs.remove('cloud_token');
+    } catch (e, stack) {
+      cleanupError ??= e;
+      cleanupStack ??= stack;
+    }
+    if (cleanupError != null) {
+      Error.throwWithStackTrace(cleanupError, cleanupStack!);
+    }
   }
 
   /// Awaitable handle to the one-shot init. Call sites that need the token
@@ -362,7 +378,7 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
   }
 
   Future<void> _runRefreshProfile({bool force = false}) async {
-    if (!state.isLoggedIn) return;
+    if (!state.isLoggedIn || state.isLoading || state.isSyncing) return;
     if (!force && _lastRefreshTime != null) {
       if (DateTime.now().difference(_lastRefreshTime!) <
           const Duration(minutes: 30)) {
@@ -443,7 +459,7 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
   }
 
   Future<void> syncManagedConfig() async {
-    if (!state.isLoggedIn) return;
+    if (!state.isLoggedIn || state.isLoading || state.isRefreshing) return;
     if (!_canFetchManagedConfig) {
       await _clearManagedProfiles();
       return;
@@ -567,23 +583,103 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
   }
 
   Future<bool> signOut({bool revokeToken = false}) async {
+    if (state.isLoading) return false;
+    state = state.copyWith(isLoading: true, error: null);
     if (revokeToken) {
       try {
-        await CloudApiService().logout();
+        await logoutRequest();
       } catch (e) {
-        state = state.copyWith(error: CloudApiException.clean(e));
+        state = state.copyWith(
+          isLoading: false,
+          error: CloudApiException.clean(e),
+        );
         return false;
       }
     }
+    final cleanupError = await clearSession();
+    if (cleanupError != null) {
+      state = state.copyWith(error: cleanupError);
+      return false;
+    }
+    return true;
+  }
+
+  @protected
+  Future<void> Function() get logoutRequest => CloudApiService().logout;
+
+  Future<bool> deleteAccount({
+    required String password,
+    String? twoFactorCode,
+  }) async {
+    if (!state.isLoggedIn ||
+        state.isLoading ||
+        state.isRefreshing ||
+        state.isSyncing ||
+        _managedProfileFuture != null) {
+      return false;
+    }
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      await deleteAccountRequest(
+        password: password,
+        twoFactorCode: twoFactorCode,
+      );
+    } catch (e) {
+      final error = CloudApiException.clean(e);
+      if (CloudApiException.isHandledUnauthorized(e) ||
+          CloudApiException.isUnauthorized(e)) {
+        await clearSession();
+        state = state.copyWith(error: error);
+        return false;
+      }
+      state = state.copyWith(isLoading: false, error: error);
+      return false;
+    }
+    await clearSession();
+    return true;
+  }
+
+  @protected
+  Future<void> Function({required String password, String? twoFactorCode})
+  get deleteAccountRequest => CloudApiService().deleteAccount;
+
+  @protected
+  Future<String?> clearSession() async {
     _lastRefreshTime = null;
-    await _clearStoredToken();
-    await _clearCache();
+    String? cleanupError;
+    try {
+      await _clearStoredToken();
+    } catch (e) {
+      CloudApiService().setToken(null);
+      cleanupError = CloudApiException.clean(e);
+      commonPrint.log(
+        'failed to clear cloud token: $e',
+        logLevel: LogLevel.warning,
+      );
+    }
+    try {
+      await _clearCache();
+    } catch (e) {
+      cleanupError ??= CloudApiException.clean(e);
+      commonPrint.log(
+        'failed to clear cloud cache: $e',
+        logLevel: LogLevel.warning,
+      );
+    }
 
     oixCloudConfigCache.clear();
     state = const CloudAccountState();
     ref.read(storeProvider.notifier).reset();
-    await _clearManagedProfiles();
-    return true;
+    try {
+      await _clearManagedProfiles();
+    } catch (e) {
+      cleanupError ??= CloudApiException.clean(e);
+      commonPrint.log(
+        'failed to clear managed cloud profiles: $e',
+        logLevel: LogLevel.warning,
+      );
+    }
+    return cleanupError;
   }
 
   Future<void> handleUnauthorized() {
