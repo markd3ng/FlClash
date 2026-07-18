@@ -23,20 +23,20 @@ void main() {
 
     expect(
       message,
-      '第 16 行的配置格式不正确。\n'
-      '此处应为列表，但实际为对象。\n\n'
-      '请检查该行附近的缩进和 "-" 列表标记。',
+      '第 16 行的配置格式不正确\n'
+      '此处应为列表，但实际为对象\n\n'
+      '请检查该行附近的缩进和 "-" 列表标记',
     );
 
     expect(
       formatConfigValidationMessage(
-        "Parse Error: yaml: unmarshal errors:\n"
-        "  line 8: cannot unmarshal !!str 'abc' into int",
+        'Parse Error: yaml: unmarshal errors:\n'
+        '  line 8: cannot unmarshal !!str \'abc\' into int',
         localizations,
       ),
-      '第 8 行的配置格式不正确。\n'
-      '此处应为整数，但实际为文本。\n\n'
-      '请检查该行附近的缩进和 "-" 列表标记。',
+      '第 8 行的配置格式不正确\n'
+      '此处应为整数，但实际为文本\n\n'
+      '请检查该行附近的缩进和 "-" 列表标记',
     );
   });
 

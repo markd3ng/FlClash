@@ -22,10 +22,10 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m0(value) => "コミッション ¥ ${value}";
 
-  static String m1(line) => "設定ファイルの ${line} 行目の形式が正しくありません。";
+  static String m1(line) => "設定ファイルの ${line} 行目の形式が正しくありません";
 
   static String m2(expected, actual) =>
-      "${expected} が必要ですが、${actual} が指定されています。";
+      "${expected} が必要ですが、${actual} が指定されています";
 
   static String m3(name) => "${name} はグループ、ルール、またはプロキシチェーンから参照されています";
 
@@ -118,7 +118,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "action_view": MessageLookupByLibrary.simpleMessage("表示/非表示"),
     "activate": MessageLookupByLibrary.simpleMessage("アクティブ化"),
     "activatePlanConfirm": MessageLookupByLibrary.simpleMessage(
-      "このプランをアクティブ化しますか？アクティブ化すると現在有効なプランになります。",
+      "このプランをアクティブ化しますか？アクティブ化すると現在有効なプランになります",
     ),
     "activatePlanTitle": MessageLookupByLibrary.simpleMessage("プランをアクティブ化"),
     "add": MessageLookupByLibrary.simpleMessage("追加"),
@@ -236,7 +236,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "configValueTypeObject": MessageLookupByLibrary.simpleMessage("オブジェクト"),
     "configValueTypeText": MessageLookupByLibrary.simpleMessage("テキスト"),
     "configYamlFormatHint": MessageLookupByLibrary.simpleMessage(
-      "この行付近のインデントと \"-\" のリスト記号を確認してください。",
+      "この行付近のインデントと \"-\" のリスト記号を確認してください",
     ),
     "confirm": MessageLookupByLibrary.simpleMessage("確認"),
     "confirmClearAllData": MessageLookupByLibrary.simpleMessage(
@@ -308,12 +308,12 @@ class MessageLookup extends MessageLookupByLibrary {
       "アカウントを削除しました",
     ),
     "deleteAccountWarning": MessageLookupByLibrary.simpleMessage(
-      "アカウントを完全に削除すると、アカウント、有効なプラン、残高、購入履歴、関連するクラウドデータが削除されます。この操作は取り消せません。",
+      "アカウントを完全に削除すると、アカウント、有効なプラン、残高、購入履歴、関連するクラウドデータが削除されます。この操作は取り消せません",
     ),
     "deleteMultipTip": m5,
     "deleteTip": m6,
     "desc": MessageLookupByLibrary.simpleMessage(
-      "ClashMetaベースのマルチプラットフォームプロキシクライアント。シンプルで使いやすく、オープンソースで広告なし。",
+      "ClashMetaベースのマルチプラットフォームプロキシクライアント。シンプルで使いやすく、オープンソースで広告なし",
     ),
     "destination": MessageLookupByLibrary.simpleMessage("宛先"),
     "destinationGeoIP": MessageLookupByLibrary.simpleMessage("宛先地理情報"),
@@ -322,13 +322,13 @@ class MessageLookup extends MessageLookupByLibrary {
     "detectionTip": MessageLookupByLibrary.simpleMessage("サードパーティAPIに依存（参考値）"),
     "developerMode": MessageLookupByLibrary.simpleMessage("デベロッパーモード"),
     "developerModeEnableTip": MessageLookupByLibrary.simpleMessage(
-      "デベロッパーモードが有効になりました。",
+      "デベロッパーモードが有効になりました",
     ),
     "direct": MessageLookupByLibrary.simpleMessage("ダイレクト"),
     "disableUDP": MessageLookupByLibrary.simpleMessage("UDPを無効化"),
     "disclaimer": MessageLookupByLibrary.simpleMessage("免責事項"),
     "disclaimerDesc": MessageLookupByLibrary.simpleMessage(
-      "本ソフトウェアは学習交流や科学研究などの非営利目的でのみ使用されます。商用利用は厳禁です。いかなる商用活動も本ソフトウェアとは無関係です。",
+      "本ソフトウェアは学習交流や科学研究などの非営利目的でのみ使用されます。商用利用は厳禁です。いかなる商用活動も本ソフトウェアとは無関係です",
     ),
     "disconnected": MessageLookupByLibrary.simpleMessage("切断済み"),
     "discountCodeOptional": MessageLookupByLibrary.simpleMessage("割引コード（任意）"),
@@ -481,7 +481,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "invalidAmount": MessageLookupByLibrary.simpleMessage("有効な金額を入力してください"),
     "invalidBackupFile": MessageLookupByLibrary.simpleMessage("無効なバックアップファイル"),
     "invalidCertificateContent": MessageLookupByLibrary.simpleMessage(
-      "サーバー証明書を検証できません。現在のネットワークとサーバーを信頼できる場合のみ、この再試行だけ検証をスキップできます。",
+      "サーバー証明書を検証できません。現在のネットワークとサーバーを信頼できる場合のみ、この再試行だけ検証をスキップできます",
     ),
     "invalidCertificateTitle": MessageLookupByLibrary.simpleMessage(
       "証明書の検証に失敗しました",
@@ -526,7 +526,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "ログアウトしてトークンを削除",
     ),
     "logoutContent": MessageLookupByLibrary.simpleMessage(
-      "どちらを選んでも、このデバイスからトークンは削除されます。oixCloudからトークンを削除すると、同じトークンを使用している他のデバイスでもログアウトする場合があります。",
+      "どちらを選んでも、このデバイスからトークンは削除されます。oixCloudからトークンを削除すると、同じトークンを使用している他のデバイスでもログアウトする場合があります",
     ),
     "logoutLocalOnly": MessageLookupByLibrary.simpleMessage("ログアウトのみ"),
     "logoutTitle": MessageLookupByLibrary.simpleMessage("ログアウト"),
@@ -542,7 +542,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "maxFailedTimes": MessageLookupByLibrary.simpleMessage("最大失敗回数"),
     "memoryInfo": MessageLookupByLibrary.simpleMessage("メモリ情報"),
     "messageTest": MessageLookupByLibrary.simpleMessage("メッセージテスト"),
-    "messageTestTip": MessageLookupByLibrary.simpleMessage("これはメッセージです。"),
+    "messageTestTip": MessageLookupByLibrary.simpleMessage("これはメッセージです"),
     "min": MessageLookupByLibrary.simpleMessage("最小化"),
     "minimalConfiguration": MessageLookupByLibrary.simpleMessage("最小構成"),
     "minimalConfigurationDesc": MessageLookupByLibrary.simpleMessage(
@@ -576,7 +576,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "ネットワーク例外、接続を確認してもう一度お試しください",
     ),
     "networkRequestException": MessageLookupByLibrary.simpleMessage(
-      "ネットワーク要求例外、後でもう一度試してください。",
+      "ネットワーク要求例外、後でもう一度試してください",
     ),
     "networkSpeed": MessageLookupByLibrary.simpleMessage("ネットワーク速度"),
     "networkType": MessageLookupByLibrary.simpleMessage("ネットワーク種別"),
@@ -752,7 +752,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "プロキシチェーンには少なくとも 2 つのノードが必要です",
     ),
     "proxyChainMinimumNodesHint": MessageLookupByLibrary.simpleMessage(
-      "プロキシチェーンには少なくとも 2 つのノードが必要です。出口ノードを追加してください。",
+      "プロキシチェーンには少なくとも 2 つのノードが必要です。出口ノードを追加してください",
     ),
     "proxyChainNodeAdded": MessageLookupByLibrary.simpleMessage(
       "ノードをプロキシチェーンに追加しました",
@@ -770,7 +770,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "対応形式：ss://、ssr://、vmess://、vless://、trojan://、anytls://、hysteria:// / hy://、hysteria2:// / hy2://、tuic://、wireguard:// / wg://、http(s)://、socks(5)://",
     ),
     "proxyChainWarning": MessageLookupByLibrary.simpleMessage(
-      "プロキシチェーンは通信速度を大きく低下させる可能性があります。明確な用途がない場合は無効のままにしてください。",
+      "プロキシチェーンは通信速度を大きく低下させる可能性があります。明確な用途がない場合は無効のままにしてください",
     ),
     "proxyChains": MessageLookupByLibrary.simpleMessage("プロキシチェーン"),
     "proxyFilter": MessageLookupByLibrary.simpleMessage("プロキシフィルター"),
@@ -813,7 +813,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "registerFailed": MessageLookupByLibrary.simpleMessage("登録に失敗しました"),
     "registerTitle": MessageLookupByLibrary.simpleMessage("アカウント作成"),
     "relayGroupUnsupported": MessageLookupByLibrary.simpleMessage(
-      "Relay グループはコアから削除されました。別のタイプを選択してください。",
+      "Relay グループはコアから削除されました。別のタイプを選択してください",
     ),
     "reload": MessageLookupByLibrary.simpleMessage("リロード"),
     "remaining": m27,
@@ -832,7 +832,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "resendCodeIn": m29,
     "reset": MessageLookupByLibrary.simpleMessage("リセット"),
     "resetEmailSent": MessageLookupByLibrary.simpleMessage(
-      "リセットメールを送信しました。メール内のリセットリンクまたはコードを下に貼り付けてください。",
+      "リセットメールを送信しました。メール内のリセットリンクまたはコードを下に貼り付けてください",
     ),
     "resetPageChangesTip": MessageLookupByLibrary.simpleMessage(
       "現在のページに変更があります。リセットしてもよろしいですか？",
@@ -970,7 +970,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "tight": MessageLookupByLibrary.simpleMessage("密"),
     "time": MessageLookupByLibrary.simpleMessage("時間"),
     "timeSyncTip": MessageLookupByLibrary.simpleMessage(
-      "プロキシプロトコルは、デバイスの時刻が世界標準時（UTC）と30秒以内の誤差である必要があります。デバイスの時刻が正確であることを確認してください。",
+      "プロキシプロトコルは、デバイスの時刻が世界標準時（UTC）と30秒以内の誤差である必要があります。デバイスの時刻が正確であることを確認してください",
     ),
     "timeout": MessageLookupByLibrary.simpleMessage("タイムアウト"),
     "tip": MessageLookupByLibrary.simpleMessage("ヒント"),
@@ -987,7 +987,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "trafficUsage": MessageLookupByLibrary.simpleMessage("トラフィック使用量"),
     "trafficUsed": MessageLookupByLibrary.simpleMessage("トラフィック使用量"),
     "transferConfirmNotice": MessageLookupByLibrary.simpleMessage(
-      "送金完了後、システムが自動的に確認し、選択したプランが自動的に有効になります。",
+      "送金完了後、システムが自動的に確認し、選択したプランが自動的に有効になります",
     ),
     "tun": MessageLookupByLibrary.simpleMessage("TUN"),
     "tunDesc": MessageLookupByLibrary.simpleMessage("管理者モードでのみ有効"),

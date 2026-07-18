@@ -22,9 +22,9 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m0(value) => "佣金 ¥ ${value}";
 
-  static String m1(line) => "第 ${line} 行的配置格式不正确。";
+  static String m1(line) => "第 ${line} 行的配置格式不正确";
 
-  static String m2(expected, actual) => "此处应为${expected}，但实际为${actual}。";
+  static String m2(expected, actual) => "此处应为${expected}，但实际为${actual}";
 
   static String m3(name) => "${name} 仍被策略组、规则或链式代理引用";
 
@@ -113,7 +113,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "action_view": MessageLookupByLibrary.simpleMessage("显示/隐藏"),
     "activate": MessageLookupByLibrary.simpleMessage("激活"),
     "activatePlanConfirm": MessageLookupByLibrary.simpleMessage(
-      "确认激活该套餐？激活后将成为当前生效套餐。",
+      "确认激活该套餐？激活后将成为当前生效套餐",
     ),
     "activatePlanTitle": MessageLookupByLibrary.simpleMessage("激活套餐"),
     "add": MessageLookupByLibrary.simpleMessage("添加"),
@@ -221,7 +221,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "configValueTypeObject": MessageLookupByLibrary.simpleMessage("对象"),
     "configValueTypeText": MessageLookupByLibrary.simpleMessage("文本"),
     "configYamlFormatHint": MessageLookupByLibrary.simpleMessage(
-      "请检查该行附近的缩进和 \"-\" 列表标记。",
+      "请检查该行附近的缩进和 \"-\" 列表标记",
     ),
     "confirm": MessageLookupByLibrary.simpleMessage("确定"),
     "confirmClearAllData": MessageLookupByLibrary.simpleMessage("确定要清除所有数据？"),
@@ -282,7 +282,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "deleteMultipTip": m5,
     "deleteTip": m6,
     "desc": MessageLookupByLibrary.simpleMessage(
-      "基于ClashMeta的多平台代理客户端，简单易用，开源无广告。",
+      "基于ClashMeta的多平台代理客户端，简单易用，开源无广告",
     ),
     "destination": MessageLookupByLibrary.simpleMessage("目标地址"),
     "destinationGeoIP": MessageLookupByLibrary.simpleMessage("目标地理定位"),
@@ -290,12 +290,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "details": m7,
     "detectionTip": MessageLookupByLibrary.simpleMessage("依赖第三方api，仅供参考"),
     "developerMode": MessageLookupByLibrary.simpleMessage("开发者模式"),
-    "developerModeEnableTip": MessageLookupByLibrary.simpleMessage("开发者模式已启用。"),
+    "developerModeEnableTip": MessageLookupByLibrary.simpleMessage("开发者模式已启用"),
     "direct": MessageLookupByLibrary.simpleMessage("直连"),
     "disableUDP": MessageLookupByLibrary.simpleMessage("禁用 UDP"),
     "disclaimer": MessageLookupByLibrary.simpleMessage("免责声明"),
     "disclaimerDesc": MessageLookupByLibrary.simpleMessage(
-      "本软件仅供学习交流、科研等非商业性质的用途，严禁将本软件用于商业目的。如有任何商业行为，均与本软件无关。",
+      "本软件仅供学习交流、科研等非商业性质的用途，严禁将本软件用于商业目的。如有任何商业行为，均与本软件无关",
     ),
     "disconnected": MessageLookupByLibrary.simpleMessage("已断开"),
     "discountCodeOptional": MessageLookupByLibrary.simpleMessage("折扣码（可选）"),
@@ -426,7 +426,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "invalidAmount": MessageLookupByLibrary.simpleMessage("请输入有效金额"),
     "invalidBackupFile": MessageLookupByLibrary.simpleMessage("无效备份文件"),
     "invalidCertificateContent": MessageLookupByLibrary.simpleMessage(
-      "无法验证服务器证书。若你信任当前网络和服务器，可仅本次重试跳过验证。",
+      "无法验证服务器证书。若你信任当前网络和服务器，可仅本次重试跳过验证",
     ),
     "invalidCertificateTitle": MessageLookupByLibrary.simpleMessage("证书校验失败"),
     "inviteCodeHint": MessageLookupByLibrary.simpleMessage("请输入邀请码"),
@@ -461,7 +461,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "loginTitle": MessageLookupByLibrary.simpleMessage("登录"),
     "logoutAndDeleteToken": MessageLookupByLibrary.simpleMessage("退出并删除 Token"),
     "logoutContent": MessageLookupByLibrary.simpleMessage(
-      "无论选择哪种方式，都会从本机移除 Token。从 oixCloud 删除 Token 可能会让使用同一 Token 的其他设备退出登录。",
+      "无论选择哪种方式，都会从本机移除 Token。从 oixCloud 删除 Token 可能会让使用同一 Token 的其他设备退出登录",
     ),
     "logoutLocalOnly": MessageLookupByLibrary.simpleMessage("仅退出登录"),
     "logoutTitle": MessageLookupByLibrary.simpleMessage("退出登录"),
@@ -477,7 +477,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "maxFailedTimes": MessageLookupByLibrary.simpleMessage("最大失败次数"),
     "memoryInfo": MessageLookupByLibrary.simpleMessage("内存信息"),
     "messageTest": MessageLookupByLibrary.simpleMessage("消息测试"),
-    "messageTestTip": MessageLookupByLibrary.simpleMessage("这是一条消息。"),
+    "messageTestTip": MessageLookupByLibrary.simpleMessage("这是一条消息"),
     "min": MessageLookupByLibrary.simpleMessage("最小"),
     "minimalConfiguration": MessageLookupByLibrary.simpleMessage("最小化配置"),
     "minimalConfigurationDesc": MessageLookupByLibrary.simpleMessage(
@@ -505,7 +505,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "networkDetection": MessageLookupByLibrary.simpleMessage("网络检测"),
     "networkException": MessageLookupByLibrary.simpleMessage("网络异常，请检查连接后重试"),
     "networkRequestException": MessageLookupByLibrary.simpleMessage(
-      "网络请求异常，请稍后再试。",
+      "网络请求异常，请稍后再试",
     ),
     "networkSpeed": MessageLookupByLibrary.simpleMessage("网络速度"),
     "networkType": MessageLookupByLibrary.simpleMessage("网络类型"),
@@ -649,7 +649,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "链式代理至少需要 2 个节点",
     ),
     "proxyChainMinimumNodesHint": MessageLookupByLibrary.simpleMessage(
-      "链式代理至少需要 2 个节点，请再添加一个出口节点。",
+      "链式代理至少需要 2 个节点，请再添加一个出口节点",
     ),
     "proxyChainNodeAdded": MessageLookupByLibrary.simpleMessage("节点已加入链式代理"),
     "proxyChainOtherNodes": MessageLookupByLibrary.simpleMessage("其他节点"),
@@ -704,7 +704,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "registerFailed": MessageLookupByLibrary.simpleMessage("注册失败"),
     "registerTitle": MessageLookupByLibrary.simpleMessage("创建账号"),
     "relayGroupUnsupported": MessageLookupByLibrary.simpleMessage(
-      "核心已移除 Relay 策略组，请选择其他类型。",
+      "核心已移除 Relay 策略组，请选择其他类型",
     ),
     "reload": MessageLookupByLibrary.simpleMessage("重载"),
     "remaining": m27,
@@ -721,7 +721,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "resendCodeIn": m29,
     "reset": MessageLookupByLibrary.simpleMessage("重置"),
     "resetEmailSent": MessageLookupByLibrary.simpleMessage(
-      "重置邮件已发送，请将邮件中的重置链接或代码粘贴到下方。",
+      "重置邮件已发送，请将邮件中的重置链接或代码粘贴到下方",
     ),
     "resetPageChangesTip": MessageLookupByLibrary.simpleMessage(
       "当前页面存在更改，确定重置吗？",
@@ -755,7 +755,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "restoreStrategy_override": MessageLookupByLibrary.simpleMessage("覆盖"),
     "restoreSuccess": MessageLookupByLibrary.simpleMessage("恢复成功"),
     "reverseEngineeringNotice": MessageLookupByLibrary.simpleMessage(
-      "严禁对本应用进行逆向工程、反编译、反汇编或借助 AI 工具分析。",
+      "严禁对本应用进行逆向工程、反编译、反汇编或借助 AI 工具分析",
     ),
     "revokeAccessToken": MessageLookupByLibrary.simpleMessage(
       "删除 Access Token",
@@ -869,7 +869,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "trafficUsage": MessageLookupByLibrary.simpleMessage("流量统计"),
     "trafficUsed": MessageLookupByLibrary.simpleMessage("流量使用"),
     "transferConfirmNotice": MessageLookupByLibrary.simpleMessage(
-      "转账完成后系统会自动确认，确认后将自动开通已选套餐。",
+      "转账完成后系统会自动确认，确认后将自动开通已选套餐",
     ),
     "tun": MessageLookupByLibrary.simpleMessage("虚拟网卡"),
     "tunDesc": MessageLookupByLibrary.simpleMessage("仅在管理员模式生效"),

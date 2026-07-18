@@ -70,6 +70,28 @@ void main() {
     expect(harnessKey.currentState!.changes, [1]);
   });
 
+  testWidgets('segmented control pointer selection fires once', (tester) async {
+    final harnessKey = GlobalKey<_TabHarnessState>();
+    await tester.pumpWidget(MaterialApp(home: _TabHarness(key: harnessKey)));
+
+    await tester.tap(find.text('Global'));
+    await tester.pump();
+
+    expect(harnessKey.currentState!.selected, 1);
+    expect(harnessKey.currentState!.changes, [1]);
+  });
+
+  testWidgets('segmented control keeps drag selection', (tester) async {
+    final harnessKey = GlobalKey<_TabHarnessState>();
+    await tester.pumpWidget(MaterialApp(home: _TabHarness(key: harnessKey)));
+
+    await tester.drag(find.text('Rule'), const Offset(200, 0));
+    await tester.pumpAndSettle();
+
+    expect(harnessKey.currentState!.selected, 2);
+    expect(harnessKey.currentState!.changes, [2]);
+  });
+
   testWidgets('radio list item exposes one remote focus target', (
     tester,
   ) async {
