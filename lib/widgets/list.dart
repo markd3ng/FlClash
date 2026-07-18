@@ -19,9 +19,9 @@ class Delegate {
 
 class RadioDelegate<T> extends Delegate {
   final T value;
-  final void Function()? onTab;
+  final VoidCallback onTap;
 
-  const RadioDelegate({required this.value, this.onTab});
+  const RadioDelegate({required this.value, required this.onTap});
 }
 
 class SwitchDelegate<T> extends Delegate {
@@ -303,10 +303,6 @@ class ListItem<T> extends StatelessWidget {
       final child = openDelegate.widget;
       final onChanged = openDelegate.onChanged;
       return OpenContainer<T>(
-        // closedColor: context.colorScheme.surface,
-        // openColor: context.colorScheme.surface,
-        // closedElevation: 0,
-        // openElevation: 0,
         closedBuilder: (context, action) {
           Future<void> openAction() async {
             final isMobile = globalState.container.read(isMobileViewProvider);
@@ -425,12 +421,14 @@ class ListItem<T> extends StatelessWidget {
     if (delegate is RadioDelegate) {
       final radioDelegate = delegate as RadioDelegate<T>;
       return _buildListTile(
-        onTap: radioDelegate.onTab,
-        leading: Radio<T>(
-          visualDensity: VisualDensity.compact,
-          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          value: radioDelegate.value,
-          toggleable: true,
+        onTap: radioDelegate.onTap,
+        leading: ExcludeFocus(
+          child: Radio<T>(
+            visualDensity: VisualDensity.compact,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            value: radioDelegate.value,
+            toggleable: true,
+          ),
         ),
         trailing: trailing,
       );

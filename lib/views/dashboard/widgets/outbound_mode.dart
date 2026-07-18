@@ -30,7 +30,6 @@ class OutboundMode extends StatelessWidget {
               hoverColor: Colors.transparent,
             ),
             child: CommonCard(
-              onPressed: () {},
               info: Info(
                 label: appLocalizations.outboundMode,
                 iconData: Icons.call_split_sharp,
@@ -67,7 +66,7 @@ class OutboundMode extends StatelessWidget {
                                 right: 16.ap,
                               ),
                               delegate: RadioDelegate(
-                                onTab: () {
+                                onTap: () {
                                   appController.changeMode(item);
                                 },
                                 value: item,
@@ -128,19 +127,17 @@ class OutboundModeV2 extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Container(
-                        padding: EdgeInsets.all(12),
-                        constraints: BoxConstraints.expand(),
+                        padding: const EdgeInsets.all(12),
+                        constraints: const BoxConstraints.expand(),
                         child: CommonTabBar<Mode>(
                           children: Map.fromEntries(
                             Mode.values.map(
                               (item) => MapEntry(
                                 item,
                                 Container(
-                                  clipBehavior: Clip.antiAlias,
                                   alignment: Alignment.center,
-                                  decoration: BoxDecoration(),
                                   height: height - 8.ap - 24,
-                                  padding: EdgeInsets.all(4),
+                                  padding: const EdgeInsets.all(4),
                                   child: Text(
                                     Intl.message(item.name),
                                     style: Theme.of(context)
@@ -157,7 +154,7 @@ class OutboundModeV2 extends StatelessWidget {
                               ),
                             ),
                           ),
-                          padding: EdgeInsets.symmetric(horizontal: 0),
+                          padding: EdgeInsets.zero,
                           groupValue: mode,
                           onValueChanged: (value) {
                             if (value == null) {
@@ -173,19 +170,6 @@ class OutboundModeV2 extends StatelessWidget {
                       color: thumbColor.opacity50,
                       height: 8.ap,
                       width: constraints.maxWidth,
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      // child: Row(
-                      //   children: [
-                      //     Container(
-                      //       width: (constraints.maxWidth - 32) / 3,
-                      //       height: 3,
-                      //       decoration: BoxDecoration(
-                      //         color: _getTextColor(context, mode),
-                      //         borderRadius: BorderRadius.circular(2),
-                      //       ),
-                      //     ),
-                      //   ],
-                      // ),
                     ),
                   ],
                 );

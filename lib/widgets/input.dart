@@ -77,7 +77,7 @@ class OptionsDialog<T> extends StatelessWidget {
                   return ListItem.radio(
                     delegate: RadioDelegate(
                       value: option,
-                      onTab: () {
+                      onTap: () {
                         Navigator.of(context).pop(option);
                       },
                     ),

@@ -178,7 +178,7 @@ class _UaDialogState extends State<_UaDialog> {
               ListItem.radio(
                 delegate: RadioDelegate(
                   value: _defaultUaValue,
-                  onTab: () => Navigator.of(context).pop(
+                  onTap: () => Navigator.of(context).pop(
                     const _UaDialogResult(
                       value: _defaultUaValue,
                       isCustom: false,
@@ -191,7 +191,7 @@ class _UaDialogState extends State<_UaDialog> {
                 ListItem.radio(
                   delegate: RadioDelegate(
                     value: ua,
-                    onTab: () => Navigator.of(
+                    onTap: () => Navigator.of(
                       context,
                     ).pop(_UaDialogResult(value: ua, isCustom: false)),
                   ),
@@ -200,7 +200,7 @@ class _UaDialogState extends State<_UaDialog> {
               ListItem.radio(
                 delegate: RadioDelegate(
                   value: _customUaValue,
-                  onTab: () {
+                  onTap: () {
                     setState(() {
                       _groupValue = _customUaValue;
                     });

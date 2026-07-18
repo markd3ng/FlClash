@@ -9,6 +9,7 @@ import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -146,42 +147,72 @@ class AppEnvManager extends StatelessWidget {
   }
 }
 
+class NavigationRailFocus extends StatelessWidget {
+  final Widget child;
+  final int currentIndex;
+  final int itemCount;
+  final ValueChanged<int> onSelected;
+  final bool autofocus;
+
+  const NavigationRailFocus({
+    super.key,
+    required this.child,
+    required this.currentIndex,
+    required this.itemCount,
+    required this.onSelected,
+    this.autofocus = false,
+  }) : assert(itemCount > 0),
+       assert(currentIndex >= 0 && currentIndex < itemCount);
+
+  KeyEventResult _handleKeyEvent(FocusNode _, KeyEvent event) {
+    final logicalKey = event.logicalKey;
+    final navigationOffset = switch (logicalKey) {
+      LogicalKeyboardKey.arrowUp => -1,
+      LogicalKeyboardKey.arrowDown => 1,
+      _ => null,
+    };
+    final isActivationKey =
+        logicalKey == LogicalKeyboardKey.enter ||
+        logicalKey == LogicalKeyboardKey.numpadEnter ||
+        logicalKey == LogicalKeyboardKey.gameButtonA ||
+        logicalKey == LogicalKeyboardKey.select;
+    if (event is KeyRepeatEvent &&
+        (navigationOffset != null || isActivationKey)) {
+      return KeyEventResult.handled;
+    }
+    if (event is! KeyDownEvent) {
+      return KeyEventResult.ignored;
+    }
+    if (navigationOffset != null) {
+      final nextIndex = currentIndex + navigationOffset;
+      if (nextIndex >= 0 && nextIndex < itemCount) {
+        onSelected(nextIndex);
+        return KeyEventResult.handled;
+      }
+      return KeyEventResult.ignored;
+    }
+    if (isActivationKey) {
+      onSelected(currentIndex);
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Focus(
+      autofocus: autofocus,
+      descendantsAreFocusable: false,
+      onKeyEvent: _handleKeyEvent,
+      child: child,
+    );
+  }
+}
+
 class AppSidebarContainer extends ConsumerWidget {
   final Widget child;
 
   const AppSidebarContainer({super.key, required this.child});
-
-  // Widget _buildLoading() {
-  //   return Consumer(
-  //     builder: (_, ref, _) {
-  //       final loading = ref.watch(loadingProvider);
-  //       final isMobileView = ref.watch(isMobileViewProvider);
-  //       return loading && !isMobileView
-  //           ? RotatedBox(
-  //               quarterTurns: 1,
-  //               child: const LinearProgressIndicator(),
-  //             )
-  //           : Container();
-  //     },
-  //   );
-  // }
-
-  Widget _buildBackground({
-    required BuildContext context,
-    required Widget child,
-  }) {
-    return Material(color: context.colorScheme.surfaceContainer, child: child);
-    // if (!system.isMacOS) {
-    //   return Material(
-    //     color: context.colorScheme.surfaceContainer,
-    //     child: child,
-    //   );
-    // }
-    // return child;
-    // return TransparentMacOSSidebar(
-    //   child: Material(color: Colors.transparent, child: child),
-    // );
-  }
 
   void _updateSideBarWidth(WidgetRef ref, double contentWidth) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -201,60 +232,56 @@ class AppSidebarContainer extends ConsumerWidget {
     }
     final currentIndex = navigationState.currentIndex;
     final showLabel = ref.watch(appSettingProvider).showLabel;
+    final labelTextStyle = context.textTheme.labelLarge!.copyWith(
+      color: context.colorScheme.onSurface,
+    );
+    void selectDestination(int index) {
+      appController.toPage(navigationItems[index].label);
+    }
+
     return Row(
       children: [
-        _buildBackground(
-          context: context,
+        Material(
+          color: context.colorScheme.surfaceContainer,
           child: SafeArea(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                if (system.isMacOS) SizedBox(height: 22),
-                SizedBox(height: 10),
+                if (system.isMacOS) const SizedBox(height: 22),
+                const SizedBox(height: 10),
                 if (!system.isMacOS) ...[
-                  ClipRect(child: AppIcon()),
-                  SizedBox(height: 12),
+                  const ClipRect(child: AppIcon()),
+                  const SizedBox(height: 12),
                 ],
                 Expanded(
                   child: ScrollConfiguration(
                     behavior: HiddenBarScrollBehavior(),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: NavigationRail(
-                            scrollable: true,
-                            minExtendedWidth: 200,
-                            backgroundColor: Colors.transparent,
-                            selectedLabelTextStyle: context
-                                .textTheme
-                                .labelLarge!
-                                .copyWith(color: context.colorScheme.onSurface),
-                            unselectedLabelTextStyle: context
-                                .textTheme
-                                .labelLarge!
-                                .copyWith(color: context.colorScheme.onSurface),
-                            destinations: navigationItems
-                                .map(
-                                  (e) => NavigationRailDestination(
-                                    icon: e.icon,
-                                    label: Text(Intl.message(e.label.name)),
-                                  ),
-                                )
-                                .toList(),
-                            onDestinationSelected: (index) {
-                              appController.toPage(
-                                navigationItems[index].label,
-                              );
-                            },
-                            extended: false,
-                            selectedIndex: currentIndex,
-                            labelType: showLabel
-                                ? NavigationRailLabelType.all
-                                : NavigationRailLabelType.none,
-                          ),
-                        ),
-                      ],
+                    child: NavigationRailFocus(
+                      autofocus: system.isAndroid,
+                      currentIndex: currentIndex,
+                      itemCount: navigationItems.length,
+                      onSelected: selectDestination,
+                      child: NavigationRail(
+                        scrollable: true,
+                        minExtendedWidth: 200,
+                        backgroundColor: Colors.transparent,
+                        selectedLabelTextStyle: labelTextStyle,
+                        unselectedLabelTextStyle: labelTextStyle,
+                        destinations: navigationItems
+                            .map(
+                              (e) => NavigationRailDestination(
+                                icon: e.icon,
+                                label: Text(Intl.message(e.label.name)),
+                              ),
+                            )
+                            .toList(),
+                        onDestinationSelected: selectDestination,
+                        extended: false,
+                        selectedIndex: currentIndex,
+                        labelType: showLabel
+                            ? NavigationRailLabelType.all
+                            : NavigationRailLabelType.none,
+                      ),
                     ),
                   ),
                 ),
@@ -279,7 +306,6 @@ class AppSidebarContainer extends ConsumerWidget {
           ),
         ),
         Expanded(
-          flex: 1,
           child: ClipRect(
             child: LayoutBuilder(
               builder: (_, constraints) {

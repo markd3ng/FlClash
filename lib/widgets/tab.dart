@@ -219,16 +219,22 @@ class _CommonTabBarState<T extends Object> extends State<CommonTabBar<T>>
     }
   }
 
+  void selectSegment(T? segment) {
+    if (segment == null ||
+        segment == widget.groupValue ||
+        widget.disabledChildren.contains(segment)) {
+      return;
+    }
+    widget.onValueChanged(segment);
+  }
+
   void onTapUp(TapUpDetails details) {
     if (isThumbDragging) {
       return;
     }
     final T segment = segmentForXPosition(details.localPosition.dx);
     onPressedChangedByGesture(null);
-    if (segment != widget.groupValue &&
-        !widget.disabledChildren.contains(segment)) {
-      widget.onValueChanged(segment);
-    }
+    selectSegment(segment);
   }
 
   void onDown(DragDownDetails details) {
@@ -270,15 +276,11 @@ class _CommonTabBarState<T extends Object> extends State<CommonTabBar<T>>
     final T? pressed = this.pressed;
     if (isThumbDragging) {
       _playThumbScaleAnimation(isExpanding: true);
-      if (highlighted != widget.groupValue) {
-        widget.onValueChanged(highlighted);
-      }
+      selectSegment(highlighted);
     } else if (pressed != null) {
       onHighlightChangedByGesture(pressed);
       assert(pressed == highlighted);
-      if (highlighted != widget.groupValue) {
-        widget.onValueChanged(highlighted);
-      }
+      selectSegment(highlighted);
     }
 
     onPressedChangedByGesture(null);
@@ -310,6 +312,10 @@ class _CommonTabBarState<T extends Object> extends State<CommonTabBar<T>>
       if (isHighlighted) {
         highlightedIndex = index;
       }
+      final isEnabled = !widget.disabledChildren.contains(entry.key);
+      final VoidCallback? onSelect = isEnabled
+          ? () => selectSegment(entry.key)
+          : null;
 
       if (index != 0) {
         children.add(
@@ -333,24 +339,25 @@ class _CommonTabBarState<T extends Object> extends State<CommonTabBar<T>>
       children.add(
         Semantics(
           button: true,
-          onTap: () {
-            if (widget.disabledChildren.contains(entry.key)) {
-              return;
-            }
-            widget.onValueChanged(entry.key);
-          },
+          enabled: isEnabled,
+          onTap: onSelect,
           inMutuallyExclusiveGroup: true,
           selected: widget.groupValue == entry.key,
-          child: MouseRegion(
-            cursor: kIsWeb ? SystemMouseCursors.click : MouseCursor.defer,
-            child: _Segment<T>(
-              key: ValueKey<T>(entry.key),
-              highlighted: isHighlighted,
-              pressed: pressed == entry.key,
-              isDragging: isThumbDragging,
-              enabled: !widget.disabledChildren.contains(entry.key),
-              segmentLocation: segmentLocation,
-              child: entry.value,
+          child: InkWell(
+            canRequestFocus: isEnabled,
+            excludeFromSemantics: true,
+            onTap: onSelect,
+            child: MouseRegion(
+              cursor: kIsWeb ? SystemMouseCursors.click : MouseCursor.defer,
+              child: _Segment<T>(
+                key: ValueKey<T>(entry.key),
+                highlighted: isHighlighted,
+                pressed: pressed == entry.key,
+                isDragging: isThumbDragging,
+                enabled: isEnabled,
+                segmentLocation: segmentLocation,
+                child: entry.value,
+              ),
             ),
           ),
         ),
