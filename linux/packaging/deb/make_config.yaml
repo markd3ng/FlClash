@@ -26,3 +26,17 @@ categories:
   - Network
 
 startup_notify: true
+
+postinstall_scripts:
+  - |
+    CORE_PATH="/usr/share/FlClash/FlClashCore"
+    if [ -f "$CORE_PATH" ]; then
+      chown root:root "$CORE_PATH" 2>/dev/null || true
+      chmod u+s "$CORE_PATH" 2>/dev/null || true
+    fi
+postuninstall_scripts:
+  - |
+    CORE_PATH="/usr/share/FlClash/FlClashCore"
+    if [ -f "$CORE_PATH" ]; then
+      chmod u-s "$CORE_PATH" 2>/dev/null || true
+    fi

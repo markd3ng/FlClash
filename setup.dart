@@ -535,6 +535,20 @@ class BuildCommand extends Command {
     }
   }
 
+  Future<void> _setLinuxCoreSetuid() async {
+    final coreFile = File('libclash/linux/FlClashCore');
+    if (!coreFile.existsSync()) return;
+    final result = await Process.run('chmod', ['u+s', coreFile.path]);
+    if (result.exitCode != 0) {
+      throw ProcessException(
+        'chmod',
+        ['u+s', coreFile.path],
+        result.stderr.toString(),
+        result.exitCode,
+      );
+    }
+  }
+
   Future<void> _getMacosDependencies() async {
     final appDmg = await Process.run('bash', [
       '-lc',
@@ -733,6 +747,7 @@ class BuildCommand extends Command {
         ].join(',');
         final defaultTarget = targetMap[arch];
         await _getLinuxDependencies(arch!);
+        await _setLinuxCoreSetuid();
         await _buildDistributor(
           target: target,
           targets: targets,

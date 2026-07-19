@@ -109,6 +109,26 @@ class System {
       }
       return AuthorizeCode.success;
     } else if (Platform.isLinux) {
+      try {
+        final result = await Process.run('pkexec', [
+          'sh',
+          '-c',
+          'chown root:root "\$1" && chmod u+s "\$1" && sync',
+          'sh',
+          corePath,
+        ]);
+        if (result.exitCode == 0) {
+          return await checkIsAdmin()
+              ? AuthorizeCode.success
+              : AuthorizeCode.error;
+        }
+        if (result.exitCode != 127) {
+          return AuthorizeCode.error;
+        }
+      } catch (error) {
+        commonPrint.log('pkexec failed: $error');
+      }
+      await window?.show();
       final password = await globalState.showCommonDialog<String>(
         child: InputDialog(
           obscureText: true,
@@ -117,7 +137,7 @@ class System {
           inputFormatters: TextInputLimits.limit(TextInputLimits.password),
         ),
       );
-      if (password == null) {
+      if (password == null || password.isEmpty) {
         return AuthorizeCode.error;
       }
       final chownResult = await _runSudo(password, [
@@ -128,11 +148,12 @@ class System {
       if (!chownResult) {
         return AuthorizeCode.error;
       }
-      final chmodResult = await _runSudo(password, ['chmod', '+sx', corePath]);
+      final chmodResult = await _runSudo(password, ['chmod', 'u+s', corePath]);
       if (!chmodResult) {
         return AuthorizeCode.error;
       }
-      return AuthorizeCode.success;
+      await Process.run('sync', []);
+      return await checkIsAdmin() ? AuthorizeCode.success : AuthorizeCode.error;
     }
     return AuthorizeCode.error;
   }
