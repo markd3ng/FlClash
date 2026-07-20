@@ -83,18 +83,31 @@ Support the following actions
 
 ## Docker
 
-Run FlClash on a web-accessible XFCE desktop (NAS / home server). After the container starts, open `http://<host>:3000` in a browser.
+The Docker image runs FlClash in a browser-accessible XFCE desktop for Linux
+`amd64` and `arm64` hosts. It is intended for NAS and home-server deployments;
+it does not automatically route traffic from the Docker host.
 
 ```bash
-docker run -d --name flclash \
-  -p 3000:3000 \
-  --cap-add NET_ADMIN --device /dev/net/tun \
+docker run -d \
+    --name flclash \
+    --restart unless-stopped \
+    -e PUID="$(id -u)" \
+    -e PGID="$(id -g)" \
+    -e TZ=Asia/Shanghai \
+    -p 3000:3000 -p 3001:3001 \
+    --cap-add NET_ADMIN \
+    --device /dev/net/tun:/dev/net/tun \
   -v flclash-config:/config \
   --shm-size 1g \
   ghcr.io/pickrui/flclash:latest
 ```
 
-Or use [docker/docker-compose.yml](docker/docker-compose.yml).
+Open `https://<host>:3001` after the container starts. A certificate warning is
+expected because the default certificate is self-signed. The web desktop has no
+authentication by default, so do not expose it directly to the Internet.
+
+See the [Docker guide](docker/README.md) for Docker Compose, authentication,
+persistent storage, proxy-port exposure, updates, and troubleshooting.
 
 ## Build
 

@@ -2,8 +2,6 @@ services:
   flclash:
     image: ghcr.io/pickrui/flclash:latest
     container_name: flclash
-    security_opt:
-      - seccomp:unconfined
     cap_add:
       - NET_ADMIN
     devices:

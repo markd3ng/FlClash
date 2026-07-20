@@ -71,6 +71,33 @@ on Mobile:
 
 <a href="https://chen08209.github.io/FlClash-fdroid-repo/repo?fingerprint=789D6D32668712EF7672F9E58DEEB15FBD6DCEEC5AE7A4371EA72F2AAE8A12FD"><img alt="Get it on F-Droid" src="snapshots/get-it-on-fdroid.svg" width="200px"/></a> <a href="https://github.com/chen08209/FlClash/releases"><img alt="Get it on GitHub" src="snapshots/get-it-on-github.svg" width="200px"/></a>
 
+## Docker
+
+Docker 镜像通过浏览器可访问的 XFCE 桌面运行 FlClash，支持 Linux `amd64`
+和 `arm64` 宿主机，适合部署在 NAS 或家庭服务器上。容器不会自动接管 Docker
+宿主机的流量。
+
+```bash
+docker run -d \
+    --name flclash \
+    --restart unless-stopped \
+    -e PUID="$(id -u)" \
+    -e PGID="$(id -g)" \
+    -e TZ=Asia/Shanghai \
+    -p 3000:3000 -p 3001:3001 \
+    --cap-add NET_ADMIN \
+    --device /dev/net/tun:/dev/net/tun \
+    -v flclash-config:/config \
+    --shm-size 1g \
+    ghcr.io/pickrui/flclash:latest
+```
+
+容器启动后访问 `https://<宿主机地址>:3001`。默认使用自签名证书，首次访问
+出现证书警告属于正常现象。Web 桌面默认没有身份验证，请勿直接暴露到公网。
+
+Docker Compose、身份验证、数据持久化、代理端口发布、更新和排错方法请参阅
+[Docker 使用指南](docker/README_zh_CN.md)。
+
 ## Build
 
 1. 更新 submodules
