@@ -527,7 +527,6 @@ Future<MigrationData> _oldToNowTask(
   appSettingProps['restoreStrategy'] = appSettingProps['recoveryStrategy'];
   configMap['appSettingProps'] = appSettingProps;
   configMap['proxiesStyleProps'] = configMap['proxiesStyle'];
-  configMap['proxiesStyleProps'] = configMap['proxiesStyle'];
   // final overwriteMap = configMap['overwrite'] as Map? ?? {};
   // configMap['overwriteType'] = overwriteMap['type'];
   // configMap['scriptId'] = overwriteMap['scriptOverwrite'];

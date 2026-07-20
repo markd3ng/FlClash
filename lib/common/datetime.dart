@@ -5,13 +5,6 @@ extension DateTimeExtension on DateTime {
     return isBefore(DateTime.now());
   }
 
-  bool isBeforeSecure(DateTime? dateTime) {
-    if (dateTime == null) {
-      return false;
-    }
-    return true;
-  }
-
   String get lastUpdateTimeDesc {
     final currentDateTime = DateTime.now();
     final difference = currentDateTime.difference(this);
@@ -44,9 +37,5 @@ extension DateTimeExtension on DateTime {
 
   String get showFull {
     return toString().substring(0, 19);
-  }
-
-  String get showTime {
-    return toString().substring(10, 19);
   }
 }

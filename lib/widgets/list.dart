@@ -1,4 +1,3 @@
-import 'package:collection/collection.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/providers/app.dart';
@@ -547,42 +546,6 @@ Widget generateSectionV2({
       ),
     ],
   );
-}
-
-Widget generateSectionV3({
-  String? title,
-  required Iterable<Widget> items,
-  List<Widget>? actions,
-}) {
-  final genItems = items.mapIndexed<Widget>((index, item) {
-    final position = ItemPosition.get(index, items.length);
-    if (position != ItemPosition.middle) {
-      return ItemPositionProvider(position: position, child: item);
-    }
-    return item;
-  });
-  return Column(
-    children: [
-      if (items.isNotEmpty && title != null)
-        ListHeader(title: title, actions: actions),
-      Column(children: [...genItems]),
-    ],
-  );
-}
-
-List<Widget> generateInfoSection({
-  required Info info,
-  required Iterable<Widget> items,
-  List<Widget>? actions,
-  bool separated = true,
-}) {
-  final genItems = separated
-      ? items.separated(const Divider(height: 0))
-      : items;
-  return [
-    if (items.isNotEmpty) InfoHeader(info: info, actions: actions),
-    ...genItems,
-  ];
 }
 
 Widget generateListView(List<Widget> items) {

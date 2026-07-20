@@ -35,10 +35,6 @@ extension ColorExtension on Color {
     return withAlpha(15);
   }
 
-  Color get opacity3 {
-    return withAlpha(76);
-  }
-
   Color get opacity0 {
     return withAlpha(0);
   }
@@ -98,15 +94,6 @@ extension ColorExtension on Color {
     return Color.lerp(
       this,
       brightness == Brightness.dark ? Colors.white : Colors.black,
-      factor,
-    )!;
-  }
-
-  Color blendLighten(BuildContext context, {double factor = 0.1}) {
-    final brightness = Theme.of(context).brightness;
-    return Color.lerp(
-      this,
-      brightness == Brightness.dark ? Colors.black : Colors.white,
       factor,
     )!;
   }

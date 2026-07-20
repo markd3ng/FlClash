@@ -10,20 +10,6 @@ import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-const _virtualProxyTypes = {
-  'Selector',
-  'URLTest',
-  'Fallback',
-  'LoadBalance',
-  'Relay',
-  'Direct',
-  'Reject',
-  'RejectDrop',
-  'Compatible',
-  'Pass',
-  'Dns',
-};
-
 class ProxyChainCandidateSection {
   final String label;
   final IconData iconData;
@@ -65,45 +51,6 @@ Iterable<ProfileProxy> _getValidProfileProxies(
   return profileProxies.where((item) => item.isValid);
 }
 
-ProxyChainNameScope buildProxyChainNameScope({
-  required List<Group> groups,
-  Iterable<ProfileProxy> profileProxies = const [],
-}) {
-  final proxyNames = {
-    for (final group in groups)
-      for (final proxy in group.all) proxy.name,
-    for (final proxy in _getValidProfileProxies(profileProxies)) proxy.name,
-  };
-  final groupNames = {for (final group in groups) group.name};
-  return ProxyChainNameScope(
-    targetNames: proxyNames,
-    dialerNames: {...proxyNames, ...groupNames},
-  );
-}
-
-Map<String, ProxyChainNodeInfo> buildProxyChainNodeInfoMap({
-  required List<Group> groups,
-  Iterable<ProfileProxy> profileProxies = const [],
-}) {
-  final nodeInfoMap = <String, ProxyChainNodeInfo>{};
-  for (final group in groups) {
-    nodeInfoMap.putIfAbsent(
-      group.name,
-      () => ProxyChainNodeInfo(type: group.type.value, testUrl: group.testUrl),
-    );
-    for (final proxy in group.all) {
-      nodeInfoMap.putIfAbsent(
-        proxy.name,
-        () => ProxyChainNodeInfo(type: proxy.type, testUrl: group.testUrl),
-      );
-    }
-  }
-  for (final proxy in _getValidProfileProxies(profileProxies)) {
-    nodeInfoMap[proxy.name] = ProxyChainNodeInfo(type: proxy.type);
-  }
-  return nodeInfoMap;
-}
-
 List<String> _addUniqueProxyNames(Set<String> seen, Iterable<String> proxies) {
   final names = <String>[];
   for (final proxy in normalizeProxyChainProxies(proxies)) {
@@ -112,63 +59,6 @@ List<String> _addUniqueProxyNames(Set<String> seen, Iterable<String> proxies) {
     }
   }
   return names;
-}
-
-List<ProxyChainCandidateSection> buildProxyChainCandidateSections({
-  required List<Group> groups,
-  Iterable<ProfileProxy> profileProxies = const [],
-  Iterable<String> extra = const [],
-}) {
-  final sections = <ProxyChainCandidateSection>[];
-  final seen = <String>{};
-
-  void addSection({
-    required String label,
-    required IconData iconData,
-    required Iterable<String> proxies,
-  }) {
-    final names = _addUniqueProxyNames(seen, proxies);
-    if (names.isEmpty) {
-      return;
-    }
-    sections.add(
-      ProxyChainCandidateSection(
-        label: label,
-        iconData: iconData,
-        proxies: names,
-      ),
-    );
-  }
-
-  addSection(
-    label: appLocalizations.proxyChainCustomNodes,
-    iconData: Icons.add_link,
-    proxies: _getValidProfileProxies(profileProxies).map((item) {
-      return item.name;
-    }),
-  );
-
-  for (final group in groups) {
-    addSection(
-      label: group.name,
-      iconData: Icons.account_tree_outlined,
-      proxies: group.all
-          .where((proxy) {
-            return !_virtualProxyTypes.contains(proxy.type);
-          })
-          .map((proxy) {
-            return proxy.name;
-          }),
-    );
-  }
-
-  addSection(
-    label: appLocalizations.proxyChainOtherNodes,
-    iconData: Icons.more_horiz,
-    proxies: extra,
-  );
-
-  return sections;
 }
 
 ProxyChainRawContext buildProxyChainRawContext({

@@ -1044,8 +1044,6 @@ extension ProfileExtension on Profile {
   ProfileType get type =>
       url.isEmpty == true ? ProfileType.file : ProfileType.url;
 
-  bool get realAutoUpdate => url.isEmpty == true ? false : autoUpdate;
-
   String get realLabel => label.takeFirstValid([id.toString()]);
 
   bool get isoixCloudProfile {
