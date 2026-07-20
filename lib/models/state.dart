@@ -290,6 +290,7 @@ abstract class MakeRealProfileState with _$MakeRealProfileState {
     required List<ProxyGroup> customProxyGroups,
     required List<Rule> customRules,
     required String defaultUA,
+    @Default(false) bool blockQuic,
   }) = _MakeRealProfileState;
 }
 
@@ -319,6 +320,7 @@ abstract class SetupState with _$SetupState {
     required Script? script,
     required bool overrideDns,
     required Dns dns,
+    @Default(false) bool blockQuic,
   }) = _SetupState;
 }
 
@@ -375,6 +377,9 @@ extension SetupStateExt on SetupState {
       return true;
     }
     if (overrideDns == true && dns != lastSetupState.dns) {
+      return true;
+    }
+    if (blockQuic != lastSetupState.blockQuic) {
       return true;
     }
     return false;

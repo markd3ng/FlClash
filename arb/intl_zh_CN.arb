@@ -414,6 +414,8 @@
   "coreStatus": "核心状态",
   "appendSystemDns": "追加系统DNS",
   "appendSystemDnsTip": "强制为配置附加系统DNS",
+  "blockQuic": "禁用 QUIC",
+  "blockQuicDesc": "拦截 UDP 443 流量，迫使连接回落到 TCP",
   "editRule": "编辑规则",
   "overrideMode": "覆写模式",
   "standardModeDesc": "标准模式，覆写基本配置，提供简单追加规则能力",

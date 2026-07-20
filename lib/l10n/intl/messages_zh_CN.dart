@@ -171,6 +171,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "basicConfigDesc": MessageLookupByLibrary.simpleMessage("全局修改基本配置"),
     "bind": MessageLookupByLibrary.simpleMessage("绑定"),
     "blacklistMode": MessageLookupByLibrary.simpleMessage("黑名单模式"),
+    "blockQuic": MessageLookupByLibrary.simpleMessage("禁用 QUIC"),
+    "blockQuicDesc": MessageLookupByLibrary.simpleMessage(
+      "拦截 UDP 443 流量，迫使连接回落到 TCP",
+    ),
     "buyWithBalance": MessageLookupByLibrary.simpleMessage("使用余额"),
     "bypassDomain": MessageLookupByLibrary.simpleMessage("排除域名"),
     "bypassDomainDesc": MessageLookupByLibrary.simpleMessage("仅在系统代理启用时生效"),

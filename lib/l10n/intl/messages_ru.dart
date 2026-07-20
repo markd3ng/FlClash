@@ -232,6 +232,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "blacklistMode": MessageLookupByLibrary.simpleMessage(
       "Режим черного списка",
     ),
+    "blockQuic": MessageLookupByLibrary.simpleMessage("Блокировать QUIC"),
+    "blockQuicDesc": MessageLookupByLibrary.simpleMessage(
+      "Отклонять трафик UDP 443, чтобы соединения переключались на TCP",
+    ),
     "buyWithBalance": MessageLookupByLibrary.simpleMessage(
       "Использовать баланс",
     ),

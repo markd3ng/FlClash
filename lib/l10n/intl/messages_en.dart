@@ -228,6 +228,10 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "bind": MessageLookupByLibrary.simpleMessage("Bind"),
     "blacklistMode": MessageLookupByLibrary.simpleMessage("Blacklist mode"),
+    "blockQuic": MessageLookupByLibrary.simpleMessage("Block QUIC"),
+    "blockQuicDesc": MessageLookupByLibrary.simpleMessage(
+      "Reject UDP 443 traffic to force connections back to TCP",
+    ),
     "buyWithBalance": MessageLookupByLibrary.simpleMessage("Use balance"),
     "bypassDomain": MessageLookupByLibrary.simpleMessage("Bypass domain"),
     "bypassDomainDesc": MessageLookupByLibrary.simpleMessage(

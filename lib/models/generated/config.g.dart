@@ -175,6 +175,7 @@ _NetworkProps _$NetworkPropsFromJson(Map<String, dynamic> json) =>
       autoSetSystemDns: json['autoSetSystemDns'] as bool? ?? true,
       appendSystemDns: json['appendSystemDns'] as bool? ?? false,
       autoSetIpv6: json['autoSetIpv6'] as bool? ?? true,
+      blockQuic: json['blockQuic'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$NetworkPropsToJson(_NetworkProps instance) =>
@@ -185,6 +186,7 @@ Map<String, dynamic> _$NetworkPropsToJson(_NetworkProps instance) =>
       'autoSetSystemDns': instance.autoSetSystemDns,
       'appendSystemDns': instance.appendSystemDns,
       'autoSetIpv6': instance.autoSetIpv6,
+      'blockQuic': instance.blockQuic,
     };
 
 const _$RouteModeEnumMap = {

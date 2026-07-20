@@ -1,4 +1,5 @@
 import 'package:fl_clash/common/common.dart';
+import 'package:fl_clash/controller.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/providers/config.dart';
 import 'package:fl_clash/widgets/widgets.dart';
@@ -330,6 +331,31 @@ class RouteAddressItem extends ConsumerWidget {
   }
 }
 
+class BlockQuicItem extends ConsumerWidget {
+  const BlockQuicItem({super.key});
+
+  @override
+  Widget build(BuildContext context, ref) {
+    final appLocalizations = context.appLocalizations;
+    final blockQuic = ref.watch(
+      networkSettingProvider.select((state) => state.blockQuic),
+    );
+    return ListItem.switchItem(
+      title: Text(appLocalizations.blockQuic),
+      subtitle: Text(appLocalizations.blockQuicDesc),
+      delegate: SwitchDelegate(
+        value: blockQuic,
+        onChanged: (bool value) async {
+          ref
+              .read(networkSettingProvider.notifier)
+              .update((state) => state.copyWith(blockQuic: value));
+          appController.applyProfileDebounce(silence: true);
+        },
+      ),
+    );
+  }
+}
+
 class NetworkListView extends StatelessWidget {
   const NetworkListView({super.key});
 
@@ -360,6 +386,7 @@ class NetworkListView extends StatelessWidget {
           if (system.isDesktop) const TUNItem(),
           if (system.isMacOS) const AutoSetSystemDnsItem(),
           const TunStackItem(),
+          const BlockQuicItem(),
           if (!system.isDesktop) ...[
             const RouteModeItem(),
             const RouteAddressItem(),

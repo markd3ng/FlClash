@@ -499,7 +499,7 @@ func handleGetConfig(path string) (*config.RawConfig, error) {
 	if err != nil {
 		return nil, err
 	}
-	return config.UnmarshalRawConfig(data)
+	return config.UnmarshalRawConfig(normalizeConfigShortIds(data))
 }
 
 func handleCrash() {

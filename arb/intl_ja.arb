@@ -413,6 +413,8 @@
   "coreStatus": "コアステータス",
   "appendSystemDns": "システムDNSを追加",
   "appendSystemDnsTip": "設定にシステムDNSを強制的に追加します",
+  "blockQuic": "QUICをブロック",
+  "blockQuicDesc": "UDP 443のトラフィックを拒否し、接続をTCPにフォールバックさせます",
   "editRule": "ルールを編集",
   "overrideMode": "上書きモード",
   "standardModeDesc": "標準モード、基本設定を上書きし、シンプルなルール追加機能を提供",

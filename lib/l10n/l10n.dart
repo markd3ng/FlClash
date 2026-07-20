@@ -3214,6 +3214,21 @@ class AppLocalizations {
     );
   }
 
+  /// `Block QUIC`
+  String get blockQuic {
+    return Intl.message('Block QUIC', name: 'blockQuic', desc: '', args: []);
+  }
+
+  /// `Reject UDP 443 traffic to force connections back to TCP`
+  String get blockQuicDesc {
+    return Intl.message(
+      'Reject UDP 443 traffic to force connections back to TCP',
+      name: 'blockQuicDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Edit rule`
   String get editRule {
     return Intl.message('Edit rule', name: 'editRule', desc: '', args: []);

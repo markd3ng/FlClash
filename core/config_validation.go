@@ -94,7 +94,7 @@ func prepareValidationResources(data []byte) error {
 }
 
 func prepareValidationConfig(data []byte) (*config.RawConfig, error) {
-	rawConfig, err := config.UnmarshalRawConfig(data)
+	rawConfig, err := config.UnmarshalRawConfig(normalizeConfigShortIds(data))
 	if err != nil {
 		return nil, err
 	}

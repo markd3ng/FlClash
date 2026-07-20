@@ -591,6 +591,35 @@ void main() {
     expect(result['geo-update-interval'], defaultGeoUpdateInterval);
   });
 
+  test('makeRealProfileTask injects QUIC block rule when enabled', () async {
+    final result = await makeRealProfileTask(
+      const MakeRealProfileState(
+        profilesPath: '/profiles',
+        profileId: 1,
+        overwriteType: OverwriteType.standard,
+        rawConfig: {
+          'rules': ['MATCH,DIRECT'],
+        },
+        realPatchConfig: ClashConfig(),
+        overrideDns: false,
+        appendSystemDns: false,
+        addedRules: [],
+        proxyChains: [],
+        profileProxies: [],
+        customProxyGroups: [],
+        customRules: [],
+        defaultUA: 'FlClash',
+        blockQuic: true,
+      ),
+    );
+
+    expect(result['rules'], [
+      'SNIFF-PROTOCOL,stun,REJECT-DROP',
+      'AND,((NETWORK,udp),(DST-PORT,443)),REJECT',
+      'MATCH,DIRECT',
+    ]);
+  });
+
   test(
     'makeRealProfileTask applies non-empty custom overwrite lists',
     () async {

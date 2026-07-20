@@ -180,6 +180,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "basicConfigDesc": MessageLookupByLibrary.simpleMessage("基本設定をグローバルに変更"),
     "bind": MessageLookupByLibrary.simpleMessage("バインド"),
     "blacklistMode": MessageLookupByLibrary.simpleMessage("ブラックリストモード"),
+    "blockQuic": MessageLookupByLibrary.simpleMessage("QUICをブロック"),
+    "blockQuicDesc": MessageLookupByLibrary.simpleMessage(
+      "UDP 443のトラフィックを拒否し、接続をTCPにフォールバックさせます",
+    ),
     "buyWithBalance": MessageLookupByLibrary.simpleMessage("残高を使用"),
     "bypassDomain": MessageLookupByLibrary.simpleMessage("バイパスドメイン"),
     "bypassDomainDesc": MessageLookupByLibrary.simpleMessage("システムプロキシ有効時のみ適用"),

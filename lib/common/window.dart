@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:fl_clash/common/common.dart';
@@ -27,6 +28,9 @@ class Window {
       await _showExistingInstance();
       exit(0);
     }
+    if (!system.isMacOS) {
+      unawaited(_startWakeupServer());
+    }
     if (system.isWindows) {
       protocol.register('clash');
       protocol.register('clashmeta');
@@ -55,15 +59,37 @@ class Window {
     });
   }
 
+  Future<void> _startWakeupServer() async {
+    try {
+      final server = await ServerSocket.bind(InternetAddress.loopbackIPv4, 0);
+      final file = File(await appPath.wakeupFilePath);
+      await file.writeAsString(server.port.toString(), flush: true);
+      server.listen((socket) {
+        socket.destroy();
+        show();
+      });
+    } catch (_) {}
+  }
+
   Future<void> _showExistingInstance() async {
-    if (!system.isMacOS) {
+    if (system.isMacOS) {
+      try {
+        await Process.run('/usr/bin/open', [
+          '-b',
+          globalState.packageInfo.packageName,
+        ]);
+      } catch (_) {}
       return;
     }
     try {
-      await Process.run('/usr/bin/open', [
-        '-b',
-        globalState.packageInfo.packageName,
-      ]);
+      final content = await File(await appPath.wakeupFilePath).readAsString();
+      final port = int.parse(content.trim());
+      final socket = await Socket.connect(
+        InternetAddress.loopbackIPv4,
+        port,
+        timeout: const Duration(seconds: 1),
+      );
+      socket.destroy();
     } catch (_) {}
   }
 

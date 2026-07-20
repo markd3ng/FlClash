@@ -171,6 +171,7 @@ abstract class NetworkProps with _$NetworkProps {
     @Default(true) bool autoSetSystemDns,
     @Default(false) bool appendSystemDns,
     @Default(true) bool autoSetIpv6,
+    @Default(false) bool blockQuic,
   }) = _NetworkProps;
 
   factory NetworkProps.fromJson(Map<String, Object?>? json) =>

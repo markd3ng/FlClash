@@ -149,7 +149,7 @@ func handleAction(action *Action, result ActionResult) {
 			result.error(err)
 			return
 		}
-		configInfo, err := config.UnmarshalRawConfig(data)
+		configInfo, err := config.UnmarshalRawConfig(normalizeConfigShortIds(data))
 		if err != nil {
 			result.error(err)
 			return

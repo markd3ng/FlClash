@@ -302,6 +302,7 @@ abstract class Group with _$Group {
     @JsonKey(fromJson: GroupType.parseProfileType) required GroupType type,
     @Default([]) List<Proxy> all,
     String? now,
+    String? fixed,
     bool? hidden,
     String? testUrl,
     @Default('') String icon,

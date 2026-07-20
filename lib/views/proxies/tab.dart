@@ -210,9 +210,21 @@ class ProxiesTabViewState extends ConsumerState<ProxiesTabView>
                         Tab(
                           child: Builder(
                             builder: (context) {
-                              return EmojiText(
-                                group.name,
-                                style: DefaultTextStyle.of(context).style,
+                              final style = DefaultTextStyle.of(context).style;
+                              return Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  EmojiText(group.name, style: style),
+                                  if (group.fixed?.isNotEmpty == true)
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 4),
+                                      child: Icon(
+                                        Icons.lock_outline,
+                                        size: 14,
+                                        color: style.color,
+                                      ),
+                                    ),
+                                ],
                               );
                             },
                           ),

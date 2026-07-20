@@ -505,6 +505,19 @@ class _ListHeaderState extends State<ListHeader> {
                                 groupType,
                                 style: context.textTheme.labelMedium?.toLight,
                               ),
+                              if (widget.group.fixed?.isNotEmpty == true)
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 4),
+                                  child: Icon(
+                                    Icons.lock_outline,
+                                    size: 14,
+                                    color: context
+                                        .textTheme
+                                        .labelMedium
+                                        ?.toLight
+                                        .color,
+                                  ),
+                                ),
                               Flexible(
                                 flex: 1,
                                 child: Consumer(

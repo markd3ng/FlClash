@@ -104,6 +104,7 @@ Future<Map<String, dynamic>> _makeRealProfileTask(
   final customRules = data.customRules;
   final appendSystemDns = data.appendSystemDns;
   final defaultUA = data.defaultUA;
+  final blockQuic = data.blockQuic;
   String getProvidersFilePathInner(String type, String url) {
     return join(
       profilesPath,
@@ -294,7 +295,11 @@ Future<Map<String, dynamic>> _makeRealProfileTask(
     rules = [...finalAddedRules, ...rules];
   }
   // Block WebRTC: drop sniffed STUN first, highest priority.
-  rawConfig['rules'] = ['SNIFF-PROTOCOL,stun,REJECT-DROP', ...rules];
+  rawConfig['rules'] = [
+    'SNIFF-PROTOCOL,stun,REJECT-DROP',
+    if (blockQuic) 'AND,((NETWORK,udp),(DST-PORT,443)),REJECT',
+    ...rules,
+  ];
   return Map<String, dynamic>.from(rawConfig);
 }
 

@@ -414,6 +414,8 @@
   "coreStatus": "Core status",
   "appendSystemDns": "Append System DNS",
   "appendSystemDnsTip": "Forcefully append system DNS to the configuration",
+  "blockQuic": "Block QUIC",
+  "blockQuicDesc": "Reject UDP 443 traffic to force connections back to TCP",
   "editRule": "Edit rule",
   "overrideMode": "Override mode",
   "standardModeDesc": "Standard mode, override basic configuration, provide simple rule addition capability",

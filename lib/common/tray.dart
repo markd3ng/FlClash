@@ -175,11 +175,19 @@ class Tray {
       },
       checked: trayState.autoLaunch,
     );
-    final copyEnvVarMenuItem = MenuItem(
+    final copyEnvVarMenuItem = MenuItem.submenu(
       label: appLocalizations.copyEnvVar,
-      onClick: (_) async {
-        await _copyEnv(trayState.port);
-      },
+      submenu: Menu(
+        items: [
+          for (final shell in _EnvShell.values)
+            MenuItem(
+              label: shell.label,
+              onClick: (_) async {
+                await _copyEnv(trayState.port, shell);
+              },
+            ),
+        ],
+      ),
     );
     menuItems.add(autoStartMenuItem);
     menuItems.add(copyEnvVarMenuItem);
@@ -220,15 +228,33 @@ class Tray {
     }
   }
 
-  Future<void> _copyEnv(int port) async {
+  Future<void> _copyEnv(int port, _EnvShell shell) async {
     final url = 'http://127.0.0.1:$port';
 
-    final cmdline = system.isWindows
-        ? 'set \$env:all_proxy=$url'
-        : 'export all_proxy=$url';
+    final cmdline = switch (shell) {
+      _EnvShell.bash =>
+        'export http_proxy=$url https_proxy=$url all_proxy=$url',
+      _EnvShell.fish =>
+        'set -gx http_proxy $url; set -gx https_proxy $url; set -gx all_proxy $url',
+      _EnvShell.powerShell =>
+        '\$env:http_proxy="$url"; \$env:https_proxy="$url"; \$env:all_proxy="$url"',
+      _EnvShell.cmd =>
+        'set http_proxy=$url && set https_proxy=$url && set all_proxy=$url',
+    };
 
     await Clipboard.setData(ClipboardData(text: cmdline));
   }
+}
+
+enum _EnvShell {
+  bash('Bash'),
+  fish('Fish'),
+  powerShell('PowerShell'),
+  cmd('CMD');
+
+  const _EnvShell(this.label);
+
+  final String label;
 }
 
 final tray = system.isDesktop ? Tray() : null;

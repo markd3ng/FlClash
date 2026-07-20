@@ -1707,6 +1707,7 @@ extension SetupControllerExt on AppController {
         customProxyGroups: customProxyGroups,
         customRules: customRules,
         defaultUA: defaultUA,
+        blockQuic: setupState.blockQuic,
       ),
     );
     return res;
