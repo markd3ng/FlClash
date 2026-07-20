@@ -72,7 +72,14 @@ class _StartButtonState extends ConsumerState<StartButton>
       profilesProvider.select((state) => state.isNotEmpty),
     );
     if (!hasProfile) {
-      return const SizedBox.shrink();
+      return FloatingActionButton(
+        heroTag: null,
+        onPressed: () {
+          globalState.showNotifier(appLocalizations.nullProfileDesc);
+          appController.toProfiles();
+        },
+        child: const Icon(Icons.add),
+      );
     }
     final textWidth =
         globalState.measure

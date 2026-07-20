@@ -145,4 +145,5 @@ const (
 	RequestMessage   MessageType = "request"
 	LoadedMessage    MessageType = "loaded"
 	GeoUpdateMessage MessageType = "geoUpdate"
+	ModeMessage      MessageType = "mode"
 )

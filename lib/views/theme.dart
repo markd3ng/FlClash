@@ -10,6 +10,7 @@ import 'package:fl_clash/providers/config.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -541,6 +542,39 @@ class _PaletteDialog extends StatefulWidget {
 
 class _PaletteDialogState extends State<_PaletteDialog> {
   final _controller = ValueNotifier<ui.Color>(Colors.transparent);
+  late final TextEditingController _hexController;
+
+  @override
+  void initState() {
+    super.initState();
+    _hexController = TextEditingController(text: _controller.value.hex);
+    _controller.addListener(_syncFromPalette);
+  }
+
+  void _syncFromPalette() {
+    final hex = _controller.value.hex;
+    if (_hexController.text.toUpperCase() != hex) {
+      _hexController.text = hex;
+    }
+  }
+
+  void _handleHexChanged(String value) {
+    final text = value.startsWith('#') ? value.substring(1) : value;
+    if (!RegExp(r'^[0-9a-fA-F]{6}$').hasMatch(text)) {
+      return;
+    }
+    final color = ui.Color(0xFF000000 | int.parse(text, radix: 16));
+    if (_controller.value != color) {
+      _controller.value = color;
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.removeListener(_syncFromPalette);
+    _hexController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -573,12 +607,40 @@ class _PaletteDialogState extends State<_PaletteDialog> {
           ValueListenableBuilder(
             valueListenable: _controller,
             builder: (_, color, _) {
-              return PrimaryColorBox(
-                primaryColor: color,
-                child: FilledButton(
-                  onPressed: () {},
-                  child: Text(_controller.value.hex),
-                ),
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: color,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: context.colorScheme.outlineVariant,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  SizedBox(
+                    width: 120,
+                    child: TextField(
+                      controller: _hexController,
+                      textAlign: TextAlign.center,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(
+                          RegExp(r'[#0-9a-fA-F]'),
+                        ),
+                        LengthLimitingTextInputFormatter(7),
+                      ],
+                      onChanged: _handleHexChanged,
+                    ),
+                  ),
+                ],
               );
             },
           ),

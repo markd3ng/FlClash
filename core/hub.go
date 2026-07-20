@@ -544,6 +544,12 @@ func handleSetupConfig(data []byte) string {
 }
 
 func init() {
+	tunnel.ModeChangeHook = func(m tunnel.TunnelMode) {
+		sendMessage(Message{
+			Type: ModeMessage,
+			Data: m.String(),
+		})
+	}
 	adapter.UrlTestHook = func(url string, name string, delay uint16) {
 		delayData := &Delay{
 			Url:  url,

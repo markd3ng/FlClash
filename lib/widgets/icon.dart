@@ -58,6 +58,7 @@ class ImageCacheWidget extends StatefulWidget {
 
 class _ImageCacheWidgetState extends State<ImageCacheWidget> {
   final ValueNotifier<File?> _imageNotifier = ValueNotifier(null);
+  int _retryCount = 0;
 
   @override
   void initState() {
@@ -85,9 +86,19 @@ class _ImageCacheWidgetState extends State<ImageCacheWidget> {
       if (!mounted) {
         return;
       }
+      _retryCount = 0;
       _imageNotifier.value = file;
     } catch (_) {
       // Keep the stale cached image (or default icon) when refresh fails.
+      if (!mounted || _imageNotifier.value != null || _retryCount >= 2) {
+        return;
+      }
+      _retryCount++;
+      await Future.delayed(Duration(seconds: 2 * _retryCount));
+      if (!mounted) {
+        return;
+      }
+      _getImageFormCache();
     }
   }
 

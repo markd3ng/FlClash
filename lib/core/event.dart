@@ -22,6 +22,8 @@ abstract mixin class CoreEventListener {
     bool reload,
     String? error,
   ) {}
+
+  void onModeChanged(String mode) {}
 }
 
 class CoreEventManager {
@@ -57,6 +59,9 @@ class CoreEventManager {
                     data['reload'] as bool? ?? false,
                     data['error'] as String?,
                   );
+                  break;
+                case CoreEventType.mode:
+                  listener.onModeChanged(event.data as String);
                   break;
               }
             } catch (error, stackTrace) {

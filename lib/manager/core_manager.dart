@@ -86,6 +86,22 @@ class _CoreContainerState extends ConsumerState<CoreManager>
   }
 
   @override
+  void onModeChanged(String mode) {
+    final index = Mode.values.indexWhere((item) => item.name == mode);
+    if (index == -1) {
+      return;
+    }
+    final next = Mode.values[index];
+    final current = ref.read(
+      patchClashConfigProvider.select((state) => state.mode),
+    );
+    if (current != next) {
+      appController.changeMode(next);
+    }
+    super.onModeChanged(mode);
+  }
+
+  @override
   Future<void> onLoaded(String providerName) async {
     ref
         .read(providersProvider.notifier)

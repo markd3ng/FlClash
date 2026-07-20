@@ -321,24 +321,48 @@ class GlobalState {
 
   Future<Map<String, dynamic>> handleEvaluate(
     String scriptContent,
-    Map<String, dynamic> config,
-  ) async {
+    Map<String, dynamic> config, {
+    void Function(String level, String output)? onConsole,
+  }) async {
     if (config['proxy-providers'] == null) {
       config['proxy-providers'] = {};
     }
     final configJs = json.encode(config);
-    final runtime = getJavascriptRuntime();
-    final res = await runtime.evaluateAsync('''
+    String? lastError;
+    Future<Map<String, dynamic>?> run() async {
+      final runtime = getJavascriptRuntime();
+      if (onConsole != null) {
+        JavascriptRuntime.channelFunctionsRegistered[runtime
+            .getEngineInstanceId()]?['ConsoleLog'] = (dynamic args) {
+          try {
+            final list = List<dynamic>.from(args as List);
+            final level = list.isNotEmpty ? list.removeAt(0).toString() : 'log';
+            onConsole(level, list.join(' '));
+          } catch (_) {}
+        };
+      }
+      final res = await runtime.evaluateAsync('''
       $scriptContent
       main($configJs)
     ''');
-    if (res.isError) {
-      throw res.stringResult;
+      if (res.isError) {
+        lastError = res.stringResult;
+        return null;
+      }
+      return switch (res.rawResult is ffi.Pointer) {
+        true => runtime.convertValue<Map<String, dynamic>>(res),
+        false => Map<String, dynamic>.from(res.rawResult),
+      };
     }
-    final value = switch (res.rawResult is ffi.Pointer) {
-      true => runtime.convertValue<Map<String, dynamic>>(res),
-      false => Map<String, dynamic>.from(res.rawResult),
-    };
+
+    var value = await run();
+    if (value == null && lastError != null) {
+      lastError = null;
+      value = await run();
+      if (value == null && lastError != null) {
+        throw lastError!;
+      }
+    }
     return value ?? config;
   }
 }

@@ -1,6 +1,7 @@
 package com.follow.clash.service
 
 import android.app.Service
+import android.content.ComponentCallbacks2
 import android.content.Intent
 import android.os.Binder
 import android.os.IBinder
@@ -37,6 +38,15 @@ class CommonService : Service(), IBaseService,
     override fun onLowMemory() {
         Core.forceGC()
         super.onLowMemory()
+    }
+
+    override fun onTrimMemory(level: Int) {
+        if (level >= ComponentCallbacks2.TRIM_MEMORY_BACKGROUND ||
+            level == ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL
+        ) {
+            Core.forceGC()
+        }
+        super.onTrimMemory(level)
     }
 
     private val binder = LocalBinder()

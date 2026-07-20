@@ -630,9 +630,10 @@ extension InitControllerExt on AppController {
     if (system.isAndroid) {
       await globalState.updateStartTime();
     }
+    final hasProfile = _ref.read(currentProfileIdProvider) != null;
     final status = globalState.isStart == true
         ? true
-        : _ref.read(appSettingProvider).autoRun;
+        : _ref.read(appSettingProvider).autoRun && hasProfile;
     if (status == true) {
       await updateStatus(true, isInit: true);
     } else {
@@ -1689,7 +1690,17 @@ extension SetupControllerExt on AppController {
     );
     Map<String, dynamic> rawConfig = configMap;
     if (scriptContent?.isNotEmpty == true) {
-      rawConfig = await globalState.handleEvaluate(scriptContent!, rawConfig);
+      rawConfig = await globalState.handleEvaluate(
+        scriptContent!,
+        rawConfig,
+        onConsole: (level, output) {
+          addLog(
+            Log.app(
+              '[script] $output',
+            ).copyWith(logLevel: level == 'error' ? LogLevel.error : LogLevel.info),
+          );
+        },
+      );
     }
     final directory = await appPath.profilesPath;
     final res = makeRealProfileTask(
