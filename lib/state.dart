@@ -331,28 +331,39 @@ class GlobalState {
     String? lastError;
     Future<Map<String, dynamic>?> run() async {
       final runtime = getJavascriptRuntime();
-      if (onConsole != null) {
-        JavascriptRuntime.channelFunctionsRegistered[runtime
-            .getEngineInstanceId()]?['ConsoleLog'] = (dynamic args) {
-          try {
-            final list = List<dynamic>.from(args as List);
-            final level = list.isNotEmpty ? list.removeAt(0).toString() : 'log';
-            onConsole(level, list.join(' '));
-          } catch (_) {}
-        };
-      }
-      final res = await runtime.evaluateAsync('''
+      try {
+        if (onConsole != null) {
+          JavascriptRuntime.channelFunctionsRegistered[runtime
+              .getEngineInstanceId()]?['ConsoleLog'] = (dynamic args) {
+            try {
+              final list = List<dynamic>.from(args as List);
+              final level = list.isNotEmpty
+                  ? list.removeAt(0).toString()
+                  : 'log';
+              onConsole(level, list.join(' '));
+            } catch (_) {}
+          };
+        }
+        final res = await runtime.evaluateAsync('''
       $scriptContent
       main($configJs)
     ''');
-      if (res.isError) {
-        lastError = res.stringResult;
-        return null;
+        if (res.isError) {
+          lastError = res.stringResult;
+          return null;
+        }
+        return switch (res.rawResult is ffi.Pointer) {
+          true => runtime.convertValue<Map<String, dynamic>>(res),
+          false => Map<String, dynamic>.from(res.rawResult),
+        };
+      } finally {
+        try {
+          runtime.dispose();
+        } catch (_) {}
+        JavascriptRuntime.channelFunctionsRegistered.remove(
+          runtime.getEngineInstanceId(),
+        );
       }
-      return switch (res.rawResult is ffi.Pointer) {
-        true => runtime.convertValue<Map<String, dynamic>>(res),
-        false => Map<String, dynamic>.from(res.rawResult),
-      };
     }
 
     var value = await run();

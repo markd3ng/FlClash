@@ -76,6 +76,9 @@ class _AppStateManagerState extends ConsumerState<AppStateManager>
     if (isBackgroundState) {
       if (!_isBackground) {
         await appController.savePreferences();
+        if (system.isAndroid) {
+          globalState.stopUpdateTasks();
+        }
       }
       _isBackground = true;
     }
@@ -83,6 +86,9 @@ class _AppStateManagerState extends ConsumerState<AppStateManager>
       final wasBackground = _isBackground;
       _isBackground = false;
       render?.resume();
+      if (system.isAndroid && wasBackground && globalState.isStart) {
+        globalState.startUpdateTasks();
+      }
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (wasBackground) {
           appController.clearDelay();

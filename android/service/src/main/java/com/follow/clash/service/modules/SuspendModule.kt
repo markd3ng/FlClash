@@ -40,22 +40,24 @@ class SuspendModule(private val service: Service) : Module() {
 
     override fun onInstall() {
         scope.launch {
-            val screenFlow = service.receiveBroadcastFlow {
+            service.receiveBroadcastFlow {
                 addAction(Intent.ACTION_SCREEN_ON)
                 addAction(Intent.ACTION_SCREEN_OFF)
-            }.map { intent ->
-                intent.action == Intent.ACTION_SCREEN_ON
+                addAction(PowerManager.ACTION_DEVICE_IDLE_MODE_CHANGED)
             }.onStart {
-                emit(isScreenOn())
-            }
-
-            screenFlow.collect {
-                    onUpdate(it)
+                emit(Intent())
+            }.collect { intent ->
+                if (intent.action == Intent.ACTION_SCREEN_ON) {
+                    Core.suspended(false)
+                } else {
+                    onUpdate(isScreenOn())
                 }
+            }
         }
     }
 
     override fun onUninstall() {
         scope.cancel()
+        Core.suspended(false)
     }
 }
