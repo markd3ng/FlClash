@@ -24,8 +24,10 @@ class ProvidersView extends ConsumerStatefulWidget {
 }
 
 class _ProvidersViewState extends ConsumerState<ProvidersView> {
-  Future<void> _updateProviders() async {
-    final providers = ref.read(providersProvider);
+  Future<void> _updateProviders([String? type]) async {
+    final providers = ref
+        .read(providersProvider)
+        .where((provider) => type == null || provider.type == type);
     final List<UpdatingMessage> messages = [];
     final updateProviders = providers.map<Future>((provider) async {
       final message = await appController.updateProvider(provider);
@@ -40,6 +42,17 @@ class _ProvidersViewState extends ConsumerState<ProvidersView> {
     }
   }
 
+  Widget _buildSectionSyncButton(String type) {
+    return IconButton(
+      iconSize: 20,
+      visualDensity: VisualDensity.compact,
+      onPressed: () {
+        _updateProviders(type);
+      },
+      icon: const Icon(Icons.sync),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final providers = ref.watch(providersProvider);
@@ -51,10 +64,12 @@ class _ProvidersViewState extends ConsumerState<ProvidersView> {
         .map((item) => ProviderItem(provider: item));
     final proxySection = generateSection(
       title: appLocalizations.proxyProviders,
+      actions: [_buildSectionSyncButton('Proxy')],
       items: proxyProviders,
     );
     final ruleSection = generateSection(
       title: appLocalizations.ruleProviders,
+      actions: [_buildSectionSyncButton('Rule')],
       items: ruleProviders,
     );
     return AdaptiveSheetScaffold(

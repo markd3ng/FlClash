@@ -215,6 +215,9 @@ class Request {
       try {
         final response = await _apiDirectDio.get(
           'https://$domain/api/v1/version/get',
+          queryParameters: {
+            't': DateTime.now().millisecondsSinceEpoch.toString(),
+          },
           options: Options(responseType: ResponseType.json),
         );
         if (response.statusCode != 200) continue;

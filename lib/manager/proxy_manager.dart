@@ -22,7 +22,7 @@ class _ProxyManagerState extends ConsumerState<ProxyManager> {
     final isStart = proxyState.isStart;
     final systemProxy = proxyState.systemProxy;
     final port = proxyState.port;
-    if (isStart && systemProxy) {
+    if (isStart && systemProxy && port > 0) {
       await startSystemProxy(port, proxyState.bassDomain);
     } else {
       await stopSystemProxyIfNeeded();

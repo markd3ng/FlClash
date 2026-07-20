@@ -177,6 +177,7 @@ class Tray {
     );
     final copyEnvVarMenuItem = MenuItem.submenu(
       label: appLocalizations.copyEnvVar,
+      disabled: trayState.port <= 0,
       submenu: Menu(
         items: [
           for (final shell in _EnvShell.values)
