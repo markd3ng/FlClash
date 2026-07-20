@@ -646,11 +646,10 @@ class CloudApiService {
     return (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString();
   }
 
-  String _flclashSignature(String timestamp) {
+  String _flclashHmac(String message) {
     final key = utf8.encode(Secrets.flClashAppSecret);
-    final msg = utf8.encode(timestamp);
     final hmac = Hmac(sha256, key);
-    return hmac.convert(msg).toString();
+    return hmac.convert(utf8.encode(message)).toString();
   }
 
   bool _constantTimeEquals(String a, String b) {
@@ -679,7 +678,7 @@ class CloudApiService {
       final timestamp = _flclashTimestamp();
 
       final identity = await AgeCrypto.generateIdentity();
-      final signature = _flclashSignature('$timestamp.${identity.recipient}');
+      final signature = _flclashHmac('$timestamp.${identity.recipient}');
 
       final headers = <String, String>{
         'X-Flclash-Timestamp': timestamp,
@@ -718,25 +717,23 @@ class CloudApiService {
       final responseSignature = res.headers.value(
         'X-Flclash-Response-Signature',
       );
-      final isArmored = AgeCrypto.isArmored(configBytes);
-      if (responseSignature != null && responseSignature.isNotEmpty) {
-        final expected = _flclashSignature('$timestamp.$configB64');
-        if (!_constantTimeEquals(responseSignature, expected)) {
-          throw const CloudApiException('Response signature mismatch');
-        }
-      } else if (isArmored) {
+      if (responseSignature == null || responseSignature.isEmpty) {
         throw const CloudApiException('Missing response signature');
       }
-
-      if (isArmored) {
-        try {
-          final plaintext = await AgeCrypto.decrypt(configBytes, identity);
-          return (plaintext, userinfo);
-        } catch (_) {
-          throw const CloudApiException('Server returned invalid config');
-        }
+      final expected = _flclashHmac('$timestamp.$configB64');
+      if (!_constantTimeEquals(responseSignature, expected)) {
+        throw const CloudApiException('Response signature mismatch');
       }
-      return (configBytes, userinfo);
+
+      if (!AgeCrypto.isArmored(configBytes)) {
+        throw const CloudApiException('Server returned invalid config');
+      }
+      try {
+        final plaintext = await AgeCrypto.decrypt(configBytes, identity);
+        return (plaintext, userinfo);
+      } catch (_) {
+        throw const CloudApiException('Server returned invalid config');
+      }
     } catch (e) {
       if (e is DioException) {
         throw CloudApiException(
