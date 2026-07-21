@@ -51,9 +51,9 @@ String _apiRootUrl(String domain) {
 
 String _apiV1BaseUrl(String domain) => '${_apiRootUrl(domain)}/api/v1';
 
-HttpClientAdapter _createDirectApiAdapter() {
+HttpClientAdapter _createCloudApiAdapter() {
   return createFlClashHttpClientAdapter(
-    findProxy: (_) => 'DIRECT',
+    findProxy: FlClashHttpOverrides.handleCloudApiFindProxy,
     allowBadCertificate: () => FlClashTemporaryTls.allowBadCertificate,
   );
 }
@@ -186,7 +186,7 @@ class CloudApiService {
         },
       ),
     );
-    dio.httpClientAdapter = _HedgedApiAdapter(_createDirectApiAdapter());
+    dio.httpClientAdapter = _HedgedApiAdapter(_createCloudApiAdapter());
     dio.interceptors.addAll([
       // Authorization interceptor
       InterceptorsWrapper(
@@ -1117,7 +1117,6 @@ class RetryInterceptor extends Interceptor {
       }
     }
 
-    // Keep oixCloud API direct-only so a broken proxy cannot block recovery.
     return super.onError(lastError, handler);
   }
 

@@ -23,7 +23,6 @@ bool Function()? _canFetchManagedConfigCallback;
 /// Hook the cloud-account layer registers so [Profile.update] can wait for
 /// token bootstrap to finish before issuing a managed-config fetch.
 Future<void> Function()? _ensureCloudReady;
-final Map<int, Uint8List> oixCloudConfigCache = {};
 
 const _flclashEncryptedVersion = 0x02;
 
@@ -97,7 +96,7 @@ abstract class SubscriptionInfo with _$SubscriptionInfo {
   factory SubscriptionInfo.formHString(String? info) {
     if (info == null) return const SubscriptionInfo();
     final list = info.split(';');
-    Map<String, int?> map = {};
+    final Map<String, int?> map = {};
     for (final i in list) {
       final keyValue = i.trim().split('=');
       if (keyValue.length >= 2) {
@@ -1041,8 +1040,7 @@ extension ProfilesExt on List<Profile> {
 }
 
 extension ProfileExtension on Profile {
-  ProfileType get type =>
-      url.isEmpty == true ? ProfileType.file : ProfileType.url;
+  ProfileType get type => url.isEmpty ? ProfileType.file : ProfileType.url;
 
   String get realLabel => label.takeFirstValid([id.toString()]);
 
@@ -1054,15 +1052,9 @@ extension ProfileExtension on Profile {
 
   String get updatingKey => 'profile_$id';
 
-  bool get useEncryptedDiskStore => isoixCloudProfile && system.isAndroid;
-
   bool get includeInPortableBackup => !isoixCloudProfile;
 
   Future<bool> hasLocalConfigSnapshot() async {
-    if (isoixCloudProfile && !useEncryptedDiskStore) {
-      return oixCloudConfigCache.containsKey(id);
-    }
-
     return await getExistingFilePath() != null;
   }
 
@@ -1070,7 +1062,7 @@ extension ProfileExtension on Profile {
     final mFile = await _getFile(false);
     if (!await mFile.exists()) return null;
 
-    if (!useEncryptedDiskStore) {
+    if (!isoixCloudProfile) {
       return mFile.path;
     }
 
@@ -1118,9 +1110,7 @@ extension ProfileExtension on Profile {
     return file;
   }
 
-  Future<File> get file async {
-    return _getFile();
-  }
+  Future<File> get file => _getFile();
 
   Future<void> _replaceWithEncryptedSnapshot(Uint8List bytes) async {
     final encryptedBytes = await ensureEncryptedProfileBytes(bytes);
@@ -1128,14 +1118,14 @@ extension ProfileExtension on Profile {
     final tempFile = File(await appPath.getProfilePath('.$id'));
 
     try {
-      if (!await tempFile.exists()) {
-        await tempFile.create(recursive: true);
-      }
+      await tempFile.create(recursive: true);
       await tempFile.writeAsBytes(encryptedBytes, flush: true);
-      await tempFile.rename(mFile.path);
-    } catch (_) {
-      await tempFile.safeDelete();
-      rethrow;
+      await durableRename(tempFile.path, mFile.path);
+    } catch (error, stackTrace) {
+      try {
+        await tempFile.safeDelete();
+      } catch (_) {}
+      Error.throwWithStackTrace(error, stackTrace);
     }
   }
 
@@ -1182,7 +1172,7 @@ extension ProfileExtension on Profile {
     final response = await request.getFileResponseForUrl(url);
     final disposition = response.headers.value('content-disposition');
     final userinfo = response.headers.value('subscription-userinfo');
-    return await copyWith(
+    return copyWith(
       label: label.takeFirstValid([
         utils.getFileNameForDisposition(disposition),
         id.toString(),
@@ -1207,12 +1197,7 @@ extension ProfileExtension on Profile {
         throw ConfigValidationException(message);
       }
 
-      if (useEncryptedDiskStore) {
-        oixCloudConfigCache.remove(id);
-        await _replaceWithEncryptedSnapshot(bytes);
-      } else {
-        oixCloudConfigCache[id] = Uint8List.fromList(gzip.encode(bytes));
-      }
+      await _replaceWithEncryptedSnapshot(bytes);
 
       return copyWith(lastUpdateDate: DateTime.now());
     }

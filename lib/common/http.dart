@@ -4,6 +4,17 @@ import 'package:dio/io.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/controller.dart';
 
+String resolveManagedConfigProxy({
+  required bool isCoreRunning,
+  required bool hasProxyGroups,
+  required int port,
+}) {
+  if (!isCoreRunning || !hasProxyGroups || port <= 0) {
+    return 'DIRECT';
+  }
+  return 'PROXY localhost:$port; DIRECT';
+}
+
 class FlClashTemporaryTls {
   const FlClashTemporaryTls._();
 
@@ -80,11 +91,28 @@ class FlClashHttpOverrides extends HttpOverrides {
     return 'PROXY localhost:$port';
   }
 
+  static String handleCloudApiFindProxy(Uri url) {
+    final isManagedConfigRequest =
+        Secrets.isApiDomain(url.host) &&
+        url.path == '/api/v1/managed/flclash/direct';
+    if (!isManagedConfigRequest ||
+        !system.isDesktop ||
+        !appController.isAttach) {
+      return 'DIRECT';
+    }
+    final port = appController.config.patchClashConfig.mixedPort;
+    return resolveManagedConfigProxy(
+      isCoreRunning: appController.isStart,
+      hasProxyGroups: appController.groups.isNotEmpty,
+      port: port,
+    );
+  }
+
   @override
   HttpClient createHttpClient(SecurityContext? context) {
     final client = super.createHttpClient(context);
     client.badCertificateCallback =
-        (_, _, _) => FlClashTemporaryTls.allowBadCertificate;
+      (_, _, _) => FlClashTemporaryTls.allowBadCertificate;
     client.findProxy = handleFindProxy;
     return client;
   }

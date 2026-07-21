@@ -164,7 +164,6 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
     int id, {
     required int? fallbackProfileId,
   }) async {
-    oixCloudConfigCache.remove(id);
     await ref.read(profilesProvider.notifier).del(id, reportOnWait: false);
     await appController.clearEffect(id);
     if (ref.read(currentProfileIdProvider) != id) {
@@ -331,7 +330,6 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
     try {
       await _clearStoredToken();
       await _clearCache();
-      oixCloudConfigCache.clear();
     } catch (e, s) {
       commonPrint.log(
         'failed to rollback oixCloud sign-in: $e\n$s',
@@ -583,7 +581,12 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
   }
 
   Future<bool> signOut({bool revokeToken = false}) async {
-    if (state.isLoading) return false;
+    if (state.isLoading ||
+        state.isRefreshing ||
+        state.isSyncing ||
+        _managedProfileFuture != null) {
+      return false;
+    }
     state = state.copyWith(isLoading: true, error: null);
     if (revokeToken) {
       try {
@@ -667,7 +670,6 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
       );
     }
 
-    oixCloudConfigCache.clear();
     state = const CloudAccountState();
     ref.read(storeProvider.notifier).reset();
     try {
@@ -689,8 +691,13 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
     }
 
     final future = () async {
-      await signOut();
-      await appController.openCloudLogin();
+      final cleanupError = await clearSession();
+      if (cleanupError != null) {
+        state = state.copyWith(error: cleanupError);
+      }
+      if (appController.isAttach) {
+        await appController.openCloudLogin();
+      }
     }();
 
     _unauthorizedFuture = future.whenComplete(() {

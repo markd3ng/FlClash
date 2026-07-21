@@ -63,6 +63,47 @@ void main() {
     expect(state.error, 'Secure storage failed');
   });
 
+  test('sign out does not race an active managed profile sync', () async {
+    final notifier = _DeleteNotifier(
+      initialState: const CloudAccountState(
+        isLoggedIn: true,
+        isSyncing: true,
+      ),
+    );
+    final container = ProviderContainer(
+      overrides: [cloudAccountProvider.overrideWith(() => notifier)],
+    );
+    addTearDown(container.dispose);
+
+    final success = await container
+        .read(cloudAccountProvider.notifier)
+        .signOut();
+
+    expect(success, false);
+    expect(notifier.didClearSession, false);
+    expect(container.read(cloudAccountProvider).isLoggedIn, true);
+  });
+
+  test('unauthorized cleanup is not blocked by active sync state', () async {
+    final notifier = _DeleteNotifier(
+      initialState: const CloudAccountState(
+        isLoggedIn: true,
+        isSyncing: true,
+      ),
+    );
+    final container = ProviderContainer(
+      overrides: [cloudAccountProvider.overrideWith(() => notifier)],
+    );
+    addTearDown(container.dispose);
+
+    await container
+        .read(cloudAccountProvider.notifier)
+        .handleUnauthorized();
+
+    expect(notifier.didClearSession, true);
+    expect(container.read(cloudAccountProvider).isLoggedIn, false);
+  });
+
   test('failed account deletion preserves the signed-in session', () async {
     final notifier = _DeleteNotifier(
       requestError: const CloudApiException('Incorrect password'),

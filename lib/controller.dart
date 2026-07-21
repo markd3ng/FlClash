@@ -465,7 +465,7 @@ class AppController {
     );
     _preferencesWriteTail = operation.then<void>(
       (_) {},
-      onError: (Object _, StackTrace __) {},
+      onError: (Object _, StackTrace _) {},
     );
     return operation;
   }
@@ -502,7 +502,6 @@ class AppController {
   }) {
     _ref.read(profilesProvider.notifier).replaceFromDatabase(profiles);
     _ref.read(scriptsProvider.notifier).replaceFromDatabase(scripts);
-    oixCloudConfigCache.clear();
     globalState.lastSetupState = null;
     _ref.invalidate(addedRuleStreamProvider);
     _ref.invalidate(setupStateProvider);
@@ -791,7 +790,6 @@ extension StateControllerExt on AppController {
 
 extension ProfilesControllerExt on AppController {
   Future<void> deleteProfile(int id) async {
-    oixCloudConfigCache.remove(id);
     await storageLock.synchronized(() async {
       await _ref.read(profilesProvider.notifier).del(id, reportOnWait: false);
       await clearEffect(id);
@@ -858,20 +856,6 @@ extension ProfilesControllerExt on AppController {
         }
       }
 
-      if (profile.isoixCloudProfile && !profile.useEncryptedDiskStore) {
-        final hadCache = oixCloudConfigCache.containsKey(profile.id);
-        final cached = oixCloudConfigCache[profile.id];
-        try {
-          return await persist();
-        } catch (_) {
-          if (hadCache && cached != null) {
-            oixCloudConfigCache[profile.id] = Uint8List.fromList(cached);
-          } else {
-            oixCloudConfigCache.remove(profile.id);
-          }
-          rethrow;
-        }
-      }
       return withFileRollback(
         await appPath.getProfilePath(profile.id.toString()),
         persist,
@@ -1391,57 +1375,22 @@ extension SetupControllerExt on AppController {
     }
   }
 
-  Uint8List? _getCachedProfileBytes(Profile? profile) {
-    if (profile == null || profile.useEncryptedDiskStore) {
-      return null;
-    }
-    return oixCloudConfigCache[profile.id];
-  }
-
-  Future<Profile> _refreshOixCloudProfile(Profile profile) async {
-    return _updateProfileWithCertificateRetry(profile);
-  }
-
   Future<Map<String, dynamic>> getRawProfileConfig(int profileId) async {
     var profile = _ref.read(profilesProvider).getProfile(profileId);
-    var cachedBytes = _getCachedProfileBytes(profile);
-    String? existingPath;
+    var existingPath = await profile?.getExistingFilePath();
 
-    if (profile != null && profile.isoixCloudProfile) {
-      if (profile.useEncryptedDiskStore) {
-        existingPath = await profile.getExistingFilePath();
-      }
-      if (cachedBytes == null && existingPath == null) {
-        profile = await _refreshOixCloudProfile(profile);
-        cachedBytes = _getCachedProfileBytes(profile);
-        if (profile.useEncryptedDiskStore) {
-          existingPath = await profile.getExistingFilePath();
-        }
-      }
+    if (profile != null &&
+        profile.isoixCloudProfile &&
+        existingPath == null) {
+      profile = await _updateProfileWithCertificateRetry(profile);
+      existingPath = await profile.getExistingFilePath();
     }
 
-    if (cachedBytes != null) {
-      final raw = gzip.decode(cachedBytes);
-      return coreController.getConfigFromBytes(base64Encode(raw));
+    if (profile?.isoixCloudProfile == true && existingPath == null) {
+      throw Exception('oixCloud profile snapshot unavailable');
     }
-
-    String path;
-    if (profile != null) {
-      existingPath ??=
-          profile.isoixCloudProfile && !profile.useEncryptedDiskStore
-          ? null
-          : await profile.getExistingFilePath();
-      if (existingPath != null) {
-        path = existingPath;
-      } else {
-        if (profile.isoixCloudProfile) {
-          throw Exception('oixCloud profile cache miss');
-        }
-        path = await appPath.getProfilePath(profileId.toString());
-      }
-    } else {
-      path = await appPath.getProfilePath(profileId.toString());
-    }
+    final path =
+        existingPath ?? await appPath.getProfilePath(profileId.toString());
     return coreController.getConfig(path);
   }
 
@@ -2123,11 +2072,7 @@ extension BackupControllerExt on AppController {
   Future<void> shakingStore() async {
     final profileIds = _ref.read(
       profilesProvider.select(
-        (state) => state
-            .where(
-              (item) => !item.isoixCloudProfile || item.useEncryptedDiskStore,
-            )
-            .map((item) => item.id),
+        (state) => state.map((item) => item.id),
       ),
     );
     final scriptIds = await _ref.read(
@@ -2212,10 +2157,6 @@ extension BackupControllerExt on AppController {
     RestoreOption option, {
     String? backupPath,
   }) async {
-    // Note: When restoring a backup, oixCloud profiles might be reloaded.
-    // Since oixCloud cache is empty and tokens are not backed up (they reside in SharedPreferences),
-    // restoring might prompt the user to login again when standard update fails.
-    // This is an intended security design.
     final restoreStrategy = _ref.read(
       appSettingProvider.select((state) => state.restoreStrategy),
     );
@@ -2643,7 +2584,6 @@ extension StoreControllerExt on AppController {
                 CoreStatus.disconnected;
 
             irreversibleClearStarted = true;
-            oixCloudConfigCache.clear();
             _persistentLogFile = null;
             _persistentLogLength = 0;
             await runCleanupActions([
