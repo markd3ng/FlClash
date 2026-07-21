@@ -18,14 +18,14 @@ void main() {
     });
   });
 
-  test('managed config uses the running core proxy only when ready', () {
+  test('managed config prefers direct with a ready core fallback', () {
     expect(
       resolveManagedConfigProxy(
         isCoreRunning: true,
         hasProxyGroups: true,
         port: 7890,
       ),
-      'PROXY localhost:7890; DIRECT',
+      'DIRECT; PROXY localhost:7890',
     );
 
     for (final state in [

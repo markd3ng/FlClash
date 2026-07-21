@@ -12,7 +12,7 @@ String resolveManagedConfigProxy({
   if (!isCoreRunning || !hasProxyGroups || port <= 0) {
     return 'DIRECT';
   }
-  return 'PROXY localhost:$port; DIRECT';
+  return 'DIRECT; PROXY localhost:$port';
 }
 
 class FlClashTemporaryTls {
