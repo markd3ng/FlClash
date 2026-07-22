@@ -91,6 +91,79 @@ SelectedProxyState computeRealSelectedProxyState(
   );
 }
 
+typedef DelayTestTarget = ({String name, String url});
+
+DelayTestTarget? computeDelayTestTarget({
+  required Proxy proxy,
+  required List<Group> groups,
+  required Map<String, String> selectedMap,
+  required String defaultTestUrl,
+}) {
+  final state = computeRealSelectedProxyState(
+    proxy.name,
+    groups: groups,
+    selectedMap: selectedMap,
+  );
+  if (state.proxyName.isEmpty) {
+    return null;
+  }
+  final url = getDelayTestUrl(
+    proxyName: state.proxyName,
+    testUrl: state.testUrl.takeFirstValid([defaultTestUrl]),
+  );
+  return (name: state.proxyName, url: url);
+}
+
+bool _selectionUsesURLTest(
+  String proxyName, {
+  required List<Group> groups,
+  required Map<String, String> selectedMap,
+}) {
+  final visited = <String>{};
+  var currentProxyName = proxyName;
+  while (currentProxyName.isNotEmpty && visited.add(currentProxyName)) {
+    final group = groups.getGroup(currentProxyName);
+    if (group == null) {
+      return false;
+    }
+    if (group.type == GroupType.URLTest) {
+      return true;
+    }
+    currentProxyName = group.getCurrentSelectedName(
+      selectedMap[currentProxyName] ?? '',
+    );
+  }
+  return false;
+}
+
+List<DelayTestTarget> computeDelayTestTargets({
+  required Iterable<Proxy> proxies,
+  required List<Group> groups,
+  required Map<String, String> selectedMap,
+  required String defaultTestUrl,
+}) {
+  final targets = <DelayTestTarget>{};
+  for (final proxy in proxies) {
+    if (_selectionUsesURLTest(
+      proxy.name,
+      groups: groups,
+      selectedMap: selectedMap,
+    )) {
+      continue;
+    }
+    final target = computeDelayTestTarget(
+      proxy: proxy,
+      groups: groups,
+      selectedMap: selectedMap,
+      defaultTestUrl: defaultTestUrl,
+    );
+    if (target != null) {
+      targets.add(target);
+    }
+  }
+  return targets.toList();
+}
+
 DelayState computeProxyDelayState({
   required String proxyName,
   required String testUrl,

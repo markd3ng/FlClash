@@ -21,58 +21,36 @@ double getItemHeight(ProxyCardType proxyCardType) {
   };
 }
 
-Future<void> proxyDelayTest(Proxy proxy, [String? testUrl]) async {
-  final groups = appController.groups;
-  final selectedMap = appController.currentProfile?.selectedMap ?? {};
-  final state = computeRealSelectedProxyState(
-    proxy.name,
-    groups: groups,
-    selectedMap: selectedMap,
-  );
-  final currentTestUrl = state.testUrl.takeFirstValid([
-    appController.getRealTestUrl(testUrl),
-  ]);
-  final delayTestUrl = getDelayTestUrl(
-    proxyName: state.proxyName,
-    testUrl: currentTestUrl,
-  );
-  if (state.proxyName.isEmpty) {
-    return;
-  }
+Future<void> _testDelayTarget(DelayTestTarget target) async {
+  appController.setDelay(Delay(url: target.url, name: target.name, value: 0));
   appController.setDelay(
-    Delay(url: delayTestUrl, name: state.proxyName, value: 0),
-  );
-  appController.setDelay(
-    await coreController.getDelay(delayTestUrl, state.proxyName),
+    await coreController.getDelay(target.url, target.name),
   );
 }
 
+Future<void> proxyDelayTest(Proxy proxy, [String? testUrl]) async {
+  final target = computeDelayTestTarget(
+    proxy: proxy,
+    groups: appController.groups,
+    selectedMap: appController.currentProfile?.selectedMap ?? {},
+    defaultTestUrl: appController.getRealTestUrl(testUrl),
+  );
+  if (target == null) {
+    return;
+  }
+  await _testDelayTarget(target);
+}
+
 Future<void> delayTest(List<Proxy> proxies, [String? testUrl]) async {
-  final proxyNames = proxies.map((proxy) => proxy.name).toSet().toList();
+  final delayTargets = computeDelayTestTargets(
+    proxies: proxies,
+    groups: appController.groups,
+    selectedMap: appController.currentProfile?.selectedMap ?? {},
+    defaultTestUrl: appController.getRealTestUrl(testUrl),
+  );
 
-  final delayProxies = proxyNames.map<Future>((proxyName) async {
-    final groups = appController.groups;
-    final selectedMap = appController.currentProfile?.selectedMap ?? {};
-    final state = computeRealSelectedProxyState(
-      proxyName,
-      groups: groups,
-      selectedMap: selectedMap,
-    );
-    final url = state.testUrl.takeFirstValid([
-      appController.getRealTestUrl(testUrl),
-    ]);
-    final name = state.proxyName;
-    final delayTestUrl = getDelayTestUrl(proxyName: name, testUrl: url);
-    if (name.isEmpty) {
-      return;
-    }
-    appController.setDelay(Delay(url: delayTestUrl, name: name, value: 0));
-    appController.setDelay(await coreController.getDelay(delayTestUrl, name));
-  }).toList();
-
-  final batchesDelayProxies = delayProxies.batch(100);
-  for (final batchDelayProxies in batchesDelayProxies) {
-    await Future.wait(batchDelayProxies);
+  for (final batch in delayTargets.batch(100)) {
+    await Future.wait(batch.map(_testDelayTarget));
   }
   appController.addSortNum();
 }

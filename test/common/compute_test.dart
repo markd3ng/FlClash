@@ -1,4 +1,5 @@
 import 'package:fl_clash/common/compute.dart';
+import 'package:fl_clash/common/constant.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:test/test.dart';
@@ -209,6 +210,140 @@ void main() {
         delayMap: delayMap,
       );
       expect(state.delay, 80);
+    });
+  });
+
+  group('computeDelayTestTargets', () {
+    test('resolves a single URLTest target for an explicit card test', () {
+      final target = computeDelayTestTarget(
+        proxy: const Proxy(name: 'auto', type: 'URLTest'),
+        groups: const [
+          Group(
+            name: 'auto',
+            type: GroupType.URLTest,
+            now: 'proxy-fast',
+            testUrl: 'https://example.com/generate_204',
+          ),
+        ],
+        selectedMap: const {},
+        defaultTestUrl: 'https://default.example.com/generate_204',
+      );
+
+      expect(target, const (
+        name: 'proxy-fast',
+        url: 'https://example.com/generate_204',
+      ));
+    });
+
+    test('skips a URLTest group during batch testing', () {
+      final targets = computeDelayTestTargets(
+        proxies: const [Proxy(name: 'auto', type: 'URLTest')],
+        groups: const [
+          Group(
+            name: 'auto',
+            type: GroupType.URLTest,
+            now: 'proxy-fast',
+            testUrl: 'https://example.com/generate_204',
+          ),
+        ],
+        selectedMap: const {},
+        defaultTestUrl: 'https://default.example.com/generate_204',
+      );
+
+      expect(targets, isEmpty);
+    });
+
+    test('skips a selection chain containing a URLTest group', () {
+      final targets = computeDelayTestTargets(
+        proxies: const [Proxy(name: 'selector', type: 'Selector')],
+        groups: const [
+          Group(
+            name: 'selector',
+            type: GroupType.Selector,
+            all: [Proxy(name: 'auto', type: 'URLTest')],
+          ),
+          Group(
+            name: 'auto',
+            type: GroupType.URLTest,
+            now: 'proxy-fast',
+            testUrl: 'https://example.com/generate_204',
+          ),
+        ],
+        selectedMap: const {'selector': 'auto'},
+        defaultTestUrl: 'https://default.example.com/generate_204',
+      );
+
+      expect(targets, isEmpty);
+    });
+
+    test('shares one target between URLTest group and its current proxy', () {
+      const testUrl = 'https://example.com/generate_204';
+      final targets = computeDelayTestTargets(
+        proxies: const [
+          Proxy(name: 'auto', type: 'URLTest'),
+          Proxy(name: 'proxy-fast', type: 'ss'),
+        ],
+        groups: const [
+          Group(
+            name: 'auto',
+            type: GroupType.URLTest,
+            now: 'proxy-fast',
+            testUrl: testUrl,
+            all: [Proxy(name: 'proxy-fast', type: 'ss')],
+          ),
+        ],
+        selectedMap: const {},
+        defaultTestUrl: testUrl,
+      );
+
+      expect(targets, const [(name: 'proxy-fast', url: testUrl)]);
+    });
+
+    test('keeps the same proxy with different URLs as separate targets', () {
+      final targets = computeDelayTestTargets(
+        proxies: const [
+          Proxy(name: 'selector-a', type: 'Selector'),
+          Proxy(name: 'selector-b', type: 'Selector'),
+        ],
+        groups: const [
+          Group(
+            name: 'selector-a',
+            type: GroupType.Selector,
+            testUrl: 'https://a.example.com/generate_204',
+            all: [Proxy(name: 'proxy-fast', type: 'ss')],
+          ),
+          Group(
+            name: 'selector-b',
+            type: GroupType.Selector,
+            testUrl: 'https://b.example.com/generate_204',
+            all: [Proxy(name: 'proxy-fast', type: 'ss')],
+          ),
+        ],
+        selectedMap: const {
+          'selector-a': 'proxy-fast',
+          'selector-b': 'proxy-fast',
+        },
+        defaultTestUrl: 'https://default.example.com/generate_204',
+      );
+
+      expect(
+        targets,
+        unorderedEquals(const [
+          (name: 'proxy-fast', url: 'https://a.example.com/generate_204'),
+          (name: 'proxy-fast', url: 'https://b.example.com/generate_204'),
+        ]),
+      );
+    });
+
+    test('uses the dedicated DIRECT test URL', () {
+      final target = computeDelayTestTarget(
+        proxy: const Proxy(name: 'DIRECT', type: 'Direct'),
+        groups: const [],
+        selectedMap: const {},
+        defaultTestUrl: 'https://example.com/generate_204',
+      );
+
+      expect(target, const (name: 'DIRECT', url: defaultDirectTestUrl));
     });
   });
 
