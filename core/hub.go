@@ -62,6 +62,20 @@ func handleStartListener() bool {
 	isRunning = true
 	updateListeners()
 	resolver.ResetConnection()
+	if features.Android {
+		return true
+	}
+	if currentConfig == nil {
+		isRunning = false
+		listener.StopListener()
+		return false
+	}
+	mixedPort := currentConfig.General.MixedPort
+	if mixedPort > 0 && listener.GetPorts().MixedPort != mixedPort {
+		isRunning = false
+		listener.StopListener()
+		return false
+	}
 	return true
 }
 

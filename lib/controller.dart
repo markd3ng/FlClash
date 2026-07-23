@@ -1786,7 +1786,6 @@ extension SetupControllerExt on AppController {
     );
 
     final message = await coreController.setupConfig(
-      setupState: setupState,
       params: updatedSetupParams,
       preloadInvoke: preloadInvoke,
     );

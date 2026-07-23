@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:fl_clash/common/system.dart';
 import 'package:proxy/proxy.dart';
@@ -8,10 +10,12 @@ final proxy = system.isDesktop ? Proxy() : null;
 typedef SystemProxyStarter =
     Future<bool?> Function(int port, List<String> bypassDomain);
 typedef SystemProxyStopper = Future<bool?> Function();
+typedef SystemProxyReadinessChecker = Future<bool> Function(int port);
 
 class SystemProxyController {
   final SystemProxyStarter? _startProxy;
   final SystemProxyStopper? _stopProxy;
+  final SystemProxyReadinessChecker? _readinessChecker;
 
   bool _startedByFlClash = false;
   bool _checkedPersistedState = false;
@@ -20,8 +24,10 @@ class SystemProxyController {
   SystemProxyController({
     required SystemProxyStarter? startProxy,
     required SystemProxyStopper? stopProxy,
+    SystemProxyReadinessChecker? readinessChecker,
   }) : _startProxy = startProxy,
-       _stopProxy = stopProxy;
+       _stopProxy = stopProxy,
+       _readinessChecker = readinessChecker;
 
   bool get startedByFlClash => _startedByFlClash;
 
@@ -31,6 +37,23 @@ class SystemProxyController {
 
     return _queue(() async {
       _checkedPersistedState = false;
+      final readinessChecker = _readinessChecker;
+      var isReady = true;
+      if (readinessChecker != null) {
+        try {
+          isReady = await readinessChecker(port);
+        } catch (_) {
+          isReady = false;
+        }
+      }
+      if (!isReady) {
+        final success = await _stopProxy?.call();
+        if (success == true) {
+          _startedByFlClash = false;
+          _checkedPersistedState = true;
+        }
+        return false;
+      }
       final success = await startProxy(port, bypassDomain);
       if (success == true) {
         _startedByFlClash = true;
@@ -63,6 +86,68 @@ class SystemProxyController {
   }
 }
 
+Future<bool> isLocalMixedProxyReady(
+  int port, {
+  int attempts = 10,
+  Duration retryDelay = const Duration(milliseconds: 100),
+}) async {
+  for (var attempt = 0; attempt < attempts; attempt++) {
+    if (await _supportsSocks5(port)) return true;
+    if (attempt + 1 < attempts) {
+      await Future<void>.delayed(retryDelay);
+    }
+  }
+  return false;
+}
+
+Future<bool> _supportsSocks5(int port) async {
+  Socket? socket;
+  StreamSubscription<Uint8List>? subscription;
+  final result = Completer<bool>();
+  try {
+    socket = await Socket.connect(
+      InternetAddress.loopbackIPv4,
+      port,
+      timeout: const Duration(milliseconds: 300),
+    );
+    int? version;
+    subscription = socket.listen(
+      (data) {
+        for (final byte in data) {
+          if (version == null) {
+            version = byte;
+          } else if (!result.isCompleted) {
+            result.complete(version == 0x05 && byte == 0x00);
+            break;
+          }
+        }
+      },
+      onError: (_) {
+        if (!result.isCompleted) result.complete(false);
+      },
+      onDone: () {
+        if (!result.isCompleted) result.complete(false);
+      },
+      cancelOnError: true,
+    );
+    socket.add(const [0x05, 0x01, 0x00]);
+    await socket.flush();
+    return await result.future.timeout(
+      const Duration(milliseconds: 300),
+      onTimeout: () => false,
+    );
+  } catch (_) {
+    return false;
+  } finally {
+    try {
+      await subscription?.cancel();
+    } catch (_) {
+    } finally {
+      socket?.destroy();
+    }
+  }
+}
+
 Future<bool> startSystemProxy(int port, List<String> bypassDomain) {
   return systemProxyController.start(port, bypassDomain);
 }
@@ -74,4 +159,5 @@ Future<bool> stopSystemProxyIfNeeded() {
 final systemProxyController = SystemProxyController(
   startProxy: proxy?.startProxy,
   stopProxy: proxy?.stopProxy,
+  readinessChecker: isLocalMixedProxyReady,
 );

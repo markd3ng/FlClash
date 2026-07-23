@@ -23,7 +23,13 @@ class _ProxyManagerState extends ConsumerState<ProxyManager> {
     final systemProxy = proxyState.systemProxy;
     final port = proxyState.port;
     if (isStart && systemProxy && port > 0) {
-      await startSystemProxy(port, proxyState.bassDomain);
+      final started = await startSystemProxy(port, proxyState.bassDomain);
+      if (!started) {
+        commonPrint.log(
+          'system proxy skipped: mixed proxy is unavailable on port $port',
+          logLevel: LogLevel.warning,
+        );
+      }
     } else {
       await stopSystemProxyIfNeeded();
     }

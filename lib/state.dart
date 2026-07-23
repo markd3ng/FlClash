@@ -174,7 +174,10 @@ class GlobalState {
   Future<void> handleStart([UpdateTasks? tasks]) async {
     startTime ??= DateTime.now();
     if (coreController.isCompleted) {
-      await coreController.startListener();
+      if (!await coreController.startListener()) {
+        startTime = null;
+        throw appLocalizations.portConflictTip;
+      }
     }
     await service?.start();
     startUpdateTasks(tasks);
