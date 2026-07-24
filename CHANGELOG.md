@@ -8,6 +8,8 @@
 
 - Prevent concurrent desktop instances from accessing application data during startup
 
+- Fix some Android backups being reported as invalid after reinstalling
+
 ## v0.8.93
 
 - chore(release): follow upstream v0.8.93

@@ -536,29 +536,56 @@ void main() {
       );
     });
 
-    test('rejects future schemas and orphaned relationships', () async {
-      final root = await Directory.systemTemp.createTemp('invalid_schema_');
-      addTearDown(() => root.delete(recursive: true));
-      final futurePath = '${root.path}/future.sqlite';
-      final futureDatabase = Database(NativeDatabase(File(futurePath)));
-      await futureDatabase.profilesDao.all().get();
-      await futureDatabase.close();
-      final futureSqlite = sqlite.sqlite3.open(futurePath);
-      futureSqlite.execute('PRAGMA user_version = 4');
-      futureSqlite.dispose();
-      expect(await validateBackupDatabase(futurePath), false);
+    test(
+      'rejects future schemas but accepts repairable orphaned links',
+      () async {
+        final root = await Directory.systemTemp.createTemp('invalid_schema_');
+        addTearDown(() => root.delete(recursive: true));
+        final futurePath = '${root.path}/future.sqlite';
+        final futureDatabase = Database(NativeDatabase(File(futurePath)));
+        await futureDatabase.profilesDao.all().get();
+        await futureDatabase.close();
+        final futureSqlite = sqlite.sqlite3.open(futurePath);
+        futureSqlite.execute('PRAGMA user_version = 4');
+        futureSqlite.dispose();
+        expect(await validateBackupDatabase(futurePath), false);
 
-      final orphanPath = '${root.path}/orphan.sqlite';
-      final orphanDatabase = Database(NativeDatabase(File(orphanPath)));
-      await orphanDatabase.profilesDao.all().get();
-      await orphanDatabase.close();
-      final orphanSqlite = sqlite.sqlite3.open(orphanPath);
-      orphanSqlite.execute(
-        "INSERT INTO profile_rule_mapping (id, rule_id) VALUES ('orphan', 999)",
-      );
-      orphanSqlite.dispose();
-      expect(await validateBackupDatabase(orphanPath), false);
-    });
+        final orphanPath = '${root.path}/orphan.sqlite';
+        final orphanDatabase = Database(NativeDatabase(File(orphanPath)));
+        await orphanDatabase.profilesDao.all().get();
+        await orphanDatabase.close();
+        final orphanSqlite = sqlite.sqlite3.open(orphanPath);
+        orphanSqlite.execute(
+          "INSERT INTO profile_rule_mapping (id, rule_id) VALUES ('orphan', 999)",
+        );
+        orphanSqlite.dispose();
+        expect(await validateBackupDatabase(orphanPath), true);
+      },
+    );
+  });
+
+  test('schema v2 backup validation allows orphan repair', () async {
+    final root = await Directory.systemTemp.createTemp('legacy_db_backup_');
+    addTearDown(() => root.delete(recursive: true));
+    final databasePath = '${root.path}/$backupDatabaseName';
+    final database = Database(NativeDatabase(File(databasePath)));
+    await database.profilesDao.all().get();
+    await database.close();
+    final legacyDatabase = sqlite.sqlite3.open(databasePath);
+    legacyDatabase.execute('PRAGMA foreign_keys = OFF');
+    legacyDatabase.execute(
+      "INSERT INTO profile_rule_mapping (id, rule_id) VALUES ('orphan', 999)",
+    );
+    legacyDatabase.execute('PRAGMA user_version = 2');
+    legacyDatabase.dispose();
+
+    expect(await validateBackupDatabase(databasePath), true);
+    final restoredDatabase = Database(NativeDatabase(File(databasePath)));
+    expect(
+      await restoredDatabase.select(restoredDatabase.profileRuleLinks).get(),
+      isEmpty,
+    );
+    await restoredDatabase.close();
   });
 
   test('makeRealProfileTask applies Geo update preferences', () async {

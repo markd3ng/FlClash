@@ -940,7 +940,12 @@ Future<bool> validateBackupDatabase(String path) async {
     if (schemaVersion < 1 || schemaVersion > currentDatabaseSchemaVersion) {
       return false;
     }
-    if (backupDatabase.select('PRAGMA foreign_key_check').isNotEmpty) {
+    final foreignKeyViolations = backupDatabase.select(
+      'PRAGMA foreign_key_check',
+    );
+    if (foreignKeyViolations.any(
+      (row) => row['table'] != 'profile_rule_mapping',
+    )) {
       return false;
     }
     final tables = backupDatabase
