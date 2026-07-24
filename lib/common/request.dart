@@ -67,7 +67,7 @@ String? latestReleaseTagNameFromChangelog(String source) {
 String? normalizeReleaseNotes(String? source) {
   if (source == null) return null;
   final normalized = <String>[];
-  var previousLineWasEmpty = false;
+  var pendingEmptyLine = false;
   for (final rawLine in source.replaceAll('\r\n', '\n').split('\n')) {
     var line = rawLine.trimRight();
     final releaseLine = line
@@ -85,9 +85,17 @@ String? normalizeReleaseNotes(String? source) {
     );
     line = line.replaceAll('**', '').replaceAll('`', '');
     final isEmpty = line.trim().isEmpty;
-    if (isEmpty && previousLineWasEmpty) continue;
+    if (isEmpty) {
+      pendingEmptyLine = normalized.isNotEmpty;
+      continue;
+    }
+    if (pendingEmptyLine &&
+        !(normalized.last.trimLeft().startsWith('- ') &&
+            line.trimLeft().startsWith('- '))) {
+      normalized.add('');
+    }
     normalized.add(line);
-    previousLineWasEmpty = isEmpty;
+    pendingEmptyLine = false;
   }
   final result = normalized.join('\n').trim();
   return result.isEmpty ? null : result;

@@ -17,7 +17,7 @@ void main() {
         'version': '2026072318',
         'release_notes': '  - Fix startup\n\n\n- Improve updates  ',
       }, 'v0.8.95'),
-      '- Fix startup\n\n- Improve updates',
+      '- Fix startup\n- Improve updates',
     );
   });
 
@@ -93,6 +93,13 @@ download table
     expect(
       normalizeReleaseNotes('- Upgrade Flutter to 3.44'),
       '- Upgrade Flutter to 3.44',
+    );
+  });
+
+  test('normalizeReleaseNotes preserves paragraph breaks', () {
+    expect(
+      normalizeReleaseNotes('Summary\n\nDetails\n\n- First\n\n- Second'),
+      'Summary\n\nDetails\n\n- First\n- Second',
     );
   });
 
