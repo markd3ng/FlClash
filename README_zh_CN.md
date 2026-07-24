@@ -60,11 +60,11 @@ on Mobile:
 支持下列操作
 
    ```bash
-    com.follow.clash.action.START
+    com.oixcloud.clash.action.START
     
-    com.follow.clash.action.STOP
+    com.oixcloud.clash.action.STOP
     
-    com.follow.clash.action.TOGGLE
+    com.oixcloud.clash.action.TOGGLE
    ```
 
 ## Download

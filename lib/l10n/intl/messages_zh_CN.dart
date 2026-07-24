@@ -84,11 +84,9 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m31(count) => "已选择 ${count} 项";
 
-  static String m32(version) => "发现新版本 ${version}，是否立即打开下载链接？";
+  static String m32(label) => "${label}必须为URL";
 
-  static String m33(label) => "${label}必须为URL";
-
-  static String m34(count) => "${count} 年前";
+  static String m33(count) => "${count} 年前";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -825,12 +823,11 @@ class MessageLookup extends MessageLookupByLibrary {
     "unknownNetworkError": MessageLookupByLibrary.simpleMessage("未知网络错误"),
     "unnamed": MessageLookupByLibrary.simpleMessage("未命名"),
     "update": MessageLookupByLibrary.simpleMessage("更新"),
-    "updateAvailableTip": m32,
     "upgradePlan": MessageLookupByLibrary.simpleMessage("升级套餐"),
     "upload": MessageLookupByLibrary.simpleMessage("上传"),
     "url": MessageLookupByLibrary.simpleMessage("URL"),
     "urlDesc": MessageLookupByLibrary.simpleMessage("通过URL获取配置文件"),
-    "urlTip": m33,
+    "urlTip": m32,
     "useHosts": MessageLookupByLibrary.simpleMessage("使用Hosts"),
     "useSystemHosts": MessageLookupByLibrary.simpleMessage("使用系统Hosts"),
     "userAgent": MessageLookupByLibrary.simpleMessage("用户代理"),
@@ -849,7 +846,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "webDAVConfiguration": MessageLookupByLibrary.simpleMessage("WebDAV配置"),
     "whitelistMode": MessageLookupByLibrary.simpleMessage("白名单模式"),
     "years": MessageLookupByLibrary.simpleMessage("年"),
-    "yearsAgo": m34,
+    "yearsAgo": m33,
     "zh_CN": MessageLookupByLibrary.simpleMessage("中文简体"),
   };
 }

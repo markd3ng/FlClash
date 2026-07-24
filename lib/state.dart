@@ -45,6 +45,7 @@ class GlobalState {
   UpdateTasks tasks = [];
   SetupState? lastSetupState;
   VpnState? lastVpnState;
+  List<String> launchArguments = const [];
 
   bool get isStart => startTime != null && startTime!.isBeforeNow;
 
@@ -55,7 +56,11 @@ class GlobalState {
     return _instance!;
   }
 
-  Future<ProviderContainer> init(int version) async {
+  Future<ProviderContainer> init(
+    int version, {
+    List<String> arguments = const [],
+  }) async {
+    launchArguments = List.unmodifiable(arguments);
     coreSHA256 = const String.fromEnvironment('CORE_SHA256');
     isPre = const String.fromEnvironment('APP_ENV') != 'stable';
     await _initDynamicColor();
@@ -91,6 +96,8 @@ class GlobalState {
     );
     final appStateOverrides = buildAppStateOverrides(appState);
     packageInfo = await PackageInfo.fromPlatform();
+    await window?.ensureSingleInstance();
+    await appPath.migrateLegacyApplicationSupportData();
     await recoverPendingRestore(
       homePath: await appPath.homeDirPath,
       databasePath: await appPath.databasePath,
@@ -136,6 +143,7 @@ class GlobalState {
     );
     final silentLaunch = shouldLaunchSilently(
       enabled: config.appSettingProps.silentLaunch,
+      arguments: launchArguments,
     );
     await window?.init(version, config.windowProps, silentLaunch: silentLaunch);
     if (system.isAndroid) {

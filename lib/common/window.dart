@@ -23,11 +23,7 @@ class Window {
     WindowProps props, {
     bool silentLaunch = false,
   }) async {
-    final acquire = await singleInstanceLock.acquire();
-    if (!acquire) {
-      await _showExistingInstance();
-      exit(0);
-    }
+    await ensureSingleInstance();
     if (!system.isMacOS) {
       unawaited(_startWakeupServer());
     }
@@ -57,6 +53,14 @@ class Window {
         }
       }
     });
+  }
+
+  Future<void> ensureSingleInstance() async {
+    final acquire = await singleInstanceLock.acquire();
+    if (!acquire) {
+      await _showExistingInstance();
+      exit(0);
+    }
   }
 
   Future<void> _startWakeupServer() async {

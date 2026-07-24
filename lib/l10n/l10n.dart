@@ -999,16 +999,6 @@ class AppLocalizations {
     );
   }
 
-  /// `A new version {version} is available. Open the download link now?`
-  String updateAvailableTip(Object version) {
-    return Intl.message(
-      'A new version $version is available. Open the download link now?',
-      name: 'updateAvailableTip',
-      desc: '',
-      args: [version],
-    );
-  }
-
   /// `Unknown`
   String get unknown {
     return Intl.message('Unknown', name: 'unknown', desc: '', args: []);

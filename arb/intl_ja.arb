@@ -130,7 +130,6 @@
   "checkUpdate": "更新を確認",
   "checkUpdateError": "アプリは最新版です",
   "checkUpdateFailed": "更新の確認に失敗しました。ネットワークを確認して再試行してください",
-  "updateAvailableTip": "新しいバージョン {version} が見つかりました。今すぐダウンロードリンクを開きますか？",
   "unknown": "不明",
   "country": "国",
   "search": "検索",

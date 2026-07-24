@@ -11,8 +11,145 @@ import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/state.dart';
 import 'package:flutter/cupertino.dart';
 
-String formatRemoteVersion(String remoteBuildNumber, String packageVersion) {
-  return 'v${packageVersion.trim()}+${remoteBuildNumber.trim()}';
+class AppUpdateInfo {
+  const AppUpdateInfo({this.releaseNotes});
+
+  final String? releaseNotes;
+}
+
+final _releaseVersionPattern = RegExp(
+  r'^v?(\d+(?:\.\d+)+(?:[-+][\w.-]+)?)$',
+  caseSensitive: false,
+);
+final _releasePlaceholderPattern = RegExp(
+  r'^(?:(?:feat|chore)(?:\([^)]*\))?:\s*)?(?:release|follow upstream)\s+v?\d+(?:\.\d+)+(?:[-+][\w.-]+)?$',
+  caseSensitive: false,
+);
+final _releaseHeadingPattern = RegExp(
+  r'^##\s+(v?\d+(?:\.\d+)+(?:[-+][\w.-]+)?)\s*$',
+  caseSensitive: false,
+);
+
+String? normalizeReleaseTagName(String? value) {
+  if (value == null) return null;
+  final match = _releaseVersionPattern.firstMatch(value.trim());
+  return match == null ? null : 'v${match.group(1)}';
+}
+
+String? releaseTagNameFromVersionData(Object? versionData) {
+  if (versionData is String) {
+    return normalizeReleaseTagName(versionData.split('+').first);
+  }
+  if (versionData is! Map<String, dynamic>) return null;
+  for (final key in [
+    'tag_name',
+    'tagName',
+    'version_name',
+    'versionName',
+    'version',
+  ]) {
+    final value = versionData[key];
+    if (value is! String) continue;
+    final tagName = normalizeReleaseTagName(value.split('+').first);
+    if (tagName != null) return tagName;
+  }
+  return null;
+}
+
+String? latestReleaseTagNameFromChangelog(String source) {
+  for (final line in source.replaceAll('\r\n', '\n').split('\n')) {
+    final match = _releaseHeadingPattern.firstMatch(line.trim());
+    if (match != null) return normalizeReleaseTagName(match.group(1));
+  }
+  return null;
+}
+
+String? normalizeReleaseNotes(String? source) {
+  if (source == null) return null;
+  final normalized = <String>[];
+  var previousLineWasEmpty = false;
+  for (final rawLine in source.replaceAll('\r\n', '\n').split('\n')) {
+    var line = rawLine.trimRight();
+    final releaseLine = line
+        .trim()
+        .replaceFirst(RegExp(r'^#{1,6}\s+'), '')
+        .replaceFirst(RegExp(r'^-\s+'), '');
+    if (_releaseVersionPattern.hasMatch(releaseLine) ||
+        _releasePlaceholderPattern.hasMatch(releaseLine)) {
+      continue;
+    }
+    line = line.replaceFirst(RegExp(r'^#{1,6}\s+'), '');
+    line = line.replaceAllMapped(
+      RegExp(r'\[([^\]]+)]\([^)]+\)'),
+      (match) => match.group(1)!,
+    );
+    line = line.replaceAll('**', '').replaceAll('`', '');
+    final isEmpty = line.trim().isEmpty;
+    if (isEmpty && previousLineWasEmpty) continue;
+    normalized.add(line);
+    previousLineWasEmpty = isEmpty;
+  }
+  final result = normalized.join('\n').trim();
+  return result.isEmpty ? null : result;
+}
+
+String? extractCurrentReleaseNotes(String? source, String tagName) {
+  if (source == null) return null;
+  final versionNotes = extractReleaseNotesFromChangelog(source, tagName);
+  if (versionNotes != null) return versionNotes;
+  if (RegExp(r'^##\s+', multiLine: true).hasMatch(source)) return null;
+  return normalizeReleaseNotes(source);
+}
+
+String? extractEmbeddedReleaseNotes(Object? versionData, String tagName) {
+  if (versionData is! Map<String, dynamic>) return null;
+  for (final key in ['changelog', 'release_notes', 'releaseNotes']) {
+    final notes = versionData[key];
+    if (notes is String) {
+      final normalized = extractCurrentReleaseNotes(
+        notes,
+        latestReleaseTagNameFromChangelog(notes) ?? tagName,
+      );
+      if (normalized != null) return normalized;
+    }
+  }
+  return null;
+}
+
+String? extractReleaseNotesFromReleaseBody(String? body, String tagName) {
+  if (body == null) return null;
+  var end = body.length;
+  for (final marker in [
+    '<div align=center>',
+    '<div align="center">',
+    '**Download based on your OS:**',
+    '**List of all changes:**',
+  ]) {
+    final index = body.indexOf(marker);
+    if (index >= 0 && index < end) end = index;
+  }
+  final notes = body.substring(0, end);
+  return extractCurrentReleaseNotes(notes, tagName);
+}
+
+String? extractReleaseNotesFromChangelog(String source, String tagName) {
+  final lines = source.replaceAll('\r\n', '\n').split('\n');
+  final normalizedTagName = normalizeReleaseTagName(tagName);
+  if (normalizedTagName == null) return null;
+  final start = lines.indexWhere((line) {
+    final match = _releaseHeadingPattern.firstMatch(line.trim());
+    return match != null &&
+        normalizeReleaseTagName(match.group(1)) == normalizedTagName;
+  });
+  if (start < 0) return null;
+  var end = lines.length;
+  for (var index = start + 1; index < lines.length; index++) {
+    if (lines[index].trimLeft().startsWith('## ')) {
+      end = index;
+      break;
+    }
+  }
+  return normalizeReleaseNotes(lines.sublist(start + 1, end).join('\n'));
 }
 
 class Request {
@@ -210,7 +347,7 @@ class Request {
     return MemoryImage(data);
   }
 
-  Future<String?> checkForUpdate() async {
+  Future<AppUpdateInfo?> checkForUpdate() async {
     for (final domain in Secrets.apiDomains) {
       try {
         final response = await _apiDirectDio.get(
@@ -240,10 +377,13 @@ class Request {
 
         if (!hasUpdate) return null;
 
-        return formatRemoteVersion(
-          remoteVersion,
-          globalState.packageInfo.version,
-        );
+        final tagName =
+            releaseTagNameFromVersionData(versionData) ??
+            'v${globalState.packageInfo.version.trim()}';
+        final releaseNotes =
+            extractEmbeddedReleaseNotes(versionData, tagName) ??
+            await _fetchReleaseNotes(tagName);
+        return AppUpdateInfo(releaseNotes: releaseNotes);
       } catch (_) {
         commonPrint.log(
           'checkForUpdate failed for $domain',
@@ -252,6 +392,62 @@ class Request {
       }
     }
     throw Exception('checkForUpdate failed for all domains');
+  }
+
+  Future<String?> _fetchReleaseNotes(String tagName) async {
+    final releaseFuture = _fetchLatestGitHubRelease();
+    final changelogFuture = _fetchGitHubChangelog();
+    final release = await releaseFuture;
+    final changelog = await changelogFuture;
+    final currentTagName =
+        release?.tagName ??
+        (changelog == null
+            ? null
+            : latestReleaseTagNameFromChangelog(changelog)) ??
+        tagName;
+    return extractReleaseNotesFromReleaseBody(release?.body, currentTagName) ??
+        (changelog == null
+            ? null
+            : extractReleaseNotesFromChangelog(changelog, currentTagName));
+  }
+
+  Future<({String? body, String tagName})?> _fetchLatestGitHubRelease() async {
+    try {
+      final response = await _apiDirectDio
+          .get<Map<String, dynamic>>(
+            'https://api.github.com/repos/$releaseRepository/releases/latest',
+            options: Options(responseType: ResponseType.json),
+          )
+          .timeout(httpTimeoutDuration);
+      final data = response.data;
+      final tagName = normalizeReleaseTagName(data?['tag_name'] as String?);
+      if (tagName == null) return null;
+      return (body: data?['body'] as String?, tagName: tagName);
+    } catch (error) {
+      commonPrint.log(
+        'fetch release notes failed: $error',
+        logLevel: LogLevel.warning,
+      );
+      return null;
+    }
+  }
+
+  Future<String?> _fetchGitHubChangelog() async {
+    try {
+      final response = await _apiDirectDio
+          .get<String>(
+            'https://raw.githubusercontent.com/$releaseRepository/main/CHANGELOG.md',
+            options: Options(responseType: ResponseType.plain),
+          )
+          .timeout(httpTimeoutDuration);
+      return response.data;
+    } catch (error) {
+      commonPrint.log(
+        'fetch changelog failed: $error',
+        logLevel: LogLevel.warning,
+      );
+      return null;
+    }
   }
 
   final Map<String, IpInfo Function(Map<String, dynamic>)> _ipInfoSources = {

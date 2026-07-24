@@ -588,9 +588,10 @@ extension InitControllerExt on AppController {
     };
     updateTray();
     checkUpdate();
-    autoLaunch?.updateStatus(_ref.read(appSettingProvider).autoLaunch);
+    await autoLaunch?.updateStatus(_ref.read(appSettingProvider).autoLaunch);
     final silentLaunch = shouldLaunchSilently(
       enabled: _ref.read(appSettingProvider).silentLaunch,
+      arguments: globalState.launchArguments,
     );
     if (!silentLaunch) {
       await window?.show();
@@ -641,9 +642,9 @@ extension InitControllerExt on AppController {
   }
 
   Future<void> checkUpdate({bool isUser = false}) async {
-    String? tagName;
+    AppUpdateInfo? updateInfo;
     try {
-      tagName = await request.checkForUpdate();
+      updateInfo = await request.checkForUpdate();
     } catch (error) {
       commonPrint.log(
         'check update failed: $error',
@@ -658,7 +659,7 @@ extension InitControllerExt on AppController {
       }
       return;
     }
-    if (tagName == null) {
+    if (updateInfo == null) {
       if (isUser) {
         globalState.showMessage(
           title: appLocalizations.checkUpdate,
@@ -668,12 +669,11 @@ extension InitControllerExt on AppController {
       }
       return;
     }
-    final updateTagName = tagName;
     window?.show();
     final res = await globalState.showMessage(
       title: appLocalizations.discovery,
       message: TextSpan(
-        text: appLocalizations.updateAvailableTip(updateTagName),
+        text: updateInfo.releaseNotes ?? appLocalizations.noInfo,
       ),
     );
     if (res != true) {

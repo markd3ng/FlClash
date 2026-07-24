@@ -9,11 +9,11 @@ import 'system.dart';
 
 const silentLaunchArgument = '--silent-launch';
 
-bool shouldLaunchSilently({required bool enabled, List<String>? arguments}) {
-  return enabled &&
-      (arguments ?? Platform.executableArguments).contains(
-        silentLaunchArgument,
-      );
+bool shouldLaunchSilently({
+  required bool enabled,
+  required List<String> arguments,
+}) {
+  return enabled && arguments.contains(silentLaunchArgument);
 }
 
 class AutoLaunch {
@@ -32,27 +32,15 @@ class AutoLaunch {
     return _instance!;
   }
 
-  Future<bool> get isEnable async {
-    return launchAtStartup.isEnabled();
-  }
-
-  Future<bool> enable() async {
-    return launchAtStartup.enable();
-  }
-
-  Future<bool> disable() async {
-    return launchAtStartup.disable();
-  }
-
   Future<void> updateStatus(bool isAutoLaunch) async {
     if (kDebugMode) {
       return;
     }
-    if (await isEnable == isAutoLaunch) return;
-    if (isAutoLaunch == true) {
-      enable();
+    if (await launchAtStartup.isEnabled() == isAutoLaunch) return;
+    if (isAutoLaunch) {
+      await launchAtStartup.enable();
     } else {
-      disable();
+      await launchAtStartup.disable();
     }
   }
 }

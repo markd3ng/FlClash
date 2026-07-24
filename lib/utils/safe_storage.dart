@@ -1,9 +1,27 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:fl_clash/common/path.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+String? legacySecureStorageValue(String? payload, String key) {
+  if (payload == null || payload.isEmpty) return null;
+  final decoded = jsonDecode(payload);
+  if (decoded is! Map) {
+    throw const FormatException('legacy secure storage must be a JSON object');
+  }
+  final value = decoded[key];
+  return value is String ? value : null;
+}
 
 class SafeStorage {
   static const _secureStorage = FlutterSecureStorage(
     mOptions: MacOsOptions(usesDataProtectionKeychain: false),
+  );
+  static const _legacyLinuxStorage = MethodChannel(
+    'com.oixcloud.clash/legacy_secure_storage',
   );
 
   static Future<String?> read(String key) async {
@@ -42,6 +60,16 @@ class SafeStorage {
       }
       return legacyValue;
     }
+    final legacySecureValue = await _readLegacyLinuxValue(key);
+    if (legacySecureValue != null) {
+      try {
+        await _writeSecure(key, legacySecureValue);
+        await _markMigratedAndDeleteLegacy(prefs, key, migrationKey);
+      } catch (_) {
+        return legacySecureValue;
+      }
+      return legacySecureValue;
+    }
     return null;
   }
 
@@ -72,6 +100,19 @@ class SafeStorage {
 
   static String _migrationKey(String key) => '__safe_storage_migrated_$key';
   static String _deletionKey(String key) => '__safe_storage_deleted_$key';
+
+  static Future<String?> _readLegacyLinuxValue(String key) async {
+    if (!Platform.isLinux ||
+        !await File(await appPath.identityMigrationMarkerPath).exists()) {
+      return null;
+    }
+    try {
+      final payload = await _legacyLinuxStorage.invokeMethod<String>('readAll');
+      return legacySecureStorageValue(payload, key);
+    } catch (_) {
+      return null;
+    }
+  }
 
   static Future<void> _deleteLegacyValue(
     SharedPreferences prefs,

@@ -15,6 +15,7 @@ class SingleInstanceLock {
   }
 
   Future<bool> acquire() async {
+    if (_accessFile != null) return true;
     try {
       final lockFilePath = await appPath.lockFilePath;
       final lockFile = File(lockFilePath);

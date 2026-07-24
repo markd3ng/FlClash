@@ -131,7 +131,6 @@
   "checkUpdate": "检查更新",
   "checkUpdateError": "当前应用已经是最新版了",
   "checkUpdateFailed": "检查更新失败，请检查网络后重试",
-  "updateAvailableTip": "发现新版本 {version}，是否立即打开下载链接？",
   "unknown": "未知",
   "country": "区域",
   "search": "搜索",

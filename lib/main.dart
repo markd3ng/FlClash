@@ -13,12 +13,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'application.dart';
 import 'common/common.dart';
 
-Future<void> main() async {
+Future<void> main(List<String> arguments) async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
     registerFetchManagedConfig(CloudApiService().fetchManagedConfig);
     final version = await system.version;
-    final container = await globalState.init(version);
+    final container = await globalState.init(version, arguments: arguments);
     // Eagerly build the cloud-account notifier so it registers its
     // ensureCloudReady hook before any oixCloud profile setup runs.
     container.read(cloudAccountProvider);

@@ -14,7 +14,10 @@ const appHelperService = 'FlClashHelperService';
 const coreName = 'clash.meta';
 const browserUa =
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
-const packageName = 'com.follow.clash';
+const packageName = 'com.oixcloud.clash';
+const legacyPackageName = 'com.follow.clash';
+const identityMigrationMarkerName = '.identity-migrated-from-com.follow.clash';
+const releaseRepository = 'pickrui/FlClash';
 final unixSocketPath = '/tmp/FlClashSocket_${Random().nextInt(10000)}.sock';
 final windowsPipeName = '\\\\.\\pipe\\FlClashCore_${Random().nextInt(10000)}';
 const helperPort = 47890;

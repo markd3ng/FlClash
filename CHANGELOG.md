@@ -1,6 +1,12 @@
 ## v0.8.94
 
-- feat: release v0.8.94
+- Show only the current release notes in every update prompt
+
+- Fix Windows silent launch at system startup
+
+- Change the application identifier to `com.oixcloud.clash` and migrate existing desktop data and credentials
+
+- Prevent concurrent desktop instances from accessing application data during startup
 
 ## v0.8.93
 

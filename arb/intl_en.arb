@@ -131,7 +131,6 @@
   "checkUpdate": "Check for updates",
   "checkUpdateError": "The current application is already the latest version",
   "checkUpdateFailed": "Failed to check for updates. Please check your network and try again",
-  "updateAvailableTip": "A new version {version} is available. Open the download link now?",
   "unknown": "Unknown",
   "country": "Country",
   "search": "Search",

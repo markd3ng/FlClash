@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 
 import 'package:fl_clash/models/models.dart';
@@ -15,34 +14,41 @@ final durableConfigStore = DurableConfigStore(
 
 class Preferences {
   static Preferences? _instance;
-  Completer<SharedPreferences?> sharedPreferencesCompleter = Completer();
+  Future<SharedPreferences?>? _sharedPreferences;
 
-  Future<bool> get isInit async =>
-      await sharedPreferencesCompleter.future != null;
+  Future<bool> get isInit async => await _loadSharedPreferences() != null;
 
-  Preferences._internal() {
-    SharedPreferences.getInstance()
-        .then((value) => sharedPreferencesCompleter.complete(value))
-        .onError((_, _) => sharedPreferencesCompleter.complete(null));
-  }
+  Preferences._internal();
 
   factory Preferences() {
     _instance ??= Preferences._internal();
     return _instance!;
   }
 
+  Future<SharedPreferences?> _loadSharedPreferences() {
+    return _sharedPreferences ??= _createSharedPreferences();
+  }
+
+  Future<SharedPreferences?> _createSharedPreferences() async {
+    try {
+      return await SharedPreferences.getInstance();
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<int> getVersion() async {
-    final preferences = await sharedPreferencesCompleter.future;
+    final preferences = await _loadSharedPreferences();
     return preferences?.getInt('version') ?? 0;
   }
 
   Future<void> setVersion(int version) async {
-    final preferences = await sharedPreferencesCompleter.future;
+    final preferences = await _loadSharedPreferences();
     await preferences?.setInt('version', version);
   }
 
   Future<void> saveShareState(SharedState shareState) async {
-    final preferences = await sharedPreferencesCompleter.future;
+    final preferences = await _loadSharedPreferences();
     await preferences?.setString('sharedState', json.encode(shareState));
   }
 
@@ -52,7 +58,7 @@ class Preferences {
     if (durable != null) {
       return durable;
     }
-    final preferences = await sharedPreferencesCompleter.future;
+    final preferences = await _loadSharedPreferences();
     final configString = preferences?.getString(configKey);
     if (configString == null) return null;
     final decoded = json.decode(configString);
@@ -64,7 +70,7 @@ class Preferences {
 
   Future<Map<String, Object?>?> getClashConfigMap() async {
     try {
-      final preferences = await sharedPreferencesCompleter.future;
+      final preferences = await _loadSharedPreferences();
       final clashConfigString = preferences?.getString(clashConfigKey);
       if (clashConfigString == null) return null;
       return json.decode(clashConfigString);
@@ -75,7 +81,7 @@ class Preferences {
 
   Future<void> clearClashConfig() async {
     try {
-      final preferences = await sharedPreferencesCompleter.future;
+      final preferences = await _loadSharedPreferences();
       await preferences?.remove(clashConfigKey);
       return;
     } catch (_) {
@@ -93,7 +99,7 @@ class Preferences {
 
   Future<bool> saveConfig(Config config) async {
     await durableConfigStore.write(await appPath.durableConfigPath, config);
-    final preferences = await sharedPreferencesCompleter.future;
+    final preferences = await _loadSharedPreferences();
     try {
       await preferences?.setString(
         configKey,
@@ -108,7 +114,7 @@ class Preferences {
   }
 
   Future<void> clearPreferences({Set<String> preserveKeys = const {}}) async {
-    final sharedPreferencesIns = await sharedPreferencesCompleter.future;
+    final sharedPreferencesIns = await _loadSharedPreferences();
     if (sharedPreferencesIns != null) {
       for (final key in sharedPreferencesIns.getKeys()) {
         if (preserveKeys.contains(key)) {

@@ -44,7 +44,7 @@ fun String.asBuildConfigString(): String =
 
 
 android {
-    namespace = "com.follow.clash"
+    namespace = "com.oixcloud.clash"
     compileSdk = libs.versions.compileSdk.get().toInt()
     ndkVersion = libs.versions.ndkVersion.get()
 
@@ -60,7 +60,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.follow.clash"
+        applicationId = "com.oixcloud.clash"
         minSdk = flutter.minSdkVersion
         targetSdk = libs.versions.targetSdk.get().toInt()
         versionCode = flutter.versionCode
