@@ -18,7 +18,7 @@ class CloudProfileCard extends ConsumerStatefulWidget {
 }
 
 class _CloudProfileCardState extends ConsumerState<CloudProfileCard> {
-  OixParams _params = const OixParams();
+  CloudParams _params = const CloudParams();
 
   @override
   void initState() {
@@ -27,15 +27,15 @@ class _CloudProfileCardState extends ConsumerState<CloudProfileCard> {
   }
 
   Future<void> _loadParams() async {
-    final loaded = await OixParamsStorage.load();
+    final loaded = await CloudParamsStorage.load();
     if (mounted) {
       setState(() => _params = loaded);
     }
   }
 
-  Future<void> _commit(OixParams next) async {
+  Future<void> _commit(CloudParams next) async {
     setState(() => _params = next);
-    await OixParamsStorage.save(next);
+    await CloudParamsStorage.save(next);
 
     final clashProfileList = ref
         .read(profilesProvider)
@@ -213,7 +213,7 @@ class _CloudProfileCardState extends ConsumerState<CloudProfileCard> {
   }
 
   /// Restore the level/type to the tier's defaults, preserving switches and extras.
-  OixParams _restoreDefault(SubscriptionTier tier) {
+  CloudParams _restoreDefault(SubscriptionTier tier) {
     return _params.applyingTierDefaults(tier.defaultParams);
   }
 

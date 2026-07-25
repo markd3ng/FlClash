@@ -78,3 +78,32 @@ func TestHandleUpdateConfigBeforeSetup(t *testing.T) {
 		t.Fatalf("message = %q, want empty", message)
 	}
 }
+
+func TestLogSubscriptionLifecycle(t *testing.T) {
+	previousIsInit := isInit
+	isInit = true
+	t.Cleanup(func() {
+		isInit = previousIsInit
+		handleStopLog()
+	})
+
+	handleStartLog()
+	first := logSubscriber
+	if first == nil {
+		t.Fatal("first log subscription is nil")
+	}
+
+	handleStartLog()
+	second := logSubscriber
+	if second == nil {
+		t.Fatal("second log subscription is nil")
+	}
+	if first == second {
+		t.Fatal("log subscription was not replaced")
+	}
+
+	handleStopLog()
+	if logSubscriber != nil {
+		t.Fatal("log subscription was not cleared")
+	}
+}

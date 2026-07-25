@@ -83,9 +83,10 @@ Support the following actions
 
 ## Docker
 
-The Docker image runs FlClash in a browser-accessible XFCE desktop for Linux
-`amd64` and `arm64` hosts. It is intended for NAS and home-server deployments;
-it does not automatically route traffic from the Docker host.
+The Docker image runs FlClash in a lightweight, browser-accessible single-app
+session for Linux `amd64` and `arm64` hosts. It contains no virtual machine and
+does not start nested Docker. It is intended for NAS and home-server
+deployments and does not automatically route traffic from the Docker host.
 
 ```bash
 docker run -d \
@@ -103,11 +104,14 @@ docker run -d \
 ```
 
 Open `https://<host>:3001` after the container starts. A certificate warning is
-expected because the default certificate is self-signed. The web desktop has no
-authentication by default, so do not expose it directly to the Internet.
+expected because the default certificate is self-signed. The browser interface
+has no authentication by default, so do not expose it directly to the Internet.
 
-See the [Docker guide](docker/README.md) for Docker Compose, authentication,
-persistent storage, proxy-port exposure, updates, and troubleshooting.
+Docker Desktop on macOS and Windows runs one shared Linux VM for all Linux
+containers. A VM process shown by the host belongs to Docker Desktop, not to a
+nested VM in this image. See the [Docker guide](docker/README.md) for Docker
+Compose, authentication, performance tuning, persistent storage, proxy-port
+exposure, updates, and troubleshooting.
 
 ## Build
 

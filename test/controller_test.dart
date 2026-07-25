@@ -33,9 +33,7 @@ void main() {
   });
 
   test('formats YAML type mismatch for the profile error dialog', () async {
-    final localizations = await AppLocalizations.load(
-      const Locale('zh', 'CN'),
-    );
+    final localizations = await AppLocalizations.load(const Locale('zh', 'CN'));
 
     final message = formatConfigValidationMessage(
       'Parse Error: yaml: unmarshal errors:\n'
@@ -212,6 +210,33 @@ void main() {
       expect(canPublishGroupsForProfile(8, appliedState), false);
       expect(canPublishGroupsForProfile(7, null), false);
       expect(canPublishGroupsForProfile(null, null), false);
+    });
+
+    test('rejects a proxy change after the active profile changes', () {
+      expect(
+        canChangeProxyForProfile(
+          requestedProfileId: 7,
+          currentProfileId: 7,
+          appliedState: appliedState,
+        ),
+        true,
+      );
+      expect(
+        canChangeProxyForProfile(
+          requestedProfileId: 7,
+          currentProfileId: 8,
+          appliedState: appliedState,
+        ),
+        false,
+      );
+      expect(
+        canChangeProxyForProfile(
+          requestedProfileId: 7,
+          currentProfileId: 7,
+          appliedState: null,
+        ),
+        false,
+      );
     });
   });
 

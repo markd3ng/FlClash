@@ -136,7 +136,10 @@ Future<Map<String, dynamic>> _makeRealProfileTask(
   rawConfig['redir-port'] = realPatchConfig.redirPort;
   rawConfig['tproxy-port'] = realPatchConfig.tproxyPort;
   rawConfig['find-process-mode'] = realPatchConfig.findProcessMode.name;
-  rawConfig['allow-lan'] = realPatchConfig.allowLan;
+  rawConfig['allow-lan'] = data.dockerMode || realPatchConfig.allowLan;
+  if (data.dockerMode) {
+    rawConfig['bind-address'] = '*';
+  }
   rawConfig['mode'] = realPatchConfig.mode.name;
   if (rawConfig['tun'] == null) {
     rawConfig['tun'] = {};

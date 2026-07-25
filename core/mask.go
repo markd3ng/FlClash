@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	isOixCloud atomic.Bool
+	isoixCloud atomic.Bool
 	cloudIPs   sync.Map
 )
 
@@ -21,8 +21,8 @@ func init() {
 	route.DNSQueryObfuscated = matchManagedSuffix
 }
 
-func setMaskedAddrs(isOix bool) {
-	isOixCloud.Store(isOix)
+func setMaskedAddrs(isoix bool) {
+	isoixCloud.Store(isoix)
 	cloudIPs.Clear()
 }
 
@@ -50,7 +50,7 @@ func isCloudIP(host string) bool {
 }
 
 func maskMetadata(m *constant.Metadata) {
-	if m == nil || !isOixCloud.Load() {
+	if m == nil || !isoixCloud.Load() {
 		return
 	}
 	m.RemoteDst = maskAddr(m.RemoteDst)

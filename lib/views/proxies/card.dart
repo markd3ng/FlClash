@@ -105,7 +105,6 @@ class ProxyCard extends StatelessWidget {
         true => currentProxyName == proxy.name ? '' : proxy.name,
         false => proxy.name,
       };
-      appController.updateCurrentSelectedMap(groupName, nextProxyName);
       appController.changeProxyDebounce(groupName, nextProxyName);
       return;
     }

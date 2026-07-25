@@ -73,9 +73,9 @@ on Mobile:
 
 ## Docker
 
-Docker 镜像通过浏览器可访问的 XFCE 桌面运行 FlClash，支持 Linux `amd64`
-和 `arm64` 宿主机，适合部署在 NAS 或家庭服务器上。容器不会自动接管 Docker
-宿主机的流量。
+Docker 镜像通过轻量的单应用浏览器界面运行 FlClash，支持 Linux `amd64`
+和 `arm64` 宿主机，适合部署在 NAS 或家庭服务器上。镜像内没有虚拟机，
+也不会启动嵌套 Docker；容器不会自动接管 Docker 宿主机的流量。
 
 ```bash
 docker run -d \
@@ -93,9 +93,12 @@ docker run -d \
 ```
 
 容器启动后访问 `https://<宿主机地址>:3001`。默认使用自签名证书，首次访问
-出现证书警告属于正常现象。Web 桌面默认没有身份验证，请勿直接暴露到公网。
+出现证书警告属于正常现象。浏览器界面默认没有身份验证，请勿直接暴露到公网。
 
-Docker Compose、身份验证、数据持久化、代理端口发布、更新和排错方法请参阅
+macOS 和 Windows 上的 Docker Desktop 会为所有 Linux 容器运行一个共享的 Linux
+虚拟机；系统中看到的虚拟机进程来自 Docker Desktop，不是 FlClash 镜像再次嵌套的
+虚拟机。Docker Compose、身份验证、性能调优、数据持久化、代理端口发布、更新和
+排错方法请参阅
 [Docker 使用指南](docker/README_zh_CN.md)。
 
 ## Build

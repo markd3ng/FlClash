@@ -11,6 +11,11 @@ import 'package:fl_clash/widgets/input.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart';
 
+bool isFlClashDockerEnvironment(Map<String, String> environment) {
+  final value = environment['FLCLASH_DOCKER']?.trim().toLowerCase();
+  return value == 'true' || value == '1';
+}
+
 class System {
   static System? _instance;
 
@@ -30,6 +35,8 @@ class System {
   bool get isAndroid => Platform.isAndroid;
 
   bool get isLinux => Platform.isLinux;
+
+  bool get isDocker => isFlClashDockerEnvironment(Platform.environment);
 
   Future<void> hideFile(String path) async {
     try {

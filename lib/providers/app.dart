@@ -233,19 +233,47 @@ class Groups extends _$Groups with NotifierMixin<List<Group>> {
 
 @Riverpod(keepAlive: true)
 class DelayDataSource extends _$DelayDataSource with NotifierMixin<DelayMap> {
+  int _generation = 0;
+
   @override
   DelayMap build() {
     return {};
   }
 
-  void setDelay(Delay delay) {
-    if (state[delay.url]?[delay.name] != delay.value) {
-      final DelayMap newDelayMap = Map.from(state);
-      if (newDelayMap[delay.url] == null) {
-        newDelayMap[delay.url] = {};
+  int get generation => _generation;
+
+  bool isCurrent(int generation) => generation == _generation;
+
+  int begin() => ++_generation;
+
+  void clear() {
+    _generation++;
+    state = {};
+  }
+
+  void setDelay(Delay delay, {int? generation}) {
+    setDelays([delay], generation: generation);
+  }
+
+  void setDelays(Iterable<Delay> delays, {int? generation}) {
+    if (generation != null && !isCurrent(generation)) {
+      return;
+    }
+    final DelayMap nextState = Map.from(state);
+    final copiedUrls = <String>{};
+    var changed = false;
+    for (final delay in delays) {
+      if (state[delay.url]?[delay.name] == delay.value) {
+        continue;
       }
-      newDelayMap[delay.url]![delay.name] = delay.value;
-      state = newDelayMap;
+      if (copiedUrls.add(delay.url)) {
+        nextState[delay.url] = Map.from(state[delay.url] ?? const {});
+      }
+      nextState[delay.url]![delay.name] = delay.value;
+      changed = true;
+    }
+    if (changed) {
+      state = nextState;
     }
   }
 }

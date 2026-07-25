@@ -12,5 +12,15 @@ void main() {
         expect(ParsedRule.parseString(value).value, value);
       });
     }
+
+    test('handles empty and incomplete rules', () {
+      expect(ParsedRule.parseString('').value, 'DOMAIN');
+      expect(ParsedRule.parseString('src').value, 'DOMAIN');
+      expect(ParsedRule.parseString('DOMAIN').value, 'DOMAIN');
+      expect(
+        ParsedRule.parseString('RULE-SET,provider').value,
+        'RULE-SET,provider',
+      );
+    });
   });
 }

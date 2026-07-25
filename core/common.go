@@ -318,18 +318,18 @@ func applyConfig(params *SetupParams) error {
 	defer runLock.Unlock()
 	stopGeoScheduler()
 	var err error
-	isOixConfig := params.RawConfig != ""
+	isoixConfig := params.RawConfig != ""
 	constant.DefaultTestURL = params.TestURL
-	if isOixConfig {
+	if isoixConfig {
 		applyDNSAuth()
 		currentConfig, err = executor.ParseWithBytes([]byte(params.RawConfig))
 	} else {
-		currentConfig, isOixConfig, err = parseConfigPath(filepath.Join(constant.Path.HomeDir(), "config.yaml"))
+		currentConfig, isoixConfig, err = parseConfigPath(filepath.Join(constant.Path.HomeDir(), "config.yaml"))
 	}
 	if err != nil {
 		currentConfig, _ = config.ParseRawConfig(config.DefaultRawConfig())
 	}
-	setMaskedAddrs(isOixConfig)
+	setMaskedAddrs(isoixConfig)
 	hub.ApplyConfig(currentConfig)
 	installDNSAuthResolver()
 	patchSelectGroup(params.SelectedMap)

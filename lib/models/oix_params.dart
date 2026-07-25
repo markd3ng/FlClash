@@ -44,10 +44,10 @@ enum SubscriptionTier {
 
   bool get canUseEmergency => this == premium;
 
-  OixParams get defaultParams => switch (this) {
-    none => const OixParams(),
-    alu => const OixParams(level: NetworkLevel.emergency),
-    premium => const OixParams(type: 'love'),
+  CloudParams get defaultParams => switch (this) {
+    none => const CloudParams(),
+    alu => const CloudParams(level: NetworkLevel.emergency),
+    premium => const CloudParams(type: 'love'),
   };
 }
 
@@ -66,14 +66,14 @@ enum NetworkLevel {
   }
 }
 
-class OixParams {
+class CloudParams {
   final NetworkLevel? level;
   final String? type;
   final bool? tfo;
   final bool simplerules;
   final Map<String, String> extras;
 
-  const OixParams({
+  const CloudParams({
     this.level,
     this.type,
     this.tfo,
@@ -81,9 +81,9 @@ class OixParams {
     this.extras = const {},
   });
 
-  static OixParams parse(String raw) {
+  static CloudParams parse(String raw) {
     final cleaned = raw.startsWith('&') ? raw.substring(1) : raw;
-    if (cleaned.isEmpty) return const OixParams();
+    if (cleaned.isEmpty) return const CloudParams();
 
     NetworkLevel? level;
     String? type;
@@ -116,7 +116,7 @@ class OixParams {
       }
     }
 
-    return OixParams(
+    return CloudParams(
       level: level,
       type: type,
       tfo: tfo,
@@ -150,14 +150,14 @@ class OixParams {
     return withTfo.encode();
   }
 
-  OixParams copyWith({
+  CloudParams copyWith({
     Object? level = _sentinel,
     Object? type = _sentinel,
     Object? tfo = _sentinel,
     Object? simplerules = _sentinel,
     Map<String, String>? extras,
   }) {
-    return OixParams(
+    return CloudParams(
       level: level == _sentinel ? this.level : level as NetworkLevel?,
       type: type == _sentinel ? this.type : type as String?,
       tfo: tfo == _sentinel ? this.tfo : tfo as bool?,
@@ -171,17 +171,17 @@ class OixParams {
   /// Encoded form excluding independent switches. Used to compare with tier
   /// defaults, which only own routing params like level/type.
   String encodeDefaultComparable() =>
-      OixParams(level: level, type: type).encode();
+      CloudParams(level: level, type: type).encode();
 
   String encodeEditableOptions() =>
       copyWith(tfo: null, simplerules: false).encode();
 
-  OixParams applyingTierDefaults(OixParams defaults) {
+  CloudParams applyingTierDefaults(CloudParams defaults) {
     return copyWith(level: defaults.level, type: defaults.type);
   }
 
   /// Strip emergency mode if the current [tier] cannot support it.
-  OixParams stripEmergencyIfUnsupported(SubscriptionTier tier) {
+  CloudParams stripEmergencyIfUnsupported(SubscriptionTier tier) {
     if (level == NetworkLevel.emergency &&
         !tier.canUseEmergency &&
         tier != SubscriptionTier.alu) {
@@ -193,7 +193,7 @@ class OixParams {
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    if (other is! OixParams) return false;
+    if (other is! CloudParams) return false;
     if (level != other.level ||
         type != other.type ||
         tfo != other.tfo ||

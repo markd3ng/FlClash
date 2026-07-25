@@ -55,10 +55,7 @@ class Tray {
     }
     if (iconChanged || isLinux) {
       _lastIconPath = iconPath;
-      await trayManager.setIcon(
-        iconPath,
-        isTemplate: true,
-      );
+      await trayManager.setIcon(iconPath, isTemplate: true);
     }
     if (!isLinux) {
       await trayManager.setToolTip(appName);
@@ -127,11 +124,7 @@ class Tray {
               checked:
                   appController.getSelectedProxyName(group.name) == proxy.name,
               onClick: (_) {
-                appController.updateCurrentSelectedMap(group.name, proxy.name);
-                appController.changeProxy(
-                  groupName: group.name,
-                  proxyName: proxy.name,
-                );
+                appController.changeProxyDebounce(group.name, proxy.name);
               },
             ),
           );

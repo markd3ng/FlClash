@@ -65,9 +65,10 @@ String formatConfigValidationMessage(
   String message,
   AppLocalizations localizations,
 ) {
-  final normalized = message
-      .trim()
-      .replaceFirst(RegExp(r'^Parse Error:\s*', caseSensitive: false), '');
+  final normalized = message.trim().replaceFirst(
+    RegExp(r'^Parse Error:\s*', caseSensitive: false),
+    '',
+  );
   final typeMismatchPattern = RegExp(
     r'line\s+(\d+):\s+cannot unmarshal\s+(!![a-z]+)(?:\s+.*)?\s+into\s+([^\r\n]+)',
     caseSensitive: false,
@@ -105,10 +106,7 @@ String formatConfigValidationMessage(
       '${localizations.configYamlFormatHint}';
 }
 
-String? _configValueTypeLabel(
-  String rawType,
-  AppLocalizations localizations,
-) {
+String? _configValueTypeLabel(String rawType, AppLocalizations localizations) {
   final type = rawType.trim().toLowerCase();
   if (type.startsWith('[]') || type == '!!seq') {
     return localizations.configValueTypeList;
@@ -122,9 +120,7 @@ String? _configValueTypeLabel(
   if (type == 'bool' || type == 'boolean' || type == '!!bool') {
     return localizations.configValueTypeBoolean;
   }
-  if (type.startsWith('int') ||
-      type.startsWith('uint') ||
-      type == '!!int') {
+  if (type.startsWith('int') || type.startsWith('uint') || type == '!!int') {
     return localizations.configValueTypeInteger;
   }
   if (type.startsWith('float') || type == '!!float') {
@@ -145,6 +141,15 @@ bool shouldStopCoreAfterApplyFailure({
 
 bool canPublishGroupsForProfile(int? profileId, SetupState? appliedState) {
   return profileId != null && appliedState?.profileId == profileId;
+}
+
+bool canChangeProxyForProfile({
+  required int requestedProfileId,
+  required int? currentProfileId,
+  required SetupState? appliedState,
+}) {
+  return requestedProfileId == currentProfileId &&
+      canPublishGroupsForProfile(requestedProfileId, appliedState);
 }
 
 Profile mergeRefreshedProfile(Profile current, Profile refreshed) {
@@ -1013,7 +1018,7 @@ extension ProfilesControllerExt on AppController {
       return _runWithCertificateRetry(() {
         final profile = Profile.normal(url: url);
         return persistProfile(profile, profile.update);
-      }, handleCloudUnauthorized: isOixCloudProfileUrl(url));
+      }, handleCloudUnauthorized: isoixCloudProfileUrl(url));
     }, title: appLocalizations.addProfile);
     if (profile != null) {
       globalState.showNotifier(appLocalizations.getProfileSuccess);
@@ -1196,13 +1201,36 @@ extension ProxiesControllerExt on AppController {
   }
 
   void changeProxyDebounce(String groupName, String proxyName) {
-    debouncer.call(FunctionTag.changeProxy, (
+    final profileId = _ref.read(currentProfileIdProvider);
+    if (profileId == null) {
+      return;
+    }
+    debouncer.call((FunctionTag.changeProxy, groupName), (
+      int profileId,
       String groupName,
       String proxyName,
     ) async {
-      await changeProxy(groupName: groupName, proxyName: proxyName);
+      bool isCurrentProfile() => canChangeProxyForProfile(
+        requestedProfileId: profileId,
+        currentProfileId: _ref.read(currentProfileIdProvider),
+        appliedState: globalState.lastSetupState,
+      );
+      if (!isCurrentProfile()) {
+        return;
+      }
+      final changed = await changeProxy(
+        profileId: profileId,
+        groupName: groupName,
+        proxyName: proxyName,
+      );
+      if (!changed) {
+        if (isCurrentProfile()) {
+          await updateGroups();
+        }
+        return;
+      }
       updateGroupsDebounce();
-    }, args: [groupName, proxyName]);
+    }, args: [profileId, groupName, proxyName]);
   }
 
   Future<void> updateGroups() async {
@@ -1291,30 +1319,73 @@ extension ProxiesControllerExt on AppController {
         .put(currentProfile.copyWith(unfoldSet: value));
   }
 
-  void setDelay(Delay delay) {
-    _ref.read(delayDataSourceProvider.notifier).setDelay(delay);
+  int beginDelayTest() {
+    return _ref.read(delayDataSourceProvider.notifier).begin();
+  }
+
+  bool isCurrentDelayGeneration(int generation) {
+    return _ref.read(delayDataSourceProvider.notifier).isCurrent(generation);
+  }
+
+  void setDelay(Delay delay, {int? generation}) {
+    _ref
+        .read(delayDataSourceProvider.notifier)
+        .setDelay(delay, generation: generation);
+  }
+
+  void setDelays(Iterable<Delay> delays, {int? generation}) {
+    _ref
+        .read(delayDataSourceProvider.notifier)
+        .setDelays(delays, generation: generation);
   }
 
   void clearDelay() {
-    _ref.read(delayDataSourceProvider.notifier).value = {};
+    _ref.read(delayDataSourceProvider.notifier).clear();
   }
 
-  Future<void> changeProxy({
+  Future<bool> changeProxy({
+    required int profileId,
     required String groupName,
     required String proxyName,
-  }) async {
-    if (!await ensureCoreReady()) {
-      return;
-    }
-    await coreController.changeProxy(
-      ChangeProxyParams(groupName: groupName, proxyName: proxyName),
-    );
-    if (_ref.read(appSettingProvider).closeConnections) {
-      coreController.closeConnections();
-    } else {
-      coreController.resetConnections();
-    }
-    addCheckIp();
+  }) {
+    return _serializeCoreLifecycle(() async {
+      bool isCurrentProfile() => canChangeProxyForProfile(
+        requestedProfileId: profileId,
+        currentProfileId: _ref.read(currentProfileIdProvider),
+        appliedState: globalState.lastSetupState,
+      );
+      if (!isCurrentProfile() || !await ensureCoreReady()) {
+        return false;
+      }
+      if (!isCurrentProfile()) {
+        return false;
+      }
+      try {
+        await coreController.changeProxy(
+          ChangeProxyParams(groupName: groupName, proxyName: proxyName),
+        );
+      } catch (error) {
+        commonPrint.log(
+          'changeProxy error: $error',
+          logLevel: LogLevel.warning,
+        );
+        if (isCurrentProfile()) {
+          globalState.showNotifier(error.toString());
+        }
+        return false;
+      }
+      if (!isCurrentProfile()) {
+        return false;
+      }
+      updateCurrentSelectedMap(groupName, proxyName);
+      if (_ref.read(appSettingProvider).closeConnections) {
+        coreController.closeConnections();
+      } else {
+        coreController.resetConnections();
+      }
+      addCheckIp();
+      return true;
+    });
   }
 
   void setProvider(ExternalProvider? provider) {
@@ -1364,7 +1435,7 @@ extension SetupControllerExt on AppController {
     if (!_ref.read(initProvider)) {
       return;
     }
-    _ref.read(delayDataSourceProvider.notifier).value = {};
+    clearDelay();
     applyProfile(force: true);
     _ref.read(logsProvider.notifier).value = FixedList(500);
     _ref.read(requestsProvider.notifier).value = FixedList(500);
@@ -1412,9 +1483,7 @@ extension SetupControllerExt on AppController {
     var profile = _ref.read(profilesProvider).getProfile(profileId);
     var existingPath = await profile?.getExistingFilePath();
 
-    if (profile != null &&
-        profile.isoixCloudProfile &&
-        existingPath == null) {
+    if (profile != null && profile.isoixCloudProfile && existingPath == null) {
       profile = await _updateProfileWithCertificateRetry(profile);
       existingPath = await profile.getExistingFilePath();
     }
@@ -1669,6 +1738,7 @@ extension SetupControllerExt on AppController {
     }
     final realPatchConfig = patchConfig.copyWith(
       tun: patchConfig.tun.getRealTun(routeMode),
+      allowLan: system.isDocker || patchConfig.allowLan,
     );
     Map<String, dynamic> rawConfig = configMap;
     if (scriptContent?.isNotEmpty == true) {
@@ -1677,9 +1747,9 @@ extension SetupControllerExt on AppController {
         rawConfig,
         onConsole: (level, output) {
           addLog(
-            Log.app(
-              '[script] $output',
-            ).copyWith(logLevel: level == 'error' ? LogLevel.error : LogLevel.info),
+            Log.app('[script] $output').copyWith(
+              logLevel: level == 'error' ? LogLevel.error : LogLevel.info,
+            ),
           );
         },
       );
@@ -1700,6 +1770,7 @@ extension SetupControllerExt on AppController {
         customProxyGroups: customProxyGroups,
         customRules: customRules,
         defaultUA: defaultUA,
+        dockerMode: system.isDocker,
         blockQuic: setupState.blockQuic,
       ),
     );
@@ -1791,13 +1862,13 @@ extension SetupControllerExt on AppController {
     if (!isCurrentApply()) {
       return false;
     }
-    final isOixCloud = profile?.isoixCloudProfile ?? false;
-    if (isOixCloud && system.isAndroid) {
+    final isoixCloud = profile?.isoixCloudProfile ?? false;
+    if (isoixCloud && system.isAndroid) {
       final encryptedBytes = await ensureEncryptedProfileBytes(
         Uint8List.fromList(utf8.encode(yamlString)),
       );
       await File(configFilePath).safeWriteAsBytes(encryptedBytes);
-    } else if (!isOixCloud) {
+    } else if (!isoixCloud) {
       await File(configFilePath).safeWriteAsString(yamlString);
     }
 
@@ -1805,7 +1876,7 @@ extension SetupControllerExt on AppController {
     final updatedSetupParams = SetupParams(
       selectedMap: latestProfile?.selectedMap ?? const {},
       testUrl: _ref.read(appSettingProvider).testUrl,
-      rawConfig: isOixCloud ? yamlString : '',
+      rawConfig: isoixCloud ? yamlString : '',
     );
 
     if (!isCurrentApply()) {
@@ -2103,9 +2174,7 @@ extension SystemControllerExt on AppController {
 extension BackupControllerExt on AppController {
   Future<void> shakingStore() async {
     final profileIds = _ref.read(
-      profilesProvider.select(
-        (state) => state.map((item) => item.id),
-      ),
+      profilesProvider.select((state) => state.map((item) => item.id)),
     );
     final scriptIds = await _ref.read(
       scriptsProvider.future.select(

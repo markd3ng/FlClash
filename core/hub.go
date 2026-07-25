@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"runtime/debug"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/metacubex/mihomo/adapter"
@@ -30,8 +31,9 @@ import (
 )
 
 var (
-	isInit        = false
-	logSubscriber observable.Subscription[log.Event]
+	isInit          = false
+	logSubscriber   observable.Subscription[log.Event]
+	logSubscriberMu sync.Mutex
 )
 
 func handleInitClash(paramsString string) bool {
@@ -104,12 +106,13 @@ func handleShutdown() bool {
 	stopGeoLifecycle()
 	runLock.Lock()
 	defer runLock.Unlock()
+	isInit = false
+	handleStopLog()
 	isRunning = false
 	listener.StopListener()
 	closeCurrentProviders()
 	executor.Shutdown()
 	handleForceGC()
-	isInit = false
 	return true
 }
 
@@ -462,10 +465,20 @@ func handleSuspend(suspended bool) bool {
 }
 
 func handleStartLog() {
-	handleStopLog()
-	logSubscriber = log.Subscribe()
-	go func() {
-		for logData := range logSubscriber {
+	runLock.Lock()
+	defer runLock.Unlock()
+	if !isInit {
+		return
+	}
+	logSubscriberMu.Lock()
+	if logSubscriber != nil {
+		log.UnSubscribe(logSubscriber)
+	}
+	subscriber := log.Subscribe()
+	logSubscriber = subscriber
+	logSubscriberMu.Unlock()
+	go func(subscription observable.Subscription[log.Event]) {
+		for logData := range subscription {
 			if logData.LogLevel < log.Level() {
 				continue
 			}
@@ -476,10 +489,12 @@ func handleStartLog() {
 			}
 			sendMessage(*message)
 		}
-	}()
+	}(subscriber)
 }
 
 func handleStopLog() {
+	logSubscriberMu.Lock()
+	defer logSubscriberMu.Unlock()
 	if logSubscriber != nil {
 		log.UnSubscribe(logSubscriber)
 		logSubscriber = nil

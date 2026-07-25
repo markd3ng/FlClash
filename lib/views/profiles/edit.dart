@@ -58,12 +58,12 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
 
   Future<void> _loadoixParams() async {
     if (!widget.profile.isoixCloudProfile) return;
-    final params = await OixParamsStorage.load();
-    final defaultRaw = await OixParamsStorage.loadDefaultRaw();
+    final params = await CloudParamsStorage.load();
+    final defaultRaw = await CloudParamsStorage.loadDefaultRaw();
 
     if (mounted) {
       setState(() {
-        _defaultEditableParams = OixParams.parse(
+        _defaultEditableParams = CloudParams.parse(
           defaultRaw,
         ).encodeEditableOptions();
         _tfo = params.tfo ?? true;
@@ -74,10 +74,10 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
   }
 
   Future<void> _saveoixParams(Profile currentProfile) async {
-    final edited = OixParams.parse(
+    final edited = CloudParams.parse(
       _oixParamsController.text,
     ).copyWith(tfo: _tfo, simplerules: _minimalConfig);
-    await OixParamsStorage.save(edited);
+    await CloudParamsStorage.save(edited);
     await appController.updateProfile(currentProfile, showLoading: true);
   }
 

@@ -306,6 +306,59 @@ void main() {
 
       expect(identical(container.read(delayDataSourceProvider), state), isTrue);
     });
+
+    test('ignores results from a cleared delay generation', () {
+      final notifier = container.read(delayDataSourceProvider.notifier);
+      final generation = notifier.generation;
+
+      notifier.clear();
+      notifier.setDelay(
+        const Delay(name: 'Proxy', url: 'https://test.example', value: 120),
+        generation: generation,
+      );
+
+      expect(container.read(delayDataSourceProvider), isEmpty);
+    });
+
+    test('a new delay test invalidates results from the previous test', () {
+      final notifier = container.read(delayDataSourceProvider.notifier);
+      final previousGeneration = notifier.begin();
+      final currentGeneration = notifier.begin();
+
+      notifier.setDelay(
+        const Delay(name: 'Old', url: 'https://test.example', value: 120),
+        generation: previousGeneration,
+      );
+      notifier.setDelay(
+        const Delay(name: 'New', url: 'https://test.example', value: 80),
+        generation: currentGeneration,
+      );
+
+      expect(container.read(delayDataSourceProvider), {
+        'https://test.example': {'New': 80},
+      });
+    });
+
+    test('does not mutate the previous nested delay map', () {
+      final notifier = container.read(delayDataSourceProvider.notifier);
+      notifier.setDelay(
+        const Delay(name: 'Proxy A', url: 'https://test.example', value: 120),
+      );
+      final previous = container.read(delayDataSourceProvider);
+
+      notifier.setDelays(const [
+        Delay(name: 'Proxy B', url: 'https://test.example', value: 180),
+        Delay(name: 'Proxy C', url: 'https://other.example', value: 200),
+      ]);
+
+      expect(previous, {
+        'https://test.example': {'Proxy A': 120},
+      });
+      expect(container.read(delayDataSourceProvider), {
+        'https://test.example': {'Proxy A': 120, 'Proxy B': 180},
+        'https://other.example': {'Proxy C': 200},
+      });
+    });
   });
 
   group('Loading provider', () {

@@ -82,7 +82,7 @@ UpdateParams updateParams(Ref ref) {
     patchClashConfigProvider.select(
       (state) => UpdateParams(
         tun: state.tun.getRealTun(routeMode),
-        allowLan: state.allowLan,
+        allowLan: system.isDocker || state.allowLan,
         findProcessMode: state.findProcessMode,
         mode: state.mode,
         logLevel: state.logLevel,

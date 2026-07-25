@@ -6,16 +6,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// Handles two stored values:
 ///   - `cloud_service_config_params`  user-effective params (encoded form)
 ///   - `cloud_service_default_params` last computed default for the active tier
-class OixParamsStorage {
+class CloudParamsStorage {
   static const _kConfigParams = 'cloud_service_config_params';
   static const _kDefaultParams = 'cloud_service_default_params';
   // Legacy: previously stored as separate bool. Kept for migration only.
   static const _kLegacyTfo = 'cloud_service_tfo';
 
-  static Future<OixParams> load() async {
+  static Future<CloudParams> load() async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(_kConfigParams) ?? '';
-    var parsed = OixParams.parse(raw);
+    var parsed = CloudParams.parse(raw);
 
     // Migrate legacy `cloud_service_tfo` bool into the params object.
     if (parsed.tfo == null && prefs.containsKey(_kLegacyTfo)) {
@@ -26,7 +26,7 @@ class OixParamsStorage {
     return parsed;
   }
 
-  static Future<void> save(OixParams params) async {
+  static Future<void> save(CloudParams params) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_kConfigParams, params.encode());
   }

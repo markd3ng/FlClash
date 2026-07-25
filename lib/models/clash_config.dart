@@ -447,26 +447,39 @@ abstract class ParsedRule with _$ParsedRule {
           (item) => item.isNotEmpty && item != 'src' && item != 'no-resolve',
         )
         .toList();
+    if (shortSplits.isEmpty) {
+      return ParsedRule(
+        ruleAction: RuleAction.DOMAIN,
+        src: splits.contains('src'),
+        noResolve: splits.contains('no-resolve'),
+      );
+    }
     final ruleAction = RuleAction.values.firstWhere(
       (item) => item.value == shortSplits.first,
       orElse: () => RuleAction.DOMAIN,
     );
+    final params = shortSplits.skip(1).toList();
     String? subRule;
     String? ruleTarget;
 
-    if (ruleAction == RuleAction.SUB_RULE) {
-      subRule = shortSplits.last;
-    } else {
-      ruleTarget = shortSplits.last;
+    if (params.isNotEmpty) {
+      if (ruleAction == RuleAction.SUB_RULE) {
+        subRule = params.last;
+      } else {
+        ruleTarget = params.last;
+      }
     }
 
     String? content;
     String? ruleProvider;
+    final Iterable<String> values = params.length > 1
+        ? params.take(params.length - 1)
+        : const <String>[];
 
     if (ruleAction == RuleAction.RULE_SET) {
-      ruleProvider = shortSplits.sublist(1, shortSplits.length - 1).join(',');
+      ruleProvider = values.join(',');
     } else {
-      content = shortSplits.sublist(1, shortSplits.length - 1).join(',');
+      content = values.join(',');
     }
 
     return ParsedRule(

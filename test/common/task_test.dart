@@ -618,6 +618,57 @@ void main() {
     expect(result['geo-update-interval'], defaultGeoUpdateInterval);
   });
 
+  test('makeRealProfileTask exposes the mixed proxy in Docker mode', () async {
+    final result = await makeRealProfileTask(
+      const MakeRealProfileState(
+        profilesPath: '/profiles',
+        profileId: 1,
+        overwriteType: OverwriteType.standard,
+        rawConfig: {
+          'allow-lan': false,
+          'bind-address': '127.0.0.1',
+          'rules': <String>[],
+        },
+        realPatchConfig: ClashConfig(),
+        overrideDns: false,
+        appendSystemDns: false,
+        addedRules: [],
+        proxyChains: [],
+        profileProxies: [],
+        customProxyGroups: [],
+        customRules: [],
+        defaultUA: 'FlClash',
+        dockerMode: true,
+      ),
+    );
+
+    expect(result['allow-lan'], true);
+    expect(result['bind-address'], '*');
+  });
+
+  test('makeRealProfileTask preserves native bind address', () async {
+    final result = await makeRealProfileTask(
+      const MakeRealProfileState(
+        profilesPath: '/profiles',
+        profileId: 1,
+        overwriteType: OverwriteType.standard,
+        rawConfig: {'bind-address': '127.0.0.1', 'rules': <String>[]},
+        realPatchConfig: ClashConfig(),
+        overrideDns: false,
+        appendSystemDns: false,
+        addedRules: [],
+        proxyChains: [],
+        profileProxies: [],
+        customProxyGroups: [],
+        customRules: [],
+        defaultUA: 'FlClash',
+      ),
+    );
+
+    expect(result['allow-lan'], false);
+    expect(result['bind-address'], '127.0.0.1');
+  });
+
   test('makeRealProfileTask injects QUIC block rule when enabled', () async {
     final result = await makeRealProfileTask(
       const MakeRealProfileState(

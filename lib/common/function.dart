@@ -1,13 +1,12 @@
 import 'dart:async';
 
 import 'package:fl_clash/common/common.dart';
-import 'package:fl_clash/enum/enum.dart';
 
 class Debouncer {
-  final Map<FunctionTag, Timer?> _operations = {};
+  final Map<Object, Timer?> _operations = {};
 
   void call(
-    FunctionTag tag,
+    Object tag,
     Function func, {
     List<dynamic>? args,
     Duration? duration,
@@ -23,17 +22,17 @@ class Debouncer {
     });
   }
 
-  void cancel(dynamic tag) {
+  void cancel(Object tag) {
     _operations[tag]?.cancel();
     _operations[tag] = null;
   }
 }
 
 class Throttler {
-  final Map<FunctionTag, Timer?> _operations = {};
+  final Map<Object, Timer?> _operations = {};
 
   bool call(
-    FunctionTag tag,
+    Object tag,
     Function func, {
     List<dynamic>? args,
     Duration duration = const Duration(milliseconds: 600),
@@ -59,7 +58,7 @@ class Throttler {
     return false;
   }
 
-  void cancel(dynamic tag) {
+  void cancel(Object tag) {
     _operations[tag]?.cancel();
     _operations[tag] = null;
   }

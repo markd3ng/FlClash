@@ -300,7 +300,7 @@ void main() {
     });
 
     test('editable options keep routing and arbitrary extras', () {
-      final params = OixParams.parse(
+      final params = CloudParams.parse(
         '&lv=2&type=love&tfo=false&simplerules=true&area=hk&custom=1',
       );
 
@@ -314,7 +314,7 @@ void main() {
     });
 
     test('encoded options round trip without double encoding', () {
-      final params = OixParams.parse('&space=a%20b&plus=a+b&ampersand=a%26b');
+      final params = CloudParams.parse('&space=a%20b&plus=a+b&ampersand=a%26b');
       final encoded = params.encodeEditableOptions();
 
       expect(params.extras, {
@@ -322,13 +322,13 @@ void main() {
         'plus': 'a b',
         'ampersand': 'a&b',
       });
-      expect(OixParams.parse(encoded), params);
+      expect(CloudParams.parse(encoded), params);
       expect(encoded, isNot(contains('%2520')));
       expect(encoded, contains('ampersand=a%26b'));
     });
 
     test('invalid and bare reserved keys never become extras', () {
-      final params = OixParams.parse(
+      final params = CloudParams.parse(
         '&lv=bad&LV=bad&type=love&type&tfo=bad&tfo&simplerules&area=hk',
       );
 
@@ -341,7 +341,7 @@ void main() {
     });
 
     test('tier migration preserves switches and arbitrary extras', () {
-      final params = OixParams.parse(
+      final params = CloudParams.parse(
         '&lv=1&tfo=false&simplerules=true&area=hk',
       );
       final migrated = params.applyingTierDefaults(

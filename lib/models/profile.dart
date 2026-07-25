@@ -1045,7 +1045,7 @@ extension ProfileExtension on Profile {
   String get realLabel => label.takeFirstValid([id.toString()]);
 
   bool get isoixCloudProfile {
-    return isOixCloudProfileUrl(url);
+    return isoixCloudProfileUrl(url);
   }
 
   String get fileName => '$id.yaml';
@@ -1141,7 +1141,7 @@ extension ProfileExtension on Profile {
           return this;
         }
 
-        final params = await OixParamsStorage.load();
+        final params = await CloudParamsStorage.load();
         final paramWithTfo = params.encodeWithTfo();
         final (bytes, userinfo) = await fetch(paramWithTfo);
         final profileWithLabel = copyWith(

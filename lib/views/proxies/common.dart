@@ -21,11 +21,12 @@ double getItemHeight(ProxyCardType proxyCardType) {
   };
 }
 
-Future<void> _testDelayTarget(DelayTestTarget target) async {
-  appController.setDelay(Delay(url: target.url, name: target.name, value: 0));
-  appController.setDelay(
-    await coreController.getDelay(target.url, target.name),
-  );
+Future<Delay> _testDelayTarget(DelayTestTarget target) async {
+  try {
+    return await coreController.getDelay(target.url, target.name);
+  } catch (_) {
+    return Delay(url: target.url, name: target.name, value: -1);
+  }
 }
 
 Future<void> proxyDelayTest(Proxy proxy, [String? testUrl]) async {
@@ -38,7 +39,15 @@ Future<void> proxyDelayTest(Proxy proxy, [String? testUrl]) async {
   if (target == null) {
     return;
   }
-  await _testDelayTarget(target);
+  final generation = appController.beginDelayTest();
+  appController.setDelay(
+    Delay(url: target.url, name: target.name, value: 0),
+    generation: generation,
+  );
+  appController.setDelay(
+    await _testDelayTarget(target),
+    generation: generation,
+  );
 }
 
 Future<void> delayTest(List<Proxy> proxies, [String? testUrl]) async {
@@ -48,11 +57,24 @@ Future<void> delayTest(List<Proxy> proxies, [String? testUrl]) async {
     selectedMap: appController.currentProfile?.selectedMap ?? {},
     defaultTestUrl: appController.getRealTestUrl(testUrl),
   );
+  final generation = appController.beginDelayTest();
+  appController.setDelays(
+    delayTargets.map(
+      (target) => Delay(url: target.url, name: target.name, value: 0),
+    ),
+    generation: generation,
+  );
 
   for (final batch in delayTargets.batch(100)) {
-    await Future.wait(batch.map(_testDelayTarget));
+    if (!appController.isCurrentDelayGeneration(generation)) {
+      return;
+    }
+    final delays = await Future.wait(batch.map(_testDelayTarget));
+    appController.setDelays(delays, generation: generation);
   }
-  appController.addSortNum();
+  if (appController.isCurrentDelayGeneration(generation)) {
+    appController.addSortNum();
+  }
 }
 
 double getScrollToSelectedOffset({

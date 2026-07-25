@@ -1,7 +1,50 @@
 import 'package:fl_clash/common/function.dart';
+import 'package:fl_clash/enum/enum.dart';
 import 'package:test/test.dart';
 
 void main() {
+  test('debounces calls with the same key', () async {
+    final debouncer = Debouncer();
+    final values = <int>[];
+
+    debouncer.call(
+      (FunctionTag.changeProxy, 'Group A'),
+      values.add,
+      args: [1],
+      duration: Duration.zero,
+    );
+    debouncer.call(
+      (FunctionTag.changeProxy, 'Group A'),
+      values.add,
+      args: [2],
+      duration: Duration.zero,
+    );
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+
+    expect(values, [2]);
+  });
+
+  test('keeps calls for different proxy groups', () async {
+    final debouncer = Debouncer();
+    final values = <String>[];
+
+    debouncer.call(
+      (FunctionTag.changeProxy, 'Group A'),
+      values.add,
+      args: ['A'],
+      duration: Duration.zero,
+    );
+    debouncer.call(
+      (FunctionTag.changeProxy, 'Group B'),
+      values.add,
+      args: ['B'],
+      duration: Duration.zero,
+    );
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+
+    expect(values, containsAll(['A', 'B']));
+  });
+
   group('retry', () {
     test('returns immediately when first result does not need retry', () async {
       var attempts = 0;

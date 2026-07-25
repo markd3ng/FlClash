@@ -2,7 +2,7 @@ import 'package:fl_clash/common/secrets.dart';
 
 const oixCloudManagedProfileUrl = 'oixcloud://managed';
 
-bool isOixCloudProfileUrl(String url) {
+bool isoixCloudProfileUrl(String url) {
   final normalizedUrl = url.trim().toLowerCase();
   if (normalizedUrl == oixCloudManagedProfileUrl) return true;
 
@@ -37,12 +37,12 @@ typedef ManagedProfileRefresher<T> =
 typedef ManagedProfileActivator<T> =
     Future<void> Function(T profile, {required bool applyIfRunning});
 
-class OixCloudManagedProfileUpdateFlow<T> {
+class CloudManagedProfileUpdateFlow<T> {
   final ManagedProfileDeduplicator<T> deduplicate;
   final ManagedProfileRefresher<T> refresh;
   final ManagedProfileActivator<T> activate;
 
-  const OixCloudManagedProfileUpdateFlow({
+  const CloudManagedProfileUpdateFlow({
     required this.deduplicate,
     required this.refresh,
     required this.activate,

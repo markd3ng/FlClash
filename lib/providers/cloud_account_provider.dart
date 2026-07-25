@@ -156,7 +156,7 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
     await prefs.remove('cloud_profile');
     await prefs.remove('cloud_notification');
     if (clearParams) {
-      await OixParamsStorage.clear();
+      await CloudParamsStorage.clear();
     }
   }
 
@@ -230,8 +230,8 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
     bool showLoading = false,
     bool showSuccessMessage = false,
   }) async {
-    final updateFlow = OixCloudManagedProfileUpdateFlow<Profile>(
-      deduplicate: _dedupOixProfiles,
+    final updateFlow = CloudManagedProfileUpdateFlow<Profile>(
+      deduplicate: _dedupCloudProfiles,
       refresh: (profile, {required showLoading, required applyIfCurrent}) {
         return appController.updateProfile(
           profile,
@@ -431,15 +431,15 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
     );
     final newDefault = tier.defaultParams;
 
-    final oldDefaultRaw = await OixParamsStorage.loadDefaultRaw();
-    final hasUserParams = await OixParamsStorage.hasConfig();
-    final userParams = await OixParamsStorage.load();
+    final oldDefaultRaw = await CloudParamsStorage.loadDefaultRaw();
+    final hasUserParams = await CloudParamsStorage.hasConfig();
+    final userParams = await CloudParamsStorage.load();
 
-    OixParams effective = userParams;
+    CloudParams effective = userParams;
 
     final newDefaultEncoded = newDefault.encode();
     if (oldDefaultRaw != newDefaultEncoded) {
-      await OixParamsStorage.saveDefaultRaw(newDefaultEncoded);
+      await CloudParamsStorage.saveDefaultRaw(newDefaultEncoded);
     }
 
     // No prior user params, OR user params equal the OLD default (auto-upgrade).
@@ -456,7 +456,7 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
     effective = effective.copyWith(tfo: effective.tfo ?? true);
 
     if (!hasUserParams || effective != userParams) {
-      await OixParamsStorage.save(effective);
+      await CloudParamsStorage.save(effective);
     }
   }
 
@@ -474,11 +474,11 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
           await _injectDefaultParams(state.profile!);
         }
 
-        final existing = await _existingOixProfiles();
+        final existing = await _existingCloudProfiles();
         if (existing.isEmpty) {
           if (state.profile != null) {
             await _addManagedProfile(oixCloudManagedProfileUrl);
-            await _dedupOixProfiles(await _existingOixProfiles());
+            await _dedupCloudProfiles(await _existingCloudProfiles());
           }
         } else {
           await _syncExistingManagedProfile(existing);
@@ -505,10 +505,10 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
     }
 
     await _runManagedProfileTask(() async {
-      final existing = await _existingOixProfiles();
+      final existing = await _existingCloudProfiles();
       if (existing.isEmpty) {
         await _addManagedProfile(url);
-        await _dedupOixProfiles(await _existingOixProfiles());
+        await _dedupCloudProfiles(await _existingCloudProfiles());
         return;
       }
 
@@ -549,7 +549,7 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
     }
   }
 
-  Future<List<Profile>> _existingOixProfiles() async {
+  Future<List<Profile>> _existingCloudProfiles() async {
     final byId = <int, Profile>{};
     final dbProfiles = await database.profilesDao.all().get();
 
@@ -578,7 +578,7 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
     return profiles;
   }
 
-  Future<void> _dedupOixProfiles(List<Profile> existing) async {
+  Future<void> _dedupCloudProfiles(List<Profile> existing) async {
     for (int i = 1; i < existing.length; i++) {
       await appController.deleteProfile(existing[i].id);
     }

@@ -290,6 +290,7 @@ abstract class MakeRealProfileState with _$MakeRealProfileState {
     required List<ProxyGroup> customProxyGroups,
     required List<Rule> customRules,
     required String defaultUA,
+    @Default(false) bool dockerMode,
     @Default(false) bool blockQuic,
   }) = _MakeRealProfileState;
 }
