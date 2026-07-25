@@ -72,6 +72,7 @@ class AppPath {
 
   Future<bool> migrateLegacyApplicationSupportData() async {
     if (!system.isDesktop) return false;
+    if (_legacyDataLock != null) return false;
     final currentPath = await homeDirPath;
     final legacyPath = legacyApplicationSupportPathFor(
       currentPath,
@@ -80,18 +81,25 @@ class AppPath {
     if (legacyPath == null) return false;
     final legacyDirectory = Directory(legacyPath);
     if (!await legacyDirectory.exists()) return false;
-    final migrated = await migrateLegacyApplicationSupportDirectory(
-      legacyPath: legacyPath,
-      currentPath: currentPath,
-    );
-    _legacyDataLock ??= await _tryLockLegacyApplicationSupport(legacyDirectory);
-    if (_legacyDataLock == null) {
+    final legacyLock = await _tryLockLegacyApplicationSupport(legacyDirectory);
+    if (legacyLock == null) {
       throw FileSystemException(
         'Legacy application data is in use',
         legacyPath,
       );
     }
-    return migrated;
+    try {
+      final migrated = await migrateLegacyApplicationSupportDirectory(
+        legacyPath: legacyPath,
+        currentPath: currentPath,
+        heldLegacyLock: legacyLock,
+      );
+      _legacyDataLock = legacyLock;
+      return migrated;
+    } catch (_) {
+      await _releaseLegacyApplicationSupportLock(legacyLock);
+      rethrow;
+    }
   }
 
   Future<String> get databasePath async {
@@ -225,13 +233,15 @@ String? legacyApplicationSupportPathFor(
 Future<bool> migrateLegacyApplicationSupportDirectory({
   required String legacyPath,
   required String currentPath,
+  RandomAccessFile? heldLegacyLock,
 }) async {
   final source = Directory(legacyPath);
   final destination = Directory(currentPath);
   if (legacyPath == currentPath || !await source.exists()) return false;
   if (await _directoryHasEntries(destination)) return false;
 
-  final legacyLock = await _tryLockLegacyApplicationSupport(source);
+  final legacyLock =
+      heldLegacyLock ?? await _tryLockLegacyApplicationSupport(source);
   if (legacyLock == null) {
     throw FileSystemException('Legacy application data is in use', legacyPath);
   }
@@ -256,12 +266,20 @@ Future<bool> migrateLegacyApplicationSupportDirectory({
         await temporary.delete(recursive: true);
       }
     } finally {
-      try {
-        await legacyLock.unlock();
-      } finally {
-        await legacyLock.close();
+      if (heldLegacyLock == null) {
+        await _releaseLegacyApplicationSupportLock(legacyLock);
       }
     }
+  }
+}
+
+Future<void> _releaseLegacyApplicationSupportLock(
+  RandomAccessFile legacyLock,
+) async {
+  try {
+    await legacyLock.unlock();
+  } finally {
+    await legacyLock.close();
   }
 }
 

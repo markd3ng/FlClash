@@ -8,6 +8,21 @@ import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 
 void main() {
+  test('durable config refuses a replacement seed', () {
+    expect(
+      shouldPreserveConfigSeed(hasValidSeed: false, durableConfigExists: true),
+      true,
+    );
+    expect(
+      shouldPreserveConfigSeed(hasValidSeed: true, durableConfigExists: true),
+      false,
+    );
+    expect(
+      shouldPreserveConfigSeed(hasValidSeed: false, durableConfigExists: false),
+      false,
+    );
+  });
+
   late AgeIdentity identity;
   late DurableConfigStore store;
 

@@ -157,4 +157,77 @@ Future<void> main(List<String> arguments) async {
       );
     }
   });
+
+  test('keeps a caller-held legacy lock after migration', () async {
+    final root = await Directory.systemTemp.createTemp(
+      'flclash_identity_retained_lock_',
+    );
+    addTearDown(() => root.delete(recursive: true));
+    final legacy = Directory(p.join(root.path, 'legacy'));
+    final current = Directory(p.join(root.path, 'current'));
+    final lockFile = File(p.join(legacy.path, 'FlClash.lock'));
+    await lockFile.create(recursive: true);
+    await File(p.join(legacy.path, 'config.yaml')).writeAsString('config');
+    final heldLock = await lockFile.open(mode: FileMode.write);
+    await heldLock.lock(FileLock.exclusive);
+
+    expect(
+      await migrateLegacyApplicationSupportDirectory(
+        legacyPath: legacy.path,
+        currentPath: current.path,
+        heldLegacyLock: heldLock,
+      ),
+      isTrue,
+    );
+
+    final helper = File(p.join(root.path, 'lock_helper.dart'));
+    await helper.writeAsString('''
+import 'dart:io';
+
+Future<void> main(List<String> arguments) async {
+  final lock = await File(arguments.single).open(mode: FileMode.write);
+  try {
+    await lock.lock(FileLock.exclusive);
+    stdout.writeln('locked');
+    await lock.unlock();
+  } catch (_) {
+    stdout.writeln('blocked');
+  } finally {
+    await lock.close();
+  }
+}
+''');
+    try {
+      final blockedProcess = await Process.start('dart', [
+        helper.path,
+        lockFile.path,
+      ]);
+      expect(
+        await blockedProcess.stdout
+            .transform(utf8.decoder)
+            .transform(const LineSplitter())
+            .first,
+        'blocked',
+      );
+      expect(await blockedProcess.exitCode, 0);
+
+      await heldLock.unlock();
+      final acquiredProcess = await Process.start('dart', [
+        helper.path,
+        lockFile.path,
+      ]);
+      expect(
+        await acquiredProcess.stdout
+            .transform(utf8.decoder)
+            .transform(const LineSplitter())
+            .first,
+        'locked',
+      );
+      expect(await acquiredProcess.exitCode, 0);
+    } finally {
+      try {
+        await heldLock.close();
+      } catch (_) {}
+    }
+  });
 }

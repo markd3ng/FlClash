@@ -29,6 +29,34 @@ const _persistentLogMaxBytes = 1024 * 1024;
 const _persistentLogKeepBytes = 768 * 1024;
 const _coreDisconnectedMessage = 'Core is not connected';
 
+@visibleForTesting
+Uint8List retainCompleteLogLines(Uint8List bytes, int keepBytes) {
+  if (bytes.length <= keepBytes) {
+    return bytes;
+  }
+  final lineStart = bytes.indexOf(10, bytes.length - keepBytes);
+  if (lineStart == -1 || lineStart + 1 >= bytes.length) {
+    return Uint8List(0);
+  }
+  return Uint8List.sublistView(bytes, lineStart + 1);
+}
+
+@visibleForTesting
+Uint8List limitLogLine(Uint8List bytes, int maxBytes) {
+  if (bytes.length <= maxBytes) {
+    return bytes;
+  }
+  const suffix = [46, 46, 46, 10];
+  if (maxBytes <= suffix.length) {
+    return Uint8List.fromList(suffix.sublist(0, maxBytes));
+  }
+  var end = maxBytes - suffix.length;
+  while (end > 0 && bytes[end] & 0xc0 == 0x80) {
+    end--;
+  }
+  return Uint8List.fromList([...bytes.sublist(0, end), ...suffix]);
+}
+
 class CandidateConfigValidationException extends ConfigValidationException {
   const CandidateConfigValidationException(super.message);
 }
@@ -1074,9 +1102,18 @@ extension LogsControllerExt on AppController {
     final file = await _preparePersistentLogFile();
     final line =
         '${log.dateTime} [${log.logLevel.name.toUpperCase()}] ${log.payload}\n';
-    final encodedLine = utf8.encode(line);
+    final encodedLine = limitLogLine(
+      Uint8List.fromList(utf8.encode(line)),
+      _persistentLogMaxBytes,
+    );
     if (_persistentLogLength + encodedLine.length > _persistentLogMaxBytes) {
-      await _rotatePersistentLog(file);
+      final available = _persistentLogMaxBytes - encodedLine.length;
+      await _rotatePersistentLog(
+        file,
+        available < _persistentLogKeepBytes
+            ? available
+            : _persistentLogKeepBytes,
+      );
     }
     await file.writeAsBytes(encodedLine, mode: FileMode.append);
     _persistentLogLength += encodedLine.length;
@@ -1096,17 +1133,13 @@ extension LogsControllerExt on AppController {
     return file;
   }
 
-  Future<void> _rotatePersistentLog(File file) async {
+  Future<void> _rotatePersistentLog(File file, int keepBytes) async {
     if (!await file.exists()) {
       _persistentLogLength = 0;
       return;
     }
     final bytes = await file.readAsBytes();
-    final keepStart = bytes.length > _persistentLogKeepBytes
-        ? bytes.length - _persistentLogKeepBytes
-        : 0;
-    final lineStart = bytes.indexOf(10, keepStart);
-    final kept = bytes.sublist(lineStart == -1 ? keepStart : lineStart + 1);
+    final kept = retainCompleteLogLines(bytes, keepBytes);
     await file.writeAsBytes(kept);
     _persistentLogLength = kept.length;
   }

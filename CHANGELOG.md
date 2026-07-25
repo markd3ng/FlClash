@@ -1,9 +1,8 @@
 ## v0.8.94
 
-- Show only the current release notes in every update prompt
-- Fix Windows silent launch at system startup
-- Change the application identifier to `com.oixcloud.clash` and migrate existing desktop data and credentials
-- Prevent concurrent desktop instances from accessing application data during startup
-- Fix some Android backups being reported as invalid after reinstalling
-- Remove extra spacing between entries in update release notes
-- Fix an internal core panic when settings update before profile setup completes
+- 优化更新弹窗和本地日志处理，更新时仅显示当前版本内容
+- 修复 Windows 开机静默启动和桌面端重复运行问题
+- 完善桌面端应用标识迁移，避免数据与凭据丢失及 macOS 启动卡住
+- 修复 Android 旧备份恢复异常
+- 修复配置初始化、监听器关闭和连接流处理中的内核崩溃、竞态与资源泄漏
+- 优化 oixCloud 登录、请求容错和账户清理

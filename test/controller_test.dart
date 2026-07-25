@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:fl_clash/controller.dart';
 import 'package:fl_clash/common/preferences.dart';
@@ -10,6 +12,26 @@ import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 
 void main() {
+  test('persistent log rotation keeps only complete UTF-8 lines', () {
+    final bytes = Uint8List.fromList(utf8.encode('超长中文行\n保留内容\n'));
+
+    expect(
+      utf8.decode(retainCompleteLogLines(bytes, bytes.length - 1)),
+      '保留内容\n',
+    );
+    expect(retainCompleteLogLines(bytes, 2), isEmpty);
+  });
+
+  test('persistent log line limit preserves valid UTF-8 and byte limit', () {
+    final limited = limitLogLine(
+      Uint8List.fromList(utf8.encode('abc中文def\n')),
+      10,
+    );
+
+    expect(limited.length, 10);
+    expect(utf8.decode(limited), 'abc中...\n');
+  });
+
   test('formats YAML type mismatch for the profile error dialog', () async {
     final localizations = await AppLocalizations.load(
       const Locale('zh', 'CN'),

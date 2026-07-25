@@ -1,9 +1,20 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:fl_clash/common/path.dart';
 import 'package:fl_clash/services/age_crypto.dart';
 import 'package:fl_clash/utils/safe_storage.dart';
+import 'package:flutter/foundation.dart';
+
+@visibleForTesting
+bool shouldPreserveConfigSeed({
+  required bool hasValidSeed,
+  required bool durableConfigExists,
+}) {
+  return !hasValidSeed && durableConfigExists;
+}
 
 /// Per-device X25519 identity used to encrypt oixCloud configs at rest.
 ///
@@ -54,12 +65,19 @@ class ConfigKeyStore {
 
   static Future<String> _loadOrCreateSeed(int generation) async {
     final stored = await SafeStorage.read(_seedKey);
-    if (decodeSeed(stored) != null) {
+    final hasValidSeed = decodeSeed(stored) != null;
+    if (hasValidSeed) {
       if (generation != _generation) {
         throw StateError('config encryption seed load was invalidated');
       }
       _cachedSeedBase64 = stored;
       return stored!;
+    }
+    if (shouldPreserveConfigSeed(
+      hasValidSeed: hasValidSeed,
+      durableConfigExists: await _durableConfigExists(),
+    )) {
+      throw StateError('config encryption seed is unavailable');
     }
     final generated = base64Encode(_randomSeed());
     await SafeStorage.write(_seedKey, generated);
@@ -68,6 +86,16 @@ class ConfigKeyStore {
     }
     _cachedSeedBase64 = generated;
     return generated;
+  }
+
+  static Future<bool> _durableConfigExists() async {
+    final path = await appPath.durableConfigPath;
+    for (final candidate in [path, '$path.tmp', '$path.old']) {
+      if (await File(candidate).exists()) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /// Identity derived from the persistent seed, for at-rest encryption.

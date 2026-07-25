@@ -65,10 +65,7 @@ void main() {
 
   test('sign out does not race an active managed profile sync', () async {
     final notifier = _DeleteNotifier(
-      initialState: const CloudAccountState(
-        isLoggedIn: true,
-        isSyncing: true,
-      ),
+      initialState: const CloudAccountState(isLoggedIn: true, isSyncing: true),
     );
     final container = ProviderContainer(
       overrides: [cloudAccountProvider.overrideWith(() => notifier)],
@@ -86,19 +83,14 @@ void main() {
 
   test('unauthorized cleanup is not blocked by active sync state', () async {
     final notifier = _DeleteNotifier(
-      initialState: const CloudAccountState(
-        isLoggedIn: true,
-        isSyncing: true,
-      ),
+      initialState: const CloudAccountState(isLoggedIn: true, isSyncing: true),
     );
     final container = ProviderContainer(
       overrides: [cloudAccountProvider.overrideWith(() => notifier)],
     );
     addTearDown(container.dispose);
 
-    await container
-        .read(cloudAccountProvider.notifier)
-        .handleUnauthorized();
+    await container.read(cloudAccountProvider.notifier).handleUnauthorized();
 
     expect(notifier.didClearSession, true);
     expect(container.read(cloudAccountProvider).isLoggedIn, false);
@@ -160,6 +152,24 @@ void main() {
     expect(success, true);
     expect(container.read(cloudAccountProvider).isLoggedIn, false);
     expect(notifier.requestCount, 1);
+    expect(notifier.didClearSession, true);
+  });
+
+  test('account deletion reports a local cleanup failure', () async {
+    final notifier = _DeleteNotifier(cleanupError: 'Secure storage failed');
+    final container = ProviderContainer(
+      overrides: [cloudAccountProvider.overrideWith(() => notifier)],
+    );
+    addTearDown(container.dispose);
+
+    final success = await container
+        .read(cloudAccountProvider.notifier)
+        .deleteAccount(password: 'secret');
+    final state = container.read(cloudAccountProvider);
+
+    expect(success, false);
+    expect(state.isLoggedIn, false);
+    expect(state.error, 'Secure storage failed');
     expect(notifier.didClearSession, true);
   });
 

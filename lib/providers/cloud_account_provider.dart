@@ -182,16 +182,20 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
         .where((p) => !p.isoixCloudProfile)
         .firstOrNull
         ?.id;
-    for (final profile in existing) {
-      if (appController.isAttach) {
-        await appController.deleteProfile(profile.id);
-      } else {
-        await _deleteProfileLocally(
-          profile.id,
-          fallbackProfileId: fallbackProfileId,
-        );
-      }
-    }
+    await runCleanupActions(
+      existing.map(
+        (profile) => () async {
+          if (appController.isAttach) {
+            await appController.deleteProfile(profile.id);
+          } else {
+            await _deleteProfileLocally(
+              profile.id,
+              fallbackProfileId: fallbackProfileId,
+            );
+          }
+        },
+      ),
+    );
   }
 
   Future<void> _activateManagedProfile(
@@ -638,7 +642,11 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
       state = state.copyWith(isLoading: false, error: error);
       return false;
     }
-    await clearSession();
+    final cleanupError = await clearSession();
+    if (cleanupError != null) {
+      state = state.copyWith(error: cleanupError);
+      return false;
+    }
     return true;
   }
 

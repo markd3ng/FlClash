@@ -21,7 +21,8 @@ const int _httpServerError = 500;
 // Marks a request as non-idempotent (balance/order/email side effects). Such
 // requests must never be hedged to a spare domain or retried, otherwise a slow
 // backend response could be processed twice (e.g. double charge).
-const String _nonIdempotentExtraKey = 'flclash_non_idempotent';
+@visibleForTesting
+const String cloudNonIdempotentExtraKey = 'flclash_non_idempotent';
 
 @visibleForTesting
 Map<String, dynamic> buildDeleteAccountRequestData({
@@ -186,7 +187,7 @@ class CloudApiService {
         },
       ),
     );
-    dio.httpClientAdapter = _HedgedApiAdapter(_createCloudApiAdapter());
+    dio.httpClientAdapter = HedgedApiAdapter(_createCloudApiAdapter());
     dio.interceptors.addAll([
       // Authorization interceptor
       InterceptorsWrapper(
@@ -444,7 +445,7 @@ class CloudApiService {
         'passwd': password,
         'token_expire': 365,
       }),
-      options: Options(extra: {'skipAuth': true}),
+      options: _writeOptions(Options(extra: {'skipAuth': true})),
     );
 
     final responseDto = CloudApiResponse<Map<dynamic, dynamic>>.fromJson(
@@ -751,7 +752,7 @@ class CloudApiService {
     final options = base ?? Options();
     final extra = <String, dynamic>{
       ...?options.extra,
-      _nonIdempotentExtraKey: true,
+      cloudNonIdempotentExtraKey: true,
     };
     return options.copyWith(extra: extra);
   }
@@ -957,10 +958,13 @@ class CloudApiService {
 }
 
 // -- Happy Eyeballs hedged adapter for the oixCloud API --
-class _HedgedApiAdapter implements HttpClientAdapter {
-  _HedgedApiAdapter(this._inner);
+@visibleForTesting
+class HedgedApiAdapter implements HttpClientAdapter {
+  HedgedApiAdapter(this._inner, {List<String> Function()? domains})
+    : _domains = domains ?? (() => Secrets.apiDomains);
 
   final HttpClientAdapter _inner;
+  final List<String> Function() _domains;
 
   static const Duration _hedgeDelay = Duration(milliseconds: 250);
 
@@ -973,11 +977,11 @@ class _HedgedApiAdapter implements HttpClientAdapter {
     Stream<Uint8List>? requestStream,
     Future<void>? cancelFuture,
   ) async {
-    final domains = Secrets.apiDomains;
+    final domains = _domains();
     final host = options.uri.host.toLowerCase();
     if (domains.length < 2 ||
         domains.first.toLowerCase() != host ||
-        options.extra[_nonIdempotentExtraKey] == true) {
+        options.extra[cloudNonIdempotentExtraKey] == true) {
       return _inner.fetch(options, requestStream, cancelFuture);
     }
 
@@ -1036,6 +1040,7 @@ class _HedgedApiAdapter implements HttpClientAdapter {
             .then(
               (response) {
                 if (settled) {
+                  unawaited(_drainResponse(response));
                   return;
                 }
                 settled = true;
@@ -1076,6 +1081,12 @@ class _HedgedApiAdapter implements HttpClientAdapter {
 
     return completer.future;
   }
+
+  Future<void> _drainResponse(ResponseBody response) async {
+    try {
+      await response.stream.drain<void>();
+    } catch (_) {}
+  }
 }
 
 // -- Interceptor to handle Retries --
@@ -1094,7 +1105,7 @@ class RetryInterceptor extends Interceptor {
   ) async {
     if (!_shouldRetry(err) ||
         err.requestOptions.extra[_retryHandledKey] == true ||
-        err.requestOptions.extra[_nonIdempotentExtraKey] == true) {
+        err.requestOptions.extra[cloudNonIdempotentExtraKey] == true) {
       return super.onError(err, handler);
     }
 
