@@ -4,6 +4,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -189,6 +190,51 @@ func TestPrepareValidationResourcesRejectsSymbolicLink(t *testing.T) {
 		[]byte("proxies:\n  - name: SSH\n    type: ssh\n    private-key: linked/secret.pem\n"),
 	); err == nil {
 		t.Fatal("prepareValidationResources() accepted a symbolic link path")
+	}
+}
+
+func TestOpenValidationResourceFallback(t *testing.T) {
+	source := t.TempDir()
+	dataPath := filepath.Join(source, "ASN.mmdb")
+	if err := os.WriteFile(dataPath, []byte("asn"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	sourceRoot, err := os.OpenRoot(source)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer sourceRoot.Close()
+	input, err := openValidationResourceFallback(sourceRoot, "ASN.mmdb")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer input.Close()
+	data, err := io.ReadAll(input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(data) != "asn" {
+		t.Fatalf("fallback data = %q, want asn", data)
+	}
+}
+
+func TestOpenValidationResourceFallbackRejectsSymbolicLink(t *testing.T) {
+	source := t.TempDir()
+	outside := filepath.Join(t.TempDir(), "ASN.mmdb")
+	if err := os.WriteFile(outside, []byte("asn"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(outside, filepath.Join(source, "ASN.mmdb")); err != nil {
+		t.Skipf("symbolic links are unavailable: %v", err)
+	}
+	sourceRoot, err := os.OpenRoot(source)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer sourceRoot.Close()
+	if input, err := openValidationResourceFallback(sourceRoot, "ASN.mmdb"); err == nil {
+		_ = input.Close()
+		t.Fatal("fallback accepted a symbolic link")
 	}
 }
 

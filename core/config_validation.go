@@ -135,13 +135,13 @@ func prepareValidationConfig(data []byte) (*config.RawConfig, error) {
 				return fmt.Errorf("validation resource path must be relative to the app home: %s", relative)
 			}
 			source := filepath.Join(sourceHome, relative)
-			hasSymlink, err := validationPathHasSymlink(sourceHome, relative)
+			hasLink, err := validationPathHasLink(sourceHome, relative)
 			if err != nil {
 				return err
 			}
-			if hasSymlink {
+			if hasLink {
 				return fmt.Errorf(
-					"validation resource path cannot contain symbolic links: %s",
+					"validation resource path cannot contain links or reparse points: %s",
 					source,
 				)
 			}
@@ -499,7 +499,7 @@ func validationBool(value any) bool {
 	return boolean
 }
 
-func validationPathHasSymlink(root, relative string) (bool, error) {
+func validationPathHasLink(root, relative string) (bool, error) {
 	current := root
 	for _, part := range strings.Split(filepath.Clean(relative), string(os.PathSeparator)) {
 		current = filepath.Join(current, part)
@@ -510,11 +510,60 @@ func validationPathHasSymlink(root, relative string) (bool, error) {
 		if err != nil {
 			return false, err
 		}
-		if info.Mode()&os.ModeSymlink != 0 {
+		if validationPathEntryIsLink(info) {
 			return true, nil
 		}
 	}
 	return false, nil
+}
+
+func openValidationResource(sourceRoot *os.Root, relative string) (*os.File, error) {
+	input, err := sourceRoot.Open(relative)
+	if err == nil || !shouldFallbackValidationResourceOpen(err) {
+		return input, err
+	}
+	return openValidationResourceFallback(sourceRoot, relative)
+}
+
+func openValidationResourceFallback(sourceRoot *os.Root, relative string) (*os.File, error) {
+	sourceHome := sourceRoot.Name()
+	source := filepath.Join(sourceHome, relative)
+	input, err := os.Open(source)
+	if err != nil {
+		return nil, err
+	}
+	closeWithError := func(err error) (*os.File, error) {
+		_ = input.Close()
+		return nil, err
+	}
+	hasLink, err := validationPathHasLink(sourceHome, relative)
+	if err != nil {
+		return closeWithError(err)
+	}
+	if hasLink {
+		return closeWithError(fmt.Errorf(
+			"validation resource path cannot contain links or reparse points: %s",
+			source,
+		))
+	}
+	pathInfo, err := os.Lstat(source)
+	if err != nil {
+		return closeWithError(err)
+	}
+	if validationPathEntryIsLink(pathInfo) {
+		return closeWithError(fmt.Errorf(
+			"validation resource path cannot contain links or reparse points: %s",
+			source,
+		))
+	}
+	inputInfo, err := input.Stat()
+	if err != nil {
+		return closeWithError(err)
+	}
+	if !os.SameFile(pathInfo, inputInfo) {
+		return closeWithError(fmt.Errorf("validation resource changed while opening: %s", source))
+	}
+	return input, nil
 }
 
 func copyValidationResource(
@@ -533,7 +582,7 @@ func copyValidationResource(
 		return nil
 	}
 	visited[cleanSource] = struct{}{}
-	input, err := sourceRoot.Open(relative)
+	input, err := openValidationResource(sourceRoot, relative)
 	if err != nil {
 		return err
 	}
