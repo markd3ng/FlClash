@@ -66,3 +66,15 @@ func TestNormalizeSelectorSelection(t *testing.T) {
 		t.Fatalf("selected = %q, want %q", selector.selected, "first")
 	}
 }
+
+func TestHandleUpdateConfigBeforeSetup(t *testing.T) {
+	previousConfig := currentConfig
+	currentConfig = nil
+	t.Cleanup(func() {
+		currentConfig = previousConfig
+	})
+
+	if message := handleUpdateConfig([]byte(`{}`)); message != "" {
+		t.Fatalf("message = %q, want empty", message)
+	}
+}

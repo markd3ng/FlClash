@@ -229,6 +229,9 @@ func readFile(path string) ([]byte, error) {
 func updateConfig(params *UpdateParams) {
 	runLock.Lock()
 	defer runLock.Unlock()
+	if currentConfig == nil || currentConfig.General == nil {
+		return
+	}
 	general := currentConfig.General
 	restartGeo :=
 		(params.GeoAutoUpdate != nil && *params.GeoAutoUpdate != general.GeoAutoUpdate) ||

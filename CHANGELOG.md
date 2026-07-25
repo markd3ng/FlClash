@@ -6,3 +6,4 @@
 - Prevent concurrent desktop instances from accessing application data during startup
 - Fix some Android backups being reported as invalid after reinstalling
 - Remove extra spacing between entries in update release notes
+- Fix an internal core panic when settings update before profile setup completes
