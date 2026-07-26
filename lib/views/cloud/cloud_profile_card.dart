@@ -63,6 +63,7 @@ class _CloudProfileCardState extends ConsumerState<CloudProfileCard> {
       profile.subscription,
       planCode: profile.planCode,
       planRank: profile.planRank,
+      nodeAccess: profile.nodeAccess,
     );
     final clashProfile = ref
         .watch(profilesProvider)

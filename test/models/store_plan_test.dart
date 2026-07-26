@@ -306,15 +306,18 @@ void main() {
 
       expect(
         params.encodeEditableOptions(),
-        '&lv=2&type=love&area=hk&custom=1',
+        '&mode=emergency&area=hk&custom=1',
       );
+      expect(params.type, isNull);
       expect(params.tfo, false);
       expect(params.simplerules, true);
       expect(params.extras, {'area': 'hk', 'custom': '1'});
     });
 
     test('encoded options round trip without double encoding', () {
-      final params = CloudParams.parse('&space=a%20b&plus=a+b&ampersand=a%26b');
+      final params = CloudParams.parse(
+        '&type=relay&space=a%20b&plus=a+b&ampersand=a%26b',
+      );
       final encoded = params.encodeEditableOptions();
 
       expect(params.extras, {
@@ -325,11 +328,12 @@ void main() {
       expect(CloudParams.parse(encoded), params);
       expect(encoded, isNot(contains('%2520')));
       expect(encoded, contains('ampersand=a%26b'));
+      expect(encoded, isNot(contains('type=')));
     });
 
     test('invalid and bare reserved keys never become extras', () {
       final params = CloudParams.parse(
-        '&lv=bad&LV=bad&type=love&type&tfo=bad&tfo&simplerules&area=hk',
+        '&lv=bad&LV=bad&nolv=2&type=love&type&tfo=bad&tfo&simplerules&area=hk',
       );
 
       expect(params.level, isNull);
@@ -340,6 +344,34 @@ void main() {
       expect(params.encode(), '&type=love&area=hk');
     });
 
+    test('valid mode wins over premium type and invalid repeated mode', () {
+      final params = CloudParams.parse(
+        '&mode=overseas&type=love&mode=bad&lv=2&area=hk',
+      );
+
+      expect(params.level, NetworkLevel.overseas);
+      expect(params.type, isNull);
+      expect(params.encode(), '&mode=overseas&area=hk');
+    });
+
+    test(
+      'legacy premium aliases normalize and old type filters are dropped',
+      () {
+        expect(CloudParams.parse('&type=latest').encode(), '&type=love');
+        expect(CloudParams.parse('&type=extreme').encode(), '&type=love');
+        for (final type in [
+          'relay',
+          'cusrelay',
+          'gamer',
+          'back',
+          'all',
+          'default',
+        ]) {
+          expect(CloudParams.parse('&type=$type').encode(), '');
+        }
+      },
+    );
+
     test('tier migration preserves switches and arbitrary extras', () {
       final params = CloudParams.parse(
         '&lv=1&tfo=false&simplerules=true&area=hk',
@@ -348,7 +380,7 @@ void main() {
         SubscriptionTier.premium.defaultParams,
       );
 
-      expect(params.encodeDefaultComparable(), '&lv=1');
+      expect(params.encodeDefaultComparable(), '&mode=overseas');
       expect(migrated.level, isNull);
       expect(migrated.type, 'love');
       expect(migrated.tfo, false);
@@ -379,12 +411,42 @@ void main() {
           planCode: 'bronze',
           planRank: 30,
         ),
-        SubscriptionTier.premium,
+        SubscriptionTier.alu,
       );
 
       expect(SubscriptionTier.none.defaultParams.encode(), '');
-      expect(SubscriptionTier.alu.defaultParams.encode(), '&lv=2');
+      expect(SubscriptionTier.alu.defaultParams.encode(), '&mode=emergency');
       expect(SubscriptionTier.premium.defaultParams.encode(), '&type=love');
+    });
+
+    test('node access determines routing defaults before plan identity', () {
+      expect(
+        SubscriptionTier.fromServer(
+          'Pass Silver',
+          planCode: 'silver',
+          planRank: 40,
+          nodeAccess: const ['edge', 'cia', 'ixp'],
+        ),
+        SubscriptionTier.alu,
+      );
+      expect(
+        SubscriptionTier.fromServer(
+          'Pass Bronze',
+          planCode: 'bronze',
+          planRank: 30,
+          nodeAccess: const ['edge', 'cia', 'ixp', 'fusion'],
+        ),
+        SubscriptionTier.premium,
+      );
+      expect(
+        SubscriptionTier.fromServer(
+          'Pass Silver',
+          planCode: 'silver',
+          planRank: 40,
+          nodeAccess: const ['edge'],
+        ),
+        SubscriptionTier.none,
+      );
     });
 
     test('old cached profile defaults new identity fields', () {

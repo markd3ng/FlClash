@@ -428,6 +428,7 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
       profile.subscription,
       planCode: profile.planCode,
       planRank: profile.planRank,
+      nodeAccess: profile.nodeAccess,
     );
     final newDefault = tier.defaultParams;
 

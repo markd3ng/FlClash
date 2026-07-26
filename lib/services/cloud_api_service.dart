@@ -14,15 +14,29 @@ import 'package:flutter/painting.dart';
 
 // -- Constants --
 const int _defaultConnectTimeoutMs = 10000;
+const int _loginConnectTimeoutMs = 5000;
 const int _defaultReceiveTimeoutMs = 15000;
 const int _httpOk = 200;
 const int _httpServerError = 500;
 
-// Marks a request as non-idempotent (balance/order/email side effects). Such
-// requests must never be hedged to a spare domain or retried, otherwise a slow
-// backend response could be processed twice (e.g. double charge).
+// Non-idempotent requests are never hedged or normally retried. Login opts into
+// sequential domain failover only when the connection was never established.
 @visibleForTesting
 const String cloudNonIdempotentExtraKey = 'flclash_non_idempotent';
+
+@visibleForTesting
+const String cloudSequentialFailoverExtraKey =
+    'flclash_sequential_domain_failover';
+
+@visibleForTesting
+Options buildCloudLoginOptions() => Options(
+  connectTimeout: const Duration(milliseconds: _loginConnectTimeoutMs),
+  extra: {
+    'skipAuth': true,
+    cloudNonIdempotentExtraKey: true,
+    cloudSequentialFailoverExtraKey: true,
+  },
+);
 
 @visibleForTesting
 Map<String, dynamic> buildDeleteAccountRequestData({
@@ -438,15 +452,20 @@ class CloudApiService {
   login(String email, String password) async {
     _validateInput(email, password);
 
-    final res = await _client.post(
-      '/login',
-      data: FormData.fromMap({
-        'email': email,
-        'passwd': password,
-        'token_expire': 365,
-      }),
-      options: _writeOptions(Options(extra: {'skipAuth': true})),
-    );
+    late Response<dynamic> res;
+    try {
+      res = await _client.post(
+        '/login',
+        data: FormData.fromMap({
+          'email': email,
+          'passwd': password,
+          'token_expire': 365,
+        }),
+        options: buildCloudLoginOptions(),
+      );
+    } on DioException catch (error) {
+      throw CloudApiException(_formatHealthCheckError(error));
+    }
 
     final responseDto = CloudApiResponse<Map<dynamic, dynamic>>.fromJson(
       res.data,
@@ -957,7 +976,7 @@ class CloudApiService {
   }
 }
 
-// -- Happy Eyeballs hedged adapter for the oixCloud API --
+// -- Hedged reads and sequential login failover for the oixCloud API --
 @visibleForTesting
 class HedgedApiAdapter implements HttpClientAdapter {
   HedgedApiAdapter(this._inner, {List<String> Function()? domains})
@@ -979,9 +998,15 @@ class HedgedApiAdapter implements HttpClientAdapter {
   ) async {
     final domains = _domains();
     final host = options.uri.host.toLowerCase();
-    if (domains.length < 2 ||
-        domains.first.toLowerCase() != host ||
-        options.extra[cloudNonIdempotentExtraKey] == true) {
+    if (domains.length < 2 || domains.first.toLowerCase() != host) {
+      return _inner.fetch(options, requestStream, cancelFuture);
+    }
+
+    final isNonIdempotent = options.extra[cloudNonIdempotentExtraKey] == true;
+    final useSequentialFailover =
+        isNonIdempotent &&
+        options.extra[cloudSequentialFailoverExtraKey] == true;
+    if (isNonIdempotent && !useSequentialFailover) {
       return _inner.fetch(options, requestStream, cancelFuture);
     }
 
@@ -992,6 +1017,10 @@ class HedgedApiAdapter implements HttpClientAdapter {
         builder.add(chunk);
       }
       body = builder.takeBytes();
+    }
+
+    if (useSequentialFailover) {
+      return _fetchSequentially(options, domains, body, cancelFuture);
     }
 
     final completer = Completer<ResponseBody>();
@@ -1021,12 +1050,7 @@ class HedgedApiAdapter implements HttpClientAdapter {
       launched++;
       final canceller = Completer<void>();
       cancellers.add(canceller);
-      final uri = options.uri.replace(host: domain);
-      final perHost = options.copyWith(
-        baseUrl: uri.origin,
-        path: uri.path,
-        queryParameters: Map<String, dynamic>.from(uri.queryParameters),
-      );
+      final perHost = _requestForDomain(options, domain);
       final cancelSignal = cancelFuture == null
           ? canceller.future
           : Future.any<void>([cancelFuture, canceller.future]);
@@ -1080,6 +1104,53 @@ class HedgedApiAdapter implements HttpClientAdapter {
     );
 
     return completer.future;
+  }
+
+  Future<ResponseBody> _fetchSequentially(
+    RequestOptions options,
+    List<String> domains,
+    Uint8List? body,
+    Future<void>? cancelFuture,
+  ) async {
+    Object? lastError;
+    StackTrace? lastStack;
+
+    for (var index = 0; index < domains.length; index++) {
+      final perHost = _requestForDomain(options, domains[index]);
+      try {
+        return await _inner.fetch(
+          perHost,
+          body == null ? null : Stream<Uint8List>.value(body),
+          cancelFuture,
+        );
+      } catch (error, stack) {
+        lastError = error;
+        lastStack = stack;
+        if (!_isConnectionFailure(error) || index == domains.length - 1) {
+          Error.throwWithStackTrace(error, stack);
+        }
+      }
+    }
+
+    Error.throwWithStackTrace(
+      lastError ?? Exception('All API endpoints failed'),
+      lastStack ?? StackTrace.current,
+    );
+  }
+
+  RequestOptions _requestForDomain(RequestOptions options, String domain) {
+    final uri = options.uri.replace(host: domain);
+    return options.copyWith(
+      baseUrl: uri.origin,
+      path: uri.path,
+      queryParameters: Map<String, dynamic>.from(uri.queryParameters),
+    );
+  }
+
+  bool _isConnectionFailure(Object error) {
+    return error is DioException &&
+        (error.type == DioExceptionType.connectionTimeout ||
+            error.type == DioExceptionType.connectionError);
   }
 
   Future<void> _drainResponse(ResponseBody response) async {

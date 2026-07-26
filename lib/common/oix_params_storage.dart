@@ -16,6 +16,10 @@ class CloudParamsStorage {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(_kConfigParams) ?? '';
     var parsed = CloudParams.parse(raw);
+    final normalized = parsed.encode();
+    if (normalized != raw) {
+      await prefs.setString(_kConfigParams, normalized);
+    }
 
     // Migrate legacy `cloud_service_tfo` bool into the params object.
     if (parsed.tfo == null && prefs.containsKey(_kLegacyTfo)) {

@@ -4,7 +4,7 @@ import 'package:dio/io.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/controller.dart';
 
-String resolveManagedConfigProxy({
+String resolveCloudApiProxy({
   required bool isCoreRunning,
   required bool hasProxyGroups,
   required int port,
@@ -52,8 +52,8 @@ IOHttpClientAdapter createFlClashHttpClientAdapter({
   return IOHttpClientAdapter(
     createHttpClient: () {
       final client = HttpClient();
-      client.badCertificateCallback =
-          (_, _, _) => allowBadCertificate?.call() ?? false;
+      client.badCertificateCallback = (_, _, _) =>
+          allowBadCertificate?.call() ?? false;
       client.findProxy = (uri) {
         final ua = userAgent?.call();
         if (ua != null && ua.isNotEmpty) {
@@ -92,16 +92,13 @@ class FlClashHttpOverrides extends HttpOverrides {
   }
 
   static String handleCloudApiFindProxy(Uri url) {
-    final isManagedConfigRequest =
-        Secrets.isApiDomain(url.host) &&
-        url.path == '/api/v1/managed/flclash/direct';
-    if (!isManagedConfigRequest ||
+    if (!Secrets.isApiDomain(url.host) ||
         !system.isDesktop ||
         !appController.isAttach) {
       return 'DIRECT';
     }
     final port = appController.config.patchClashConfig.mixedPort;
-    return resolveManagedConfigProxy(
+    return resolveCloudApiProxy(
       isCoreRunning: appController.isStart,
       hasProxyGroups: appController.groups.isNotEmpty,
       port: port,
@@ -111,8 +108,8 @@ class FlClashHttpOverrides extends HttpOverrides {
   @override
   HttpClient createHttpClient(SecurityContext? context) {
     final client = super.createHttpClient(context);
-    client.badCertificateCallback =
-      (_, _, _) => FlClashTemporaryTls.allowBadCertificate;
+    client.badCertificateCallback = (_, _, _) =>
+        FlClashTemporaryTls.allowBadCertificate;
     client.findProxy = handleFindProxy;
     return client;
   }

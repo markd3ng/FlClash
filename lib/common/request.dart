@@ -163,14 +163,14 @@ String? extractReleaseNotesFromChangelog(String source, String tagName) {
 class Request {
   late final Dio dio;
   late final Dio _clashDio;
-  late final Dio _apiDirectDio;
+  late final Dio _apiDio;
   String? userAgent;
 
   Request() {
     dio = Dio(BaseOptions(headers: {'User-Agent': browserUa}));
-    _apiDirectDio = Dio(BaseOptions(headers: {'User-Agent': browserUa}));
-    _apiDirectDio.httpClientAdapter = createFlClashHttpClientAdapter(
-      findProxy: (_) => 'DIRECT',
+    _apiDio = Dio(BaseOptions(headers: {'User-Agent': browserUa}));
+    _apiDio.httpClientAdapter = createFlClashHttpClientAdapter(
+      findProxy: FlClashHttpOverrides.handleCloudApiFindProxy,
       allowBadCertificate: () => FlClashTemporaryTls.allowBadCertificate,
     );
     _clashDio = Dio();
@@ -285,7 +285,7 @@ class Request {
       final isApiDomain = uri != null && Secrets.isApiDomain(uri.host);
       return await _getWithRedirect<Uint8List>(
         url,
-        client: isApiDomain ? _apiDirectDio : null,
+        client: isApiDomain ? _apiDio : null,
         options: Options(
           headers: _flclashIdentityHeaders,
           responseType: ResponseType.bytes,
@@ -358,7 +358,7 @@ class Request {
   Future<AppUpdateInfo?> checkForUpdate() async {
     for (final domain in Secrets.apiDomains) {
       try {
-        final response = await _apiDirectDio.get(
+        final response = await _apiDio.get(
           'https://$domain/api/v1/version/get',
           queryParameters: {
             't': DateTime.now().millisecondsSinceEpoch.toString(),
@@ -421,7 +421,7 @@ class Request {
 
   Future<({String? body, String tagName})?> _fetchLatestGitHubRelease() async {
     try {
-      final response = await _apiDirectDio
+      final response = await _apiDio
           .get<Map<String, dynamic>>(
             'https://api.github.com/repos/$releaseRepository/releases/latest',
             options: Options(responseType: ResponseType.json),
@@ -442,7 +442,7 @@ class Request {
 
   Future<String?> _fetchGitHubChangelog() async {
     try {
-      final response = await _apiDirectDio
+      final response = await _apiDio
           .get<String>(
             'https://raw.githubusercontent.com/$releaseRepository/main/CHANGELOG.md',
             options: Options(responseType: ResponseType.plain),

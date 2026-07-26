@@ -7,17 +7,34 @@ enum SubscriptionTier {
     String? raw, {
     String? planCode,
     int? planRank,
+    List<String>? nodeAccess,
   }) {
+    final access =
+        nodeAccess
+            ?.map((value) => value.trim().toLowerCase())
+            .where((value) => value.isNotEmpty)
+            .toSet() ??
+        const <String>{};
+    if (access.isNotEmpty) {
+      if (access.any(
+        const {'fusion', 'fusion_advanced', 'fusion_premium', 'gia'}.contains,
+      )) {
+        return premium;
+      }
+      if (access.contains('cia') || access.contains('ixp')) return alu;
+      return none;
+    }
+
     if (planRank != null) {
-      if (planRank >= 30) return premium;
+      if (planRank >= 40) return premium;
       if (planRank >= 20) return alu;
       return none;
     }
 
-    switch (planCode?.toLowerCase()) {
+    switch (planCode?.trim().toLowerCase()) {
       case 'alu':
-        return alu;
       case 'bronze':
+        return alu;
       case 'silver':
       case 'gold':
       case 'platinum':
@@ -52,8 +69,8 @@ enum SubscriptionTier {
 }
 
 enum NetworkLevel {
-  overseas('1'),
-  emergency('2');
+  overseas('overseas'),
+  emergency('emergency');
 
   final String value;
   const NetworkLevel(this.value);
@@ -64,6 +81,12 @@ enum NetworkLevel {
     }
     return null;
   }
+
+  static NetworkLevel? fromLegacyValue(String? value) => switch (value) {
+    '1' => overseas,
+    '2' => emergency,
+    _ => null,
+  };
 }
 
 class CloudParams {
@@ -102,19 +125,23 @@ class CloudParams {
       final k = _decodeQueryComponent(pair.substring(0, eq));
       final v = _decodeQueryComponent(pair.substring(eq + 1));
       switch (k.toLowerCase()) {
+        case 'mode':
+          level = NetworkLevel.fromValue(v) ?? level;
         case 'lv':
-          level = NetworkLevel.fromValue(v);
+          level ??= NetworkLevel.fromLegacyValue(v);
         case 'type':
-          type = v;
+          type = _normalizePremiumType(v) ?? type;
         case 'tfo':
           if (v == 'true') tfo = true;
           if (v == 'false') tfo = false;
         case 'simplerules':
           simplerules = v == 'true';
         default:
-          extras[k] = v;
+          if (!_isReservedKey(k)) extras[k] = v;
       }
     }
+
+    if (level != null) type = null;
 
     return CloudParams(
       level: level,
@@ -127,9 +154,10 @@ class CloudParams {
 
   String encode() {
     final segments = <String>[];
-    if (level != null) segments.add('lv=${level!.value}');
-    if (type != null && type!.isNotEmpty) {
-      segments.add('type=${Uri.encodeQueryComponent(type!)}');
+    if (level != null) segments.add('mode=${level!.value}');
+    final premiumType = _normalizePremiumType(type);
+    if (level == null && premiumType != null) {
+      segments.add('type=$premiumType');
     }
     if (tfo != null) segments.add('tfo=$tfo');
     if (simplerules) segments.add('simplerules=true');
@@ -182,9 +210,7 @@ class CloudParams {
 
   /// Strip emergency mode if the current [tier] cannot support it.
   CloudParams stripEmergencyIfUnsupported(SubscriptionTier tier) {
-    if (level == NetworkLevel.emergency &&
-        !tier.canUseEmergency &&
-        tier != SubscriptionTier.alu) {
+    if (level == NetworkLevel.emergency && tier == SubscriptionTier.none) {
       return copyWith(level: null);
     }
     return this;
@@ -233,11 +259,20 @@ class CloudParams {
 
   static bool _isReservedKey(String key) {
     return const {
+      'mode',
       'lv',
+      'nolv',
       'type',
       'tfo',
       'simplerules',
     }.contains(key.toLowerCase());
+  }
+
+  static String? _normalizePremiumType(String? type) {
+    final normalized = type?.trim().toLowerCase();
+    return const {'love', 'latest', 'extreme'}.contains(normalized)
+        ? 'love'
+        : null;
   }
 }
 
