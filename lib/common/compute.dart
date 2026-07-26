@@ -61,7 +61,24 @@ SelectedProxyState getRealSelectedProxyState(
   required List<Group> groups,
   required Map<String, String> selectedMap,
 }) {
+  return _getRealSelectedProxyState(
+    state,
+    groups: groups,
+    selectedMap: selectedMap,
+    visited: {},
+  );
+}
+
+SelectedProxyState _getRealSelectedProxyState(
+  SelectedProxyState state, {
+  required List<Group> groups,
+  required Map<String, String> selectedMap,
+  required Set<String> visited,
+}) {
   if (state.proxyName.isEmpty) return state;
+  if (!visited.add(state.proxyName)) {
+    return state.copyWith(proxyName: '', group: true);
+  }
   final index = groups.indexWhere((element) => element.name == state.proxyName);
   final newState = state.copyWith(group: true);
   if (index == -1) return newState;
@@ -72,10 +89,20 @@ SelectedProxyState getRealSelectedProxyState(
   if (currentSelectedName.isEmpty) {
     return newState;
   }
-  return getRealSelectedProxyState(
-    newState.copyWith(proxyName: currentSelectedName, testUrl: group.testUrl),
+  final groupTestUrl = group.testUrl?.trim();
+  final inheritedTestUrl = newState.testUrl?.trim();
+  return _getRealSelectedProxyState(
+    newState.copyWith(
+      proxyName: currentSelectedName,
+      testUrl: groupTestUrl != null && groupTestUrl.isNotEmpty
+          ? groupTestUrl
+          : (inheritedTestUrl != null && inheritedTestUrl.isNotEmpty
+                ? inheritedTestUrl
+                : null),
+    ),
     groups: groups,
     selectedMap: selectedMap,
+    visited: visited,
   );
 }
 
@@ -114,28 +141,6 @@ DelayTestTarget? computeDelayTestTarget({
   return (name: state.proxyName, url: url);
 }
 
-bool _selectionUsesURLTest(
-  String proxyName, {
-  required List<Group> groups,
-  required Map<String, String> selectedMap,
-}) {
-  final visited = <String>{};
-  var currentProxyName = proxyName;
-  while (currentProxyName.isNotEmpty && visited.add(currentProxyName)) {
-    final group = groups.getGroup(currentProxyName);
-    if (group == null) {
-      return false;
-    }
-    if (group.type == GroupType.URLTest) {
-      return true;
-    }
-    currentProxyName = group.getCurrentSelectedName(
-      selectedMap[currentProxyName] ?? '',
-    );
-  }
-  return false;
-}
-
 List<DelayTestTarget> computeDelayTestTargets({
   required Iterable<Proxy> proxies,
   required List<Group> groups,
@@ -144,13 +149,6 @@ List<DelayTestTarget> computeDelayTestTargets({
 }) {
   final targets = <DelayTestTarget>{};
   for (final proxy in proxies) {
-    if (_selectionUsesURLTest(
-      proxy.name,
-      groups: groups,
-      selectedMap: selectedMap,
-    )) {
-      continue;
-    }
     final target = computeDelayTestTarget(
       proxy: proxy,
       groups: groups,

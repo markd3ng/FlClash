@@ -25,6 +25,17 @@ bool isoixCloudProfileUrl(String url) {
   return cloudDomains.contains(host);
 }
 
+Future<T?> createAndActivateManagedProfile<T>({
+  required Future<T?> Function({required bool requestStartIfNeeded}) create,
+  required Future<void> Function(T profile) activate,
+}) async {
+  final profile = await create(requestStartIfNeeded: false);
+  if (profile != null) {
+    await activate(profile);
+  }
+  return profile;
+}
+
 typedef ManagedProfileDeduplicator<T> = Future<void> Function(List<T> profiles);
 
 typedef ManagedProfileRefresher<T> =

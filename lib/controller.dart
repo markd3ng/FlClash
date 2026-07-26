@@ -1009,7 +1009,10 @@ extension ProfilesControllerExt on AppController {
     }
   }
 
-  Future<Profile?> addProfileFormURL(String url) async {
+  Future<Profile?> addProfileFormURL(
+    String url, {
+    bool requestStartIfNeeded = true,
+  }) async {
     if (globalState.navigatorKey.currentState?.canPop() ?? false) {
       globalState.navigatorKey.currentState?.popUntil((route) => route.isFirst);
     }
@@ -1022,7 +1025,9 @@ extension ProfilesControllerExt on AppController {
     }, title: appLocalizations.addProfile);
     if (profile != null) {
       globalState.showNotifier(appLocalizations.getProfileSuccess);
-      await requestStartCore();
+      if (requestStartIfNeeded) {
+        await requestStartCore();
+      }
     }
     return profile;
   }
@@ -2867,7 +2872,7 @@ extension CommonControllerExt on AppController {
       final isConfigValidationError = e is ConfigValidationException;
       final message = isConfigValidationError
           ? formatConfigValidationMessage(e.message, appLocalizations)
-          : e.toString();
+          : Secrets.redactApiDomains(e.toString());
       if (silence) {
         globalState.showNotifier(message);
       } else {

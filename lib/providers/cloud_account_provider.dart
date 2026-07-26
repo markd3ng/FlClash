@@ -219,10 +219,15 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
   Future<void> _addManagedProfile(String url) async {
     if (!_canFetchManagedConfig) return;
 
-    final profile = await appController.addProfileFormURL(url);
-    if (profile != null) {
-      await _activateManagedProfile(profile, requestStartIfNeeded: false);
-    }
+    await createAndActivateManagedProfile<Profile>(
+      create: ({required requestStartIfNeeded}) {
+        return appController.addProfileFormURL(
+          url,
+          requestStartIfNeeded: requestStartIfNeeded,
+        );
+      },
+      activate: _activateManagedProfile,
+    );
   }
 
   Future<void> _syncExistingManagedProfile(
@@ -430,35 +435,7 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
       planRank: profile.planRank,
       nodeAccess: profile.nodeAccess,
     );
-    final newDefault = tier.defaultParams;
-
-    final oldDefaultRaw = await CloudParamsStorage.loadDefaultRaw();
-    final hasUserParams = await CloudParamsStorage.hasConfig();
-    final userParams = await CloudParamsStorage.load();
-
-    CloudParams effective = userParams;
-
-    final newDefaultEncoded = newDefault.encode();
-    if (oldDefaultRaw != newDefaultEncoded) {
-      await CloudParamsStorage.saveDefaultRaw(newDefaultEncoded);
-    }
-
-    // No prior user params, OR user params equal the OLD default (auto-upgrade).
-    // Compare only the tier-owned params; independent switches should not block
-    // level/type migration when the user's subscription tier changes.
-    if (!hasUserParams ||
-        (userParams.encodeDefaultComparable() == oldDefaultRaw &&
-            oldDefaultRaw != newDefaultEncoded)) {
-      effective = userParams.applyingTierDefaults(newDefault);
-    }
-
-    effective = effective.stripEmergencyIfUnsupported(tier);
-    // Ensure tfo has a concrete value once we touch storage.
-    effective = effective.copyWith(tfo: effective.tfo ?? true);
-
-    if (!hasUserParams || effective != userParams) {
-      await CloudParamsStorage.save(effective);
-    }
+    await CloudParamsStorage.reconcileForTier(tier);
   }
 
   Future<void> syncManagedConfig() async {

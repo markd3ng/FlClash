@@ -393,9 +393,12 @@ class _DelayTestButtonState extends State<DelayTestButton>
       return;
     }
     _controller.forward();
-    await widget.onClick();
-    if (mounted) {
-      _controller.reverse();
+    try {
+      await widget.onClick();
+    } finally {
+      if (mounted) {
+        _controller.reverse();
+      }
     }
   }
 

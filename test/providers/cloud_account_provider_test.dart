@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:fl_clash/common/oix_cloud.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/cloud_account_provider.dart';
 import 'package:fl_clash/services/cloud_api_service.dart';
@@ -7,6 +8,37 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('managed profile activates before any core start request', () async {
+    final events = <String>[];
+
+    final result = await createAndActivateManagedProfile<int>(
+      create: ({required requestStartIfNeeded}) async {
+        events.add('create:$requestStartIfNeeded');
+        return 42;
+      },
+      activate: (profile) async {
+        events.add('activate:$profile');
+      },
+    );
+
+    expect(result, 42);
+    expect(events, ['create:false', 'activate:42']);
+  });
+
+  test('managed profile does not activate when creation fails', () async {
+    var activated = false;
+
+    final result = await createAndActivateManagedProfile<int>(
+      create: ({required requestStartIfNeeded}) async => null,
+      activate: (_) async {
+        activated = true;
+      },
+    );
+
+    expect(result, isNull);
+    expect(activated, false);
+  });
+
   test('failed token revocation preserves the signed-in session', () async {
     final notifier = _DeleteNotifier(
       logoutError: const CloudApiException('Revocation failed'),

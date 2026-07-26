@@ -3,6 +3,24 @@ import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 
+String redactHostnames(String value, Iterable<String> hosts) {
+  var redacted = value;
+  final normalizedHosts = hosts
+      .map((host) => host.trim().toLowerCase())
+      .where((host) => host.isNotEmpty)
+      .toSet();
+  for (final host in normalizedHosts) {
+    redacted = redacted.replaceAll(
+      RegExp(
+        '(?:https?://)?${RegExp.escape(host)}(?::\\d+)?(?:/[^\\s,;)]*)?',
+        caseSensitive: false,
+      ),
+      '[oixCloud API]',
+    );
+  }
+  return redacted;
+}
+
 class Secrets {
   const Secrets._();
 
@@ -45,6 +63,13 @@ class Secrets {
     return apiDomains.contains(host.trim().toLowerCase());
   }
 
+  static String redactApiDomains(String value) {
+    return redactHostnames(value, {
+      apiDomain.trim().toLowerCase(),
+      spareApiDomain.trim().toLowerCase(),
+    });
+  }
+
   static String _requireDomain(String value, String name) {
     final domain = value.trim();
     if (domain.isEmpty) {
@@ -82,10 +107,48 @@ class Secrets {
   }
 
   static Uint8List _obfMaster() {
-    const a = [0x5a, 0x1c, 0xe7, 0x93, 0x2f, 0xb8, 0x04, 0xd6, 0x69, 0xa1, 0x3e, 0xcf, 0x72, 0x8d, 0x15, 0xba];
-    const b = [0xc4, 0x37, 0x9e, 0x08, 0x51, 0xed, 0x2a, 0x7f, 0xd3, 0x60, 0x1b, 0x86, 0xf9, 0x42, 0xad, 0x0e];
+    const a = [
+      0x5a,
+      0x1c,
+      0xe7,
+      0x93,
+      0x2f,
+      0xb8,
+      0x04,
+      0xd6,
+      0x69,
+      0xa1,
+      0x3e,
+      0xcf,
+      0x72,
+      0x8d,
+      0x15,
+      0xba,
+    ];
+    const b = [
+      0xc4,
+      0x37,
+      0x9e,
+      0x08,
+      0x51,
+      0xed,
+      0x2a,
+      0x7f,
+      0xd3,
+      0x60,
+      0x1b,
+      0x86,
+      0xf9,
+      0x42,
+      0xad,
+      0x0e,
+    ];
     return Uint8List.fromList(
-      sha256.convert(<int>[...a, ...b, ...utf8.encode('oix-obf-v2-flclash')]).bytes,
+      sha256.convert(<int>[
+        ...a,
+        ...b,
+        ...utf8.encode('oix-obf-v2-flclash'),
+      ]).bytes,
     );
   }
 

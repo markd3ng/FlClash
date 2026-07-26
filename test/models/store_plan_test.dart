@@ -1,4 +1,6 @@
+import 'package:fl_clash/common/oix_params_storage.dart';
 import 'package:fl_clash/models/models.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -308,7 +310,6 @@ void main() {
         params.encodeEditableOptions(),
         '&mode=emergency&area=hk&custom=1',
       );
-      expect(params.type, isNull);
       expect(params.tfo, false);
       expect(params.simplerules, true);
       expect(params.extras, {'area': 'hk', 'custom': '1'});
@@ -336,12 +337,11 @@ void main() {
         '&lv=bad&LV=bad&nolv=2&type=love&type&tfo=bad&tfo&simplerules&area=hk',
       );
 
-      expect(params.level, isNull);
-      expect(params.type, 'love');
+      expect(params.level, NetworkLevel.premium);
       expect(params.tfo, isNull);
       expect(params.simplerules, false);
       expect(params.extras, {'area': 'hk'});
-      expect(params.encode(), '&type=love&area=hk');
+      expect(params.encode(), '&mode=premium&area=hk');
     });
 
     test('valid mode wins over premium type and invalid repeated mode', () {
@@ -350,15 +350,15 @@ void main() {
       );
 
       expect(params.level, NetworkLevel.overseas);
-      expect(params.type, isNull);
       expect(params.encode(), '&mode=overseas&area=hk');
     });
 
     test(
       'legacy premium aliases normalize and old type filters are dropped',
       () {
-        expect(CloudParams.parse('&type=latest').encode(), '&type=love');
-        expect(CloudParams.parse('&type=extreme').encode(), '&type=love');
+        expect(CloudParams.parse('&type=latest').encode(), '&mode=premium');
+        expect(CloudParams.parse('&type=extreme').encode(), '&mode=premium');
+        expect(CloudParams.parse('&mode=fusion').encode(), '');
         for (final type in [
           'relay',
           'cusrelay',
@@ -372,6 +372,36 @@ void main() {
       },
     );
 
+    test('legacy premium default is normalized in storage', () async {
+      SharedPreferences.setMockInitialValues({
+        'cloud_service_default_params': '&type=love',
+      });
+
+      expect(await CloudParamsStorage.loadDefaultRaw(), '&mode=premium');
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString('cloud_service_default_params'), '&mode=premium');
+    });
+
+    test('tier reconciliation does not overwrite a concurrent save', () async {
+      SharedPreferences.setMockInitialValues({
+        'cloud_service_config_params': '&mode=emergency&tfo=true',
+        'cloud_service_default_params': '&mode=emergency',
+      });
+      const userParams = CloudParams(
+        level: NetworkLevel.overseas,
+        tfo: false,
+        extras: {'area': 'jp'},
+      );
+
+      await Future.wait([
+        CloudParamsStorage.reconcileForTier(SubscriptionTier.premium),
+        CloudParamsStorage.save(userParams),
+      ]);
+
+      expect(await CloudParamsStorage.load(), userParams);
+      expect(await CloudParamsStorage.loadDefaultRaw(), '&mode=premium');
+    });
+
     test('tier migration preserves switches and arbitrary extras', () {
       final params = CloudParams.parse(
         '&lv=1&tfo=false&simplerules=true&area=hk',
@@ -381,8 +411,7 @@ void main() {
       );
 
       expect(params.encodeDefaultComparable(), '&mode=overseas');
-      expect(migrated.level, isNull);
-      expect(migrated.type, 'love');
+      expect(migrated.level, NetworkLevel.premium);
       expect(migrated.tfo, false);
       expect(migrated.simplerules, true);
       expect(migrated.extras, {'area': 'hk'});
@@ -416,7 +445,29 @@ void main() {
 
       expect(SubscriptionTier.none.defaultParams.encode(), '');
       expect(SubscriptionTier.alu.defaultParams.encode(), '&mode=emergency');
-      expect(SubscriptionTier.premium.defaultParams.encode(), '&type=love');
+      expect(SubscriptionTier.premium.defaultParams.encode(), '&mode=premium');
+      expect(SubscriptionTier.alu.canSelectEmergency, false);
+      expect(SubscriptionTier.premium.canSelectEmergency, true);
+      expect(SubscriptionTier.alu.supports(NetworkLevel.emergency), true);
+      expect(SubscriptionTier.alu.supports(NetworkLevel.premium), false);
+    });
+
+    test('unsupported routing modes return to the tier default', () {
+      const params = CloudParams(
+        level: NetworkLevel.premium,
+        extras: {'area': 'hk'},
+      );
+      final adjusted = params.adjustedForTier(SubscriptionTier.alu);
+
+      expect(adjusted.level, NetworkLevel.emergency);
+      expect(adjusted.extras, {'area': 'hk'});
+      expect(
+        const CloudParams(
+          level: NetworkLevel.emergency,
+        ).adjustedForTier(SubscriptionTier.none).level,
+        isNull,
+      );
+      expect(params.adjustedForTier(SubscriptionTier.premium), params);
     });
 
     test('node access determines routing defaults before plan identity', () {

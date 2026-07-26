@@ -1,12 +1,60 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:fl_clash/common/http.dart';
+import 'package:fl_clash/common/secrets.dart';
 import 'package:fl_clash/services/cloud_api_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('cloud API connection errors do not expose endpoint details', () {
+    final error = DioException(
+      requestOptions: RequestOptions(
+        baseUrl: 'https://private-api.example',
+        path: '/api/v1/information',
+      ),
+      type: DioExceptionType.connectionError,
+      error: SocketException(
+        "Can't assign requested address",
+        address: InternetAddress.loopbackIPv4,
+        port: 443,
+      ),
+      message: 'Connection failed',
+    );
+
+    final message = CloudApiException.clean(error);
+    expect(message, isNot(contains('private-api.example')));
+    expect(message, isNot(contains('443')));
+    expect(message, isNot(contains('SocketException')));
+    expect(message, isNot(contains('requested address')));
+  });
+
+  test('API hostname redaction covers URLs, ports, and socket addresses', () {
+    const host = 'private-api.example';
+    final redacted = redactHostnames(
+      'GET https://$host:443/api/v1/information failed; '
+      'address = $host, port = 443',
+      const [host],
+    );
+
+    expect(redacted, isNot(contains(host)));
+    expect(redacted, isNot(contains('/api/v1/information')));
+  });
+
+  test('cloud API 401 errors remain recognizable after sanitizing', () {
+    final options = RequestOptions(path: '/api/v1/information');
+    final error = DioException(
+      requestOptions: options,
+      response: Response<dynamic>(requestOptions: options, statusCode: 401),
+      type: DioExceptionType.badResponse,
+    );
+
+    expect(CloudApiException.clean(error), 'Unauthorized');
+    expect(CloudApiException.isUnauthorized(error), true);
+  });
+
   test('delete account request includes confirmation and optional TOTP', () {
     expect(
       buildDeleteAccountRequestData(

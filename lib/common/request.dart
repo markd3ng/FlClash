@@ -280,9 +280,9 @@ class Request {
   }
 
   Future<Response<Uint8List>> getFileResponseForUrl(String url) async {
+    final uri = Uri.tryParse(url);
+    final isApiDomain = uri != null && Secrets.isApiDomain(uri.host);
     try {
-      final uri = Uri.tryParse(url);
-      final isApiDomain = uri != null && Secrets.isApiDomain(uri.host);
       return await _getWithRedirect<Uint8List>(
         url,
         client: isApiDomain ? _apiDio : null,
@@ -292,13 +292,20 @@ class Request {
         ),
       );
     } catch (e) {
-      commonPrint.log('getFileResponseForUrl error ${e.toString()}');
+      commonPrint.log(
+        isApiDomain
+            ? 'oixCloud profile request failed: ${e is DioException ? e.type.name : e.runtimeType}'
+            : 'getFileResponseForUrl error ${e.toString()}',
+      );
       if (e is DioException) {
         if (FlClashTemporaryTls.isCertificateVerifyFailed(e)) {
           rethrow;
         }
         if (e.response?.statusCode == HttpStatus.unauthorized) {
           throw 'Unauthorized';
+        }
+        if (isApiDomain) {
+          throw appLocalizations.networkException;
         }
         if (e.type == DioExceptionType.unknown) {
           throw appLocalizations.unknownNetworkError;

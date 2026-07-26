@@ -312,10 +312,14 @@ class GlobalState {
   }
 
   void showNotifier(String text, {MessageActionState? actionState}) {
-    if (text.isEmpty) {
+    final safeText = Secrets.redactApiDomains(text);
+    if (safeText.isEmpty) {
       return;
     }
-    navigatorKey.currentContext?.showNotifier(text, actionState: actionState);
+    navigatorKey.currentContext?.showNotifier(
+      safeText,
+      actionState: actionState,
+    );
   }
 
   Future<void> openUrl(String url) async {

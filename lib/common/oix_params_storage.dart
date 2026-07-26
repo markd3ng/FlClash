@@ -11,9 +11,22 @@ class CloudParamsStorage {
   static const _kDefaultParams = 'cloud_service_default_params';
   // Legacy: previously stored as separate bool. Kept for migration only.
   static const _kLegacyTfo = 'cloud_service_tfo';
+  static Future<void> _tail = Future.value();
 
-  static Future<CloudParams> load() async {
-    final prefs = await SharedPreferences.getInstance();
+  static Future<T> _synchronized<T>(Future<T> Function() action) {
+    final operation = _tail.then((_) => action());
+    _tail = operation.then<void>((_) {}, onError: (_, _) {});
+    return operation;
+  }
+
+  static Future<CloudParams> load() {
+    return _synchronized(() async {
+      final prefs = await SharedPreferences.getInstance();
+      return _load(prefs);
+    });
+  }
+
+  static Future<CloudParams> _load(SharedPreferences prefs) async {
     final raw = prefs.getString(_kConfigParams) ?? '';
     var parsed = CloudParams.parse(raw);
     final normalized = parsed.encode();
@@ -30,30 +43,80 @@ class CloudParamsStorage {
     return parsed;
   }
 
-  static Future<void> save(CloudParams params) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_kConfigParams, params.encode());
+  static Future<void> save(CloudParams params) {
+    return _synchronized(() async {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_kConfigParams, params.encode());
+    });
   }
 
-  static Future<String> loadDefaultRaw() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kDefaultParams) ?? '';
+  static Future<String> loadDefaultRaw() {
+    return _synchronized(() async {
+      final prefs = await SharedPreferences.getInstance();
+      return _loadDefaultRaw(prefs);
+    });
   }
 
-  static Future<void> saveDefaultRaw(String encoded) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_kDefaultParams, encoded);
+  static Future<String> _loadDefaultRaw(SharedPreferences prefs) async {
+    final raw = prefs.getString(_kDefaultParams) ?? '';
+    final normalized = CloudParams.parse(raw).encodeDefaultComparable();
+    if (normalized != raw) {
+      await prefs.setString(_kDefaultParams, normalized);
+    }
+    return normalized;
   }
 
-  static Future<bool> hasConfig() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.containsKey(_kConfigParams);
+  static Future<void> saveDefaultRaw(String encoded) {
+    return _synchronized(() async {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        _kDefaultParams,
+        CloudParams.parse(encoded).encodeDefaultComparable(),
+      );
+    });
   }
 
-  static Future<void> clear() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_kConfigParams);
-    await prefs.remove(_kDefaultParams);
-    await prefs.remove(_kLegacyTfo);
+  static Future<bool> hasConfig() {
+    return _synchronized(() async {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.containsKey(_kConfigParams);
+    });
+  }
+
+  static Future<void> reconcileForTier(SubscriptionTier tier) {
+    return _synchronized(() async {
+      final prefs = await SharedPreferences.getInstance();
+      final oldDefaultRaw = await _loadDefaultRaw(prefs);
+      final hasUserParams = prefs.containsKey(_kConfigParams);
+      final userParams = await _load(prefs);
+      final newDefault = tier.defaultParams;
+      final newDefaultEncoded = newDefault.encode();
+
+      if (oldDefaultRaw != newDefaultEncoded) {
+        await prefs.setString(_kDefaultParams, newDefaultEncoded);
+      }
+
+      var effective = userParams;
+      if (!hasUserParams ||
+          (userParams.encodeDefaultComparable() == oldDefaultRaw &&
+              oldDefaultRaw != newDefaultEncoded)) {
+        effective = userParams.applyingTierDefaults(newDefault);
+      }
+      effective = effective.adjustedForTier(tier);
+      effective = effective.copyWith(tfo: effective.tfo ?? true);
+
+      if (!hasUserParams || effective != userParams) {
+        await prefs.setString(_kConfigParams, effective.encode());
+      }
+    });
+  }
+
+  static Future<void> clear() {
+    return _synchronized(() async {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_kConfigParams);
+      await prefs.remove(_kDefaultParams);
+      await prefs.remove(_kLegacyTfo);
+    });
   }
 }

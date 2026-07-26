@@ -339,6 +339,21 @@ void main() {
       });
     });
 
+    test('a new delay test removes stale pending values only', () {
+      final notifier = container.read(delayDataSourceProvider.notifier);
+      notifier.setDelays(const [
+        Delay(name: 'Pending', url: 'https://test.example', value: 0),
+        Delay(name: 'Complete', url: 'https://test.example', value: 80),
+        Delay(name: 'Only pending', url: 'https://other.example', value: 0),
+      ]);
+
+      notifier.begin();
+
+      expect(container.read(delayDataSourceProvider), {
+        'https://test.example': {'Complete': 80},
+      });
+    });
+
     test('does not mutate the previous nested delay map', () {
       final notifier = container.read(delayDataSourceProvider.notifier);
       notifier.setDelay(

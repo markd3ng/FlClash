@@ -57,6 +57,9 @@ Future<void> delayTest(List<Proxy> proxies, [String? testUrl]) async {
     selectedMap: appController.currentProfile?.selectedMap ?? {},
     defaultTestUrl: appController.getRealTestUrl(testUrl),
   );
+  if (delayTargets.isEmpty) {
+    return;
+  }
   final generation = appController.beginDelayTest();
   appController.setDelays(
     delayTargets.map(

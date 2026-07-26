@@ -77,6 +77,33 @@ void main() {
       expect(state.testUrl, 'http://test-b.com');
     });
 
+    test(
+      'inherits the nearest outer test URL when an inner group has none',
+      () {
+        final state = computeRealSelectedProxyState(
+          'group-a',
+          groups: const [
+            Group(
+              name: 'group-a',
+              type: GroupType.Selector,
+              testUrl: 'http://test-a.com',
+              all: [Proxy(name: 'group-b', type: 'Selector')],
+            ),
+            Group(
+              name: 'group-b',
+              type: GroupType.Selector,
+              testUrl: '   ',
+              all: [Proxy(name: 'proxy-leaf', type: 'ss')],
+            ),
+          ],
+          selectedMap: const {'group-a': 'group-b', 'group-b': 'proxy-leaf'},
+        );
+
+        expect(state.proxyName, 'proxy-leaf');
+        expect(state.testUrl, 'http://test-a.com');
+      },
+    );
+
     test('stops at group when selectedMap has no entry', () {
       final groups = [
         const Group(
@@ -132,6 +159,27 @@ void main() {
         selectedMap: {'selector': 'proxy-b'},
       );
       expect(state.proxyName, 'proxy-b');
+    });
+
+    test('returns an empty target for a cyclic selection chain', () {
+      final state = computeRealSelectedProxyState(
+        'group-a',
+        groups: const [
+          Group(
+            name: 'group-a',
+            type: GroupType.Selector,
+            all: [Proxy(name: 'group-b', type: 'Selector')],
+          ),
+          Group(
+            name: 'group-b',
+            type: GroupType.Selector,
+            all: [Proxy(name: 'group-a', type: 'Selector')],
+          ),
+        ],
+        selectedMap: const {'group-a': 'group-b', 'group-b': 'group-a'},
+      );
+
+      expect(state.proxyName, isEmpty);
     });
   });
 
@@ -235,7 +283,7 @@ void main() {
       ));
     });
 
-    test('skips a URLTest group during batch testing', () {
+    test('resolves a URLTest group during batch testing', () {
       final targets = computeDelayTestTargets(
         proxies: const [Proxy(name: 'auto', type: 'URLTest')],
         groups: const [
@@ -250,10 +298,12 @@ void main() {
         defaultTestUrl: 'https://default.example.com/generate_204',
       );
 
-      expect(targets, isEmpty);
+      expect(targets, const [
+        (name: 'proxy-fast', url: 'https://example.com/generate_204'),
+      ]);
     });
 
-    test('skips a selection chain containing a URLTest group', () {
+    test('resolves a selection chain containing a URLTest group', () {
       final targets = computeDelayTestTargets(
         proxies: const [Proxy(name: 'selector', type: 'Selector')],
         groups: const [
@@ -273,7 +323,9 @@ void main() {
         defaultTestUrl: 'https://default.example.com/generate_204',
       );
 
-      expect(targets, isEmpty);
+      expect(targets, const [
+        (name: 'proxy-fast', url: 'https://example.com/generate_204'),
+      ]);
     });
 
     test('shares one target between URLTest group and its current proxy', () {
@@ -297,6 +349,33 @@ void main() {
       );
 
       expect(targets, const [(name: 'proxy-fast', url: testUrl)]);
+    });
+
+    test('keeps URLTest and leaf targets when their URLs differ', () {
+      final targets = computeDelayTestTargets(
+        proxies: const [
+          Proxy(name: 'auto', type: 'URLTest'),
+          Proxy(name: 'proxy-fast', type: 'ss'),
+        ],
+        groups: const [
+          Group(
+            name: 'auto',
+            type: GroupType.URLTest,
+            now: 'proxy-fast',
+            testUrl: 'https://group.example.com/generate_204',
+          ),
+        ],
+        selectedMap: const {},
+        defaultTestUrl: 'https://default.example.com/generate_204',
+      );
+
+      expect(
+        targets,
+        unorderedEquals(const [
+          (name: 'proxy-fast', url: 'https://group.example.com/generate_204'),
+          (name: 'proxy-fast', url: 'https://default.example.com/generate_204'),
+        ]),
+      );
     });
 
     test('keeps the same proxy with different URLs as separate targets', () {

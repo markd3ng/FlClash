@@ -244,7 +244,24 @@ class DelayDataSource extends _$DelayDataSource with NotifierMixin<DelayMap> {
 
   bool isCurrent(int generation) => generation == _generation;
 
-  int begin() => ++_generation;
+  int begin() {
+    _generation++;
+    final nextState = <String, Map<String, int?>>{};
+    for (final entry in state.entries) {
+      final completed = Map<String, int?>.from(entry.value)
+        ..removeWhere((_, value) => value == 0);
+      if (completed.isNotEmpty) {
+        nextState[entry.key] = completed;
+      }
+    }
+    if (nextState.length != state.length ||
+        nextState.entries.any(
+          (entry) => entry.value.length != state[entry.key]?.length,
+        )) {
+      state = nextState;
+    }
+    return _generation;
+  }
 
   void clear() {
     _generation++;

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -124,10 +125,33 @@ class CloudApiException implements Exception {
   }
 
   static String clean(Object error) {
+    if (error is DioException) {
+      return _cleanDioException(error);
+    }
+    if (error is SocketException) {
+      return 'Connection failed';
+    }
     if (error is CloudApiException) {
       return _cleanMessage(error.message);
     }
     return _cleanMessage(error.toString());
+  }
+
+  static String _cleanDioException(DioException error) {
+    if (FlClashTemporaryTls.isCertificateVerifyFailed(error)) {
+      return appLocalizations.invalidCertificateTitle;
+    }
+    if (error.response?.statusCode == HttpStatus.unauthorized ||
+        (error.response?.data is Map && error.response?.data['ret'] == 401)) {
+      return 'Unauthorized';
+    }
+    return switch (error.type) {
+      DioExceptionType.badCertificate =>
+        appLocalizations.invalidCertificateTitle,
+      DioExceptionType.cancel => 'Request canceled',
+      DioExceptionType.unknown => 'Unknown network error',
+      _ => 'Connection failed',
+    };
   }
 
   static bool isCertificateVerifyFailed(Object error) {
@@ -135,7 +159,7 @@ class CloudApiException implements Exception {
   }
 
   static String _cleanMessage(String value) {
-    var message = value.trim();
+    var message = Secrets.redactApiDomains(value.trim());
     if (FlClashTemporaryTls.isCertificateVerifyFailed(message)) {
       return appLocalizations.invalidCertificateTitle;
     }

@@ -1,6 +1,7 @@
 import 'package:fl_clash/controller.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
+import 'package:fl_clash/common/secrets.dart';
 import 'package:flutter/material.dart';
 
 class CommonPrint {
@@ -14,7 +15,7 @@ class CommonPrint {
   }
 
   void log(String? text, {LogLevel logLevel = LogLevel.info}) {
-    final payload = '[APP] $text';
+    final payload = '[APP] ${Secrets.redactApiDomains(text ?? 'null')}';
     final log = Log.app(payload).copyWith(logLevel: logLevel);
     debugPrint(payload);
     appController.writePersistentLog(log);

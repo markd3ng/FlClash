@@ -59,18 +59,25 @@ enum SubscriptionTier {
     return premium;
   }
 
-  bool get canUseEmergency => this == premium;
+  bool get canSelectEmergency => this == premium;
+
+  bool supports(NetworkLevel level) => switch (level) {
+    NetworkLevel.overseas => true,
+    NetworkLevel.emergency => this != none,
+    NetworkLevel.premium => this == premium,
+  };
 
   CloudParams get defaultParams => switch (this) {
     none => const CloudParams(),
     alu => const CloudParams(level: NetworkLevel.emergency),
-    premium => const CloudParams(type: 'love'),
+    premium => const CloudParams(level: NetworkLevel.premium),
   };
 }
 
 enum NetworkLevel {
   overseas('overseas'),
-  emergency('emergency');
+  emergency('emergency'),
+  premium('premium');
 
   final String value;
   const NetworkLevel(this.value);
@@ -91,14 +98,12 @@ enum NetworkLevel {
 
 class CloudParams {
   final NetworkLevel? level;
-  final String? type;
   final bool? tfo;
   final bool simplerules;
   final Map<String, String> extras;
 
   const CloudParams({
     this.level,
-    this.type,
     this.tfo,
     this.simplerules = false,
     this.extras = const {},
@@ -108,8 +113,9 @@ class CloudParams {
     final cleaned = raw.startsWith('&') ? raw.substring(1) : raw;
     if (cleaned.isEmpty) return const CloudParams();
 
-    NetworkLevel? level;
-    String? type;
+    NetworkLevel? explicitMode;
+    NetworkLevel? legacyLevel;
+    var legacyPremium = false;
     bool? tfo;
     bool simplerules = false;
     final extras = <String, String>{};
@@ -126,11 +132,11 @@ class CloudParams {
       final v = _decodeQueryComponent(pair.substring(eq + 1));
       switch (k.toLowerCase()) {
         case 'mode':
-          level = NetworkLevel.fromValue(v) ?? level;
+          explicitMode = NetworkLevel.fromValue(v) ?? explicitMode;
         case 'lv':
-          level ??= NetworkLevel.fromLegacyValue(v);
+          legacyLevel = NetworkLevel.fromLegacyValue(v) ?? legacyLevel;
         case 'type':
-          type = _normalizePremiumType(v) ?? type;
+          legacyPremium = _isLegacyPremiumType(v) || legacyPremium;
         case 'tfo':
           if (v == 'true') tfo = true;
           if (v == 'false') tfo = false;
@@ -141,11 +147,13 @@ class CloudParams {
       }
     }
 
-    if (level != null) type = null;
+    final level =
+        explicitMode ??
+        legacyLevel ??
+        (legacyPremium ? NetworkLevel.premium : null);
 
     return CloudParams(
       level: level,
-      type: type,
       tfo: tfo,
       simplerules: simplerules,
       extras: extras,
@@ -155,10 +163,6 @@ class CloudParams {
   String encode() {
     final segments = <String>[];
     if (level != null) segments.add('mode=${level!.value}');
-    final premiumType = _normalizePremiumType(type);
-    if (level == null && premiumType != null) {
-      segments.add('type=$premiumType');
-    }
     if (tfo != null) segments.add('tfo=$tfo');
     if (simplerules) segments.add('simplerules=true');
     extras.forEach((k, v) {
@@ -180,14 +184,12 @@ class CloudParams {
 
   CloudParams copyWith({
     Object? level = _sentinel,
-    Object? type = _sentinel,
     Object? tfo = _sentinel,
     Object? simplerules = _sentinel,
     Map<String, String>? extras,
   }) {
     return CloudParams(
       level: level == _sentinel ? this.level : level as NetworkLevel?,
-      type: type == _sentinel ? this.type : type as String?,
       tfo: tfo == _sentinel ? this.tfo : tfo as bool?,
       simplerules: simplerules == _sentinel
           ? this.simplerules
@@ -197,23 +199,20 @@ class CloudParams {
   }
 
   /// Encoded form excluding independent switches. Used to compare with tier
-  /// defaults, which only own routing params like level/type.
-  String encodeDefaultComparable() =>
-      CloudParams(level: level, type: type).encode();
+  /// defaults, which only own the routing mode.
+  String encodeDefaultComparable() => CloudParams(level: level).encode();
 
   String encodeEditableOptions() =>
       copyWith(tfo: null, simplerules: false).encode();
 
   CloudParams applyingTierDefaults(CloudParams defaults) {
-    return copyWith(level: defaults.level, type: defaults.type);
+    return copyWith(level: defaults.level);
   }
 
-  /// Strip emergency mode if the current [tier] cannot support it.
-  CloudParams stripEmergencyIfUnsupported(SubscriptionTier tier) {
-    if (level == NetworkLevel.emergency && tier == SubscriptionTier.none) {
-      return copyWith(level: null);
-    }
-    return this;
+  CloudParams adjustedForTier(SubscriptionTier tier) {
+    final currentLevel = level;
+    if (currentLevel == null || tier.supports(currentLevel)) return this;
+    return copyWith(level: tier.defaultParams.level);
   }
 
   @override
@@ -221,7 +220,6 @@ class CloudParams {
     if (identical(this, other)) return true;
     if (other is! CloudParams) return false;
     if (level != other.level ||
-        type != other.type ||
         tfo != other.tfo ||
         simplerules != other.simplerules) {
       return false;
@@ -239,14 +237,7 @@ class CloudParams {
     for (final extra in extras.entries) {
       extrasHash ^= Object.hash(extra.key, extra.value);
     }
-    return Object.hash(
-      level,
-      type,
-      tfo,
-      simplerules,
-      extras.length,
-      extrasHash,
-    );
+    return Object.hash(level, tfo, simplerules, extras.length, extrasHash);
   }
 
   static String _decodeQueryComponent(String value) {
@@ -268,11 +259,12 @@ class CloudParams {
     }.contains(key.toLowerCase());
   }
 
-  static String? _normalizePremiumType(String? type) {
-    final normalized = type?.trim().toLowerCase();
-    return const {'love', 'latest', 'extreme'}.contains(normalized)
-        ? 'love'
-        : null;
+  static bool _isLegacyPremiumType(String type) {
+    return const {
+      'love',
+      'latest',
+      'extreme',
+    }.contains(type.trim().toLowerCase());
   }
 }
 

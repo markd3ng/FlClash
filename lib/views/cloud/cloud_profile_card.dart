@@ -19,6 +19,7 @@ class CloudProfileCard extends ConsumerStatefulWidget {
 
 class _CloudProfileCardState extends ConsumerState<CloudProfileCard> {
   CloudParams _params = const CloudParams();
+  bool _paramsLoaded = false;
 
   @override
   void initState() {
@@ -29,7 +30,10 @@ class _CloudProfileCardState extends ConsumerState<CloudProfileCard> {
   Future<void> _loadParams() async {
     final loaded = await CloudParamsStorage.load();
     if (mounted) {
-      setState(() => _params = loaded);
+      setState(() {
+        _params = loaded;
+        _paramsLoaded = true;
+      });
     }
   }
 
@@ -156,7 +160,7 @@ class _CloudProfileCardState extends ConsumerState<CloudProfileCard> {
               AppLocalizations.current.points,
               profile.points,
             ),
-            if (clashProfile != null) ...[
+            if (clashProfile != null && _paramsLoaded) ...[
               const Divider(height: 16),
               ListItem.switchItem(
                 padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
@@ -171,16 +175,13 @@ class _CloudProfileCardState extends ConsumerState<CloudProfileCard> {
                   value: isOverseas,
                   onChanged: (val) {
                     final next = val
-                        ? _params.copyWith(
-                            level: NetworkLevel.overseas,
-                            type: null,
-                          )
+                        ? _params.copyWith(level: NetworkLevel.overseas)
                         : _restoreDefault(tier);
                     _commit(next);
                   },
                 ),
               ),
-              if (tier.canUseEmergency) ...[
+              if (tier.canSelectEmergency) ...[
                 const Divider(height: 16),
                 ListItem.switchItem(
                   padding: const EdgeInsets.symmetric(
@@ -196,10 +197,7 @@ class _CloudProfileCardState extends ConsumerState<CloudProfileCard> {
                     value: isEmergency,
                     onChanged: (val) {
                       final next = val
-                          ? _params.copyWith(
-                              level: NetworkLevel.emergency,
-                              type: null,
-                            )
+                          ? _params.copyWith(level: NetworkLevel.emergency)
                           : _restoreDefault(tier);
                       _commit(next);
                     },
@@ -213,7 +211,6 @@ class _CloudProfileCardState extends ConsumerState<CloudProfileCard> {
     );
   }
 
-  /// Restore the level/type to the tier's defaults, preserving switches and extras.
   CloudParams _restoreDefault(SubscriptionTier tier) {
     return _params.applyingTierDefaults(tier.defaultParams);
   }
