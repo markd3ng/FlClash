@@ -346,18 +346,20 @@ class GlobalState {
     String? lastError;
     Future<Map<String, dynamic>?> run() async {
       final runtime = getJavascriptRuntime();
+      final engineId = runtime.getEngineInstanceId();
       try {
         if (onConsole != null) {
-          JavascriptRuntime.channelFunctionsRegistered[runtime
-              .getEngineInstanceId()]?['ConsoleLog'] = (dynamic args) {
-            try {
-              final list = List<dynamic>.from(args as List);
-              final level = list.isNotEmpty
-                  ? list.removeAt(0).toString()
-                  : 'log';
-              onConsole(level, list.join(' '));
-            } catch (_) {}
-          };
+          JavascriptRuntime
+                  .channelFunctionsRegistered[engineId]?['ConsoleLog'] =
+              (dynamic args) {
+                try {
+                  final list = List<dynamic>.from(args as List);
+                  final level = list.isNotEmpty
+                      ? list.removeAt(0).toString()
+                      : 'log';
+                  onConsole(level, list.join(' '));
+                } catch (_) {}
+              };
         }
         final res = await runtime.evaluateAsync('''
       $scriptContent
@@ -372,12 +374,12 @@ class GlobalState {
           false => Map<String, dynamic>.from(res.rawResult),
         };
       } finally {
-        try {
-          runtime.dispose();
-        } catch (_) {}
-        JavascriptRuntime.channelFunctionsRegistered.remove(
-          runtime.getEngineInstanceId(),
-        );
+        JavascriptRuntime.channelFunctionsRegistered.remove(engineId);
+        if (!system.isMacOS) {
+          try {
+            runtime.dispose();
+          } catch (_) {}
+        }
       }
     }
 
