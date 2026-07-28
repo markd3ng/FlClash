@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/controller.dart';
@@ -34,10 +35,13 @@ class FlClashTemporaryTls {
   }
 
   static bool isCertificateVerifyFailed(Object error) {
+    if (error is DioException &&
+        error.type == DioExceptionType.badCertificate) {
+      return true;
+    }
     final message = error.toString().toLowerCase();
     return message.contains('certificate_verify_failed') ||
-        message.contains('handshakeexception') ||
-        message.contains('handshake error') ||
+        message.contains('certificate verify failed') ||
         message.contains('bad certificate') ||
         message.contains('invalid certificate') ||
         message.contains('unable to get local issuer certificate');

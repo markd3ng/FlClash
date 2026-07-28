@@ -9,6 +9,45 @@ import 'package:fl_clash/services/cloud_api_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('certificate classifier ignores generic TLS handshake failures', () {
+    expect(
+      FlClashTemporaryTls.isCertificateVerifyFailed(
+        HandshakeException('Connection terminated during handshake'),
+      ),
+      false,
+    );
+    expect(
+      FlClashTemporaryTls.isCertificateVerifyFailed(
+        HandshakeException(
+          'Handshake error in client (OS Error: CONNECTION_RESET)',
+        ),
+      ),
+      false,
+    );
+  });
+
+  test('certificate classifier recognizes verification failures', () {
+    expect(
+      FlClashTemporaryTls.isCertificateVerifyFailed(
+        HandshakeException(
+          'Handshake error in client '
+          '(OS Error: CERTIFICATE_VERIFY_FAILED: certificate has expired)',
+        ),
+      ),
+      true,
+    );
+
+    expect(
+      FlClashTemporaryTls.isCertificateVerifyFailed(
+        DioException(
+          requestOptions: RequestOptions(path: '/'),
+          type: DioExceptionType.badCertificate,
+        ),
+      ),
+      true,
+    );
+  });
+
   test('cloud API connection errors do not expose endpoint details', () {
     final error = DioException(
       requestOptions: RequestOptions(
