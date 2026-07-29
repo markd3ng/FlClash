@@ -54,12 +54,12 @@ class _TrayContainerState extends ConsumerState<TrayManager> with TrayListener {
   }
 
   @override
-  onTrayIconMouseDown() {
+  void onTrayIconMouseDown() {
     window?.show();
   }
 
   @override
-  dispose() {
+  void dispose() {
     trayManager.removeListener(this);
     super.dispose();
   }

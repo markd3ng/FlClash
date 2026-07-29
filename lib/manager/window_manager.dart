@@ -281,9 +281,9 @@ class AppIcon extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
         ),
       ),
-      padding: EdgeInsets.all(8),
+      padding: const EdgeInsets.all(8),
       child: Transform.translate(
-        offset: Offset(0, -1),
+        offset: const Offset(0, -1),
         child: Image.asset('assets/images/icon.png', width: 34, height: 34),
       ),
     );

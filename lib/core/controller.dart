@@ -60,7 +60,7 @@ class CoreController {
           continue;
         }
         final data = await rootBundle.load('assets/data/$geoFileName');
-        List<int> bytes = data.buffer.asUint8List();
+        final List<int> bytes = data.buffer.asUint8List();
         await geoFile.writeAsBytes(bytes, flush: true);
       }
     } catch (e) {
@@ -72,7 +72,7 @@ class CoreController {
     await initGeo();
     final homeDirPath = await appPath.homeDirPath;
     final configAgeSecretKey = await ConfigKeyStore.seedBase64();
-    return await _interface.init(
+    return _interface.init(
       InitParams(
         homeDir: homeDirPath,
         version: version,
@@ -108,7 +108,7 @@ class CoreController {
   }
 
   Future<String> updateConfig(UpdateParams updateParams) async {
-    return await _interface.updateConfig(updateParams);
+    return _interface.updateConfig(updateParams);
   }
 
   Future<String> setupConfig({
@@ -219,11 +219,11 @@ class CoreController {
   }
 
   Future<bool> startListener() async {
-    return await _interface.startListener();
+    return _interface.startListener();
   }
 
   Future<bool> stopListener() async {
-    return await _interface.stopListener();
+    return _interface.stopListener();
   }
 
   Future<Delay> getDelay(String url, String proxyName) async {
@@ -253,7 +253,7 @@ class CoreController {
   Future<Traffic> getTraffic(bool onlyStatisticsProxy) async {
     final trafficString = await _interface.getTraffic(onlyStatisticsProxy);
     if (trafficString.isEmpty) {
-      return Traffic();
+      return const Traffic();
     }
     return Traffic.fromJson(json.decode(trafficString));
   }
@@ -271,7 +271,7 @@ class CoreController {
       onlyStatisticsProxy,
     );
     if (totalTrafficString.isEmpty) {
-      return Traffic();
+      return const Traffic();
     }
     return Traffic.fromJson(json.decode(totalTrafficString));
   }
@@ -309,7 +309,7 @@ class CoreController {
   }
 
   Future<String> deleteFile(String path) async {
-    return await _interface.deleteFile(path);
+    return _interface.deleteFile(path);
   }
 }
 

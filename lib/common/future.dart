@@ -28,12 +28,3 @@ extension FutureExt<T> on Future<T> {
     );
   }
 }
-
-extension CompleterExt<T> on Completer<T> {
-  void safeCompleter(T value) {
-    if (isCompleted) {
-      return;
-    }
-    complete(value);
-  }
-}

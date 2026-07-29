@@ -59,7 +59,7 @@ class _HotKeyManagerState extends ConsumerState<HotKeyManager> {
             key: PhysicalKeyboardKey(hotKeyAction.key!),
             modifiers: modifiers,
           );
-          return await hotKeyManager.register(
+          return hotKeyManager.register(
             hotKey,
             keyDownHandler: (_) {
               _handleHotKeyAction(hotKeyAction.action);

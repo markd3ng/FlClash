@@ -359,13 +359,9 @@ extension ProxyChainsExt on List<ProxyChain> {
   }
 
   List<ProxyChain> copyAndReorder(int oldIndex, int newIndex) {
-    var insertIndex = newIndex;
-    if (oldIndex < insertIndex) {
-      insertIndex -= 1;
-    }
     final nextList = List<ProxyChain>.from(this);
     final proxyChain = nextList.removeAt(oldIndex);
-    nextList.insert(insertIndex, proxyChain);
+    nextList.insert(newIndex, proxyChain);
     return nextList;
   }
 

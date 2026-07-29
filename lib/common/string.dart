@@ -26,16 +26,6 @@ extension StringExtension on String {
     return toLowerCase().compareTo(other.toLowerCase());
   }
 
-  String safeSubstring(int start, [int? end]) {
-    if (isEmpty) return '';
-    final safeStart = start.clamp(0, length);
-    if (end == null) {
-      return substring(safeStart);
-    }
-    final safeEnd = end.clamp(safeStart, length);
-    return substring(safeStart, safeEnd);
-  }
-
   List<int> get encodeUtf16LeWithBom {
     final byteData = ByteData(length * 2);
     final bom = [0xFF, 0xFE];
@@ -62,16 +52,6 @@ extension StringExtension on String {
 
   bool get isSvg {
     return endsWith('.svg');
-  }
-
-  bool get isRegex {
-    try {
-      RegExp(this);
-      return true;
-    } catch (e) {
-      commonPrint.log(e.toString());
-      return false;
-    }
   }
 
   String toMd5() {

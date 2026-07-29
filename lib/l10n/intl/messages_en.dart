@@ -324,7 +324,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "copySuccess": MessageLookupByLibrary.simpleMessage("Copy success"),
     "core": MessageLookupByLibrary.simpleMessage("Core"),
     "coreStatus": MessageLookupByLibrary.simpleMessage("Core status"),
-    "country": MessageLookupByLibrary.simpleMessage("Country"),
     "crashTest": MessageLookupByLibrary.simpleMessage("Crash test"),
     "create": MessageLookupByLibrary.simpleMessage("Create"),
     "creationTime": MessageLookupByLibrary.simpleMessage("Creation time"),
@@ -333,7 +332,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "cut": MessageLookupByLibrary.simpleMessage("Cut"),
     "dark": MessageLookupByLibrary.simpleMessage("Dark"),
     "dashboard": MessageLookupByLibrary.simpleMessage("Dashboard"),
-    "days": MessageLookupByLibrary.simpleMessage("Days"),
     "daysAgo": m4,
     "defaultNameserver": MessageLookupByLibrary.simpleMessage(
       "Default nameserver",
@@ -486,7 +484,6 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "forgotPassword": MessageLookupByLibrary.simpleMessage("Forgot password?"),
     "fruitSaladScheme": MessageLookupByLibrary.simpleMessage("FruitSalad"),
-    "general": MessageLookupByLibrary.simpleMessage("General"),
     "geoAutoUpdate": MessageLookupByLibrary.simpleMessage("Auto Update"),
     "geoAutoUpdateInterval": MessageLookupByLibrary.simpleMessage(
       "Auto Update Interval",
@@ -655,12 +652,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "minimizeOnExitDesc": MessageLookupByLibrary.simpleMessage(
       "Modify the default system exit event",
     ),
-    "minutes": MessageLookupByLibrary.simpleMessage("Minutes"),
     "minutesAgo": m17,
     "mixedPort": MessageLookupByLibrary.simpleMessage("Mixed Port"),
     "mode": MessageLookupByLibrary.simpleMessage("Mode"),
     "monochromeScheme": MessageLookupByLibrary.simpleMessage("Monochrome"),
-    "months": MessageLookupByLibrary.simpleMessage("Months"),
     "monthsAgo": m18,
     "more": MessageLookupByLibrary.simpleMessage("More"),
     "myOrders": MessageLookupByLibrary.simpleMessage("Purchased Plans"),
@@ -930,7 +925,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "refreshAfterPayment": MessageLookupByLibrary.simpleMessage(
       "After payment, pull down to refresh and check the result",
     ),
-    "regExp": MessageLookupByLibrary.simpleMessage("RegExp"),
     "register": MessageLookupByLibrary.simpleMessage("Register"),
     "registerClosed": MessageLookupByLibrary.simpleMessage(
       "Registration is currently closed",
@@ -942,7 +936,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "relayGroupUnsupported": MessageLookupByLibrary.simpleMessage(
       "Relay groups were removed by the core. Choose another type.",
     ),
-    "reload": MessageLookupByLibrary.simpleMessage("Reload"),
     "remaining": m27,
     "remainingStock": m28,
     "remote": MessageLookupByLibrary.simpleMessage("Remote"),
@@ -1205,7 +1198,6 @@ class MessageLookup extends MessageLookupByLibrary {
       "WebDAV configuration",
     ),
     "whitelistMode": MessageLookupByLibrary.simpleMessage("Whitelist mode"),
-    "years": MessageLookupByLibrary.simpleMessage("Years"),
     "yearsAgo": m33,
     "zh_CN": MessageLookupByLibrary.simpleMessage("Simplified Chinese"),
   };

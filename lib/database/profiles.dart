@@ -31,18 +31,18 @@ class Profiles extends Table {
   TextColumn get unfoldSet => text().map(const StringSetConverter())();
 
   TextColumn get proxyChains =>
-      text().map(const ProxyChainListConverter()).withDefault(Constant('[]'))();
+      text().map(const ProxyChainListConverter()).withDefault(const Constant('[]'))();
 
   TextColumn get profileProxies => text()
       .map(const ProfileProxyListConverter())
-      .withDefault(Constant('[]'))();
+      .withDefault(const Constant('[]'))();
 
     TextColumn get customProxyGroups => text()
       .map(const ProxyGroupListConverter())
-      .withDefault(Constant('[]'))();
+      .withDefault(const Constant('[]'))();
 
     TextColumn get customRules =>
-      text().map(const RuleListConverter()).withDefault(Constant('[]'))();
+      text().map(const RuleListConverter()).withDefault(const Constant('[]'))();
 
   IntColumn get order => integer().nullable()();
 

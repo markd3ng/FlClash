@@ -12,13 +12,13 @@ void main() {
   test('certificate classifier ignores generic TLS handshake failures', () {
     expect(
       FlClashTemporaryTls.isCertificateVerifyFailed(
-        HandshakeException('Connection terminated during handshake'),
+        const HandshakeException('Connection terminated during handshake'),
       ),
       false,
     );
     expect(
       FlClashTemporaryTls.isCertificateVerifyFailed(
-        HandshakeException(
+        const HandshakeException(
           'Handshake error in client (OS Error: CONNECTION_RESET)',
         ),
       ),
@@ -29,7 +29,7 @@ void main() {
   test('certificate classifier recognizes verification failures', () {
     expect(
       FlClashTemporaryTls.isCertificateVerifyFailed(
-        HandshakeException(
+        const HandshakeException(
           'Handshake error in client '
           '(OS Error: CERTIFICATE_VERIFY_FAILED: certificate has expired)',
         ),

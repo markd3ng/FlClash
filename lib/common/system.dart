@@ -323,12 +323,12 @@ class Windows {
 
     final res = runas('cmd.exe', command);
 
-    await Future.delayed(Duration(milliseconds: 300));
+    await Future.delayed(const Duration(milliseconds: 300));
     final retryStatus = await retry(
       task: checkService,
       maxAttempts: 5,
       retryIf: (status) => status != WindowsHelperServiceStatus.running,
-      delay: Duration(seconds: 1),
+      delay: const Duration(seconds: 1),
     );
     return res && retryStatus == WindowsHelperServiceStatus.running;
   }
@@ -470,7 +470,7 @@ class MacOS {
       if (originDns == null) {
         return;
       }
-      final needAddDns = '223.5.5.5';
+      const needAddDns = '223.5.5.5';
       if (originDns.contains(needAddDns)) {
         return;
       }

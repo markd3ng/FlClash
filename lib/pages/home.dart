@@ -9,8 +9,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-typedef OnSelected = void Function(int index);
-
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
@@ -120,7 +118,7 @@ class _HomePageViewState extends ConsumerState<_HomePageView> {
   late PageController _pageController;
 
   @override
-  initState() {
+  void initState() {
     super.initState();
     _pageController = PageController(initialPage: _pageIndex);
     ref.listenManual(currentPageLabelProvider, (prev, next) {

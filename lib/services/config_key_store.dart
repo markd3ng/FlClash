@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
-import 'dart:typed_data';
 
 import 'package:fl_clash/common/path.dart';
 import 'package:fl_clash/services/age_crypto.dart';

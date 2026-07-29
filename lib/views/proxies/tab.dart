@@ -81,7 +81,7 @@ class ProxiesTabViewState extends ConsumerState<ProxiesTabView>
   void _showMoreMenu() {
     showSheet(
       context: context,
-      props: SheetProps(isScrollControlled: false),
+      props: const SheetProps(isScrollControlled: false),
       builder: (_, type) {
         return AdaptiveSheetScaffold(
           type: type,
@@ -172,7 +172,7 @@ class ProxiesTabViewState extends ConsumerState<ProxiesTabView>
     final groups = state.groups;
     if (groups.isEmpty || _tabController == null) {
       return NullStatus(
-        illustration: ProxyEmptyIllustration(),
+        illustration: const ProxyEmptyIllustration(),
         label: appLocalizations.nullTip(appLocalizations.proxies),
       );
     }

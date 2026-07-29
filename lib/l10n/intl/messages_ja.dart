@@ -256,7 +256,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "copySuccess": MessageLookupByLibrary.simpleMessage("コピー成功"),
     "core": MessageLookupByLibrary.simpleMessage("コア"),
     "coreStatus": MessageLookupByLibrary.simpleMessage("コアステータス"),
-    "country": MessageLookupByLibrary.simpleMessage("国"),
     "crashTest": MessageLookupByLibrary.simpleMessage("クラッシュテスト"),
     "create": MessageLookupByLibrary.simpleMessage("作成"),
     "creationTime": MessageLookupByLibrary.simpleMessage("作成時間"),
@@ -265,7 +264,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "cut": MessageLookupByLibrary.simpleMessage("切り取り"),
     "dark": MessageLookupByLibrary.simpleMessage("ダーク"),
     "dashboard": MessageLookupByLibrary.simpleMessage("ダッシュボード"),
-    "days": MessageLookupByLibrary.simpleMessage("日"),
     "daysAgo": m4,
     "defaultNameserver": MessageLookupByLibrary.simpleMessage("デフォルトネームサーバー"),
     "defaultNameserverDesc": MessageLookupByLibrary.simpleMessage(
@@ -384,7 +382,6 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "forgotPassword": MessageLookupByLibrary.simpleMessage("パスワードをお忘れですか？"),
     "fruitSaladScheme": MessageLookupByLibrary.simpleMessage("フルーツサラダ"),
-    "general": MessageLookupByLibrary.simpleMessage("一般"),
     "geoAutoUpdate": MessageLookupByLibrary.simpleMessage("自動更新"),
     "geoAutoUpdateInterval": MessageLookupByLibrary.simpleMessage("自動更新間隔"),
     "geoAutoUpdateIntervalTip": MessageLookupByLibrary.simpleMessage(
@@ -517,12 +514,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "minimizeOnExitDesc": MessageLookupByLibrary.simpleMessage(
       "システムの終了イベントを変更",
     ),
-    "minutes": MessageLookupByLibrary.simpleMessage("分"),
     "minutesAgo": m17,
     "mixedPort": MessageLookupByLibrary.simpleMessage("混合ポート"),
     "mode": MessageLookupByLibrary.simpleMessage("モード"),
     "monochromeScheme": MessageLookupByLibrary.simpleMessage("モノクローム"),
-    "months": MessageLookupByLibrary.simpleMessage("月"),
     "monthsAgo": m18,
     "more": MessageLookupByLibrary.simpleMessage("詳細"),
     "myOrders": MessageLookupByLibrary.simpleMessage("購入済みプラン"),
@@ -744,7 +739,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "refreshAfterPayment": MessageLookupByLibrary.simpleMessage(
       "支払い完了後、下にスワイプして結果を確認してください",
     ),
-    "regExp": MessageLookupByLibrary.simpleMessage("正規表現"),
     "register": MessageLookupByLibrary.simpleMessage("登録"),
     "registerClosed": MessageLookupByLibrary.simpleMessage("現在、新規登録は停止しています"),
     "registerFailed": MessageLookupByLibrary.simpleMessage("登録に失敗しました"),
@@ -752,7 +746,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "relayGroupUnsupported": MessageLookupByLibrary.simpleMessage(
       "Relay グループはコアから削除されました。別のタイプを選択してください",
     ),
-    "reload": MessageLookupByLibrary.simpleMessage("リロード"),
     "remaining": m27,
     "remainingStock": m28,
     "remote": MessageLookupByLibrary.simpleMessage("リモート"),
@@ -805,6 +798,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "restoreStrategy_compatible": MessageLookupByLibrary.simpleMessage("互換"),
     "restoreStrategy_override": MessageLookupByLibrary.simpleMessage("上書き"),
     "restoreSuccess": MessageLookupByLibrary.simpleMessage("復元に成功しました"),
+    "reverseEngineeringNotice": MessageLookupByLibrary.simpleMessage(
+      "本アプリのリバースエンジニアリング、逆コンパイル、逆アセンブル、および AI を用いた解析を嚴禁します。",
+    ),
     "routeAddress": MessageLookupByLibrary.simpleMessage("ルートアドレス"),
     "routeAddressDesc": MessageLookupByLibrary.simpleMessage("ルートアドレスを設定"),
     "routeMode": MessageLookupByLibrary.simpleMessage("ルートモード"),
@@ -958,7 +954,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "vpnTip": MessageLookupByLibrary.simpleMessage("変更はVPN再起動後に有効"),
     "webDAVConfiguration": MessageLookupByLibrary.simpleMessage("WebDAV設定"),
     "whitelistMode": MessageLookupByLibrary.simpleMessage("ホワイトリストモード"),
-    "years": MessageLookupByLibrary.simpleMessage("年"),
     "yearsAgo": m33,
     "zh_CN": MessageLookupByLibrary.simpleMessage("簡体字中国語"),
   };

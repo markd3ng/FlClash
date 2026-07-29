@@ -106,7 +106,7 @@ class Traffics extends _$Traffics with NotifierMixin<FixedList<Traffic>> {
 class TotalTraffic extends _$TotalTraffic with NotifierMixin<Traffic> {
   @override
   Traffic build() {
-    return Traffic();
+    return const Traffic();
   }
 }
 
@@ -382,7 +382,7 @@ class NetworkDetection extends _$NetworkDetection
 
   @override
   NetworkDetectionState build() {
-    return NetworkDetectionState(isLoading: true, ipInfo: null);
+    return const NetworkDetectionState(isLoading: true, ipInfo: null);
   }
 
   void startCheck() {

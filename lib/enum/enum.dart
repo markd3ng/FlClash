@@ -71,12 +71,6 @@ extension GroupTypeExtension on GroupType {
     return [GroupType.URLTest, GroupType.Fallback].contains(this);
   }
 
-  static GroupType? getGroupType(String value) {
-    final index = GroupTypeExtension.valueList.indexOf(value);
-    if (index == -1) return null;
-    return GroupType.values[index];
-  }
-
   String get value => GroupTypeExtension.valueList[index];
 }
 
@@ -262,10 +256,8 @@ enum WindowsHelperServiceStatus { none, presence, running }
 
 enum FunctionTag {
   updateConfig,
-  setupConfig,
   updateStatus,
   updateGroups,
-  addCheckIpNum,
   applyProfile,
   savePreferences,
   changeProxy,
@@ -275,12 +267,8 @@ enum FunctionTag {
   vpnTip,
   autoLaunch,
   renderPause,
-  updatePageIndex,
-  pageChange,
-  proxiesTabChange,
   logs,
   requests,
-  autoScrollToEnd,
   loadedProvider,
   geoReload,
   saveSharedFile,
@@ -313,7 +301,7 @@ enum DashboardWidget {
   const DashboardWidget(this.widget, {this.platforms = SupportPlatform.values});
 
   static DashboardWidget getDashboardWidget(GridItem gridItem) {
-    final dashboardWidgets = DashboardWidget.values;
+    const dashboardWidgets = DashboardWidget.values;
     final index = dashboardWidgets.indexWhere(
       (item) => item.widget == gridItem,
     );

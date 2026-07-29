@@ -340,7 +340,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "copySuccess": MessageLookupByLibrary.simpleMessage("Копирование успешно"),
     "core": MessageLookupByLibrary.simpleMessage("Ядро"),
     "coreStatus": MessageLookupByLibrary.simpleMessage("Основной статус"),
-    "country": MessageLookupByLibrary.simpleMessage("Страна"),
     "crashTest": MessageLookupByLibrary.simpleMessage("Тест на сбои"),
     "create": MessageLookupByLibrary.simpleMessage("Создать"),
     "creationTime": MessageLookupByLibrary.simpleMessage("Время создания"),
@@ -349,7 +348,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "cut": MessageLookupByLibrary.simpleMessage("Вырезать"),
     "dark": MessageLookupByLibrary.simpleMessage("Темный"),
     "dashboard": MessageLookupByLibrary.simpleMessage("Панель управления"),
-    "days": MessageLookupByLibrary.simpleMessage("Дней"),
     "daysAgo": m4,
     "defaultNameserver": MessageLookupByLibrary.simpleMessage(
       "Сервер имен по умолчанию",
@@ -512,7 +510,6 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "forgotPassword": MessageLookupByLibrary.simpleMessage("Забыли пароль?"),
     "fruitSaladScheme": MessageLookupByLibrary.simpleMessage("Фруктовый микс"),
-    "general": MessageLookupByLibrary.simpleMessage("Общие"),
     "geoAutoUpdate": MessageLookupByLibrary.simpleMessage("Автообновление"),
     "geoAutoUpdateInterval": MessageLookupByLibrary.simpleMessage(
       "Интервал автообновления",
@@ -695,12 +692,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "minimizeOnExitDesc": MessageLookupByLibrary.simpleMessage(
       "Изменить стандартное событие выхода из системы",
     ),
-    "minutes": MessageLookupByLibrary.simpleMessage("Минут"),
     "minutesAgo": m17,
     "mixedPort": MessageLookupByLibrary.simpleMessage("Смешанный порт"),
     "mode": MessageLookupByLibrary.simpleMessage("Режим"),
     "monochromeScheme": MessageLookupByLibrary.simpleMessage("Монохром"),
-    "months": MessageLookupByLibrary.simpleMessage("Месяцев"),
     "monthsAgo": m18,
     "more": MessageLookupByLibrary.simpleMessage("Еще"),
     "myOrders": MessageLookupByLibrary.simpleMessage("Купленные тарифы"),
@@ -984,7 +979,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "refreshAfterPayment": MessageLookupByLibrary.simpleMessage(
       "После оплаты потяните вниз, чтобы обновить и проверить результат",
     ),
-    "regExp": MessageLookupByLibrary.simpleMessage("Регулярное выражение"),
     "register": MessageLookupByLibrary.simpleMessage("Регистрация"),
     "registerClosed": MessageLookupByLibrary.simpleMessage(
       "Регистрация в настоящее время закрыта",
@@ -996,7 +990,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "relayGroupUnsupported": MessageLookupByLibrary.simpleMessage(
       "Группы Relay удалены из ядра. Выберите другой тип.",
     ),
-    "reload": MessageLookupByLibrary.simpleMessage("Перезагрузить"),
     "remaining": m27,
     "remainingStock": m28,
     "remote": MessageLookupByLibrary.simpleMessage("Удаленный"),
@@ -1076,6 +1069,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "restoreSuccess": MessageLookupByLibrary.simpleMessage(
       "Восстановление успешно",
+    ),
+    "reverseEngineeringNotice": MessageLookupByLibrary.simpleMessage(
+      "Обратная разработка, декомпиляция, дизассемблирование или анализ этого приложения с помощью ИИ строго запрещены.",
     ),
     "routeAddress": MessageLookupByLibrary.simpleMessage("Адрес маршрутизации"),
     "routeAddressDesc": MessageLookupByLibrary.simpleMessage(
@@ -1274,7 +1270,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "whitelistMode": MessageLookupByLibrary.simpleMessage(
       "Режим белого списка",
     ),
-    "years": MessageLookupByLibrary.simpleMessage("Лет"),
     "yearsAgo": m33,
     "zh_CN": MessageLookupByLibrary.simpleMessage("Упрощенный китайский"),
   };

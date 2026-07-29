@@ -32,7 +32,7 @@ class CoreLib extends CoreHandlerInterface {
   }
 
   @override
-  destroy() async {
+  Future<bool> destroy() async {
     return true;
   }
 

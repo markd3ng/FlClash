@@ -35,11 +35,6 @@ extension IterableExt<E> on Iterable<E> {
       count++;
     }
   }
-
-  Iterable<E> takeLast({int count = 50}) {
-    if (count <= 0) return Iterable.empty();
-    return count >= length ? this : toList().skip(length - count);
-  }
 }
 
 extension ListExt<T> on List<T> {
@@ -78,15 +73,6 @@ extension ListExt<T> on List<T> {
       newList.insert(0, data);
     }
     return newList;
-  }
-
-  List<T> safeSublist(int start, [int? end]) {
-    if (start <= 0) return this;
-    if (start > length) return [];
-    if (end != null) {
-      return sublist(start, end.clamp(start, length));
-    }
-    return sublist(start);
   }
 
   T? safeGet(int index, {T? defaultValue}) {
@@ -154,15 +140,5 @@ extension MapExt<K, V> on Map<K, V> {
       this[key] = callback();
     }
     return this[key]!;
-  }
-
-  Map<K, V> copyWitUpdate(K key, V? value) {
-    final newMap = Map<K, V>.from(this);
-    if (value == null) {
-      newMap.remove(key);
-    } else {
-      newMap[key] = value;
-    }
-    return newMap;
   }
 }

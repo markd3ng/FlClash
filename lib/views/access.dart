@@ -52,7 +52,7 @@ class _AccessViewState extends ConsumerState<AccessView> {
     required bool isSelectedAll,
     required List<String> allValueList,
   }) {
-    onPressed() {
+    void onPressed() {
       ref.read(accessControlStateProvider.notifier).update((state) {
         final newSet = Set<String>.from(state.currentList);
         final isSelectedAll = newSet.containsAll(allValueList);
@@ -69,13 +69,13 @@ class _AccessViewState extends ConsumerState<AccessView> {
       alignment: Alignment.centerRight,
       child: isSelectedAll
           ? FloatingActionButton.extended(
-              key: ValueKey(true),
+              key: const ValueKey(true),
               onPressed: onPressed,
               label: Text(appLocalizations.cancelSelectAll),
               icon: const Icon(Icons.deselect),
             )
           : FloatingActionButton.extended(
-              key: ValueKey(false),
+              key: const ValueKey(false),
               tooltip: appLocalizations.selectAll,
               onPressed: onPressed,
               label: Text(appLocalizations.selectAll),
@@ -113,11 +113,11 @@ class _AccessViewState extends ConsumerState<AccessView> {
   Future<void> _handleToSetting() async {
     await showSheet<int>(
       context: context,
-      props: SheetProps(isScrollControlled: true),
+      props: const SheetProps(isScrollControlled: true),
       builder: (_, type) {
         return AdaptiveSheetScaffold(
           type: type,
-          body: AccessControlPanel(),
+          body: const AccessControlPanel(),
           title: appLocalizations.accessControlSettings,
         );
       },
@@ -200,7 +200,7 @@ class _AccessViewState extends ConsumerState<AccessView> {
           ),
         );
         if (noSave) {
-          return SizedBox();
+          return const SizedBox();
         }
         return child!;
       },
@@ -247,9 +247,9 @@ class _AccessViewState extends ConsumerState<AccessView> {
         targetBuilder: (open) {
           return IconButton(
             onPressed: () {
-              open(offset: Offset(0, 0));
+              open(offset: const Offset(0, 0));
             },
-            icon: Icon(Icons.more_vert),
+            icon: const Icon(Icons.more_vert),
           );
         },
         popup: CommonPopupMenu(
@@ -306,7 +306,7 @@ class _AccessViewState extends ConsumerState<AccessView> {
       future: _completer.future,
       builder: (_, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
-          return Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator());
         }
         return packages.isEmpty
             ? NullStatus(label: appLocalizations.noData)
@@ -350,12 +350,12 @@ class _AccessViewState extends ConsumerState<AccessView> {
             borderRadius: BorderRadius.circular(14),
           ),
           child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(appLocalizations.selected, style: textStyle),
-                SizedBox(width: 4),
+                const SizedBox(width: 4),
                 Flexible(child: Text('$count', style: textStyle)),
               ],
             ),
@@ -413,7 +413,7 @@ class _AccessViewState extends ConsumerState<AccessView> {
           mainAxisSize: MainAxisSize.min,
           children: [
             _buildBannerBar(mode, valueList.length),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Expanded(
               child: _buildContent(
                 packages: viewPackages,

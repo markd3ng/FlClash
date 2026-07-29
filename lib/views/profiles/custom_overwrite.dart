@@ -294,9 +294,6 @@ class CustomProxyGroupsView extends ConsumerWidget {
     final groups = List<ProxyGroup>.from(
       ref.read(profileProvider(profileId))?.customProxyGroups ?? [],
     );
-    if (oldIndex < newIndex) {
-      newIndex -= 1;
-    }
     final group = groups.removeAt(oldIndex);
     groups.insert(newIndex, group);
     _update(ref, groups);
@@ -348,7 +345,7 @@ class CustomProxyGroupsView extends ConsumerWidget {
                   ),
                 );
               },
-              onReorder: (oldIndex, newIndex) {
+              onReorderItem: (oldIndex, newIndex) {
                 _reorder(ref, oldIndex, newIndex);
               },
             ),
@@ -870,9 +867,6 @@ class CustomRulesView extends ConsumerWidget {
     final rules = List<Rule>.from(
       ref.read(profileProvider(profileId))?.customRules ?? [],
     );
-    if (oldIndex < newIndex) {
-      newIndex -= 1;
-    }
     final rule = rules.removeAt(oldIndex);
     rules.insert(newIndex, rule);
     _update(ref, rules);
@@ -925,7 +919,7 @@ class CustomRulesView extends ConsumerWidget {
                   ),
                 );
               },
-              onReorder: (oldIndex, newIndex) {
+              onReorderItem: (oldIndex, newIndex) {
                 _reorder(ref, oldIndex, newIndex);
               },
             ),

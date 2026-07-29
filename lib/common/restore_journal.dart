@@ -255,10 +255,6 @@ Future<void> recoverPendingRestore({
   await syncDirectory(homePath);
 }
 
-Future<void> discardPendingRestore(String homePath) async {
-  await durableDeleteEntity(p.join(homePath, _journalDirectoryName));
-}
-
 Future<void> _flushFile(File file) async {
   final handle = await file.open(mode: FileMode.append);
   try {

@@ -186,8 +186,8 @@ class ProxyChainRoleBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = _getProxyChainRoleColor(context, index, totalLength);
     return Container(
-      constraints: BoxConstraints(minWidth: 42),
-      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      constraints: const BoxConstraints(minWidth: 42),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(999),
@@ -294,7 +294,7 @@ class _ProxyChainPathChip extends StatelessWidget {
               fontWeight: FontWeight.w700,
             ),
           ),
-          SizedBox(width: 6),
+          const SizedBox(width: 6),
           Flexible(
             child: Text(
               proxy,
@@ -336,7 +336,7 @@ class ProxyChainItem extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: Container(
-        margin: EdgeInsets.symmetric(vertical: 4, horizontal: 16),
+        margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
         color: Colors.transparent,
         child: CommonCard(
           padding: EdgeInsets.zero,
@@ -399,7 +399,7 @@ class ProxyChainItem extends StatelessWidget {
                             onPressed: () {
                               open();
                             },
-                            icon: Icon(Icons.more_vert),
+                            icon: const Icon(Icons.more_vert),
                           );
                         },
                       ),
@@ -698,7 +698,7 @@ class _ProfileProxyChainsContentState
     final child = SliverMainAxisGroup(
       slivers: [
         ProfileProxiesContent(profileId: widget.profileId),
-        SliverToBoxAdapter(child: SizedBox(height: 24)),
+        const SliverToBoxAdapter(child: SizedBox(height: 24)),
         SliverToBoxAdapter(
           child: InfoHeader(
             info: Info(label: appLocalizations.proxyChains),
@@ -707,10 +707,10 @@ class _ProfileProxyChainsContentState
                 CommonMinIconButtonTheme(
                   child: IconButton.filledTonal(
                     onPressed: _handleDeleteProxyChains,
-                    icon: Icon(Icons.delete),
+                    icon: const Icon(Icons.delete),
                   ),
                 ),
-                SizedBox(width: 8),
+                const SizedBox(width: 8),
               ],
               CommonMinFilledButtonTheme(
                 child: selectedProxyChains.isNotEmpty
@@ -722,7 +722,7 @@ class _ProfileProxyChainsContentState
                         onPressed: () {
                           _handleAddOrUpdateProxyChain();
                         },
-                        icon: Icon(Icons.add),
+                        icon: const Icon(Icons.add),
                         label: Text(appLocalizations.add),
                       ),
               ),
@@ -730,7 +730,7 @@ class _ProfileProxyChainsContentState
           ),
         ),
         if (proxyChains.isNotEmpty) ...[
-          SliverToBoxAdapter(child: SizedBox(height: 8)),
+          const SliverToBoxAdapter(child: SizedBox(height: 8)),
           SliverReorderableList(
             itemCount: proxyChains.length,
             itemBuilder: (_, index) {
@@ -757,7 +757,7 @@ class _ProfileProxyChainsContentState
                 ),
               );
             },
-            onReorder: _handleProxyChainReorder,
+            onReorderItem: _handleProxyChainReorder,
           ),
         ] else if (widget.showEmptyStatus)
           SliverFillRemaining(
@@ -903,7 +903,7 @@ class _ProxyChainEditViewState extends ConsumerState<ProxyChainEditView> {
   Future<void> _handleAddProfileProxy() async {
     final res = await BaseNavigator.push<ProfileProxy>(
       context,
-      ProfileProxyEditView(),
+      const ProfileProxyEditView(),
     );
     if (res == null || !mounted) {
       return;
@@ -963,9 +963,6 @@ class _ProxyChainEditViewState extends ConsumerState<ProxyChainEditView> {
   }
 
   void _handleReorder(int oldIndex, int newIndex) {
-    if (oldIndex < newIndex) {
-      newIndex -= 1;
-    }
     final proxies = List<String>.from(_proxies);
     final proxy = proxies.removeAt(oldIndex);
     proxies.insert(newIndex, proxy);
@@ -1003,10 +1000,10 @@ class _ProxyChainEditViewState extends ConsumerState<ProxyChainEditView> {
           getDelayProvider(proxyName: proxy, testUrl: testUrl),
         );
         if (delay == null) {
-          return SizedBox.shrink();
+          return const SizedBox.shrink();
         }
         if (delay == 0) {
-          return SizedBox.square(
+          return const SizedBox.square(
             dimension: 14,
             child: CircularProgressIndicator(strokeWidth: 2),
           );
@@ -1076,7 +1073,7 @@ class _ProxyChainEditViewState extends ConsumerState<ProxyChainEditView> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   _buildProxyDelay(proxy, nodeInfo?.testUrl),
-                  if (nodeInfo != null) SizedBox(width: 8),
+                  if (nodeInfo != null) const SizedBox(width: 8),
                   Icon(
                     Icons.drag_indicator,
                     color: context.colorScheme.onSurfaceVariant.opacity80,
@@ -1088,7 +1085,7 @@ class _ProxyChainEditViewState extends ConsumerState<ProxyChainEditView> {
                             _handleDelete(proxy);
                           },
                     color: context.colorScheme.error,
-                    icon: Icon(Icons.delete_outline),
+                    icon: const Icon(Icons.delete_outline),
                   ),
                 ],
               ),
@@ -1096,7 +1093,7 @@ class _ProxyChainEditViewState extends ConsumerState<ProxyChainEditView> {
           ),
           if (index < totalLength - 1)
             Padding(
-              padding: EdgeInsets.symmetric(vertical: 2),
+              padding: const EdgeInsets.symmetric(vertical: 2),
               child: Icon(
                 Icons.arrow_downward,
                 size: 20,
@@ -1155,7 +1152,7 @@ class _ProxyChainEditViewState extends ConsumerState<ProxyChainEditView> {
         overflow: TextOverflow.ellipsis,
         style: context.textTheme.bodyMedium?.toJetBrainsMono,
       ),
-      trailing: Icon(Icons.add),
+      trailing: const Icon(Icons.add),
     );
   }
 
@@ -1199,10 +1196,10 @@ class _ProxyChainEditViewState extends ConsumerState<ProxyChainEditView> {
                   ),
                 ),
             onPressed: canSubmit ? _handleSubmit : null,
-            icon: Icon(Icons.check),
+            icon: const Icon(Icons.check),
           ),
         ),
-        SizedBox(width: 8),
+        const SizedBox(width: 8),
       ],
       body: CustomScrollView(
         slivers: [
@@ -1224,7 +1221,7 @@ class _ProxyChainEditViewState extends ConsumerState<ProxyChainEditView> {
                       title: Text(appLocalizations.proxyChainWarning),
                     ),
                   ),
-                  SizedBox(height: 12),
+                  const SizedBox(height: 12),
                   TextField(
                     controller: _nameController,
                     inputFormatters: TextInputLimits.limit(
@@ -1246,24 +1243,24 @@ class _ProxyChainEditViewState extends ConsumerState<ProxyChainEditView> {
                 CommonMinFilledButtonTheme(
                   child: FilledButton.icon(
                     onPressed: _handleAddProfileProxy,
-                    icon: Icon(Icons.add_link),
+                    icon: const Icon(Icons.add_link),
                     label: Text(appLocalizations.addProxyChainNode),
                   ),
                 ),
-                if (_proxies.isNotEmpty) SizedBox(width: 8),
+                if (_proxies.isNotEmpty) const SizedBox(width: 8),
                 if (_proxies.isNotEmpty)
                   CommonMinIconButtonTheme(
                     child: IconButton.filledTonal(
                       tooltip: appLocalizations.clearProxyChain,
                       onPressed: _handleClear,
-                      icon: Icon(Icons.delete_outline),
+                      icon: const Icon(Icons.delete_outline),
                     ),
                   ),
               ],
             ),
           ),
           SliverToBoxAdapter(child: _buildChainHint()),
-          SliverToBoxAdapter(child: SizedBox(height: 8)),
+          const SliverToBoxAdapter(child: SizedBox(height: 8)),
           if (_proxies.isEmpty)
             SliverToBoxAdapter(
               child: Padding(
@@ -1307,7 +1304,7 @@ class _ProxyChainEditViewState extends ConsumerState<ProxyChainEditView> {
                     animation,
                   );
                 },
-                onReorder: _handleReorder,
+                onReorderItem: _handleReorder,
               ),
             ),
           if (candidateSections.isEmpty)
@@ -1362,7 +1359,7 @@ class _ProxyChainEditViewState extends ConsumerState<ProxyChainEditView> {
               ),
             ],
           ],
-          SliverToBoxAdapter(child: SizedBox(height: 16)),
+          const SliverToBoxAdapter(child: SizedBox(height: 16)),
         ],
       ),
     );

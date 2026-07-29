@@ -86,7 +86,7 @@ class TrackerInfoItem extends ConsumerWidget {
         children: [
           Flexible(
             child: ListView.separated(
-              separatorBuilder: (_, _) => SizedBox(width: 6),
+              separatorBuilder: (_, _) => const SizedBox(width: 6),
               padding: EdgeInsets.zero,
               scrollDirection: Axis.horizontal,
               itemCount: trackerInfo.chains.length,
@@ -261,11 +261,11 @@ class TrackerInfoDetailView extends StatelessWidget {
               Text(title),
               if (quickCopy)
                 Padding(
-                  padding: EdgeInsets.only(top: 4),
+                  padding: const EdgeInsets.only(top: 4),
                   child: IconButton(
                     visualDensity: VisualDensity.compact,
                     padding: EdgeInsets.zero,
-                    icon: Icon(Icons.content_copy, size: 18),
+                    icon: const Icon(Icons.content_copy, size: 18),
                     onPressed: () {},
                   ),
                 ),
@@ -345,7 +345,7 @@ class TrackerInfoDetailView extends StatelessWidget {
     ];
     return SelectionArea(
       child: ListView.builder(
-        padding: EdgeInsets.symmetric(vertical: 12),
+        padding: const EdgeInsets.symmetric(vertical: 12),
         itemCount: items.length,
         itemBuilder: (_, index) {
           return items[index];

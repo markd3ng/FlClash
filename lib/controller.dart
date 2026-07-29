@@ -785,10 +785,6 @@ extension StateControllerExt on AppController {
     return _ref.read(getSelectedProxyNameProvider(groupName));
   }
 
-  Future<SetupState> getSetupState(int profileId) async {
-    return await _ref.read(setupStateProvider(profileId).future);
-  }
-
   String getRealTestUrl(String? url) {
     return _ref.read(realTestUrlProvider(url));
   }
@@ -2037,10 +2033,6 @@ extension CoreControllerExt on AppController {
     }
     await restartCore(start);
     return true;
-  }
-
-  void handleCoreDisconnected() {
-    _ref.read(coreStatusProvider.notifier).value = CoreStatus.disconnected;
   }
 }
 

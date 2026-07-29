@@ -222,15 +222,15 @@ class ApplicationSettingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    List<Widget> items = [
-      MinimizeItem(),
-      if (system.isDesktop) ...[AutoLaunchItem(), SilentLaunchItem()],
-      AutoRunItem(),
-      if (system.isAndroid) ...[HiddenItem()],
-      AnimateTabItem(),
-      OpenLogsItem(),
-      CloseConnectionsItem(),
-      UsageItem(),
+    final List<Widget> items = [
+      const MinimizeItem(),
+      if (system.isDesktop) ...[const AutoLaunchItem(), const SilentLaunchItem()],
+      const AutoRunItem(),
+      if (system.isAndroid) ...[const HiddenItem()],
+      const AnimateTabItem(),
+      const OpenLogsItem(),
+      const CloseConnectionsItem(),
+      const UsageItem(),
     ];
     return BaseScaffold(
       title: appLocalizations.application,

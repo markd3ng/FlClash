@@ -97,7 +97,7 @@ class _Title extends ConsumerWidget {
           InfoHeader(info: Info(label: appLocalizations.overrideMode)),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            padding: EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Wrap(
               spacing: 16,
               children: [
@@ -123,9 +123,9 @@ class _Title extends ConsumerWidget {
               ],
             ),
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Text(
               _getDesc(overwriteType),
               style: context.textTheme.bodySmall?.copyWith(
@@ -231,7 +231,7 @@ class __StandardContentState extends ConsumerState<_StandardContent> {
       },
       child: SliverMainAxisGroup(
         slivers: [
-          SliverToBoxAdapter(child: SizedBox(height: 24)),
+          const SliverToBoxAdapter(child: SizedBox(height: 24)),
           SliverToBoxAdapter(
             child: Column(
               children: [
@@ -244,10 +244,10 @@ class __StandardContentState extends ConsumerState<_StandardContent> {
                           onPressed: () {
                             _handleDelete();
                           },
-                          icon: Icon(Icons.delete),
+                          icon: const Icon(Icons.delete),
                         ),
                       ),
-                      SizedBox(width: 8),
+                      const SizedBox(width: 8),
                     ],
                     CommonMinFilledButtonTheme(
                       child: selectedRules.isNotEmpty
@@ -269,7 +269,7 @@ class __StandardContentState extends ConsumerState<_StandardContent> {
               ],
             ),
           ),
-          SliverToBoxAdapter(child: SizedBox(height: 8)),
+          const SliverToBoxAdapter(child: SizedBox(height: 8)),
           Consumer(
             builder: (_, ref, _) {
               return SliverReorderableList(
@@ -292,7 +292,7 @@ class __StandardContentState extends ConsumerState<_StandardContent> {
                     ),
                   );
                 },
-                onReorder: ref
+                onReorderItem: ref
                     .read(profileAddedRulesProvider(widget.profileId).notifier)
                     .order,
               );
@@ -300,7 +300,7 @@ class __StandardContentState extends ConsumerState<_StandardContent> {
           ),
           SliverToBoxAdapter(
             child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               child: CommonCard(
                 padding: EdgeInsets.zero,
                 radius: 18,
@@ -321,8 +321,8 @@ class __StandardContentState extends ConsumerState<_StandardContent> {
                           style: context.textTheme.bodyLarge,
                         ),
                       ),
-                      SizedBox(width: 4),
-                      Icon(Icons.arrow_forward, size: 18),
+                      const SizedBox(width: 4),
+                      const Icon(Icons.arrow_forward, size: 18),
                     ],
                   ),
                 ),
@@ -362,7 +362,7 @@ class _ScriptContent extends ConsumerWidget {
     final scripts = ref.watch(scriptsProvider).value ?? [];
     return SliverMainAxisGroup(
       slivers: [
-        SliverToBoxAdapter(child: SizedBox(height: 24)),
+        const SliverToBoxAdapter(child: SizedBox(height: 24)),
         SliverToBoxAdapter(
           child: Column(
             children: [
@@ -370,17 +370,17 @@ class _ScriptContent extends ConsumerWidget {
             ],
           ),
         ),
-        SliverToBoxAdapter(child: SizedBox(height: 8)),
+        const SliverToBoxAdapter(child: SizedBox(height: 8)),
         Consumer(
           builder: (_, ref, _) {
             return SliverPadding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               sliver: SliverList.builder(
                 itemCount: scripts.length,
                 itemBuilder: (_, index) {
                   final script = scripts[index];
                   return Container(
-                    margin: EdgeInsets.symmetric(vertical: 4),
+                    margin: const EdgeInsets.symmetric(vertical: 4),
                     child: CommonCard(
                       padding: EdgeInsets.zero,
                       type: CommonCardType.filled,
@@ -409,7 +409,7 @@ class _ScriptContent extends ConsumerWidget {
                                 },
                               ),
                             ),
-                            SizedBox(width: 8),
+                            const SizedBox(width: 8),
                             Flexible(child: Text(script.label)),
                           ],
                         ),
@@ -426,7 +426,7 @@ class _ScriptContent extends ConsumerWidget {
         ),
         SliverToBoxAdapter(
           child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: CommonCard(
               padding: EdgeInsets.zero,
               radius: 18,
@@ -447,8 +447,8 @@ class _ScriptContent extends ConsumerWidget {
                         style: context.textTheme.bodyLarge,
                       ),
                     ),
-                    SizedBox(width: 4),
-                    Icon(Icons.arrow_forward, size: 18),
+                    const SizedBox(width: 4),
+                    const Icon(Icons.arrow_forward, size: 18),
                   ],
                 ),
               ),
@@ -486,10 +486,10 @@ class _EditGlobalAddedRules extends ConsumerWidget {
       body: rules.isEmpty
           ? NullStatus(
               label: appLocalizations.nullTip(appLocalizations.rule),
-              illustration: RuleEmptyIllustration(),
+              illustration: const RuleEmptyIllustration(),
             )
           : ListView.builder(
-              padding: EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16),
               itemBuilder: (context, index) {
                 final rule = rules[index];
                 return RuleStatusItem(

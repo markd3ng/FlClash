@@ -218,7 +218,7 @@ class _ProxyComputedMark extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final proxyName = ref.watch(getProxyNameProvider(groupName));
     if (proxyName != proxy.name) {
-      return SizedBox();
+      return const SizedBox();
     }
     return Container(
       alignment: Alignment.topRight,

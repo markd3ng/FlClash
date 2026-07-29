@@ -3,7 +3,6 @@ export 'color.dart';
 export 'compute.dart';
 export 'constant.dart';
 export 'context.dart';
-export 'converter.dart';
 export 'datetime.dart';
 export 'durable_file.dart';
 export 'file.dart';

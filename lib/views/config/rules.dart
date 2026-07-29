@@ -80,10 +80,10 @@ class _AddedRulesViewState extends ConsumerState<AddedRulesView> {
             CommonMinIconButtonTheme(
               child: IconButton.filledTonal(
                 onPressed: _handleDelete,
-                icon: Icon(Icons.delete),
+                icon: const Icon(Icons.delete),
               ),
             ),
-            SizedBox(width: 2),
+            const SizedBox(width: 2),
           ],
           CommonMinFilledButtonTheme(
             child: selectedRules.isNotEmpty
@@ -98,15 +98,15 @@ class _AddedRulesViewState extends ConsumerState<AddedRulesView> {
                     child: Text(appLocalizations.add),
                   ),
           ),
-          SizedBox(width: 8),
+          const SizedBox(width: 8),
         ],
         body: rules.isEmpty
             ? NullStatus(
                 label: appLocalizations.nullTip(appLocalizations.rule),
-                illustration: RuleEmptyIllustration(),
+                illustration: const RuleEmptyIllustration(),
               )
             : ReorderableList(
-                padding: EdgeInsets.symmetric(vertical: 16),
+                padding: const EdgeInsets.symmetric(vertical: 16),
                 itemBuilder: (context, index) {
                   final rule = rules[index];
                   return ReorderableDelayedDragStartListener(
@@ -126,7 +126,7 @@ class _AddedRulesViewState extends ConsumerState<AddedRulesView> {
                   );
                 },
                 itemCount: rules.length,
-                onReorder: ref.read(globalRulesProvider.notifier).order,
+                onReorderItem: ref.read(globalRulesProvider.notifier).order,
               ),
       ),
     );

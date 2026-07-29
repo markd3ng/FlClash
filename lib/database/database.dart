@@ -138,11 +138,11 @@ extension TableInfoExt<Tbl extends Table, Row> on TableInfo<Tbl, Row> {
   }
 
   Future<int> remove(Expression<bool> Function(Tbl tbl) filter) async {
-    return await (delete()..where(filter)).go();
+    return (delete()..where(filter)).go();
   }
 
   Future<int> put(Insertable<Row> item) async {
-    return await insertOnConflictUpdate(item);
+    return insertOnConflictUpdate(item);
   }
 }
 

@@ -321,16 +321,12 @@ class GlobalRules extends _$GlobalRules with AsyncNotifierMixin {
   }
 
   void order(int oldIndex, int newIndex) {
-    int insertIndex = newIndex;
-    if (oldIndex < newIndex) {
-      insertIndex -= 1;
-    }
     final nextItems = List<Rule>.from(value);
     final item = nextItems.removeAt(oldIndex);
-    nextItems.insert(insertIndex, item);
+    nextItems.insert(newIndex, item);
     value = nextItems;
-    final preOrder = nextItems.safeGet(insertIndex - 1)?.order;
-    final nextOrder = nextItems.safeGet(insertIndex + 1)?.order;
+    final preOrder = nextItems.safeGet(newIndex - 1)?.order;
+    final nextOrder = nextItems.safeGet(newIndex + 1)?.order;
     final newOrder = indexing.generateKeyBetween(nextOrder, preOrder)!;
     queueDatabaseWrite(
       () => database.rulesDao.orderGlobalRule(ruleId: item.id, order: newOrder),
@@ -374,16 +370,12 @@ class ProfileAddedRules extends _$ProfileAddedRules with AsyncNotifierMixin {
   }
 
   void order(int oldIndex, int newIndex) {
-    int insertIndex = newIndex;
-    if (oldIndex < newIndex) {
-      insertIndex -= 1;
-    }
     final nextItems = List<Rule>.from(value);
     final item = nextItems.removeAt(oldIndex);
-    nextItems.insert(insertIndex, item);
+    nextItems.insert(newIndex, item);
     value = nextItems;
-    final preOrder = nextItems.safeGet(insertIndex - 1)?.order;
-    final nextOrder = nextItems.safeGet(insertIndex + 1)?.order;
+    final preOrder = nextItems.safeGet(newIndex - 1)?.order;
+    final nextOrder = nextItems.safeGet(newIndex + 1)?.order;
     final newOrder = indexing.generateKeyBetween(nextOrder, preOrder)!;
     queueDatabaseWrite(
       () => database.rulesDao.orderProfileAddedRule(
@@ -411,7 +403,7 @@ class ProfileDisabledRuleIds extends _$ProfileDisabledRuleIds
   }
 
   void _put(int ruleId) {
-    var newList = List<int>.from(value);
+    final newList = List<int>.from(value);
     final index = newList.indexWhere((item) => item == ruleId);
     if (index != -1) {
       newList[index] = ruleId;

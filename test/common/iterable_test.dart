@@ -67,23 +67,6 @@ void main() {
     });
   });
 
-  group('IterableExt.takeLast', () {
-    test('takes last n elements', () {
-      final result = [1, 2, 3, 4, 5].takeLast(count: 3).toList();
-      expect(result, [3, 4, 5]);
-    });
-
-    test('returns all when count >= length', () {
-      final result = [1, 2].takeLast(count: 5).toList();
-      expect(result, [1, 2]);
-    });
-
-    test('returns empty when count <= 0', () {
-      final result = [1, 2, 3].takeLast(count: 0).toList();
-      expect(result, isEmpty);
-    });
-  });
-
   group('ListExt.truncate', () {
     test('removes from beginning when over max', () {
       final list = [1, 2, 3, 4, 5];
@@ -131,23 +114,6 @@ void main() {
     test('inserts at beginning when no match', () {
       final result = [1, 2, 3].copyAndPut(99, (e) => e == 5);
       expect(result, [99, 1, 2, 3]);
-    });
-  });
-
-  group('ListExt.safeSublist', () {
-    test('returns full list when start <= 0', () {
-      final result = [1, 2, 3].safeSublist(0);
-      expect(result, [1, 2, 3]);
-    });
-
-    test('returns empty when start > length', () {
-      final result = [1, 2, 3].safeSublist(5);
-      expect(result, isEmpty);
-    });
-
-    test('clamps end to length', () {
-      final result = [1, 2, 3].safeSublist(1, 10);
-      expect(result, [2, 3]);
     });
   });
 
@@ -235,26 +201,6 @@ void main() {
       final map = {'a': 10};
       final result = map.updateCacheValue('a', () => 42);
       expect(result, 10);
-    });
-  });
-
-  group('MapExt.copyWitUpdate', () {
-    test('adds key with value', () {
-      final map = {'a': 1};
-      final result = map.copyWitUpdate('b', 2);
-      expect(result, {'a': 1, 'b': 2});
-    });
-
-    test('removes key when value is null', () {
-      final map = {'a': 1, 'b': 2};
-      final result = map.copyWitUpdate('b', null);
-      expect(result, {'a': 1});
-    });
-
-    test('does not mutate original', () {
-      final map = {'a': 1};
-      map.copyWitUpdate('b', 2);
-      expect(map.length, 1);
     });
   });
 }

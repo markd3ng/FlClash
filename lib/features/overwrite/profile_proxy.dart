@@ -869,7 +869,7 @@ class ProfileProxyItem extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: Container(
-        margin: EdgeInsets.symmetric(vertical: 4, horizontal: 16),
+        margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
         color: Colors.transparent,
         child: CommonCard(
           padding: EdgeInsets.zero,
@@ -932,7 +932,7 @@ class ProfileProxyItem extends StatelessWidget {
                             onPressed: () {
                               open();
                             },
-                            icon: Icon(Icons.more_vert),
+                            icon: const Icon(Icons.more_vert),
                           );
                         },
                       ),
@@ -1011,10 +1011,10 @@ class _ProfileProxyEditViewState extends State<ProfileProxyEditView> {
                   ),
                 ),
             onPressed: canSubmit ? _handleSubmit : null,
-            icon: Icon(Icons.check),
+            icon: const Icon(Icons.check),
           ),
         ),
-        SizedBox(width: 8),
+        const SizedBox(width: 8),
       ],
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -1378,7 +1378,7 @@ class _ProfileProxiesContentState extends ConsumerState<ProfileProxiesContent> {
     );
     return SliverMainAxisGroup(
       slivers: [
-        SliverToBoxAdapter(child: SizedBox(height: 24)),
+        const SliverToBoxAdapter(child: SizedBox(height: 24)),
         SliverToBoxAdapter(
           child: InfoHeader(
             info: Info(label: appLocalizations.proxyChainCustomNodes),
@@ -1387,10 +1387,10 @@ class _ProfileProxiesContentState extends ConsumerState<ProfileProxiesContent> {
                 CommonMinIconButtonTheme(
                   child: IconButton.filledTonal(
                     onPressed: _handleDeleteProfileProxies,
-                    icon: Icon(Icons.delete),
+                    icon: const Icon(Icons.delete),
                   ),
                 ),
-                SizedBox(width: 8),
+                const SizedBox(width: 8),
               ],
               CommonMinFilledButtonTheme(
                 child: selectedProfileProxies.isNotEmpty
@@ -1402,7 +1402,7 @@ class _ProfileProxiesContentState extends ConsumerState<ProfileProxiesContent> {
                         onPressed: () {
                           _handleAddOrUpdateProfileProxy();
                         },
-                        icon: Icon(Icons.add),
+                        icon: const Icon(Icons.add),
                         label: Text(appLocalizations.addProxyChainNode),
                       ),
               ),
@@ -1410,7 +1410,7 @@ class _ProfileProxiesContentState extends ConsumerState<ProfileProxiesContent> {
           ),
         ),
         if (profileProxies.isNotEmpty) ...[
-          SliverToBoxAdapter(child: SizedBox(height: 8)),
+          const SliverToBoxAdapter(child: SizedBox(height: 8)),
           SliverList.builder(
             itemCount: profileProxies.length,
             itemBuilder: (_, index) {

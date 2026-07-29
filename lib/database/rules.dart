@@ -109,7 +109,7 @@ class RulesDao extends DatabaseAccessor<Database> with _$RulesDaoMixin {
   }
 
   Future<int> putDisabledLink(int profileId, int ruleId) async {
-    return await profileRuleLinks.insertOnConflictUpdate(
+    return profileRuleLinks.insertOnConflictUpdate(
       ProfileRuleLink(
         ruleId: ruleId,
         profileId: profileId,
@@ -119,7 +119,7 @@ class RulesDao extends DatabaseAccessor<Database> with _$RulesDaoMixin {
   }
 
   Future<bool> delDisabledLink(int profileId, int ruleId) async {
-    return await profileRuleLinks.deleteOne(
+    return profileRuleLinks.deleteOne(
       ProfileRuleLink(
         profileId: profileId,
         ruleId: ruleId,
@@ -132,7 +132,7 @@ class RulesDao extends DatabaseAccessor<Database> with _$RulesDaoMixin {
     required int ruleId,
     required String order,
   }) async {
-    return await _order(ruleId: ruleId, order: order);
+    return _order(ruleId: ruleId, order: order);
   }
 
   Future<int> orderProfileAddedRule(
@@ -140,7 +140,7 @@ class RulesDao extends DatabaseAccessor<Database> with _$RulesDaoMixin {
     required int ruleId,
     required String order,
   }) async {
-    return await _order(
+    return _order(
       ruleId: ruleId,
       order: order,
       profileId: profileId,
@@ -184,7 +184,7 @@ class RulesDao extends DatabaseAccessor<Database> with _$RulesDaoMixin {
           t.ruleId.equals(ruleId) &
           t.scene.equalsValue(scene);
     });
-    return await stmt.write(ProfileRuleLinksCompanion(order: Value(order)));
+    return stmt.write(ProfileRuleLinksCompanion(order: Value(order)));
   }
 
   Future<int> _put(Rule rule, {int? profileId, RuleScene? scene}) async {
@@ -193,7 +193,7 @@ class RulesDao extends DatabaseAccessor<Database> with _$RulesDaoMixin {
       if (row == 0) {
         return 0;
       }
-      return await profileRuleLinks.insertOnConflictUpdate(
+      return profileRuleLinks.insertOnConflictUpdate(
         ProfileRuleLink(
           ruleId: rule.id,
           profileId: profileId,

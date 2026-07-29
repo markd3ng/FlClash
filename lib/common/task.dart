@@ -20,7 +20,7 @@ const maxBackupTotalBytes = 256 * 1024 * 1024;
 const maxBackupEntries = 4096;
 
 Future<T> decodeJSONTask<T>(String data) async {
-  return await compute<String, T>(_decodeJSON, data);
+  return compute<String, T>(_decodeJSON, data);
 }
 
 Future<T> _decodeJSON<T>(String content) async {
@@ -28,7 +28,7 @@ Future<T> _decodeJSON<T>(String content) async {
 }
 
 Future<String> encodeJSONTask<T>(T data) async {
-  return await compute<T, String>(_encodeJSON, data);
+  return compute<T, String>(_encodeJSON, data);
 }
 
 Future<String> _encodeJSON<T>(T content) async {
@@ -36,7 +36,7 @@ Future<String> _encodeJSON<T>(T content) async {
 }
 
 Future<String> encodeYamlTask<T>(T data) async {
-  return await compute<T, String>(_encodeYaml, data);
+  return compute<T, String>(_encodeYaml, data);
 }
 
 Future<String> _encodeYaml<T>(T content) async {
@@ -44,7 +44,7 @@ Future<String> _encodeYaml<T>(T content) async {
 }
 
 Future<List<Group>> toGroupsTask(ComputeGroupsState data) async {
-  return await compute<ComputeGroupsState, List<Group>>(_toGroupsTask, data);
+  return compute<ComputeGroupsState, List<Group>>(_toGroupsTask, data);
 }
 
 Future<List<Group>> _toGroupsTask(ComputeGroupsState state) async {
@@ -83,7 +83,7 @@ Future<List<Group>> _toGroupsTask(ComputeGroupsState state) async {
 Future<Map<String, dynamic>> makeRealProfileTask(
   MakeRealProfileState data,
 ) async {
-  return await compute<MakeRealProfileState, Map<String, dynamic>>(
+  return compute<MakeRealProfileState, Map<String, dynamic>>(
     _makeRealProfileTask,
     data,
   );
@@ -228,7 +228,7 @@ Future<Map<String, dynamic>> _makeRealProfileTask(
     rawConfig['dns'] = {};
   }
   final isEnableDns = rawConfig['dns']['enable'] == true;
-  final systemDns = 'system://';
+  const systemDns = 'system://';
   if (overrideDns || !isEnableDns) {
     final dns = switch (!isEnableDns) {
       true => realPatchConfig.dns.copyWith(
@@ -430,7 +430,7 @@ void _applyProxyChains(Map rawConfig, List<ProxyChain> proxyChains) {
 Future<List<String>> shakingProfileTask(
   VM2<Iterable<int>, Iterable<int>> data,
 ) async {
-  return await compute<
+  return compute<
     VM3<Iterable<int>, Iterable<int>, RootIsolateToken>,
     List<String>
   >(_shakingProfileTask, VM3(data.a, data.b, RootIsolateToken.instance!));
@@ -476,7 +476,7 @@ Future<List<String>> _shakingProfileTask(
 }
 
 Future<String> encodeLogsTask(List<Log> data) async {
-  return await compute<List<Log>, String>(_encodeLogsTask, data);
+  return compute<List<Log>, String>(_encodeLogsTask, data);
 }
 
 Future<String> _encodeLogsTask(List<Log> data) async {
@@ -570,7 +570,7 @@ Future<MigrationData> _oldToNowTask(
       fileMigrations.add(VM2(path, _getScriptPath(livePath, newId.toString())));
     }
   }
-  List rawRules = configMap['rules'] as List<dynamic>? ?? [];
+  final List rawRules = configMap['rules'] as List<dynamic>? ?? [];
   final List<Rule> rules = [];
   final List<ProfileRuleLink> links = [];
   for (final rawRule in rawRules) {
@@ -587,7 +587,7 @@ Future<MigrationData> _oldToNowTask(
     rules.add(Rule.fromJson(ruleMap));
     links.add(ProfileRuleLink(ruleId: id));
   }
-  List rawProfiles = configMap['profiles'] as List<dynamic>? ?? [];
+  final List rawProfiles = configMap['profiles'] as List<dynamic>? ?? [];
   final List<Profile> profiles = [];
   for (final rawProfile in rawProfiles) {
     final profileMap = Map<String, dynamic>.from(rawProfile as Map);

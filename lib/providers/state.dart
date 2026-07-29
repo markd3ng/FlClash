@@ -162,7 +162,7 @@ TrayTitleState trayTitleState(Ref ref) {
     appSettingProvider.select((state) => state.showTrayTitle),
   );
   final traffic = ref.watch(
-    trafficsProvider.select((state) => state.list.safeLast(Traffic())),
+    trafficsProvider.select((state) => state.list.safeLast(const Traffic())),
   );
   return TrayTitleState(showTrayTitle: showTrayTitle, traffic: traffic);
 }
@@ -642,5 +642,5 @@ Future<SetupState> setupState(Ref ref, int? profileId) async {
 class AccessControlState extends _$AccessControlState
     with AutoDisposeNotifierMixin {
   @override
-  AccessControlProps build() => AccessControlProps();
+  AccessControlProps build() => const AccessControlProps();
 }

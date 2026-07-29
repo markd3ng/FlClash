@@ -12,8 +12,6 @@ import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-typedef UpdatingMap = Map<String, bool>;
-
 class ProvidersView extends ConsumerStatefulWidget {
   final SheetType type;
 
@@ -109,7 +107,7 @@ class ProviderItem extends StatelessWidget {
       final bytes = await platformFile.readBytes();
       await File(provider.path!).safeWriteAsBytes(bytes);
       final providerName = provider.name;
-      var message = await coreController.sideLoadExternalProvider(
+      final message = await coreController.sideLoadExternalProvider(
         providerName: providerName,
         data: utf8.decode(bytes),
       );
@@ -163,10 +161,10 @@ class ProviderItem extends StatelessWidget {
                       isUpdatingProvider(provider.updatingKey),
                     );
                     return isUpdating
-                        ? SizedBox(
+                        ? const SizedBox(
                             height: 30,
                             width: 30,
-                            child: const Padding(
+                            child: Padding(
                               padding: EdgeInsets.all(2),
                               child: CircularProgressIndicator(),
                             ),

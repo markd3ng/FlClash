@@ -444,29 +444,9 @@ class AppLocalizations {
     return Intl.message('Delete', name: 'delete', desc: '', args: []);
   }
 
-  /// `Years`
-  String get years {
-    return Intl.message('Years', name: 'years', desc: '', args: []);
-  }
-
-  /// `Months`
-  String get months {
-    return Intl.message('Months', name: 'months', desc: '', args: []);
-  }
-
   /// `Hours`
   String get hours {
     return Intl.message('Hours', name: 'hours', desc: '', args: []);
-  }
-
-  /// `Days`
-  String get days {
-    return Intl.message('Days', name: 'days', desc: '', args: []);
-  }
-
-  /// `Minutes`
-  String get minutes {
-    return Intl.message('Minutes', name: 'minutes', desc: '', args: []);
   }
 
   /// `Seconds`
@@ -1004,11 +984,6 @@ class AppLocalizations {
     return Intl.message('Unknown', name: 'unknown', desc: '', args: []);
   }
 
-  /// `Country`
-  String get country {
-    return Intl.message('Country', name: 'country', desc: '', args: []);
-  }
-
   /// `Search`
   String get search {
     return Intl.message('Search', name: 'search', desc: '', args: []);
@@ -1092,11 +1067,6 @@ class AppLocalizations {
   /// `App`
   String get app {
     return Intl.message('App', name: 'app', desc: '', args: []);
-  }
-
-  /// `General`
-  String get general {
-    return Intl.message('General', name: 'general', desc: '', args: []);
   }
 
   /// `Attach HTTP proxy to VpnService`
@@ -2137,11 +2107,6 @@ class AppLocalizations {
       desc: '',
       args: [],
     );
-  }
-
-  /// `RegExp`
-  String get regExp {
-    return Intl.message('RegExp', name: 'regExp', desc: '', args: []);
   }
 
   /// `Icon`
@@ -3422,11 +3387,6 @@ class AppLocalizations {
   /// `Turn Off`
   String get turnOff {
     return Intl.message('Turn Off', name: 'turnOff', desc: '', args: []);
-  }
-
-  /// `Reload`
-  String get reload {
-    return Intl.message('Reload', name: 'reload', desc: '', args: []);
   }
 
   /// `VPN configuration change detected`

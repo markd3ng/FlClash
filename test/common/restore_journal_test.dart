@@ -244,21 +244,4 @@ void main() {
       throwsFormatException,
     );
   });
-
-  test('discard removes pending restore data before a wipe', () async {
-    final home = await Directory.systemTemp.createTemp('restore_journal_');
-    addTearDown(() => home.delete(recursive: true));
-    final stores = await createStores(home);
-    final journal = await beginJournal(home, stores);
-    await journal.prepare(
-      const RestoreFilePlan(replacements: [], deletions: []),
-    );
-
-    await discardPendingRestore(home.path);
-
-    expect(
-      await Directory(p.join(home.path, '.restore-transaction')).exists(),
-      false,
-    );
-  });
 }

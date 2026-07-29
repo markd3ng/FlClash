@@ -510,7 +510,7 @@ extension ScriptsExt on List<Script> {
 extension ScriptExt on Script {
   String get fileName => '$id.js';
 
-  Future<String> get path async => await appPath.getScriptPath(id.toString());
+  Future<String> get path async => appPath.getScriptPath(id.toString());
 
   Future<String?> get content async {
     final file = File(await path);

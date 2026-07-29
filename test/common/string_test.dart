@@ -84,28 +84,6 @@ void main() {
     });
   });
 
-  group('StringExtension.safeSubstring', () {
-    test('returns empty for empty string', () {
-      expect(''.safeSubstring(0), '');
-    });
-
-    test('returns substring from start', () {
-      expect('hello'.safeSubstring(2), 'llo');
-    });
-
-    test('clamps start to length', () {
-      expect('hi'.safeSubstring(10), '');
-    });
-
-    test('clamps end to length', () {
-      expect('hello'.safeSubstring(1, 10), 'ello');
-    });
-
-    test('clamps negative start to 0', () {
-      expect('hello'.safeSubstring(-5), 'hello');
-    });
-  });
-
   group('StringExtension.getBase64', () {
     test('extracts base64 from data URI', () {
       const data = 'data:image/png;base64,aGVsbG8=';
@@ -128,18 +106,6 @@ void main() {
       expect('icon.svg'.isSvg, isTrue);
       expect('icon.PNG'.isSvg, isFalse);
       expect('icon.svg.bak'.isSvg, isFalse);
-    });
-  });
-
-  group('StringExtension.isRegex', () {
-    test('valid regex', () {
-      expect(r'\d+'.isRegex, isTrue);
-      expect(r'[a-z]+'.isRegex, isTrue);
-    });
-
-    test('invalid regex', () {
-      expect(r'['.isRegex, isFalse);
-      expect(r'(unclosed'.isRegex, isFalse);
     });
   });
 

@@ -148,7 +148,7 @@ class _RequestsViewState extends ConsumerState<RequestsView> {
                 child: SuperListView.builder(
                   reverse: true,
                   shrinkWrap: true,
-                  physics: NextClampingScrollPhysics(),
+                  physics: const NextClampingScrollPhysics(),
                   controller: _scrollController,
                   itemBuilder: (_, index) {
                     return items[index];
