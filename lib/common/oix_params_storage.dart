@@ -66,23 +66,6 @@ class CloudParamsStorage {
     return normalized;
   }
 
-  static Future<void> saveDefaultRaw(String encoded) {
-    return _synchronized(() async {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(
-        _kDefaultParams,
-        CloudParams.parse(encoded).encodeDefaultComparable(),
-      );
-    });
-  }
-
-  static Future<bool> hasConfig() {
-    return _synchronized(() async {
-      final prefs = await SharedPreferences.getInstance();
-      return prefs.containsKey(_kConfigParams);
-    });
-  }
-
   static Future<void> reconcileForTier(SubscriptionTier tier) {
     return _synchronized(() async {
       final prefs = await SharedPreferences.getInstance();

@@ -50,12 +50,15 @@ enum SubscriptionTier {
         return none;
     }
 
-    final s = raw?.trim().toLowerCase() ?? '';
-    if (s.isEmpty || s == 'null' || s == 'no plan' || s == 'default') {
+    final name = raw?.trim().toLowerCase() ?? '';
+    if (name.isEmpty ||
+        name == 'null' ||
+        name == 'no plan' ||
+        name == 'default' ||
+        name == 'pass iron') {
       return none;
     }
-    if (s == 'pass iron') return none;
-    if (s == 'pass alu' || s == 'pass bronze') return alu;
+    if (name == 'pass alu' || name == 'pass bronze') return alu;
     return premium;
   }
 
@@ -83,17 +86,12 @@ enum NetworkLevel {
   const NetworkLevel(this.value);
 
   static NetworkLevel? fromValue(String? v) {
-    for (final lv in NetworkLevel.values) {
-      if (lv.value == v) return lv;
+    final normalized = v?.trim().toLowerCase();
+    for (final level in NetworkLevel.values) {
+      if (level.value == normalized) return level;
     }
     return null;
   }
-
-  static NetworkLevel? fromLegacyValue(String? value) => switch (value) {
-    '1' => overseas,
-    '2' => emergency,
-    _ => null,
-  };
 }
 
 class CloudParams {
@@ -110,12 +108,10 @@ class CloudParams {
   });
 
   static CloudParams parse(String raw) {
-    final cleaned = raw.startsWith('&') ? raw.substring(1) : raw;
+    final cleaned = raw.trim().replaceFirst(RegExp(r'^[?&]+'), '');
     if (cleaned.isEmpty) return const CloudParams();
 
     NetworkLevel? explicitMode;
-    NetworkLevel? legacyLevel;
-    var legacyPremium = false;
     bool? tfo;
     bool simplerules = false;
     final extras = <String, String>{};
@@ -125,7 +121,7 @@ class CloudParams {
       final eq = pair.indexOf('=');
       if (eq < 0) {
         final key = _decodeQueryComponent(pair);
-        if (!_isReservedKey(key)) extras[key] = '';
+        if (key.isNotEmpty && !_isReservedKey(key)) extras[key] = '';
         continue;
       }
       final k = _decodeQueryComponent(pair.substring(0, eq));
@@ -133,27 +129,21 @@ class CloudParams {
       switch (k.toLowerCase()) {
         case 'mode':
           explicitMode = NetworkLevel.fromValue(v) ?? explicitMode;
-        case 'lv':
-          legacyLevel = NetworkLevel.fromLegacyValue(v) ?? legacyLevel;
-        case 'type':
-          legacyPremium = _isLegacyPremiumType(v) || legacyPremium;
         case 'tfo':
-          if (v == 'true') tfo = true;
-          if (v == 'false') tfo = false;
+          tfo = switch (v) {
+            'true' => true,
+            'false' => false,
+            _ => null,
+          };
         case 'simplerules':
           simplerules = v == 'true';
         default:
-          if (!_isReservedKey(k)) extras[k] = v;
+          if (k.isNotEmpty && !_isReservedKey(k)) extras[k] = v;
       }
     }
 
-    final level =
-        explicitMode ??
-        legacyLevel ??
-        (legacyPremium ? NetworkLevel.premium : null);
-
     return CloudParams(
-      level: level,
+      level: explicitMode,
       tfo: tfo,
       simplerules: simplerules,
       extras: extras,
@@ -165,12 +155,16 @@ class CloudParams {
     if (level != null) segments.add('mode=${level!.value}');
     if (tfo != null) segments.add('tfo=$tfo');
     if (simplerules) segments.add('simplerules=true');
-    extras.forEach((k, v) {
-      if (k.isEmpty || _isReservedKey(k)) return;
-      final encodedKey = Uri.encodeQueryComponent(k);
-      final encodedValue = Uri.encodeQueryComponent(v);
-      segments.add(v.isEmpty ? encodedKey : '$encodedKey=$encodedValue');
-    });
+    final extraKeys =
+        extras.keys.where((k) => k.isNotEmpty && !_isReservedKey(k)).toList()
+          ..sort();
+    for (final k in extraKeys) {
+      final v = extras[k]!;
+      final encodedKey = _encodeQueryComponent(k);
+      segments.add(
+        v.isEmpty ? encodedKey : '$encodedKey=${_encodeQueryComponent(v)}',
+      );
+    }
     if (segments.isEmpty) return '';
     return '&${segments.join('&')}';
   }
@@ -248,23 +242,35 @@ class CloudParams {
     }
   }
 
+  /// Mirrors the core's `url.QueryEscape` + `+`→`%20` so both ends emit the
+  /// exact same encoded suffix.
+  static String _encodeQueryComponent(String value) {
+    return Uri.encodeQueryComponent(value)
+        .replaceAll('+', '%20')
+        .replaceAll('!', '%21')
+        .replaceAll('*', '%2A')
+        .replaceAll("'", '%27')
+        .replaceAll('(', '%28')
+        .replaceAll(')', '%29');
+  }
+
   static bool _isReservedKey(String key) {
     return const {
       'mode',
+      'type',
+      // Obsolete; the server still migrates leftovers into mode, so drop them.
       'lv',
       'nolv',
-      'type',
       'tfo',
       'simplerules',
+      'flclash',
+      'age-public-key',
+      'age_public_key',
+      'provider',
+      'anywhere',
+      'debug',
+      'client',
     }.contains(key.toLowerCase());
-  }
-
-  static bool _isLegacyPremiumType(String type) {
-    return const {
-      'love',
-      'latest',
-      'extreme',
-    }.contains(type.trim().toLowerCase());
   }
 }
 

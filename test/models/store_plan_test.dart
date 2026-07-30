@@ -303,7 +303,7 @@ void main() {
 
     test('editable options keep routing and arbitrary extras', () {
       final params = CloudParams.parse(
-        '&lv=2&type=love&tfo=false&simplerules=true&area=hk&custom=1',
+        '&mode=emergency&type=love&tfo=false&simplerules=true&area=hk&custom=1',
       );
 
       expect(
@@ -334,52 +334,59 @@ void main() {
 
     test('invalid and bare reserved keys never become extras', () {
       final params = CloudParams.parse(
-        '&lv=bad&LV=bad&nolv=2&type=love&type&tfo=bad&tfo&simplerules&area=hk',
+        '&mode=bad&MODE=bad&type=love&type&lv=2&nolv=1&tfo=bad&tfo&simplerules'
+        '&provider=clash&age-public-key=x&=orphan&area=hk',
       );
 
-      expect(params.level, NetworkLevel.premium);
+      expect(params.level, isNull);
       expect(params.tfo, isNull);
       expect(params.simplerules, false);
       expect(params.extras, {'area': 'hk'});
-      expect(params.encode(), '&mode=premium&area=hk');
+      expect(params.encode(), '&area=hk');
+      expect(CloudParams.parse('&tfo=true&tfo=bad').tfo, isNull);
+    });
+
+    test('mode values are normalized and extras are sorted', () {
+      expect(
+        CloudParams.parse('?mode=+PREMIUM+&zeta=1&alpha=2').encode(),
+        '&mode=premium&alpha=2&zeta=1',
+      );
     });
 
     test('valid mode wins over premium type and invalid repeated mode', () {
       final params = CloudParams.parse(
-        '&mode=overseas&type=love&mode=bad&lv=2&area=hk',
+        '&mode=overseas&type=love&mode=bad&area=hk',
       );
 
       expect(params.level, NetworkLevel.overseas);
       expect(params.encode(), '&mode=overseas&area=hk');
     });
 
-    test(
-      'legacy premium aliases normalize and old type filters are dropped',
-      () {
-        expect(CloudParams.parse('&type=latest').encode(), '&mode=premium');
-        expect(CloudParams.parse('&type=extreme').encode(), '&mode=premium');
-        expect(CloudParams.parse('&mode=fusion').encode(), '');
-        for (final type in [
-          'relay',
-          'cusrelay',
-          'gamer',
-          'back',
-          'all',
-          'default',
-        ]) {
-          expect(CloudParams.parse('&type=$type').encode(), '');
-        }
-      },
-    );
+    test('obsolete type filters are always dropped', () {
+      for (final type in [
+        'love',
+        'latest',
+        'extreme',
+        'relay',
+        'cusrelay',
+        'gamer',
+        'back',
+        'all',
+        'default',
+      ]) {
+        expect(CloudParams.parse('&type=$type').encode(), '');
+      }
+      expect(CloudParams.parse('&mode=fusion').encode(), '');
+    });
 
-    test('legacy premium default is normalized in storage', () async {
+    test('obsolete stored default is normalized away', () async {
       SharedPreferences.setMockInitialValues({
         'cloud_service_default_params': '&type=love',
       });
 
-      expect(await CloudParamsStorage.loadDefaultRaw(), '&mode=premium');
+      expect(await CloudParamsStorage.loadDefaultRaw(), '');
       final prefs = await SharedPreferences.getInstance();
-      expect(prefs.getString('cloud_service_default_params'), '&mode=premium');
+      expect(prefs.getString('cloud_service_default_params'), '');
     });
 
     test('tier reconciliation does not overwrite a concurrent save', () async {
@@ -404,7 +411,7 @@ void main() {
 
     test('tier migration preserves switches and arbitrary extras', () {
       final params = CloudParams.parse(
-        '&lv=1&tfo=false&simplerules=true&area=hk',
+        '&mode=overseas&tfo=false&simplerules=true&area=hk',
       );
       final migrated = params.applyingTierDefaults(
         SubscriptionTier.premium.defaultParams,
