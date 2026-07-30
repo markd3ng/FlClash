@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:archive/archive_io.dart';
 import 'package:crypto/crypto.dart';
 import 'package:drift/drift.dart';
-import 'package:drift_flutter/drift_flutter.dart';
+import 'package:drift/native.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/database/database.dart';
 import 'package:fl_clash/enum/enum.dart';
@@ -1137,17 +1137,11 @@ Future<MigrationData> _restoreTask(VM3<String, String, String> paths) async {
     return migrationData;
   }
   final backupDatabaseFile = File(join(restoreDirPath, backupDatabaseName));
+  sqlite.sqlite3.tempDirectory = restoreDirPath;
   if (!await validateBackupDatabase(backupDatabaseFile.path)) {
     throw appLocalizations.invalidBackupFile;
   }
-  final database = Database(
-    driftDatabase(
-      name: 'database',
-      native: DriftNativeOptions(
-        databaseDirectory: () async => Directory(restoreDirPath),
-      ),
-    ),
-  );
+  final database = Database(NativeDatabase(backupDatabaseFile));
   try {
     final results = await Future.wait([
       database.profilesDao.all().get(),

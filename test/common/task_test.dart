@@ -495,13 +495,18 @@ void main() {
     expect(first.configMap, isNot(contains('rules')));
   });
 
-  group('restoreTask legacy archive detection', () {
+  group('restoreTask', () {
     Future<String> createBackup(
       Directory root,
-      Map<String, Object?> config,
-    ) async {
+      Map<String, Object?> config, {
+      File? databaseFile,
+    }) async {
       final archive = Archive()
         ..add(ArchiveFile.string(configJsonName, json.encode(config)));
+      if (databaseFile != null) {
+        final bytes = await databaseFile.readAsBytes();
+        archive.add(ArchiveFile(backupDatabaseName, bytes.length, bytes));
+      }
       final path = '${root.path}/backup.zip';
       await File(path).writeAsBytes(ZipEncoder().encode(archive));
       return path;
@@ -538,6 +543,30 @@ void main() {
       expect(migration.profiles, isEmpty);
       expect(migration.scripts, isEmpty);
       expect(migration.rules, isEmpty);
+    });
+
+    test('opens a current database in its background isolate', () async {
+      final root = await Directory.systemTemp.createTemp('restore_database_');
+      addTearDown(() => root.delete(recursive: true));
+      final databasePath = '${root.path}/$backupDatabaseName';
+      final database = Database(NativeDatabase(File(databasePath)));
+      await database.profilesDao.all().get();
+      await database.close();
+
+      final backup = await createBackup(root, {
+        'version': 1,
+      }, databaseFile: File(databasePath));
+
+      final migration = await restoreTask(
+        backup,
+        '${root.path}/restore',
+        '${root.path}/live',
+      );
+
+      expect(migration.profiles, isEmpty);
+      expect(migration.scripts, isEmpty);
+      expect(migration.rules, isEmpty);
+      expect(migration.links, isEmpty);
     });
   });
 
