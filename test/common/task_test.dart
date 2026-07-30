@@ -402,6 +402,42 @@ void main() {
     );
   });
 
+  test('legacy migration skips profiles whose file is missing', () async {
+    final root = await Directory.systemTemp.createTemp('legacy_missing_');
+    addTearDown(() => root.delete(recursive: true));
+    final source = Directory('${root.path}/source');
+    final staging = Directory('${root.path}/staging');
+    final live = Directory('${root.path}/live');
+    await File('${source.path}/profiles/kept.yaml')
+        .create(recursive: true)
+        .then((file) => file.writeAsString('kept profile'));
+
+    final migration = await migrateLegacyBackup(
+      {
+        'profiles': [
+          {
+            'id': 'missing',
+            'label': 'Missing profile',
+            'autoUpdateDuration': const Duration(days: 1).inMicroseconds,
+          },
+          {
+            'id': 'kept',
+            'label': 'Kept profile',
+            'autoUpdateDuration': const Duration(days: 1).inMicroseconds,
+          },
+        ],
+        'rules': <Object?>[],
+        'currentProfileId': 'missing',
+      },
+      sourcePath: source.path,
+      targetPath: staging.path,
+      livePath: live.path,
+    );
+
+    expect(migration.profiles.map((item) => item.label), ['Kept profile']);
+    expect(migration.configMap?['currentProfileId'], isNull);
+  });
+
   test('legacy migration produces stable ids when retried', () async {
     final root = await Directory.systemTemp.createTemp('legacy_stable_');
     addTearDown(() => root.delete(recursive: true));

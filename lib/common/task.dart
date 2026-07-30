@@ -601,6 +601,11 @@ Future<MigrationData> _oldToNowTask(
     if (rawId.isEmpty || basename(rawId) != rawId || rawId.contains('\\')) {
       throw const FormatException('invalid legacy profile id');
     }
+    final sourceFile = File(_getProfilePath(sourcePath, rawId));
+    // A legacy config can outlive its profile file; skipping keeps startup alive.
+    if (!await sourceFile.exists()) {
+      continue;
+    }
     final profileId = idMap.updateCacheValue(rawId, () => _legacyId(rawId));
     profileMap['id'] = profileId;
     final overwrite = profileMap['overwrite'] as Map?;
@@ -652,7 +657,6 @@ Future<MigrationData> _oldToNowTask(
       profileMap['overwriteType'] = overwrite['type'];
     }
 
-    final sourceFile = File(_getProfilePath(sourcePath, rawId));
     final targetFilePath = _getProfilePath(targetPath, profileId.toString());
     await sourceFile.safeCopy(targetFilePath);
     if (targetPath != sourcePath) {
