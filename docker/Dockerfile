@@ -31,6 +31,7 @@ RUN apt-get update && \
       fonts-noto-cjk \
       gnome-keyring \
       libsecret-1-0 \
+      xdg-user-dirs \
       libgl1-mesa-dri \
       libglx-mesa0 && \
     sed -i '/zh_CN.UTF-8 UTF-8/s/^# //' /etc/locale.gen && \

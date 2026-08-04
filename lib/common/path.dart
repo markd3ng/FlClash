@@ -26,8 +26,9 @@ class AppPath {
     getTemporaryDirectory().then((value) {
       tempDir.complete(value);
     });
-    getDownloadsDirectory().then((value) {
-      downloadDir.complete(value);
+    getDownloadsDirectory().then((value) async {
+      // Linux may return null (e.g. no xdg-user-dirs in containers)
+      downloadDir.complete(value ?? await dataDir.future);
     });
     getApplicationCacheDirectory().then((value) {
       cacheDir.complete(value);
