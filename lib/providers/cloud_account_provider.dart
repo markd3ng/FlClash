@@ -438,6 +438,14 @@ class CloudAccountNotifier extends Notifier<CloudAccountState> {
     await CloudParamsStorage.reconcileForTier(tier);
   }
 
+  /// Refreshes the plan identity first so tier-dependent parameters are current
+  /// before the managed subscription is regenerated.
+  Future<void> refreshManagedSubscription() async {
+    await refreshProfile(force: true);
+    if (!state.isLoggedIn || state.error != null) return;
+    await syncManagedConfig();
+  }
+
   Future<void> syncManagedConfig() async {
     if (!state.isLoggedIn || state.isLoading || state.isRefreshing) return;
     if (!_canFetchManagedConfig) {

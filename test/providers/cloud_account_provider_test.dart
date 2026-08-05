@@ -225,6 +225,58 @@ void main() {
     expect(notifier.requestCount, 0);
     expect(notifier.didClearSession, false);
   });
+
+  test('managed subscription refresh reloads the plan before syncing', () async {
+    final notifier = _OrderNotifier();
+    final container = ProviderContainer(
+      overrides: [cloudAccountProvider.overrideWith(() => notifier)],
+    );
+    addTearDown(container.dispose);
+
+    await container
+        .read(cloudAccountProvider.notifier)
+        .refreshManagedSubscription();
+
+    expect(notifier.calls, ['refresh:true', 'sync']);
+  });
+
+  test('a failed plan refresh never regenerates the subscription', () async {
+    final notifier = _OrderNotifier(refreshError: 'Network unavailable');
+    final container = ProviderContainer(
+      overrides: [cloudAccountProvider.overrideWith(() => notifier)],
+    );
+    addTearDown(container.dispose);
+
+    await container
+        .read(cloudAccountProvider.notifier)
+        .refreshManagedSubscription();
+
+    expect(notifier.calls, ['refresh:true']);
+    expect(container.read(cloudAccountProvider).error, 'Network unavailable');
+  });
+}
+
+class _OrderNotifier extends CloudAccountNotifier {
+  final String? refreshError;
+  final calls = <String>[];
+
+  _OrderNotifier({this.refreshError});
+
+  @override
+  CloudAccountState build() => const CloudAccountState(isLoggedIn: true);
+
+  @override
+  Future<void> refreshProfile({bool force = false}) async {
+    calls.add('refresh:$force');
+    if (refreshError != null) {
+      state = state.copyWith(error: refreshError);
+    }
+  }
+
+  @override
+  Future<void> syncManagedConfig() async {
+    calls.add('sync');
+  }
 }
 
 class _DeleteNotifier extends CloudAccountNotifier {

@@ -47,7 +47,10 @@ class _CloudStorePageState extends ConsumerState<CloudStorePage> {
 
   Future<void> _refresh() async {
     if (!await _loadStore() || !mounted) return;
-    await ref.read(cloudAccountProvider.notifier).refreshProfile(force: true);
+    // Plan changes must regenerate the managed subscription, not just the card.
+    await ref
+        .read(cloudAccountProvider.notifier)
+        .refreshManagedSubscription();
   }
 
   Future<void> _runGuarded(Future<void> Function() action) async {

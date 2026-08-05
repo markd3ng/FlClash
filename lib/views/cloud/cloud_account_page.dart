@@ -111,7 +111,7 @@ class _CloudAccountPageState extends ConsumerState<CloudAccountPage> {
                 ? null
                 : () => ref
                       .read(cloudAccountProvider.notifier)
-                      .syncManagedConfig(),
+                      .refreshManagedSubscription(),
           ),
           IconButton(
             icon: const Icon(Icons.logout),
