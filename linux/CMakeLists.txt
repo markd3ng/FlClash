@@ -132,3 +132,7 @@ if(NOT CMAKE_BUILD_TYPE MATCHES "Debug")
   install(FILES "${AOT_LIBRARY}" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
     COMPONENT Runtime)
 endif()
+
+# Must stay last: its install rule has to run after the bundle directory wipe
+# above, and it replaces the x86-64-only library shipped by the flutter_js plugin.
+add_subdirectory("quickjs_c_bridge")

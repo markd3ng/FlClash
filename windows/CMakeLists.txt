@@ -117,3 +117,7 @@ install(DIRECTORY "${PROJECT_BUILD_DIR}/${FLUTTER_ASSET_DIR_NAME}"
 install(FILES "${AOT_LIBRARY}" DESTINATION "${INSTALL_BUNDLE_DATA_DIR}"
   CONFIGURATIONS Profile;Release
   COMPONENT Runtime)
+
+# Must stay last: its install rule overwrites the x64-only quickjs_c_bridge.dll
+# that the flutter_js plugin drops into the bundle.
+add_subdirectory("quickjs_c_bridge")
