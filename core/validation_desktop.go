@@ -16,11 +16,13 @@ import (
 	"github.com/metacubex/mihomo/constant"
 )
 
-const validationTimeout = 30 * time.Second
+const (
+	validationTimeout    = 30 * time.Second
+	validationHomePrefix = "flclash-validate-"
+)
 
 func isolatedValidateConfigData(data []byte) string {
-	cleanupStaleValidationHomes()
-	tempDir, err := os.MkdirTemp("", "flclash-validate-")
+	tempDir, err := createValidationHome()
 	if err != nil {
 		return "Parse Error: " + err.Error()
 	}
@@ -67,19 +69,44 @@ func isolatedValidateConfigData(data []byte) string {
 	return fmt.Sprintf("Parse Error: validator process failed: %v", runErr)
 }
 
-func cleanupStaleValidationHomes() {
-	entries, err := os.ReadDir(os.TempDir())
+func createValidationHome() (string, error) {
+	systemTemp := os.TempDir()
+	dir, systemErr := os.MkdirTemp(systemTemp, validationHomePrefix)
+	if systemErr == nil {
+		cleanupStaleValidationHomes(systemTemp)
+		return dir, nil
+	}
+	// Cores started by the elevated Windows helper inherit the service TEMP
+	// (C:\Windows\SystemTemp), which does not exist on every system.
+	home := constant.Path.HomeDir()
+	if home == "" {
+		return "", systemErr
+	}
+	fallback := filepath.Join(home, "temp")
+	if err := os.MkdirAll(fallback, 0o700); err != nil {
+		return "", err
+	}
+	dir, err := os.MkdirTemp(fallback, validationHomePrefix)
+	if err != nil {
+		return "", err
+	}
+	cleanupStaleValidationHomes(fallback)
+	return dir, nil
+}
+
+func cleanupStaleValidationHomes(root string) {
+	entries, err := os.ReadDir(root)
 	if err != nil {
 		return
 	}
 	cutoff := time.Now().Add(-time.Hour)
 	for _, entry := range entries {
-		if !entry.IsDir() || !strings.HasPrefix(entry.Name(), "flclash-validate-") {
+		if !entry.IsDir() || !strings.HasPrefix(entry.Name(), validationHomePrefix) {
 			continue
 		}
 		info, err := entry.Info()
 		if err == nil && info.ModTime().Before(cutoff) {
-			_ = os.RemoveAll(filepath.Join(os.TempDir(), entry.Name()))
+			_ = os.RemoveAll(filepath.Join(root, entry.Name()))
 		}
 	}
 }

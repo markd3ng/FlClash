@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -551,5 +552,25 @@ func TestParseAndValidateConfigDataDoesNotRunProviderHealthCheck(t *testing.T) {
 	case <-requests:
 		t.Fatal("validator triggered provider health-check network traffic")
 	case <-time.After(100 * time.Millisecond):
+	}
+}
+
+func TestCreateValidationHomeFallsBackWhenSystemTempMissing(t *testing.T) {
+	missing := filepath.Join(t.TempDir(), "missing")
+	for _, key := range []string{"TMPDIR", "TMP", "TEMP"} {
+		t.Setenv(key, missing)
+	}
+	home := t.TempDir()
+	oldHome := constant.Path.HomeDir()
+	constant.SetHomeDir(home)
+	t.Cleanup(func() { constant.SetHomeDir(oldHome) })
+	dir, err := createValidationHome()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.RemoveAll(dir) })
+	want := filepath.Join(home, "temp") + string(os.PathSeparator)
+	if !strings.HasPrefix(dir, want) {
+		t.Fatalf("createValidationHome() = %q, want a directory under %q", dir, want)
 	}
 }
