@@ -22,8 +22,24 @@ add_library(flclash_quickjs STATIC
   "${QUICKJS_SRC_DIR}/quickjs/quickjs.c"
 )
 target_include_directories(flclash_quickjs PUBLIC "${QUICKJS_SRC_DIR}")
+target_include_directories(flclash_quickjs PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
 target_compile_definitions(flclash_quickjs PRIVATE "CONFIG_VERSION=\"${QUICKJS_VERSION}\"")
 target_compile_options(flclash_quickjs PRIVATE "$<$<C_COMPILER_ID:MSVC>:/utf-8>")
+
+# quickjs.c stores libm addresses in a static table, but /O2 turns them into
+# intrinsics without constant addresses (C2099). Limit /Oi- to that source.
+set_property(SOURCE "${QUICKJS_SRC_DIR}/quickjs/quickjs.c"
+  APPEND PROPERTY COMPILE_OPTIONS
+  "$<$<C_COMPILER_ID:MSVC>:/Oi->"
+)
+
+# Both sources use the POSIX alloca name, which MSVC does not expose on arm64.
+set_property(SOURCE
+  "${QUICKJS_SRC_DIR}/quickjs/quickjs.c"
+  "${QUICKJS_SRC_DIR}/quickjs/libregexp.c"
+  APPEND PROPERTY COMPILE_OPTIONS
+  "$<$<C_COMPILER_ID:MSVC>:/FImsvc_compat.h>"
+)
 
 add_library(quickjs_c_bridge SHARED
   "${QUICKJS_SRC_DIR}/libfastdev_quickjs_runtime.cpp"
