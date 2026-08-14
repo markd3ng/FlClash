@@ -80,10 +80,10 @@ func TestHandleUpdateConfigBeforeSetup(t *testing.T) {
 }
 
 func TestLogSubscriptionLifecycle(t *testing.T) {
-	previousIsInit := isInit
-	isInit = true
+	previousIsInit := isInit.Load()
+	isInit.Store(true)
 	t.Cleanup(func() {
-		isInit = previousIsInit
+		isInit.Store(previousIsInit)
 		handleStopLog()
 	})
 

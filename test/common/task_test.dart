@@ -683,6 +683,164 @@ void main() {
     expect(result['geo-update-interval'], defaultGeoUpdateInterval);
   });
 
+  test(
+    'disabled profile DNS ignores custom DNS when override is off',
+    () async {
+      final result = await makeRealProfileTask(
+        const MakeRealProfileState(
+          profilesPath: '/profiles',
+          profileId: 1,
+          overwriteType: OverwriteType.standard,
+          rawConfig: {
+            'dns': {'enable': false},
+            'rules': <String>[],
+          },
+          realPatchConfig: ClashConfig(
+            dns: Dns(
+              nameserver: ['https://unreachable.invalid/dns-query'],
+              proxyServerNameserver: ['https://unreachable.invalid/dns-query'],
+            ),
+          ),
+          overrideDns: false,
+          appendSystemDns: false,
+          addedRules: [],
+          proxyChains: [],
+          profileProxies: [],
+          customProxyGroups: [],
+          customRules: [],
+          defaultUA: 'FlClash',
+        ),
+      );
+
+      expect(result['dns']['nameserver'], [
+        ...defaultDns.nameserver,
+        'system://',
+      ]);
+      expect(
+        result['dns']['proxy-server-nameserver'],
+        defaultDns.proxyServerNameserver,
+      );
+    },
+  );
+
+  test('disabled profile DNS applies custom DNS when override is on', () async {
+    const customNameserver = 'https://dns.example/dns-query';
+    final result = await makeRealProfileTask(
+      const MakeRealProfileState(
+        profilesPath: '/profiles',
+        profileId: 1,
+        overwriteType: OverwriteType.standard,
+        rawConfig: {
+          'dns': {'enable': false},
+          'rules': <String>[],
+        },
+        realPatchConfig: ClashConfig(
+          dns: Dns(
+            nameserver: [customNameserver],
+            proxyServerNameserver: [customNameserver],
+          ),
+        ),
+        overrideDns: true,
+        appendSystemDns: false,
+        addedRules: [],
+        proxyChains: [],
+        profileProxies: [],
+        customProxyGroups: [],
+        customRules: [],
+        defaultUA: 'FlClash',
+      ),
+    );
+
+    expect(result['dns']['nameserver'], [customNameserver, 'system://']);
+    expect(result['dns']['proxy-server-nameserver'], [customNameserver]);
+  });
+
+  test('DNS override preserves proxy server bootstrap policy', () async {
+    const managedDomain = '+.managed-nodes.example';
+    const managedNameserver = 'udp://192.0.2.53:1053';
+    final result = await makeRealProfileTask(
+      const MakeRealProfileState(
+        profilesPath: '/profiles',
+        profileId: 1,
+        overwriteType: OverwriteType.standard,
+        rawConfig: {
+          'dns': {
+            'enable': true,
+            'fake-ip-filter': [managedDomain],
+            'proxy-server-nameserver': [managedNameserver],
+            'proxy-server-nameserver-policy': {
+              managedDomain: [managedNameserver],
+            },
+          },
+          'rules': <String>[],
+        },
+        realPatchConfig: ClashConfig(
+          dns: Dns(
+            fakeIpFilter: ['*.override.example'],
+            nameserver: ['https://dns.example/dns-query'],
+            proxyServerNameserver: [],
+          ),
+        ),
+        overrideDns: true,
+        appendSystemDns: false,
+        addedRules: [],
+        proxyChains: [],
+        profileProxies: [],
+        customProxyGroups: [],
+        customRules: [],
+        defaultUA: 'FlClash',
+      ),
+    );
+
+    expect(result['dns']['proxy-server-nameserver'], [managedNameserver]);
+    expect(result['dns']['proxy-server-nameserver-policy'], {
+      managedDomain: [managedNameserver],
+    });
+    expect(result['dns']['fake-ip-filter'], [
+      '*.override.example',
+      managedDomain,
+    ]);
+  });
+
+  test('DNS override keeps a custom proxy bootstrap nameserver', () async {
+    const managedDomain = '+.managed-nodes.example';
+    const customNameserver = 'https://bootstrap.example/dns-query';
+    final result = await makeRealProfileTask(
+      const MakeRealProfileState(
+        profilesPath: '/profiles',
+        profileId: 1,
+        overwriteType: OverwriteType.standard,
+        rawConfig: {
+          'dns': {
+            'enable': true,
+            'proxy-server-nameserver': ['udp://192.0.2.53:1053'],
+            'proxy-server-nameserver-policy': {
+              managedDomain: ['udp://192.0.2.53:1053'],
+            },
+          },
+          'rules': <String>[],
+        },
+        realPatchConfig: ClashConfig(
+          dns: Dns(proxyServerNameserver: [customNameserver]),
+        ),
+        overrideDns: true,
+        appendSystemDns: false,
+        addedRules: [],
+        proxyChains: [],
+        profileProxies: [],
+        customProxyGroups: [],
+        customRules: [],
+        defaultUA: 'FlClash',
+      ),
+    );
+
+    expect(result['dns']['proxy-server-nameserver'], [customNameserver]);
+    expect(
+      result['dns']['proxy-server-nameserver-policy'],
+      contains(managedDomain),
+    );
+  });
+
   test('makeRealProfileTask exposes the mixed proxy in Docker mode', () async {
     final result = await makeRealProfileTask(
       const MakeRealProfileState(

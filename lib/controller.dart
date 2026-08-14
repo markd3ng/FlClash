@@ -1913,13 +1913,13 @@ extension SetupControllerExt on AppController {
 extension CoreControllerExt on AppController {
   String get coreDisconnectedMessage => _coreDisconnectedMessage;
 
-  Future<void> _initCore() async {
+  Future<void> _initCore({bool refreshGroups = true}) async {
     final isInit = await coreController.isInit;
     final version = _ref.read(versionProvider);
     if (!await coreController.init(version)) {
       throw _coreDisconnectedMessage;
     }
-    if (isInit) {
+    if (isInit && refreshGroups) {
       await updateGroups();
     }
   }
@@ -1941,10 +1941,7 @@ extension CoreControllerExt on AppController {
     _ref.read(coreStatusProvider.notifier).value = CoreStatus.connected;
   }
 
-  Future<bool> ensureCoreReady() async {
-    if (coreController.isCompleted) {
-      return true;
-    }
+  Future<bool> ensureCoreReady() {
     return _coreReadyFuture ??= _ensureCoreReady().whenComplete(() {
       _coreReadyFuture = null;
     });
@@ -1958,15 +1955,32 @@ extension CoreControllerExt on AppController {
 
   Future<bool> _ensureCoreReady() async {
     return _serializeCoreLifecycle(() async {
-      if (coreController.isCompleted) return true;
+      try {
+        if (await _isCoreInitialized()) return true;
+      } catch (error) {
+        commonPrint.log(
+          'Core initialization probe failed: $error',
+          logLevel: LogLevel.warning,
+        );
+        await coreController.shutdown(false);
+      }
+      if (coreController.isCompleted) {
+        await _initCore(refreshGroups: false);
+        return _isCoreInitialized();
+      }
       commonPrint.log('Core disconnected, reconnecting');
       _ref.read(coreStatusProvider.notifier).value = CoreStatus.disconnected;
       await coreController.shutdown(false);
       await _connectCore();
       if (!coreController.isCompleted) return false;
-      await _initCore();
-      return coreController.isCompleted;
+      await _initCore(refreshGroups: false);
+      return _isCoreInitialized();
     });
+  }
+
+  Future<bool> _isCoreInitialized() async {
+    if (!coreController.isCompleted) return false;
+    return coreController.isInit;
   }
 
   Future<Profile?> _checkAndUpdateProfileWithCertificateRetry(

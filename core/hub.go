@@ -10,6 +10,7 @@ import (
 	"runtime/debug"
 	"strconv"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/metacubex/mihomo/adapter"
@@ -31,7 +32,7 @@ import (
 )
 
 var (
-	isInit          = false
+	isInit          atomic.Bool
 	logSubscriber   observable.Subscription[log.Event]
 	logSubscriberMu sync.Mutex
 )
@@ -44,9 +45,18 @@ func handleInitClash(paramsString string) bool {
 	if err != nil {
 		return false
 	}
+	if params.HomeDir == "" {
+		return false
+	}
+	if err := os.MkdirAll(params.HomeDir, 0o700); err != nil {
+		return false
+	}
 	version = params.Version
 	constant.SetHomeDir(params.HomeDir)
 	GlobalValidationSourceHome = params.ValidationSourceHome
+	if GlobalValidationSourceHome == "" {
+		GlobalValidationSourceHome = params.HomeDir
+	}
 	if params.ProfileKey != "" {
 		GlobalProfileKey = params.ProfileKey
 	}
@@ -54,8 +64,8 @@ func handleInitClash(paramsString string) bool {
 		GlobalConfigAgeSecretKey = params.ConfigAgeSecretKey
 	}
 	resetGeoLifecycle()
-	isInit = true
-	return isInit
+	isInit.Store(true)
+	return true
 }
 
 func handleStartListener() bool {
@@ -91,7 +101,7 @@ func handleStopListener() bool {
 }
 
 func handleGetIsInit() bool {
-	return isInit
+	return isInit.Load()
 }
 
 func handleForceGC() {
@@ -106,7 +116,7 @@ func handleShutdown() bool {
 	stopGeoLifecycle()
 	runLock.Lock()
 	defer runLock.Unlock()
-	isInit = false
+	isInit.Store(false)
 	handleStopLog()
 	isRunning = false
 	listener.StopListener()
@@ -148,6 +158,9 @@ func handleValidateConfig(path string) string {
 }
 
 func validateConfigData(data []byte) string {
+	if !isInit.Load() {
+		return "not initialized"
+	}
 	return isolatedValidateConfigData(data)
 }
 
@@ -467,7 +480,7 @@ func handleSuspend(suspended bool) bool {
 func handleStartLog() {
 	runLock.Lock()
 	defer runLock.Unlock()
-	if !isInit {
+	if !isInit.Load() {
 		return
 	}
 	logSubscriberMu.Lock()
@@ -555,7 +568,7 @@ func handleDelFile(path string, result ActionResult) {
 }
 
 func handleSetupConfig(data []byte) string {
-	if !isInit {
+	if !isInit.Load() {
 		return "not initialized"
 	}
 	var params = defaultSetupParams()

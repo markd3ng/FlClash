@@ -89,6 +89,57 @@ Future<Map<String, dynamic>> makeRealProfileTask(
   );
 }
 
+void _preserveProxyDnsBootstrap(
+  Map<String, dynamic> targetDns,
+  Map<dynamic, dynamic> sourceDns,
+) {
+  final sourcePolicy = sourceDns['proxy-server-nameserver-policy'];
+  if (sourcePolicy is! Map || sourcePolicy.isEmpty) {
+    return;
+  }
+
+  final policy = <String, dynamic>{};
+  for (final entry in sourcePolicy.entries) {
+    final key = entry.key;
+    if (key is! String) {
+      continue;
+    }
+    final value = entry.value;
+    policy[key] = value is List ? List.from(value) : value;
+  }
+  if (policy.isEmpty) {
+    return;
+  }
+
+  // Proxy endpoint resolution is a connectivity prerequisite, not part of
+  // the user-facing DNS override.
+  targetDns['proxy-server-nameserver-policy'] = policy;
+
+  final targetNameservers = targetDns['proxy-server-nameserver'];
+  if (targetNameservers is! List || targetNameservers.isEmpty) {
+    final sourceNameservers = sourceDns['proxy-server-nameserver'];
+    if (sourceNameservers is List && sourceNameservers.isNotEmpty) {
+      targetDns['proxy-server-nameserver'] = List.from(sourceNameservers);
+    }
+  }
+
+  final sourceFakeIpFilter = sourceDns['fake-ip-filter'];
+  final targetFakeIpFilter = targetDns['fake-ip-filter'];
+  if (sourceFakeIpFilter is! List || targetFakeIpFilter is! List) {
+    return;
+  }
+
+  final sourceFakeIpDomains = sourceFakeIpFilter.whereType<String>().toSet();
+  final mergedFakeIpFilter = List<String>.from(targetFakeIpFilter);
+  for (final domain in policy.keys) {
+    if (sourceFakeIpDomains.contains(domain) &&
+        !mergedFakeIpFilter.contains(domain)) {
+      mergedFakeIpFilter.add(domain);
+    }
+  }
+  targetDns['fake-ip-filter'] = mergedFakeIpFilter;
+}
+
 Future<Map<String, dynamic>> _makeRealProfileTask(
   MakeRealProfileState data,
 ) async {
@@ -227,21 +278,22 @@ Future<Map<String, dynamic>> _makeRealProfileTask(
   if (rawConfig['dns'] == null) {
     rawConfig['dns'] = {};
   }
+  final sourceDns = Map<dynamic, dynamic>.from(rawConfig['dns'] as Map);
   final isEnableDns = rawConfig['dns']['enable'] == true;
   const systemDns = 'system://';
   if (overrideDns || !isEnableDns) {
-    final dns = switch (!isEnableDns) {
-      true => realPatchConfig.dns.copyWith(
-        nameserver: [...realPatchConfig.dns.nameserver, systemDns],
-      ),
-      false => realPatchConfig.dns,
-    };
-    rawConfig['dns'] = dns.toJson();
-    rawConfig['dns']['nameserver-policy'] = {};
+    final baseDns = overrideDns ? realPatchConfig.dns : defaultDns;
+    final dns = !isEnableDns && !baseDns.nameserver.contains(systemDns)
+        ? baseDns.copyWith(nameserver: [...baseDns.nameserver, systemDns])
+        : baseDns;
+    final targetDns = dns.toJson();
+    targetDns['nameserver-policy'] = {};
     for (final entry in dns.nameserverPolicy.entries) {
-      rawConfig['dns']['nameserver-policy'][entry.key] =
+      targetDns['nameserver-policy'][entry.key] =
           entry.value.splitByMultipleSeparators;
     }
+    _preserveProxyDnsBootstrap(targetDns, sourceDns);
+    rawConfig['dns'] = targetDns;
   }
   if (appendSystemDns) {
     final List<String> nameserver = List<String>.from(
