@@ -6,6 +6,8 @@ void main() {
   SetupState buildState({
     List<ProxyGroup> customProxyGroups = const [],
     List<Rule> customRules = const [],
+    bool blockQuic = false,
+    bool blockWebRtc = false,
   }) {
     return SetupState(
       profileId: 1,
@@ -19,6 +21,8 @@ void main() {
       script: null,
       overrideDns: false,
       dns: const Dns(),
+      blockQuic: blockQuic,
+      blockWebRtc: blockWebRtc,
     );
   }
 
@@ -44,6 +48,12 @@ void main() {
         customRules: const [Rule(id: 1, value: 'MATCH,DIRECT')],
       );
       expect(next.needSetup(previous), true);
+    });
+
+    test('transport block changes require setup', () {
+      final previous = buildState();
+      expect(buildState(blockQuic: true).needSetup(previous), true);
+      expect(buildState(blockWebRtc: true).needSetup(previous), true);
     });
   });
 }

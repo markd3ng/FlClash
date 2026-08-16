@@ -408,6 +408,8 @@
   "appendSystemDnsTip": "强制为配置附加系统DNS",
   "blockQuic": "禁用 QUIC",
   "blockQuicDesc": "拦截 UDP 443 流量，迫使连接回落到 TCP",
+  "blockWebRtc": "阻止 WebRTC",
+  "blockWebRtcDesc": "拦截 STUN 流量以减少 WebRTC IP 泄漏。通话和实时音频可能无法使用",
   "editRule": "编辑规则",
   "overrideMode": "覆写模式",
   "standardModeDesc": "标准模式，覆写基本配置，提供简单追加规则能力",

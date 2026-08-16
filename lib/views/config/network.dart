@@ -356,6 +356,31 @@ class BlockQuicItem extends ConsumerWidget {
   }
 }
 
+class BlockWebRtcItem extends ConsumerWidget {
+  const BlockWebRtcItem({super.key});
+
+  @override
+  Widget build(BuildContext context, ref) {
+    final appLocalizations = context.appLocalizations;
+    final blockWebRtc = ref.watch(
+      networkSettingProvider.select((state) => state.blockWebRtc),
+    );
+    return ListItem.switchItem(
+      title: Text(appLocalizations.blockWebRtc),
+      subtitle: Text(appLocalizations.blockWebRtcDesc),
+      delegate: SwitchDelegate(
+        value: blockWebRtc,
+        onChanged: (bool value) async {
+          ref
+              .read(networkSettingProvider.notifier)
+              .update((state) => state.copyWith(blockWebRtc: value));
+          appController.applyProfileDebounce(silence: true);
+        },
+      ),
+    );
+  }
+}
+
 class NetworkListView extends StatelessWidget {
   const NetworkListView({super.key});
 
@@ -387,6 +412,7 @@ class NetworkListView extends StatelessWidget {
           if (system.isMacOS) const AutoSetSystemDnsItem(),
           const TunStackItem(),
           const BlockQuicItem(),
+          const BlockWebRtcItem(),
           if (!system.isDesktop) ...[
             const RouteModeItem(),
             const RouteAddressItem(),

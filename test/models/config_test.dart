@@ -158,6 +158,8 @@ void main() {
       expect(props.routeMode, RouteMode.config);
       expect(props.autoSetSystemDns, true);
       expect(props.appendSystemDns, false);
+      expect(props.blockQuic, false);
+      expect(props.blockWebRtc, false);
     });
 
     test('round-trip with custom values', () {
@@ -165,11 +167,15 @@ void main() {
         systemProxy: false,
         bypassDomain: ['example.com'],
         routeMode: RouteMode.bypassPrivate,
+        blockQuic: true,
+        blockWebRtc: true,
       );
       final restored = roundTrip(() => props.toJson(), NetworkProps.fromJson);
       expect(restored.systemProxy, false);
       expect(restored.bypassDomain, ['example.com']);
       expect(restored.routeMode, RouteMode.bypassPrivate);
+      expect(restored.blockQuic, true);
+      expect(restored.blockWebRtc, true);
     });
   });
 

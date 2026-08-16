@@ -140,10 +140,35 @@ void _preserveProxyDnsBootstrap(
   targetDns['fake-ip-filter'] = mergedFakeIpFilter;
 }
 
+void _applyWebRtcBlock(Map<String, dynamic> rawConfig) {
+  final rawSniffer = rawConfig['sniffer'];
+  final snifferMap = rawSniffer is Map
+      ? Map<dynamic, dynamic>.from(rawSniffer)
+      : <String, dynamic>{};
+  snifferMap['enable'] = true;
+  snifferMap['parse-pure-ip'] = true;
+  final rawSniff = snifferMap['sniff'];
+  final sniffMap = rawSniff is Map
+      ? Map<dynamic, dynamic>.from(rawSniff)
+      : <String, dynamic>{};
+  sniffMap['STUN'] = <String, dynamic>{};
+  for (final entry in sniffMap.entries.toList()) {
+    final value = entry.value;
+    if (value is Map && value['ports'] is List) {
+      sniffMap[entry.key] = Map<dynamic, dynamic>.from(value)
+        ..['ports'] = (value['ports'] as List)
+            .map((item) => item.toString())
+            .toList();
+    }
+  }
+  snifferMap['sniff'] = sniffMap;
+  rawConfig['sniffer'] = snifferMap;
+}
+
 Future<Map<String, dynamic>> _makeRealProfileTask(
   MakeRealProfileState data,
 ) async {
-  final rawConfig = Map.from(data.rawConfig);
+  final rawConfig = Map<String, dynamic>.from(data.rawConfig);
   final realPatchConfig = data.realPatchConfig;
   final profilesPath = data.profilesPath;
   final profileId = data.profileId;
@@ -156,6 +181,7 @@ Future<Map<String, dynamic>> _makeRealProfileTask(
   final appendSystemDns = data.appendSystemDns;
   final defaultUA = data.defaultUA;
   final blockQuic = data.blockQuic;
+  final blockWebRtc = data.blockWebRtc;
   String getProvidersFilePathInner(String type, String url) {
     return join(
       profilesPath,
@@ -206,22 +232,9 @@ Future<Map<String, dynamic>> _makeRealProfileTask(
   rawConfig['geo-update-interval'] = normalizeGeoUpdateInterval(
     realPatchConfig.geoUpdateInterval,
   );
-  // Block WebRTC: always sniff STUN (all ports) on pure-IP UDP so the
-  // SNIFF-PROTOCOL rule below can drop it and prevent real-IP leak.
-  final snifferMap = (rawConfig['sniffer'] as Map?) ?? {};
-  snifferMap['enable'] = true;
-  snifferMap['parse-pure-ip'] = true;
-  final sniffMap = (snifferMap['sniff'] as Map?) ?? {};
-  sniffMap['STUN'] ??= {};
-  for (final value in sniffMap.values) {
-    if (value is Map && value['ports'] is List) {
-      value['ports'] = (value['ports'] as List)
-          .map((item) => item.toString())
-          .toList();
-    }
+  if (blockWebRtc) {
+    _applyWebRtcBlock(rawConfig);
   }
-  snifferMap['sniff'] = sniffMap;
-  rawConfig['sniffer'] = snifferMap;
   if (rawConfig['profile'] == null) {
     rawConfig['profile'] = {};
   }
@@ -349,9 +362,8 @@ Future<Map<String, dynamic>> _makeRealProfileTask(
     }
     rules = [...finalAddedRules, ...rules];
   }
-  // Block WebRTC: drop sniffed STUN first, highest priority.
   rawConfig['rules'] = [
-    'SNIFF-PROTOCOL,stun,REJECT-DROP',
+    if (blockWebRtc) 'SNIFF-PROTOCOL,stun,REJECT-DROP',
     if (blockQuic) 'AND,((NETWORK,udp),(DST-PORT,443)),REJECT',
     ...rules,
   ];

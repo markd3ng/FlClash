@@ -1773,6 +1773,7 @@ extension SetupControllerExt on AppController {
         defaultUA: defaultUA,
         dockerMode: system.isDocker,
         blockQuic: setupState.blockQuic,
+        blockWebRtc: setupState.blockWebRtc,
       ),
     );
     return res;

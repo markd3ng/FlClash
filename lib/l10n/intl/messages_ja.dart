@@ -181,6 +181,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "blockQuicDesc": MessageLookupByLibrary.simpleMessage(
       "UDP 443のトラフィックを拒否し、接続をTCPにフォールバックさせます",
     ),
+    "blockWebRtc": MessageLookupByLibrary.simpleMessage("WebRTCをブロック"),
+    "blockWebRtcDesc": MessageLookupByLibrary.simpleMessage(
+      "WebRTCのIP漏洩を抑えるためSTUN通信を拒否します。通話やライブ音声が利用できなくなる場合があります",
+    ),
     "buyWithBalance": MessageLookupByLibrary.simpleMessage("残高を使用"),
     "bypassDomain": MessageLookupByLibrary.simpleMessage("バイパスドメイン"),
     "bypassDomainDesc": MessageLookupByLibrary.simpleMessage("システムプロキシ有効時のみ適用"),

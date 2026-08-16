@@ -14,6 +14,32 @@ import 'package:path_provider_platform_interface/path_provider_platform_interfac
 import 'package:sqlite3/sqlite3.dart' as sqlite;
 import 'package:test/test.dart';
 
+MakeRealProfileState _makeRealProfileState({
+  Map<String, dynamic> rawConfig = const {
+    'rules': ['MATCH,DIRECT'],
+  },
+  bool blockQuic = false,
+  bool blockWebRtc = false,
+}) {
+  return MakeRealProfileState(
+    profilesPath: '/profiles',
+    profileId: 1,
+    overwriteType: OverwriteType.standard,
+    rawConfig: rawConfig,
+    realPatchConfig: const ClashConfig(),
+    overrideDns: false,
+    appendSystemDns: false,
+    addedRules: const [],
+    proxyChains: const [],
+    profileProxies: const [],
+    customProxyGroups: const [],
+    customRules: const [],
+    defaultUA: 'FlClash',
+    blockQuic: blockQuic,
+    blockWebRtc: blockWebRtc,
+  );
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -894,32 +920,85 @@ void main() {
 
   test('makeRealProfileTask injects QUIC block rule when enabled', () async {
     final result = await makeRealProfileTask(
-      const MakeRealProfileState(
-        profilesPath: '/profiles',
-        profileId: 1,
-        overwriteType: OverwriteType.standard,
-        rawConfig: {
-          'rules': ['MATCH,DIRECT'],
-        },
-        realPatchConfig: ClashConfig(),
-        overrideDns: false,
-        appendSystemDns: false,
-        addedRules: [],
-        proxyChains: [],
-        profileProxies: [],
-        customProxyGroups: [],
-        customRules: [],
-        defaultUA: 'FlClash',
-        blockQuic: true,
-      ),
+      _makeRealProfileState(blockQuic: true),
     );
 
+    expect(result['rules'], [
+      'AND,((NETWORK,udp),(DST-PORT,443)),REJECT',
+      'MATCH,DIRECT',
+    ]);
+  });
+
+  test('makeRealProfileTask allows WebRTC STUN by default', () async {
+    final result = await makeRealProfileTask(_makeRealProfileState());
+
+    expect(result, isNot(contains('sniffer')));
+    expect(result['rules'], ['MATCH,DIRECT']);
+  });
+
+  test('makeRealProfileTask prioritizes WebRTC block over QUIC', () async {
+    final result = await makeRealProfileTask(
+      _makeRealProfileState(blockQuic: true, blockWebRtc: true),
+    );
+
+    expect(result['sniffer'], {
+      'enable': true,
+      'parse-pure-ip': true,
+      'sniff': {'STUN': {}},
+    });
     expect(result['rules'], [
       'SNIFF-PROTOCOL,stun,REJECT-DROP',
       'AND,((NETWORK,udp),(DST-PORT,443)),REJECT',
       'MATCH,DIRECT',
     ]);
   });
+
+  test(
+    'makeRealProfileTask blocks all STUN ports without mutating the profile',
+    () async {
+      const rawConfig = {
+        'sniffer': {
+          'enable': false,
+          'parse-pure-ip': false,
+          'sniff': {
+            'TLS': {
+              'ports': [443],
+            },
+            'STUN': {
+              'ports': [3478],
+            },
+          },
+        },
+        'rules': ['MATCH,DIRECT'],
+      };
+      final result = await makeRealProfileTask(
+        _makeRealProfileState(rawConfig: rawConfig, blockWebRtc: true),
+      );
+
+      expect(result['sniffer'], {
+        'enable': true,
+        'parse-pure-ip': true,
+        'sniff': {
+          'TLS': {
+            'ports': ['443'],
+          },
+          'STUN': {},
+        },
+      });
+      expect(rawConfig['sniffer'], {
+        'enable': false,
+        'parse-pure-ip': false,
+        'sniff': {
+          'TLS': {
+            'ports': [443],
+          },
+          'STUN': {
+            'ports': [3478],
+          },
+        },
+      });
+    },
+  );
 
   test(
     'makeRealProfileTask applies non-empty custom overwrite lists',
@@ -964,10 +1043,7 @@ void main() {
           'proxies': ['DIRECT'],
         },
       ]);
-      expect(result['rules'], [
-        'SNIFF-PROTOCOL,stun,REJECT-DROP',
-        'MATCH,Custom',
-      ]);
+      expect(result['rules'], ['MATCH,Custom']);
     },
   );
 
@@ -1002,10 +1078,7 @@ void main() {
       );
 
       expect((result['proxy-groups'] as List).first['name'], 'Original');
-      expect(result['rules'], [
-        'SNIFF-PROTOCOL,stun,REJECT-DROP',
-        'MATCH,Original',
-      ]);
+      expect(result['rules'], ['MATCH,Original']);
     },
   );
 
@@ -1038,7 +1111,7 @@ void main() {
     );
 
     expect(result['proxy-groups'], isEmpty);
-    expect(result['rules'], ['SNIFF-PROTOCOL,stun,REJECT-DROP']);
+    expect(result['rules'], isEmpty);
   });
 }
 

@@ -233,6 +233,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "blockQuicDesc": MessageLookupByLibrary.simpleMessage(
       "Отклонять трафик UDP 443, чтобы соединения переключались на TCP",
     ),
+    "blockWebRtc": MessageLookupByLibrary.simpleMessage("Блокировать WebRTC"),
+    "blockWebRtcDesc": MessageLookupByLibrary.simpleMessage(
+      "Отклонять STUN-трафик для снижения утечек IP через WebRTC. Звонки и прямые аудиотрансляции могут перестать работать.",
+    ),
     "buyWithBalance": MessageLookupByLibrary.simpleMessage(
       "Использовать баланс",
     ),

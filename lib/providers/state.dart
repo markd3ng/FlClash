@@ -619,6 +619,9 @@ Future<SetupState> setupState(Ref ref, int? profileId) async {
   final blockQuic = ref.watch(
     networkSettingProvider.select((state) => state.blockQuic),
   );
+  final blockWebRtc = ref.watch(
+    networkSettingProvider.select((state) => state.blockWebRtc),
+  );
   final List<Rule> addedRules = profileId != null
       ? await ref.watch(addedRuleStreamProvider(profileId).future)
       : [];
@@ -635,6 +638,7 @@ Future<SetupState> setupState(Ref ref, int? profileId) async {
     overrideDns: overrideDns,
     dns: dns,
     blockQuic: blockQuic,
+    blockWebRtc: blockWebRtc,
   );
 }
 

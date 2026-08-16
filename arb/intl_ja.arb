@@ -408,6 +408,8 @@
   "appendSystemDnsTip": "設定にシステムDNSを強制的に追加します",
   "blockQuic": "QUICをブロック",
   "blockQuicDesc": "UDP 443のトラフィックを拒否し、接続をTCPにフォールバックさせます",
+  "blockWebRtc": "WebRTCをブロック",
+  "blockWebRtcDesc": "WebRTCのIP漏洩を抑えるためSTUN通信を拒否します。通話やライブ音声が利用できなくなる場合があります",
   "editRule": "ルールを編集",
   "overrideMode": "上書きモード",
   "standardModeDesc": "標準モード、基本設定を上書きし、シンプルなルール追加機能を提供",

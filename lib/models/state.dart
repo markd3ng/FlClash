@@ -291,6 +291,7 @@ abstract class MakeRealProfileState with _$MakeRealProfileState {
     required String defaultUA,
     @Default(false) bool dockerMode,
     @Default(false) bool blockQuic,
+    @Default(false) bool blockWebRtc,
   }) = _MakeRealProfileState;
 }
 
@@ -321,6 +322,7 @@ abstract class SetupState with _$SetupState {
     required bool overrideDns,
     required Dns dns,
     @Default(false) bool blockQuic,
+    @Default(false) bool blockWebRtc,
   }) = _SetupState;
 }
 
@@ -380,6 +382,9 @@ extension SetupStateExt on SetupState {
       return true;
     }
     if (blockQuic != lastSetupState.blockQuic) {
+      return true;
+    }
+    if (blockWebRtc != lastSetupState.blockWebRtc) {
       return true;
     }
     return false;

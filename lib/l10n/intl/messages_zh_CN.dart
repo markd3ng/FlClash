@@ -173,6 +173,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "blockQuicDesc": MessageLookupByLibrary.simpleMessage(
       "拦截 UDP 443 流量，迫使连接回落到 TCP",
     ),
+    "blockWebRtc": MessageLookupByLibrary.simpleMessage("阻止 WebRTC"),
+    "blockWebRtcDesc": MessageLookupByLibrary.simpleMessage(
+      "拦截 STUN 流量以减少 WebRTC IP 泄漏。通话和实时音频可能无法使用",
+    ),
     "buyWithBalance": MessageLookupByLibrary.simpleMessage("使用余额"),
     "bypassDomain": MessageLookupByLibrary.simpleMessage("排除域名"),
     "bypassDomainDesc": MessageLookupByLibrary.simpleMessage("仅在系统代理启用时生效"),

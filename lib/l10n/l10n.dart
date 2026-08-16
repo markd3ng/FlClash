@@ -3184,6 +3184,26 @@ class AppLocalizations {
     );
   }
 
+  /// `Block WebRTC`
+  String get blockWebRtc {
+    return Intl.message(
+      'Block WebRTC',
+      name: 'blockWebRtc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Reject STUN traffic to reduce WebRTC IP leaks. Calls and live audio may stop working.`
+  String get blockWebRtcDesc {
+    return Intl.message(
+      'Reject STUN traffic to reduce WebRTC IP leaks. Calls and live audio may stop working.',
+      name: 'blockWebRtcDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Edit rule`
   String get editRule {
     return Intl.message('Edit rule', name: 'editRule', desc: '', args: []);

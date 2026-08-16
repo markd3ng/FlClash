@@ -229,6 +229,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "blockQuicDesc": MessageLookupByLibrary.simpleMessage(
       "Reject UDP 443 traffic to force connections back to TCP",
     ),
+    "blockWebRtc": MessageLookupByLibrary.simpleMessage("Block WebRTC"),
+    "blockWebRtcDesc": MessageLookupByLibrary.simpleMessage(
+      "Reject STUN traffic to reduce WebRTC IP leaks. Calls and live audio may stop working.",
+    ),
     "buyWithBalance": MessageLookupByLibrary.simpleMessage("Use balance"),
     "bypassDomain": MessageLookupByLibrary.simpleMessage("Bypass domain"),
     "bypassDomainDesc": MessageLookupByLibrary.simpleMessage(
