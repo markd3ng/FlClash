@@ -12,10 +12,19 @@ typedef SystemProxyStarter =
 typedef SystemProxyStopper = Future<bool?> Function();
 typedef SystemProxyReadinessChecker = Future<bool> Function(int port);
 
+enum SystemProxyStartResult {
+  success,
+  mixedProxyUnavailable,
+  systemProxySetupFailed,
+  systemProxyRestoreFailed,
+}
+
 class SystemProxyController {
   final SystemProxyStarter? _startProxy;
   final SystemProxyStopper? _stopProxy;
   final SystemProxyReadinessChecker? _readinessChecker;
+  final int _setupAttempts;
+  final Duration _setupRetryDelay;
 
   bool _startedByFlClash = false;
   bool _checkedPersistedState = false;
@@ -25,15 +34,22 @@ class SystemProxyController {
     required SystemProxyStarter? startProxy,
     required SystemProxyStopper? stopProxy,
     SystemProxyReadinessChecker? readinessChecker,
+    int setupAttempts = 1,
+    Duration setupRetryDelay = Duration.zero,
   }) : _startProxy = startProxy,
        _stopProxy = stopProxy,
-       _readinessChecker = readinessChecker;
+       _readinessChecker = readinessChecker,
+       _setupAttempts = setupAttempts,
+       _setupRetryDelay = setupRetryDelay,
+       assert(setupAttempts > 0);
 
   bool get startedByFlClash => _startedByFlClash;
 
-  Future<bool> start(int port, List<String> bypassDomain) {
+  Future<SystemProxyStartResult> start(int port, List<String> bypassDomain) {
     final startProxy = _startProxy;
-    if (startProxy == null) return Future.value(true);
+    if (startProxy == null) {
+      return Future.value(SystemProxyStartResult.success);
+    }
 
     return _queue(() async {
       _checkedPersistedState = false;
@@ -51,15 +67,23 @@ class SystemProxyController {
         if (success == true) {
           _startedByFlClash = false;
           _checkedPersistedState = true;
+        } else if (_stopProxy != null) {
+          return SystemProxyStartResult.systemProxyRestoreFailed;
         }
-        return false;
+        return SystemProxyStartResult.mixedProxyUnavailable;
       }
-      final success = await startProxy(port, bypassDomain);
-      if (success == true) {
-        _startedByFlClash = true;
-        _checkedPersistedState = true;
+      for (var attempt = 0; attempt < _setupAttempts; attempt++) {
+        final success = await startProxy(port, bypassDomain);
+        if (success == true) {
+          _startedByFlClash = true;
+          _checkedPersistedState = true;
+          return SystemProxyStartResult.success;
+        }
+        if (attempt + 1 < _setupAttempts && _setupRetryDelay > Duration.zero) {
+          await Future<void>.delayed(_setupRetryDelay);
+        }
       }
-      return success == true;
+      return SystemProxyStartResult.systemProxySetupFailed;
     });
   }
 
@@ -148,7 +172,10 @@ Future<bool> _supportsSocks5(int port) async {
   }
 }
 
-Future<bool> startSystemProxy(int port, List<String> bypassDomain) {
+Future<SystemProxyStartResult> startSystemProxy(
+  int port,
+  List<String> bypassDomain,
+) {
   return systemProxyController.start(port, bypassDomain);
 }
 
@@ -160,4 +187,6 @@ final systemProxyController = SystemProxyController(
   startProxy: proxy?.startProxy,
   stopProxy: proxy?.stopProxy,
   readinessChecker: isLocalMixedProxyReady,
+  setupAttempts: 2,
+  setupRetryDelay: const Duration(milliseconds: 500),
 );

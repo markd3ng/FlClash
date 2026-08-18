@@ -22,12 +22,25 @@ class _ProxyManagerState extends ConsumerState<ProxyManager> {
     final systemProxy = proxyState.systemProxy;
     final port = proxyState.port;
     if (isStart && systemProxy && port > 0) {
-      final started = await startSystemProxy(port, proxyState.bassDomain);
-      if (!started) {
-        commonPrint.log(
-          'system proxy skipped: mixed proxy is unavailable on port $port',
-          logLevel: LogLevel.warning,
-        );
+      final result = await startSystemProxy(port, proxyState.bassDomain);
+      switch (result) {
+        case SystemProxyStartResult.success:
+          break;
+        case SystemProxyStartResult.mixedProxyUnavailable:
+          commonPrint.log(
+            'system proxy skipped: mixed proxy is unavailable on port $port',
+            logLevel: LogLevel.warning,
+          );
+        case SystemProxyStartResult.systemProxySetupFailed:
+          commonPrint.log(
+            'system proxy setup failed after retry',
+            logLevel: LogLevel.warning,
+          );
+        case SystemProxyStartResult.systemProxyRestoreFailed:
+          commonPrint.log(
+            'system proxy skipped: previous proxy settings could not be restored',
+            logLevel: LogLevel.warning,
+          );
       }
     } else {
       await stopSystemProxyIfNeeded();

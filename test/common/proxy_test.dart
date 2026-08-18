@@ -87,7 +87,10 @@ void main() {
         readinessChecker: (_) async => false,
       );
 
-      expect(await controller.start(7890, const []), false);
+      expect(
+        await controller.start(7890, const []),
+        SystemProxyStartResult.mixedProxyUnavailable,
+      );
       expect(starts, 0);
       expect(stops, 1);
       expect(controller.startedByFlClash, false);
@@ -109,7 +112,10 @@ void main() {
       readinessChecker: (_) => throw StateError('readiness failed'),
     );
 
-    expect(await controller.start(7890, const []), false);
+    expect(
+      await controller.start(7890, const []),
+      SystemProxyStartResult.mixedProxyUnavailable,
+    );
     expect(starts, 0);
     expect(stops, 1);
     expect(controller.startedByFlClash, false);
@@ -126,10 +132,67 @@ void main() {
       readinessChecker: (_) async => true,
     );
 
-    expect(await controller.start(7890, const []), true);
+    expect(
+      await controller.start(7890, const []),
+      SystemProxyStartResult.success,
+    );
     expect(starts, 1);
     expect(controller.startedByFlClash, true);
   });
+
+  test('retries a transient system proxy setup failure', () async {
+    var starts = 0;
+    final controller = SystemProxyController(
+      startProxy: (_, _) async => ++starts == 2,
+      stopProxy: () async => true,
+      readinessChecker: (_) async => true,
+      setupAttempts: 2,
+    );
+
+    expect(
+      await controller.start(7890, const []),
+      SystemProxyStartResult.success,
+    );
+    expect(starts, 2);
+    expect(controller.startedByFlClash, true);
+  });
+
+  test('reports a persistent system proxy setup failure', () async {
+    var starts = 0;
+    final controller = SystemProxyController(
+      startProxy: (_, _) async {
+        starts++;
+        return false;
+      },
+      stopProxy: () async => true,
+      readinessChecker: (_) async => true,
+      setupAttempts: 2,
+    );
+
+    expect(
+      await controller.start(7890, const []),
+      SystemProxyStartResult.systemProxySetupFailed,
+    );
+    expect(starts, 2);
+    expect(controller.startedByFlClash, false);
+  });
+
+  test(
+    'reports a failed restore when the mixed proxy is unavailable',
+    () async {
+      final controller = SystemProxyController(
+        startProxy: (_, _) async => true,
+        stopProxy: () async => false,
+        readinessChecker: (_) async => false,
+      );
+
+      expect(
+        await controller.start(7890, const []),
+        SystemProxyStartResult.systemProxyRestoreFailed,
+      );
+      expect(controller.startedByFlClash, false);
+    },
+  );
 
   test(
     'checks once for a persisted proxy even before a successful start',
