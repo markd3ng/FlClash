@@ -89,7 +89,21 @@ class HomePage extends StatelessWidget {
                               onDidRemovePage: (_) {},
                             ),
                     );
-                    return view;
+                    return Consumer(
+                      key: ValueKey(navigationItem.label),
+                      builder: (_, ref, child) {
+                        final isActive = ref.watch(
+                          currentPageLabelProvider.select(
+                            (label) => label == navigationItem.label,
+                          ),
+                        );
+                        return PageActivityScope(
+                          isActive: isActive,
+                          child: child!,
+                        );
+                      },
+                      child: view,
+                    );
                   },
                 );
               },

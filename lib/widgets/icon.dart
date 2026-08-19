@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:fl_clash/common/common.dart';
+import 'package:fl_clash/plugins/app.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_svg/svg.dart';
@@ -123,6 +124,72 @@ class _ImageCacheWidgetState extends State<ImageCacheWidget> {
               )
             : Image.file(data, errorBuilder: (_, _, _) => widget.defaultWidget);
       },
+    );
+  }
+}
+
+class PackageIcon extends StatefulWidget {
+  final String packageName;
+  final double size;
+
+  const PackageIcon({super.key, required this.packageName, required this.size});
+
+  @override
+  State<PackageIcon> createState() => _PackageIconState();
+}
+
+class _PackageIconState extends State<PackageIcon> {
+  ImageProvider? _icon;
+  int _generation = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadIcon();
+  }
+
+  @override
+  void didUpdateWidget(covariant PackageIcon oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.packageName != widget.packageName) {
+      _loadIcon();
+    }
+  }
+
+  void _loadIcon() {
+    final generation = ++_generation;
+    final packageName = widget.packageName;
+    final currentApp = app;
+    if (currentApp == null || packageName.isEmpty) {
+      _icon = null;
+      return;
+    }
+    if (currentApp.hasPackageIcon(packageName)) {
+      _icon = currentApp.getCachedPackageIcon(packageName);
+      return;
+    }
+    _icon = null;
+    currentApp.getPackageIcon(packageName).then((icon) {
+      if (!mounted || generation != _generation || icon == null) {
+        return;
+      }
+      setState(() {
+        _icon = icon;
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final icon = _icon;
+    if (icon == null) {
+      return SizedBox(width: widget.size, height: widget.size);
+    }
+    return Image(
+      image: icon,
+      gaplessPlayback: true,
+      width: widget.size,
+      height: widget.size,
     );
   }
 }
