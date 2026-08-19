@@ -71,9 +71,30 @@ jobs:
       - name: Run tests
         run: flutter test --reporter expanded
 
+      - name: Validate Rust components
+        run: |
+          cargo fmt --manifest-path services/helper/Cargo.toml -- --check
+          cargo test --manifest-path services/helper/Cargo.toml
+          cargo fmt --manifest-path plugins/rust_api/rust/Cargo.toml -- --check
+          cargo test --manifest-path plugins/rust_api/rust/Cargo.toml
+
+  windows-helper-test:
+    name: Windows helper test
+    runs-on: windows-2022
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check format
+        run: cargo fmt --manifest-path services/helper/Cargo.toml -- --check
+
+      - name: Run Windows service tests
+        run: cargo test --manifest-path services/helper/Cargo.toml --features windows-service
+
   build:
     name: "Build ${{ matrix.name }}"
-    needs: [version, test]
+    needs: [version, test, windows-helper-test]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     strategy:
@@ -120,6 +141,7 @@ jobs:
     steps:
       - name: Setup rust
         if: startsWith(matrix.os, 'windows-11-arm')
+        shell: pwsh
         run: |
           Invoke-WebRequest -Uri "https://win.rustup.rs/aarch64" -OutFile rustup-init.exe
           .\rustup-init.exe -y --default-toolchain stable
@@ -171,10 +193,11 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
+            plugins/rust_api/rust/target
             services/helper/target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('services/helper/Cargo.lock') }}
+          key: ${{ runner.os }}-${{ matrix.arch }}-cargo-${{ hashFiles('plugins/rust_api/rust/Cargo.lock', 'services/helper/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-cargo-
+            ${{ runner.os }}-${{ matrix.arch }}-cargo-
 
       - name: Cache CocoaPods
         if: matrix.platform == 'macos'
@@ -242,6 +265,7 @@ jobs:
           FLCLASH_APP_SECRET: ${{ secrets.FLCLASH_APP_SECRET }}
           DNS_AUTH_PRIVATE_KEY: ${{ secrets.DNS_AUTH_PRIVATE_KEY }}
           DNS_AUTH_DOMAINS: ${{ secrets.DNS_AUTH_DOMAINS }}
+          MACOSX_DEPLOYMENT_TARGET: ${{ matrix.platform == 'macos' && '11.0' || '' }}
         run: |
           set -e
           BUILD_ARGS="${{ matrix.platform }}"

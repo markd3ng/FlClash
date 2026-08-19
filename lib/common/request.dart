@@ -515,66 +515,6 @@ class Request {
     token.cancel();
     return res;
   }
-
-  Future<bool> pingHelper() async {
-    try {
-      final response = await dio
-          .get(
-            'http://$localhost:$helperPort/ping',
-            options: Options(responseType: ResponseType.plain),
-          )
-          .timeout(const Duration(milliseconds: 2000));
-      if (response.statusCode != HttpStatus.ok) {
-        return false;
-      }
-      return (response.data as String) == globalState.coreSHA256;
-    } catch (_) {
-      return false;
-    }
-  }
-
-  Future<bool> startCoreByHelper(String arg, String ipcKey) async {
-    if (!await pingHelper()) return false;
-    try {
-      final response = await dio
-          .post(
-            'http://$localhost:$helperPort/start',
-            data: json.encode({
-              'path': appPath.corePath,
-              'arg': arg,
-              'key': ipcKey,
-            }),
-            options: Options(responseType: ResponseType.plain),
-          )
-          .timeout(const Duration(milliseconds: 2000));
-      if (response.statusCode != HttpStatus.ok) {
-        return false;
-      }
-      final data = response.data as String;
-      return data.isEmpty;
-    } catch (_) {
-      return false;
-    }
-  }
-
-  Future<bool> stopCoreByHelper() async {
-    if (!await pingHelper()) return false;
-    try {
-      final response = await dio
-          .post(
-            'http://$localhost:$helperPort/stop',
-            options: Options(responseType: ResponseType.plain),
-          )
-          .timeout(const Duration(milliseconds: 2000));
-      if (response.statusCode != HttpStatus.ok) {
-        return false;
-      }
-      final data = response.data as String;
-      return data.isEmpty;
-    } catch (_) {
-      return false;
-    }
-  }
 }
 
 final request = Request();

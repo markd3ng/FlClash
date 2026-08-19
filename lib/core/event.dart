@@ -1,8 +1,25 @@
 import 'dart:async';
 
+import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:flutter/foundation.dart';
+
+List<CoreEvent> coreEventsFromData(Object? data) {
+  final items = data is List ? data : [data];
+  final events = <CoreEvent>[];
+  for (final item in items.whereType<Map>()) {
+    try {
+      events.add(CoreEvent.fromJson(Map<String, Object?>.from(item)));
+    } catch (error) {
+      commonPrint.log(
+        'Unable to parse Core event: $error',
+        logLevel: LogLevel.error,
+      );
+    }
+  }
+  return events;
+}
 
 abstract mixin class CoreEventListener {
   void onLog(Log log) {}

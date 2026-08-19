@@ -61,18 +61,18 @@ object Service {
         delegate.unbind()
     }
 
-    suspend fun invokeAction(data: String, cb: ((result: String) -> Unit)?): Result<Unit> {
+    suspend fun invokeMethod(data: String, cb: ((result: String) -> Unit)?): Result<Unit> {
         val method = runCatching {
             JsonParser.parseString(data).asJsonObject.getAsJsonPrimitive("method").asString
         }.getOrNull()
         if (method in validationMethods) {
             return validationMutex.withLock {
-                invokeValidatorAction(data, cb)
+                invokeValidatorMethod(data, cb)
             }
         }
         val res = mutableListOf<ByteArray>()
         return delegate.useService {
-            it.invokeAction(
+            it.invokeMethod(
                 data, object : ICallbackInterface.Stub() {
                     override fun onResult(
                         result: ByteArray?, isSuccess: Boolean, ack: IAckInterface?
@@ -93,7 +93,7 @@ object Service {
         }
     }
 
-    private suspend fun invokeValidatorAction(
+    private suspend fun invokeValidatorMethod(
         data: String,
         cb: ((result: String) -> Unit)?,
     ): Result<Unit> {
@@ -222,7 +222,7 @@ object Service {
     private fun isSuccessfulInit(result: String): Boolean {
         return runCatching {
             JsonParser.parseString(result).asJsonObject
-                .getAsJsonPrimitive("data")
+                .getAsJsonPrimitive("result")
                 .asBoolean
         }.getOrDefault(false)
     }
@@ -236,7 +236,7 @@ object Service {
         validatorInitAction = JsonObject().apply {
             addProperty("id", "validator-init")
             addProperty("method", INIT_METHOD)
-            addProperty("data", initParamsString)
+            add("arguments", JsonParser.parseString(initParamsString))
         }.toString()
         val res = mutableListOf<ByteArray>()
         return delegate.useService {

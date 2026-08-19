@@ -41,8 +41,8 @@ class ServicePlugin : FlutterPlugin, MethodChannel.MethodCallHandler,
             handleShutdown(result)
         }
 
-        "invokeAction" -> {
-            handleInvokeAction(call, result)
+        "invokeMethod" -> {
+            handleInvokeMethod(call, result)
         }
 
         "getRunTime" -> {
@@ -66,10 +66,10 @@ class ServicePlugin : FlutterPlugin, MethodChannel.MethodCallHandler,
         }
     }
 
-    private fun handleInvokeAction(call: MethodCall, result: MethodChannel.Result) {
+    private fun handleInvokeMethod(call: MethodCall, result: MethodChannel.Result) {
         launch {
             val data = call.arguments<String>()!!
-            Service.invokeAction(data) {
+            Service.invokeMethod(data) {
                 result.success(it)
             }.onFailure {
                 result.error("service_error", it.message, null)

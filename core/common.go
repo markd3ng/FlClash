@@ -38,6 +38,12 @@ var (
 	delaySem      = semaphore.NewWeighted(50)
 )
 
+const defaultTestURL = "http://cp.cloudflare.com/generate_204"
+
+func init() {
+	constant.DefaultTestURL = defaultTestURL
+}
+
 func getExternalProvidersRaw() map[string]cp.Provider {
 	eps := make(map[string]cp.Provider)
 	for n, p := range tunnel.Providers() {
@@ -179,7 +185,7 @@ func normalizeSelectorSelections() {
 
 func defaultSetupParams() *SetupParams {
 	return &SetupParams{
-		TestURL:     "http://cp.cloudflare.com/generate_204",
+		TestURL:     defaultTestURL,
 		SelectedMap: map[string]string{},
 	}
 }

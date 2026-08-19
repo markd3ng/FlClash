@@ -68,7 +68,7 @@ Future<void> delayTest(List<Proxy> proxies, [String? testUrl]) async {
     generation: generation,
   );
 
-  for (final batch in delayTargets.batch(100)) {
+  for (final batch in delayTargets.batch(maxConcurrentDelayTests)) {
     if (!appController.isCurrentDelayGeneration(generation)) {
       return;
     }

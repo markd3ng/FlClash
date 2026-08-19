@@ -25,10 +25,6 @@ var
   i: Integer;
   ResultCode: Integer;
 begin
-  Exec('taskkill', '/im FlClash.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
-  if ResultCode = 0 then
-    Sleep(3000);
-
   Processes := ['FlClash.exe', 'FlClashCore.exe', 'FlClashHelperService.exe'];
 
   for i := 0 to GetArrayLength(Processes)-1 do
@@ -37,8 +33,28 @@ begin
   end;
 end;
 
-function InitializeSetup(): Boolean;
+procedure UnregisterHelperService;
+var
+  HelperPath: String;
+  ResultCode: Integer;
 begin
+  HelperPath := ExpandConstant('{app}\FlClashHelperService.exe');
+  if FileExists(HelperPath) then
+  begin
+    Exec(HelperPath, 'uninstall', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  end;
+end;
+
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+begin
+  UnregisterHelperService;
+  KillProcesses;
+  Result := '';
+end;
+
+function InitializeUninstall(): Boolean;
+begin
+  UnregisterHelperService;
   KillProcesses;
   Result := True;
 end;

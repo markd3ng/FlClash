@@ -59,13 +59,19 @@ void main() {
       expect(restored.customUserAgent, 'CustomUA/1.0');
     });
 
-    test('legacy HTTP default upgrades to HTTPS', () {
+    test('missing test URL uses the Cloudflare default', () {
+      final restored = AppSettingProps.fromJson({});
+
+      expect(restored.testUrl, defaultTestUrl);
+      expect(restored.testUrl, 'http://cp.cloudflare.com/generate_204');
+    });
+
+    test('gstatic default migrates to Cloudflare', () {
       final restored = AppSettingProps.fromJson({
-        'testUrl': legacyDefaultTestUrl,
+        'testUrl': 'https://www.gstatic.com/generate_204',
       });
 
       expect(restored.testUrl, defaultTestUrl);
-      expect(Uri.parse(restored.testUrl).scheme, 'https');
     });
 
     test('safeFromJson returns default on null', () {

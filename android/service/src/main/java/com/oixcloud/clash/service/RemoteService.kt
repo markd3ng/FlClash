@@ -75,8 +75,8 @@ class RemoteService : Service(),
     }
 
     private val binder = object : IRemoteInterface.Stub() {
-        override fun invokeAction(data: String, callback: ICallbackInterface) {
-            Core.invokeAction(data) {
+        override fun invokeMethod(data: String, callback: ICallbackInterface) {
+            Core.invokeMethod(data) {
                 launch {
                     runCatching {
                         val chunks = it?.chunkedForAidl() ?: listOf()

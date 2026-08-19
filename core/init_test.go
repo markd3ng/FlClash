@@ -3,7 +3,6 @@
 package main
 
 import (
-	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"
@@ -24,11 +23,8 @@ func TestHandleInitClashInitializesApplicationHome(t *testing.T) {
 	})
 
 	home := filepath.Join(t.TempDir(), "nested", "app-home")
-	params, err := json.Marshal(InitParams{HomeDir: home, Version: 7})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !handleInitClash(string(params)) {
+	initParams := InitParams{HomeDir: home, Version: 7}
+	if !handleInitClash(&initParams) {
 		t.Fatal("handleInitClash() = false")
 	}
 	if _, err := os.Stat(home); err != nil {
@@ -47,7 +43,7 @@ func TestHandleInitClashInitializesApplicationHome(t *testing.T) {
 }
 
 func TestHandleInitClashRejectsEmptyHome(t *testing.T) {
-	if handleInitClash(`{"version":7}`) {
+	if handleInitClash(&InitParams{Version: 7}) {
 		t.Fatal("handleInitClash() accepted an empty home directory")
 	}
 }

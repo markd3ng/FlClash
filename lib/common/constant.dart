@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 
 const appName = 'FlClash for oixCloud';
 const appHelperService = 'FlClashHelperService';
+const coreManifestName = 'manifest.json';
 const browserUa =
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 const packageName = 'com.oixcloud.clash';
@@ -18,7 +19,10 @@ const legacyPackageName = 'com.follow.clash';
 const identityMigrationMarkerName = '.identity-migrated-from-com.follow.clash';
 const releaseRepository = 'pickrui/FlClash';
 final unixSocketPath = '/tmp/FlClashSocket_${Random().nextInt(10000)}.sock';
+final windowsPipeName = '\\\\.\\pipe\\FlClashCore_${_randomPipeId()}';
 const helperPort = 47890;
+const helperProtocolVersionHeader = 'x-flclash-helper-protocol';
+const helperProtocolVersion = '6';
 const maxTextScale = 1.4;
 const minTextScale = 0.8;
 final baseInfoEdgeInsets = EdgeInsets.symmetric(
@@ -34,9 +38,22 @@ final listHeaderPadding = EdgeInsets.only(
 
 const watchExecution = false;
 
+String _randomPipeId() {
+  final random = Random.secure();
+  return List.generate(
+    16,
+    (_) => random.nextInt(256).toRadixString(16).padLeft(2, '0'),
+  ).join();
+}
+
 final defaultTextScaleFactor =
     WidgetsBinding.instance.platformDispatcher.textScaleFactor;
 const httpTimeoutDuration = Duration(milliseconds: 5000);
+
+/// Keep at or below the Core's delay-test concurrency (`delaySem` in
+/// core/common.go). Surplus requests queue inside the Core behind a full wave
+/// of 5s timeouts, which no RPC timeout can cover.
+const maxConcurrentDelayTests = 50;
 const animateDuration = Duration(milliseconds: 100);
 const midDuration = Duration(milliseconds: 200);
 const commonDuration = Duration(milliseconds: 300);
@@ -58,8 +75,7 @@ const double dialogCommonWidth = 300;
 const repository = 'chen08209/FlClash';
 const maxMobileWidth = 600;
 const maxLaptopWidth = 840;
-const legacyDefaultTestUrl = 'http://cp.cloudflare.com/generate_204';
-const defaultTestUrl = 'https://www.gstatic.com/generate_204';
+const defaultTestUrl = 'http://cp.cloudflare.com/generate_204';
 const defaultDirectTestUrl = 'https://wifi.vivo.com.cn/generate_204';
 
 String getDelayTestUrl({required String proxyName, required String testUrl}) {

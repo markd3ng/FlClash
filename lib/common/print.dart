@@ -18,10 +18,10 @@ class CommonPrint {
     final payload = '[APP] ${Secrets.redactApiDomains(text ?? 'null')}';
     final log = Log.app(payload).copyWith(logLevel: logLevel);
     debugPrint(payload);
-    appController.writePersistentLog(log);
     if (!appController.isAttach) {
       return;
     }
+    appController.writePersistentLog(log);
     appController.addLog(log, persist: false);
   }
 }

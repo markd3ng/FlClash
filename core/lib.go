@@ -160,43 +160,30 @@ func handleUpdateDns(value string) {
 	}()
 }
 
-func (result ActionResult) send() {
-	data, err := result.Json()
+func (response MethodResponse) send() {
+	data, err := response.JSON()
 	if err != nil {
 		return
 	}
-	invokeResult(result.callback, string(data))
-	if result.Method != messageMethod {
-		releaseObject(result.callback)
-	}
+	invokeResult(response.callback, string(data))
+	releaseObject(response.callback)
 }
 
-func nextHandle(action *Action, result ActionResult) bool {
-	switch action.Method {
-	case updateDnsMethod:
-		data := action.Data.(string)
-		handleUpdateDns(data)
-		result.success(true)
-		return true
-	}
-	return false
-}
-
-//export invokeAction
-func invokeAction(callback unsafe.Pointer, paramsChar *C.char) {
+//export invokeMethod
+func invokeMethod(callback unsafe.Pointer, paramsChar *C.char) {
 	params := takeCString(paramsChar)
-	var action = &Action{}
-	err := json.Unmarshal([]byte(params), action)
+	call := &MethodCall{}
+	err := json.Unmarshal([]byte(params), call)
 	if err != nil {
-		invokeResult(callback, err.Error())
+		response := MethodResponse{callback: callback}
+		response.failure("invalid_method_call", err.Error(), nil)
 		return
 	}
-	result := ActionResult{
-		Id:       action.Id,
-		Method:   action.Method,
+	response := MethodResponse{
+		ID:       call.ID,
 		callback: callback,
 	}
-	go handleAction(action, result)
+	go handleMethodCall(call, response)
 }
 
 //export startTUN
@@ -215,12 +202,22 @@ func quickSetup(callback unsafe.Pointer, initParamsChar *C.char, setupParamsChar
 	go func() {
 		initParamsString := takeCString(initParamsChar)
 		setupParamsString := takeCString(setupParamsChar)
-		if !handleInitClash(initParamsString) {
+		initParams := InitParams{}
+		if err := UnmarshalJson([]byte(initParamsString), &initParams); err != nil {
+			invokeResult(callback, err.Error())
+			return
+		}
+		if !handleInitClash(&initParams) {
 			invokeResult(callback, "init failed")
 			return
 		}
 		isRunning = true
-		message := handleSetupConfig([]byte(setupParamsString))
+		setupParams := defaultSetupParams()
+		if err := UnmarshalJson([]byte(setupParamsString), setupParams); err != nil {
+			invokeResult(callback, err.Error())
+			return
+		}
+		message := handleSetupConfig(setupParams)
 		invokeResult(callback, message)
 	}()
 }
@@ -235,24 +232,36 @@ func setEventListener(listener unsafe.Pointer) {
 
 //export getTotalTraffic
 func getTotalTraffic(onlyStatisticsProxy bool) *C.char {
-	return C.CString(handleGetTotalTraffic(onlyStatisticsProxy))
+	return C.CString(marshalResult(handleGetTotalTraffic(onlyStatisticsProxy)))
 }
 
 //export getTraffic
 func getTraffic(onlyStatisticsProxy bool) *C.char {
-	return C.CString(handleGetTraffic(onlyStatisticsProxy))
+	return C.CString(marshalResult(handleGetTraffic(onlyStatisticsProxy)))
 }
 
-func sendMessage(message Message) {
+func marshalResult(value any) string {
+	data, err := json.Marshal(value)
+	if err != nil {
+		return ""
+	}
+	return string(data)
+}
+
+func sendMessageBatch(messages []Message) {
 	if eventListener == nil {
 		return
 	}
-	result := ActionResult{
-		Method:   messageMethod,
-		callback: eventListener,
-		Data:     message,
+	arguments, err := json.Marshal(messages)
+	if err != nil {
+		return
 	}
-	result.send()
+	call := MethodCall{Method: messageMethod, Arguments: arguments}
+	data, err := json.Marshal(call)
+	if err != nil {
+		return
+	}
+	invokeResult(eventListener, string(data))
 }
 
 //export stopTun

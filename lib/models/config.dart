@@ -60,7 +60,7 @@ List<DashboardWidget> dashboardWidgetsSafeFormJson(
 }
 
 String testUrlFromJson(String? value) {
-  return value == null || value == legacyDefaultTestUrl
+  return value == null || value == 'https://www.gstatic.com/generate_204'
       ? defaultTestUrl
       : value;
 }

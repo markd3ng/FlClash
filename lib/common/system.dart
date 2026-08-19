@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:ffi/ffi.dart';
 import 'package:fl_clash/common/common.dart';
+import 'package:fl_clash/core/desktop/helper_client.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/plugins/app.dart';
 import 'package:fl_clash/state.dart';
@@ -61,8 +62,8 @@ class System {
   Future<bool> checkIsAdmin() async {
     final corePath = appPath.corePath;
     if (system.isWindows) {
-      final result = await windows?.checkService();
-      return result == WindowsHelperServiceStatus.running;
+      return await windowsHelperClient.readiness() ==
+          WindowsHelperReadiness.ready;
     } else if (system.isMacOS) {
       final result = await Process.run('stat', ['-f', '%Su:%Sg %Sp', corePath]);
       final output = result.stdout.trim();
@@ -92,11 +93,7 @@ class System {
     }
 
     if (system.isWindows) {
-      final result = await windows?.registerService();
-      if (result == true) {
-        return AuthorizeCode.success;
-      }
-      return AuthorizeCode.error;
+      return await windows?.registerService() ?? AuthorizeCode.error;
     }
 
     if (system.isMacOS) {
@@ -273,64 +270,47 @@ class Windows {
   //   }
   // }
 
-  Future<WindowsHelperServiceStatus> checkService() async {
-    // final qcResult = await Process.run('sc', ['qc', appHelperService]);
-    // final qcOutput = qcResult.stdout.toString();
-    // if (qcResult.exitCode != 0 || !qcOutput.contains(appPath.helperPath)) {
-    //   return WindowsHelperServiceStatus.none;
-    // }
-    final result = await Process.run('sc', ['query', appHelperService]);
-    if (result.exitCode != 0) {
-      return WindowsHelperServiceStatus.none;
+  Future<AuthorizeCode> registerService() async {
+    final readiness = await windowsHelperClient.readiness();
+    switch (readiness) {
+      case WindowsHelperReadiness.ready:
+        return AuthorizeCode.none;
+      case WindowsHelperReadiness.manifestMissing:
+        commonPrint.log(
+          'Core manifest is missing or invalid; Helper unavailable',
+          logLevel: LogLevel.warning,
+        );
+        return AuthorizeCode.error;
+      case WindowsHelperReadiness.notReady:
+        break;
     }
-    final output = result.stdout.toString();
-    if (output.contains('RUNNING') && await request.pingHelper()) {
-      return WindowsHelperServiceStatus.running;
+    if (!runas(appPath.helperPath, 'install')) {
+      return AuthorizeCode.error;
     }
-    return WindowsHelperServiceStatus.presence;
+    return await _waitForHelperService()
+        ? AuthorizeCode.success
+        : AuthorizeCode.error;
   }
 
-  Future<bool> registerService() async {
-    final status = await checkService();
-
-    if (status == WindowsHelperServiceStatus.running) {
-      return true;
+  Future<bool> _waitForHelperService() async {
+    const timeout = Duration(seconds: 6);
+    const interval = Duration(seconds: 1);
+    final stopwatch = Stopwatch()..start();
+    while (stopwatch.elapsed < timeout) {
+      final remaining = timeout - stopwatch.elapsed;
+      if (await windowsHelperClient.readiness(
+            timeout: remaining,
+            logFailure: false,
+          ) ==
+          WindowsHelperReadiness.ready) {
+        return true;
+      }
+      if (stopwatch.elapsed + interval >= timeout) {
+        break;
+      }
+      await Future.delayed(interval);
     }
-
-    final command = [
-      '/c',
-      if (status == WindowsHelperServiceStatus.presence) ...[
-        'taskkill',
-        '/F',
-        '/IM',
-        '$appHelperService.exe'
-            ' & '
-            'sc',
-        'delete',
-        appHelperService,
-        '&',
-      ],
-      'sc',
-      'create',
-      appHelperService,
-      'binPath= "${appPath.helperPath}"',
-      'start= auto',
-      '&&',
-      'sc',
-      'start',
-      appHelperService,
-    ].join(' ');
-
-    final res = runas('cmd.exe', command);
-
-    await Future.delayed(const Duration(milliseconds: 300));
-    final retryStatus = await retry(
-      task: checkService,
-      maxAttempts: 5,
-      retryIf: (status) => status != WindowsHelperServiceStatus.running,
-      delay: const Duration(seconds: 1),
-    );
-    return res && retryStatus == WindowsHelperServiceStatus.running;
+    return false;
   }
 
   Future<bool> registerTask(String appName) async {

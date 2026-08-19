@@ -3,12 +3,23 @@ package main
 import (
 	"errors"
 	"testing"
+
+	"github.com/metacubex/mihomo/constant"
 )
 
 type testSelectable struct {
 	selected string
 	valid    map[string]bool
 	fallback string
+}
+
+func TestDefaultTestURLUsesCloudflare(t *testing.T) {
+	if constant.DefaultTestURL != defaultTestURL {
+		t.Fatalf("DefaultTestURL = %q, want %q", constant.DefaultTestURL, defaultTestURL)
+	}
+	if params := defaultSetupParams(); params.TestURL != defaultTestURL {
+		t.Fatalf("SetupParams.TestURL = %q, want %q", params.TestURL, defaultTestURL)
+	}
 }
 
 func (selector *testSelectable) Set(name string) error {
@@ -74,7 +85,7 @@ func TestHandleUpdateConfigBeforeSetup(t *testing.T) {
 		currentConfig = previousConfig
 	})
 
-	if message := handleUpdateConfig([]byte(`{}`)); message != "" {
+	if message := handleUpdateConfig(&UpdateParams{}); message != "" {
 		t.Fatalf("message = %q, want empty", message)
 	}
 }

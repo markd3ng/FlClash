@@ -138,6 +138,8 @@ class Build {
 
   static String get libName => 'libclash';
 
+  static const coreManifestName = 'manifest.json';
+
   static String get outDir => join(current, libName);
 
   static String get _coreDir => join(current, 'core');
@@ -361,6 +363,16 @@ class Build {
       }
     }
 
+    if (target == Target.windows && !isLib && corePaths.isNotEmpty) {
+      final coreSha256 = await calcSha256(corePaths.first);
+      await File(
+        join(targetOutFilePath, coreManifestName),
+      ).writeAsString(
+        '${jsonEncode({'coreSha256': coreSha256})}\n',
+        flush: true,
+      );
+    }
+
     return corePaths;
   }
 
@@ -388,10 +400,10 @@ class Build {
     }
   }
 
-  static Future<void> buildHelper(Target target, String token) async {
+  static Future<void> buildHelper(Target target, String coreSha256) async {
     await exec(
       ['cargo', 'build', '--release', '--features', 'windows-service'],
-      environment: {'TOKEN': token},
+      environment: {'CORE_SHA256': coreSha256, 'CORE_NAME': '$coreName.exe'},
       name: 'build helper',
       workingDirectory: _servicesDir,
     );
@@ -726,15 +738,12 @@ class BuildCommand extends Command {
 
     switch (target) {
       case Target.windows:
-        final token = target != Target.android
-            ? await Build.calcSha256(corePaths.first)
-            : null;
-        await Build.buildHelper(target, token!);
+        final coreSha256 = await Build.calcSha256(corePaths.first);
+        await Build.buildHelper(target, coreSha256);
         await _buildDistributor(
           target: target,
           targets: 'exe,zip',
-          args:
-              ' --description $archName --build-dart-define=CORE_SHA256=$token',
+          args: ' --description $archName',
           env: env,
         );
         return;

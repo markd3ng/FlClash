@@ -89,6 +89,9 @@ install(PROGRAMS "${CLASH_DIR}/FlClashCore.exe" DESTINATION "${INSTALL_BUNDLE_LI
 install(PROGRAMS "${CLASH_DIR}/FlClashHelperService.exe" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
   COMPONENT Runtime)
 
+install(FILES "${CLASH_DIR}/manifest.json" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+  COMPONENT Runtime)
+
 install(FILES "EnableLoopback.exe" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
   COMPONENT Runtime)
 

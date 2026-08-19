@@ -6,6 +6,7 @@ import android.os.IBinder
 import com.oixcloud.clash.common.chunkedForAidl
 import com.oixcloud.clash.common.maxValidationMessageBytes
 import com.oixcloud.clash.core.Core
+import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -61,15 +62,15 @@ class ValidatorService : Service(),
                     )
                     return@launch
                 }
-                Core.invokeAction(isolatedInitAction) { initResult ->
+                Core.invokeMethod(isolatedInitAction) { initResult ->
                     if (!isSuccessfulInit(initResult)) {
                         deliverAndFinish(
                             validationError(action, "validator initialization failed"),
                             callback,
                         )
-                        return@invokeAction
+                        return@invokeMethod
                     }
-                    Core.invokeAction(action) { result ->
+                    Core.invokeMethod(action) { result ->
                         deliverAndFinish(
                             result ?: validationError(action, "validator returned no result"),
                             callback,
@@ -108,15 +109,14 @@ class ValidatorService : Service(),
     private fun isSuccessfulInit(result: String?): Boolean {
         return runCatching {
             JsonParser.parseString(result).asJsonObject
-                .getAsJsonPrimitive("data")
+                .getAsJsonPrimitive("result")
                 .asBoolean
         }.getOrDefault(false)
     }
 
     private fun prepareValidatorHome(initAction: String): String {
         val action = JsonParser.parseString(initAction).asJsonObject
-        val params = JsonParser.parseString(action.getAsJsonPrimitive("data").asString)
-            .asJsonObject
+        val params = action.getAsJsonObject("arguments")
         val sourceHome = File(params.getAsJsonPrimitive("home-dir").asString)
         val targetHome = File(cacheDir, "validator-${android.os.Process.myPid()}")
         targetHome.deleteRecursively()
@@ -125,7 +125,7 @@ class ValidatorService : Service(),
         return try {
             params.addProperty("validation-source-home", sourceHome.path)
             params.addProperty("home-dir", targetHome.path)
-            action.addProperty("data", params.toString())
+            action.add("arguments", params)
             action.toString()
         } catch (error: Throwable) {
             cleanupValidatorHome()
@@ -140,12 +140,16 @@ class ValidatorService : Service(),
 
     private fun validationError(action: String, message: String): String {
         return runCatching {
-            JsonParser.parseString(action).asJsonObject.apply {
-                addProperty("data", message)
-                addProperty("code", 0)
+            val id = JsonParser.parseString(action).asJsonObject
+                .getAsJsonPrimitive("id")?.asString
+            JsonObject().apply {
+                if (id != null) addProperty("id", id)
+                addProperty("result", message)
             }.toString()
         }.getOrElse {
-            "{\"id\":\"\",\"method\":\"validateConfig\",\"data\":\"$message\",\"code\":0}"
+            JsonObject().apply {
+                addProperty("result", message)
+            }.toString()
         }
     }
 

@@ -204,55 +204,7 @@ enum FontFamily {
 
 enum RouteMode { bypassPrivate, config }
 
-enum ActionMethod {
-  message,
-  initClash,
-  getIsInit,
-  forceGc,
-  shutdown,
-  validateConfig,
-  validateConfigWithBytes,
-  updateConfig,
-  getConfig,
-  getConfigFromBytes,
-  getProxies,
-  changeProxy,
-  getTraffic,
-  getTotalTraffic,
-  resetTraffic,
-  asyncTestDelay,
-  getConnections,
-  closeConnections,
-  resetConnections,
-  closeConnection,
-  getExternalProviders,
-  getExternalProvider,
-  updateGeoData,
-  updateExternalProvider,
-  sideLoadExternalProvider,
-  startLog,
-  stopLog,
-  startListener,
-  stopListener,
-  getCountryCode,
-  getMemory,
-  crash,
-  setupConfig,
-  deleteFile,
-
-  ///Android,
-  setState,
-  startTun,
-  stopTun,
-  getRunTime,
-  updateDns,
-  getAndroidVpnOptions,
-  getCurrentProfileName,
-}
-
 enum AuthorizeCode { none, success, error }
-
-enum WindowsHelperServiceStatus { none, presence, running }
 
 enum FunctionTag {
   updateConfig,
