@@ -49,7 +49,7 @@ class RulesDao extends DatabaseAccessor<Database> with _$RulesDaoMixin {
     );
 
     query.orderBy([
-      OrderingTerm.desc(
+      OrderingTerm.asc(
         profileRuleLinks.profileId.isNull().caseMatch<int>(
           when: {const Constant(true): const Constant(1)},
           orElse: const Constant(0),
@@ -94,18 +94,6 @@ class RulesDao extends DatabaseAccessor<Database> with _$RulesDaoMixin {
 
   Future<void> putProfileAddedRule(int profileId, Rule rule) {
     return _put(rule, profileId: profileId, scene: RuleScene.added);
-  }
-
-  Future<void> putProfileDisabledRule(int profileId, Rule rule) {
-    return _put(rule, profileId: profileId, scene: RuleScene.added);
-  }
-
-  Future<void> putGlobalRules(Iterable<Rule> rules) {
-    return _putAll(rules);
-  }
-
-  Future<void> setGlobalRules(Iterable<Rule> rules) {
-    return _set(rules);
   }
 
   Future<int> putDisabledLink(int profileId, int ruleId) async {
@@ -205,68 +193,6 @@ class RulesDao extends DatabaseAccessor<Database> with _$RulesDaoMixin {
 
   Future<void> _delAll(Iterable<int> ruleIds) async {
     await rules.deleteWhere((t) => t.id.isIn(ruleIds));
-  }
-
-  Future<void> _putAll(
-    Iterable<Rule> rules, {
-    int? profileId,
-    RuleScene? scene,
-  }) async {
-    await batch((b) {
-      b.insertAllOnConflictUpdate(
-        this.rules,
-        rules.map((item) => item.toCompanion()),
-      );
-      b.insertAllOnConflictUpdate(
-        profileRuleLinks,
-        rules.map(
-          (item) => ProfileRuleLink(
-            ruleId: item.id,
-            profileId: profileId,
-            scene: scene,
-          ).toCompanion(),
-        ),
-      );
-    });
-  }
-
-  Future<void> _set(
-    Iterable<Rule> rules, {
-    int? profileId,
-    RuleScene? scene,
-  }) async {
-    await batch((b) {
-      b.insertAllOnConflictUpdate(
-        this.rules,
-        rules.map((item) => item.toCompanion()),
-      );
-
-      b.deleteWhere(
-        profileRuleLinks,
-        (t) =>
-            (profileId == null
-                ? t.profileId.isNull()
-                : t.profileId.equals(profileId)) &
-            (scene == null ? const Constant(true) : t.scene.equalsValue(scene)),
-      );
-
-      b.insertAllOnConflictUpdate(
-        profileRuleLinks,
-        rules.map(
-          (item) => ProfileRuleLink(
-            ruleId: item.id,
-            profileId: profileId,
-            scene: scene,
-          ).toCompanion(),
-        ),
-      );
-
-      b.deleteWhere(this.rules, (r) {
-        final linkedIds = selectOnly(profileRuleLinks);
-        linkedIds.addColumns([profileRuleLinks.ruleId]);
-        return r.id.isNotInQuery(linkedIds);
-      });
-    });
   }
 }
 
