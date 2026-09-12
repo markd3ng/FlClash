@@ -68,9 +68,17 @@ struct StopResponse {
 }
 
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ErrorDetails {
+    os_error: i32,
+}
+
+#[derive(Serialize)]
 struct ErrorResponse {
     code: &'static str,
     message: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    details: Option<ErrorDetails>,
 }
 
 struct ManagedCore {
@@ -221,8 +229,24 @@ fn error_response(
         &ErrorResponse {
             code,
             message: message.into(),
+            details: None,
         },
         status,
+    )
+}
+
+/// The OS error code is what lets the app tell a Core that Windows refused on
+/// policy grounds (Smart App Control, AppLocker) from one that is broken.
+fn launch_failure_response(error: &Error) -> warp::reply::Response {
+    json_response(
+        &ErrorResponse {
+            code: "processLaunchFailed",
+            message: error.to_string(),
+            details: error
+                .raw_os_error()
+                .map(|os_error| ErrorDetails { os_error }),
+        },
+        StatusCode::INTERNAL_SERVER_ERROR,
     )
 }
 
@@ -296,11 +320,7 @@ fn start(start_params: StartParams) -> warp::reply::Response {
         }
         Err(e) => {
             log_message(e.to_string());
-            error_response(
-                "processLaunchFailed",
-                e.to_string(),
-                StatusCode::INTERNAL_SERVER_ERROR,
-            )
+            launch_failure_response(&e)
         }
     }
 }
@@ -955,5 +975,33 @@ mod tests {
         assert!(!is_allowed_core_pipe(
             r"\\.\pipe\FlClashCore_ABCDEF0123456789abcdef0123456789"
         ));
+    }
+    #[tokio::test]
+    async fn a_launch_failure_carries_the_os_error_code() {
+        let response = launch_failure_response(&Error::from_raw_os_error(577));
+
+        assert_eq!(response.status(), StatusCode::INTERNAL_SERVER_ERROR);
+        let body: serde_json::Value = serde_json::from_slice(
+            &warp::hyper::body::to_bytes(response.into_body())
+                .await
+                .unwrap(),
+        )
+        .unwrap();
+        assert_eq!(body["code"], "processLaunchFailed");
+        assert_eq!(body["details"]["osError"], 577);
+    }
+
+    #[tokio::test]
+    async fn a_launch_failure_without_an_os_error_omits_the_details() {
+        let response = launch_failure_response(&Error::other("spawn refused"));
+
+        let body: serde_json::Value = serde_json::from_slice(
+            &warp::hyper::body::to_bytes(response.into_body())
+                .await
+                .unwrap(),
+        )
+        .unwrap();
+        assert_eq!(body["message"], "spawn refused");
+        assert!(body.get("details").is_none());
     }
 }

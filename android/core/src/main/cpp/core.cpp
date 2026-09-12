@@ -101,11 +101,13 @@ static void free_string_impl(char *str) {
     free(str);
 }
 
-static void call_tun_interface_protect_impl(void *tun_interface, const int fd) {
+static int call_tun_interface_protect_impl(void *tun_interface, const int fd) {
+    if (tun_interface == nullptr) return 0;
     ATTACH_JNI();
-    env->CallVoidMethod(static_cast<jobject>(tun_interface),
-                        m_tun_interface_protect,
-                        fd);
+    const auto accepted = env->CallBooleanMethod(static_cast<jobject>(tun_interface),
+                                                m_tun_interface_protect, fd);
+    if (jni_clear_exception(env)) return 0;
+    return accepted == JNI_TRUE ? 1 : 0;
 }
 
 static char *
@@ -113,22 +115,39 @@ call_tun_interface_resolve_process_impl(void *tun_interface, const int protocol,
                                         const char *source,
                                         const char *target,
                                         const int uid) {
+    if (tun_interface == nullptr) return nullptr;
     ATTACH_JNI();
+    const auto sourceString = new_string(source);
+    if (sourceString == nullptr) return nullptr;
+    const auto targetString = new_string(target);
+    if (targetString == nullptr) {
+        env->DeleteLocalRef(sourceString);
+        return nullptr;
+    }
     const auto packageName = reinterpret_cast<jstring>(env->CallObjectMethod(
             static_cast<jobject>(tun_interface),
             m_tun_interface_resolve_process,
             protocol,
-            new_string(source),
-            new_string(target),
+            sourceString,
+            targetString,
             uid));
-    return get_string(packageName);
+    const auto failed = jni_clear_exception(env);
+    const auto result = failed ? nullptr : get_string(packageName);
+    if (sourceString != nullptr) env->DeleteLocalRef(sourceString);
+    if (targetString != nullptr) env->DeleteLocalRef(targetString);
+    if (packageName != nullptr) env->DeleteLocalRef(packageName);
+    return result;
 }
 
 static void call_invoke_interface_result_impl(void *invoke_interface, const char *data) {
+    if (invoke_interface == nullptr) return;
     ATTACH_JNI();
+    const auto value = new_string(data);
+    if (value == nullptr) return;
     env->CallVoidMethod(static_cast<jobject>(invoke_interface),
-                        m_invoke_interface_result,
-                        new_string(data));
+                        m_invoke_interface_result, value);
+    jni_clear_exception(env);
+    if (value != nullptr) env->DeleteLocalRef(value);
 }
 
 extern "C"
@@ -145,7 +164,7 @@ JNI_OnLoad(JavaVM *vm, void *) {
 
     const auto c_invoke_interface = find_class("com/oixcloud/clash/core/InvokeInterface");
 
-    m_tun_interface_protect = find_method(c_tun_interface, "protect", "(I)V");
+    m_tun_interface_protect = find_method(c_tun_interface, "protect", "(I)Z");
     m_tun_interface_resolve_process = find_method(c_tun_interface, "resolverProcess",
                                                   "(ILjava/lang/String;Ljava/lang/String;I)Ljava/lang/String;");
     m_invoke_interface_result = find_method(c_invoke_interface, "onResult",

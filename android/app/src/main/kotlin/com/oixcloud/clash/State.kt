@@ -2,6 +2,7 @@ package com.oixcloud.clash
 
 import android.net.VpnService
 import com.oixcloud.clash.common.GlobalState
+import com.oixcloud.clash.common.RunIntentArbiter
 import com.oixcloud.clash.common.QuickAction
 import com.oixcloud.clash.models.SharedState
 import com.oixcloud.clash.plugins.AppPlugin
@@ -13,12 +14,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
-import kotlin.coroutines.resume
 
 enum class RunState {
     START, PENDING, STOP
@@ -30,7 +29,7 @@ object State {
     val runLock = Mutex()
 
     var runTime: Long = 0
-    private var startRevision = 0
+    private val startPreparation = StartPreparation()
 
     var sharedState: SharedState = SharedState()
 
@@ -59,6 +58,12 @@ object State {
     )
 
     suspend fun handleQuickAction(action: QuickAction) {
+        // A shortcut stop must be able to release the start currently waiting
+        // for consent, even while QuickActionHandler owns its serialized action.
+        if (action != QuickAction.START && startPreparation.isWaiting) {
+            handleStopServiceAction()
+            return
+        }
         quickActions.handle(action)
     }
 
@@ -92,17 +97,18 @@ object State {
             it.handleStart()
             return
         }
+        val request = startPreparation.begin()
         runLock.withLock {
-            if (runStateFlow.value != RunState.STOP) {
-                return
-            }
+            startPreparation.ensureCurrent(request)
+            if (runStateFlow.value != RunState.STOP) return
             sharedState = GlobalState.application.sharedState
-            setupAndStart()
+            setupAndStart(request)
         }
 
     }
 
     suspend fun handleStopServiceAction() {
+        startPreparation.stop()
         val plugin = runLock.withLock {
             if (runStateFlow.value != RunState.START) return
             // Stopping must remain available even if Dart cannot load its key.
@@ -124,24 +130,24 @@ object State {
     }
 
     suspend fun handleStartService() = withTimeout(60_000) {
-        val revision = runLock.withLock { ++startRevision }
+        val request = startPreparation.begin()
         val options = sharedState.vpnOptions
             ?: throw IllegalStateException("Open the app to configure the VPN first")
         val plugin = appPlugin
         if (plugin != null) {
             withContext(Dispatchers.Main) {
-                suspendCancellableCoroutine<Unit> { continuation ->
-                    plugin.requestNotificationsPermission {
-                        if (continuation.isActive) continuation.resume(Unit)
-                    }
-                }
+                startPreparation.await<Unit>(
+                    request,
+                    register = plugin::requestNotificationsPermission,
+                    unregister = plugin::cancelNotificationPreparation,
+                )
             }
             val allowed = withContext(Dispatchers.Main) {
-                suspendCancellableCoroutine<Boolean> { continuation ->
-                    plugin.prepare(options.enable) {
-                        if (continuation.isActive) continuation.resume(it)
-                    }
-                }
+                startPreparation.await<Boolean>(
+                    request,
+                    register = { plugin.prepare(options.enable, it) },
+                    unregister = plugin::cancelVpnPreparation,
+                )
             }
             check(allowed) { "VPN permission was not granted" }
         } else {
@@ -150,13 +156,14 @@ object State {
             }
         }
         runLock.withLock {
-            check(revision == startRevision) { "VPN start was cancelled" }
+            startPreparation.ensureCurrent(request)
             if (runStateFlow.value == RunState.START) return@withLock
             runStateFlow.value = RunState.PENDING
             startWithRollback(
                 block = {
                     runTime = Service.startService(options, runTime)
                     check(runTime != 0L) { "VPN service did not start" }
+                    startPreparation.ensureCurrent(request)
                     runStateFlow.value = RunState.START
                 },
                 rollback = ::rollbackStart,
@@ -174,7 +181,7 @@ object State {
         )
     }
 
-    private suspend fun setupAndStart() {
+    private suspend fun setupAndStart(request: RunIntentArbiter.Token) {
         val options = sharedState.vpnOptions
             ?: throw IllegalStateException("Open the app to configure the VPN first")
         if (options.enable && VpnService.prepare(GlobalState.application) != null) {
@@ -212,8 +219,10 @@ object State {
                     completion.await()
                 }
                 check(result.isEmpty()) { result }
+                startPreparation.ensureCurrent(request)
                 runTime = Service.startService(options, runTime)
                 check(runTime != 0L) { "VPN service did not start" }
+                startPreparation.ensureCurrent(request)
                 runStateFlow.value = RunState.START
             },
             rollback = ::rollbackStart,
@@ -249,8 +258,8 @@ object State {
     }
 
     suspend fun handleStopService() {
+        startPreparation.stop()
         runLock.withLock {
-            ++startRevision
             if (runStateFlow.value != RunState.START) {
                 return
             }

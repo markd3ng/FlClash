@@ -18,6 +18,8 @@ import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
 import com.android.tools.smali.dexlib2.dexbacked.DexBackedDexFile
 import com.oixcloud.clash.R
+import com.oixcloud.clash.ChinaPackageMatcher
+import com.oixcloud.clash.common.PendingCallback
 import com.oixcloud.clash.common.Components
 import com.oixcloud.clash.common.GlobalState
 import com.oixcloud.clash.common.QuickAction
@@ -55,68 +57,13 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
 
     private lateinit var scope: CoroutineScope
 
-    private var vpnPrepareCallback: ((Boolean) -> Unit)? = null
+    private val vpnPrepareCallback = PendingCallback<Boolean>()
 
-    private var requestNotificationCallback: (() -> Unit)? = null
+    private val requestNotificationCallback = PendingCallback<Unit>()
 
     private val packages = mutableListOf<Package>()
 
-    private val skipPrefixList = listOf(
-        "com.google",
-        "com.android.chrome",
-        "com.android.vending",
-        "com.microsoft",
-        "com.apple",
-        "com.zhiliaoapp.musically", // Banned by China
-    )
-
-    private val chinaAppPrefixList = listOf(
-        "com.tencent",
-        "com.alibaba",
-        "com.umeng",
-        "com.qihoo",
-        "com.ali",
-        "com.alipay",
-        "com.amap",
-        "com.sina",
-        "com.weibo",
-        "com.vivo",
-        "com.xiaomi",
-        "com.huawei",
-        "com.taobao",
-        "com.secneo",
-        "s.h.e.l.l",
-        "com.stub",
-        "com.kiwisec",
-        "com.secshell",
-        "com.wrapper",
-        "cn.securitystack",
-        "com.mogosec",
-        "com.secoen",
-        "com.netease",
-        "com.mx",
-        "com.qq.e",
-        "com.baidu",
-        "com.bytedance",
-        "com.bugly",
-        "com.miui",
-        "com.oppo",
-        "com.coloros",
-        "com.iqoo",
-        "com.meizu",
-        "com.gionee",
-        "cn.nubia",
-        "com.oplus",
-        "andes.oplus",
-        "com.unionpay",
-        "cn.wps"
-    )
-
-    private val chinaAppRegex by lazy {
-        ("(" + chinaAppPrefixList.joinToString("|").replace(".", "\\.") + ").*").toRegex()
-    }
-
-    private var isBlockNotification: Boolean = false
+    private var isBlockNotification = false
 
     override fun onMethodCall(call: MethodCall, result: Result) {
         when (call.method) {
@@ -292,8 +239,8 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
         }
     }
 
-    fun requestNotificationsPermission(callBack: () -> Unit) {
-        requestNotificationCallback = callBack
+    fun requestNotificationsPermission(callBack: (Unit) -> Unit) {
+        requestNotificationCallback.replace(callBack, Unit)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             val permission = ContextCompat.checkSelfPermission(
                 GlobalState.application, Manifest.permission.POST_NOTIFICATIONS
@@ -317,13 +264,19 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
     }
 
     fun invokeRequestNotificationCallback() {
-        val callback = requestNotificationCallback
-        requestNotificationCallback = null
-        callback?.invoke()
+        requestNotificationCallback.resolve(Unit)
+    }
+
+    fun cancelNotificationPreparation(callback: (Unit) -> Unit) {
+        requestNotificationCallback.cancel(callback)
+    }
+
+    fun cancelVpnPreparation(callback: (Boolean) -> Unit) {
+        vpnPrepareCallback.cancel(callback)
     }
 
     fun prepare(needPrepare: Boolean, callBack: (Boolean) -> Unit) {
-        vpnPrepareCallback = callBack
+        vpnPrepareCallback.replace(callBack, false)
         if (!needPrepare) {
             invokeVpnPrepareCallback()
             return
@@ -339,24 +292,20 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
     }
 
     fun invokeVpnPrepareCallback(allowed: Boolean = true) {
-        val callback = vpnPrepareCallback
-        vpnPrepareCallback = null
-        callback?.invoke(allowed)
+        vpnPrepareCallback.resolve(allowed)
     }
 
 
     @Suppress("DEPRECATION")
     private fun isChinaPackage(packageName: String): Boolean {
         val packageManager = GlobalState.application.packageManager ?: return false
-        skipPrefixList.forEach {
-            if (packageName == it || packageName.startsWith("$it.")) return false
-        }
+        if (ChinaPackageMatcher.isSkipped(packageName)) return false
         val packageManagerFlags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             PackageManager.MATCH_UNINSTALLED_PACKAGES or PackageManager.GET_ACTIVITIES or PackageManager.GET_SERVICES or PackageManager.GET_RECEIVERS or PackageManager.GET_PROVIDERS
         } else {
             PackageManager.GET_UNINSTALLED_PACKAGES or PackageManager.GET_ACTIVITIES or PackageManager.GET_SERVICES or PackageManager.GET_RECEIVERS or PackageManager.GET_PROVIDERS
         }
-        if (packageName.matches(chinaAppRegex)) {
+        if (ChinaPackageMatcher.matchesKnownPrefix(packageName)) {
             return true
         }
         try {
@@ -375,7 +324,7 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
                 packageInfo.receivers?.let { addAll(it) }
                 packageInfo.providers?.let { addAll(it) }
             }.forEach {
-                if (it.name.matches(chinaAppRegex)) return true
+                if (ChinaPackageMatcher.matchesKnownPrefix(it.name)) return true
             }
             packageInfo.applicationInfo?.publicSourceDir?.let {
                 ZipFile(File(it)).use {
@@ -399,10 +348,9 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
                             return false
                         }
                         for (clazz in dexFile.classes) {
-                            val clazzName =
-                                clazz.type.substring(1, clazz.type.length - 1).replace("/", ".")
-                                    .replace("$", ".")
-                            if (clazzName.matches(chinaAppRegex)) return true
+                            if (ChinaPackageMatcher.matchesKnownPrefix(
+                                    ChinaPackageMatcher.classNameOf(clazz.type)
+                                )) return true
                         }
                     }
                 }
@@ -422,6 +370,9 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         channel.setMethodCallHandler(null)
+        activityRef = null
+        invokeRequestNotificationCallback()
+        invokeVpnPrepareCallback(false)
         scope.cancel()
     }
 

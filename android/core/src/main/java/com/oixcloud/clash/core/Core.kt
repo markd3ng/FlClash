@@ -37,9 +37,7 @@ data object Core {
         return startTun(
             fd,
             object : TunInterface {
-                override fun protect(fd: Int) {
-                    protect(fd)
-                }
+                override fun protect(fd: Int): Boolean = protect(fd)
 
                 override fun resolverProcess(
                     protocol: Int,

@@ -1,4 +1,6 @@
 import 'package:fl_clash/common/color.dart';
+import 'package:fl_clash/common/core_launch_error.dart';
+import 'package:fl_clash/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -55,7 +57,11 @@ class InitErrorScreen extends StatelessWidget {
                   border: Border.all(color: colorScheme.error.opacity50),
                 ),
                 child: SelectableText(
-                  error.toString(),
+                  coreLaunchBlockedMessage(
+                        error,
+                        AppLocalizations.maybeOf(context),
+                      ) ??
+                      error.toString(),
                   style: TextStyle(
                     color: colorScheme.onErrorContainer,
                     fontWeight: FontWeight.w600,

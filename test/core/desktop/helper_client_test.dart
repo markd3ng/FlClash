@@ -177,7 +177,10 @@ void main() {
         });
       }),
     );
-    final launcher = WindowsHelperLauncher(client);
+    final launcher = WindowsHelperLauncher(
+      client,
+      livenessProbe: (_) async => true,
+    );
     final lease = await launcher.start(
       sessionId: _sessionId,
       address: 'test-address',
@@ -198,6 +201,80 @@ void main() {
     expect(stopRequests, 2);
     expect(result.stopped, isFalse);
     expect(result.exitConfirmed, isTrue);
+  });
+
+  test(
+    'Helper lease confirms the exit of a Core whose Helper is gone',
+    () async {
+      var stopRequests = 0;
+      final probedPids = <int>[];
+      final client = _client(
+        _ResponseAdapter((options) {
+          if (options.path.endsWith('/start')) {
+            return _jsonResponse({'sessionId': _sessionId, 'pid': 6456});
+          }
+          stopRequests++;
+          throw DioException(
+            requestOptions: options,
+            type: DioExceptionType.connectionError,
+          );
+        }),
+      );
+      final launcher = WindowsHelperLauncher(
+        client,
+        livenessProbe: (pid) async {
+          probedPids.add(pid);
+          return false;
+        },
+      );
+      final lease = await launcher.start(
+        sessionId: _sessionId,
+        address: 'test-address',
+      );
+
+      final result = await lease.stop(const Duration(seconds: 1));
+      final repeated = await lease.stop(const Duration(seconds: 1));
+
+      expect(probedPids, [6456]);
+      expect(stopRequests, 1);
+      expect(result.stopped, isFalse);
+      expect(result.exitConfirmed, isTrue);
+      expect(repeated, result);
+    },
+  );
+
+  test('Helper lease does not reinterpret a semantic stop failure', () async {
+    final client = _client(
+      _ResponseAdapter((options) {
+        if (options.path.endsWith('/start')) {
+          return _jsonResponse({'sessionId': _sessionId, 'pid': 6456});
+        }
+        return _jsonResponse({
+          'code': 'coreStopFailed',
+          'message': 'Helper could not stop the Core',
+        }, statusCode: HttpStatus.conflict);
+      }),
+    );
+    final launcher = WindowsHelperLauncher(
+      client,
+      livenessProbe: (_) async =>
+          throw StateError('must not probe a semantic failure'),
+    );
+    final lease = await launcher.start(
+      sessionId: _sessionId,
+      address: 'test-address',
+    );
+
+    await expectLater(
+      lease.stop(const Duration(seconds: 1)),
+      throwsA(
+        isA<WindowsHelperException>().having(
+          (error) => error.code,
+          'code',
+          'coreStopFailed',
+        ),
+      ),
+    );
   });
 
   test(

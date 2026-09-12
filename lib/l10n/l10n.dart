@@ -5938,6 +5938,16 @@ class AppLocalizations {
       args: [],
     );
   }
+
+  /// `Windows blocked the proxy core from starting (system error {code}). Check Protection history in Windows Security and your app control policy, and verify the installer source and signature.`
+  String coreBlockedByPolicyTip(int code) {
+    return Intl.message(
+      'Windows blocked the proxy core from starting (system error $code). Check Protection history in Windows Security and your app control policy, and verify the installer source and signature.',
+      name: 'coreBlockedByPolicyTip',
+      desc: '',
+      args: [code],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<AppLocalizations> {

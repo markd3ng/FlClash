@@ -13,7 +13,7 @@ extern jstring jni_new_string(JNIEnv *env, const char *str);
 
 extern char *jni_get_string(JNIEnv *env, jstring str);
 
-extern int jni_catch_exception(JNIEnv *env);
+extern bool jni_clear_exception(JNIEnv *env);
 
 extern void jni_attach_thread(scoped_jni *jni);
 

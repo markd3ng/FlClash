@@ -708,5 +708,7 @@
   "customRuleType": "规则类型",
   "routingChanged": "编辑或检查期间配置发生变化，请重新打开编辑器或再次检查",
   "editCustomRouting": "编辑自定义",
-  "customRoutingDraftHint": "先填写自定义内容，再切换至自定义模式。编辑草稿不会切换当前模式"
+  "customRoutingDraftHint": "先填写自定义内容，再切换至自定义模式。编辑草稿不会切换当前模式",
+  "coreBlockedByPolicyTip": "Windows 阻止了代理内核启动（系统错误 {code}）。请检查 Windows 安全中心的保护历史记录及应用控制策略，并确认安装包来源和签名。",
+  "@coreBlockedByPolicyTip": {"placeholders": {"code": {"type": "int"}}}
 }

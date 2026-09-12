@@ -6,6 +6,7 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:fl_clash/common/geo_recovery.dart';
+import 'package:fl_clash/common/core_launch_error.dart';
 import 'package:fl_clash/common/update_download.dart';
 import 'package:fl_clash/core/core.dart';
 import 'package:fl_clash/enum/enum.dart';
@@ -3324,7 +3325,8 @@ extension CommonControllerExt on AppController {
       final isConfigValidationError = e is ConfigValidationException;
       final message = isConfigValidationError
           ? formatConfigValidationMessage(e.message, appLocalizations)
-          : Secrets.redactApiDomains(e.toString());
+          : coreLaunchBlockedMessage(e, appLocalizations) ??
+                Secrets.redactApiDomains(e.toString());
       if (silence) {
         globalState.showNotifier(message);
       } else {

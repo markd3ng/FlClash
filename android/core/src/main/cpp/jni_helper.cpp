@@ -1,7 +1,6 @@
 #include "jni_helper.h"
 
 #include <cstdlib>
-#include <malloc.h>
 #include <cstring>
 
 static JavaVM *global_vm;
@@ -22,27 +21,68 @@ JavaVM *global_java_vm() {
     return global_vm;
 }
 
+bool jni_clear_exception(JNIEnv *env) {
+    if (env->ExceptionCheck() == JNI_FALSE) {
+        return false;
+    }
+    env->ExceptionDescribe();
+    env->ExceptionClear();
+    return true;
+}
+
+static char *empty_string() {
+    return static_cast<char *>(calloc(1, 1));
+}
+
 char *jni_get_string(JNIEnv *env, jstring str) {
+    if (str == nullptr) {
+        return empty_string();
+    }
     const auto array = reinterpret_cast<jbyteArray>(env->CallObjectMethod(str, m_get_bytes));
+    if (jni_clear_exception(env) || array == nullptr) {
+        return empty_string();
+    }
     const int length = env->GetArrayLength(array);
     const auto content = static_cast<char *>(malloc(length + 1));
+    if (content == nullptr) {
+        env->DeleteLocalRef(array);
+        return empty_string();
+    }
     env->GetByteArrayRegion(array, 0, length, reinterpret_cast<jbyte *>(content));
+    if (jni_clear_exception(env)) {
+        // The copy did not happen, so `content` still holds whatever malloc
+        // handed back. Returning it would pass that heap content on as the
+        // string the caller asked for.
+        free(content);
+        env->DeleteLocalRef(array);
+        return empty_string();
+    }
+    env->DeleteLocalRef(array);
     content[length] = 0;
     return content;
 }
 
 jstring jni_new_string(JNIEnv *env, const char *str) {
+    if (str == nullptr) {
+        str = "";
+    }
     const auto length = static_cast<int>(strlen(str));
     const auto array = env->NewByteArray(length);
+    if (jni_clear_exception(env) || array == nullptr) {
+        return nullptr;
+    }
     env->SetByteArrayRegion(array, 0, length, reinterpret_cast<const jbyte *>(str));
-    return reinterpret_cast<jstring>(env->NewObject(c_string, m_new_string, array));
-}
-
-int jni_catch_exception(JNIEnv *env) {
-    const int result = env->ExceptionCheck();
-    if (result) {
-        env->ExceptionDescribe();
-        env->ExceptionClear();
+    if (jni_clear_exception(env)) {
+        // Calling NewObject with an exception still pending is undefined, and
+        // the array it would read from was not filled in anyway.
+        env->DeleteLocalRef(array);
+        return nullptr;
+    }
+    const auto result = reinterpret_cast<jstring>(env->NewObject(c_string, m_new_string, array));
+    const auto failed = jni_clear_exception(env);
+    env->DeleteLocalRef(array);
+    if (failed || result == nullptr) {
+        return nullptr;
     }
     return result;
 }

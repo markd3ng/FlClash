@@ -708,5 +708,7 @@
   "customRuleType": "ルールの種類",
   "routingChanged": "編集中または確認中に設定が変更されました。エディターを開き直すか、再度確認してください",
   "editCustomRouting": "カスタム設定を編集",
-  "customRoutingDraftHint": "カスタム設定を入力してから、カスタムモードに切り替えてください。下書きの編集では現在のモードは変わりません"
+  "customRoutingDraftHint": "カスタム設定を入力してから、カスタムモードに切り替えてください。下書きの編集では現在のモードは変わりません",
+  "coreBlockedByPolicyTip": "Windows がプロキシコアの起動をブロックしました（システムエラー {code}）。Windows セキュリティの保護の履歴とアプリ制御ポリシーを確認し、インストーラーの入手元と署名を確認してください。",
+  "@coreBlockedByPolicyTip": {"placeholders": {"code": {"type": "int"}}}
 }

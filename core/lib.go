@@ -8,7 +8,6 @@ package main
 import "C"
 
 import (
-	"context"
 	"core/platform"
 	t "core/tun"
 	"encoding/json"
@@ -16,6 +15,7 @@ import (
 	"net"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"unsafe"
 
@@ -25,94 +25,89 @@ import (
 	"github.com/metacubex/mihomo/dns"
 	"github.com/metacubex/mihomo/listener/sing_tun"
 	"github.com/metacubex/mihomo/log"
-	"golang.org/x/sync/semaphore"
 )
 
-var eventListener unsafe.Pointer
+var (
+	eventListenerLock sync.RWMutex
+	eventListener     unsafe.Pointer
+)
 
 type TunHandler struct {
 	listener *sing_tun.Listener
 	callback unsafe.Pointer
 
-	limit *semaphore.Weighted
+	callbacks tunCallbackLease
 }
 
 func (th *TunHandler) start(fd int, stack, address, dns string) bool {
 	runLock.Lock()
 	defer runLock.Unlock()
-	_ = th.limit.Acquire(context.TODO(), 4)
-	defer th.limit.Release(4)
 	th.initHook()
 	tunListener := t.Start(fd, stack, address, dns)
 	if tunListener != nil {
 		log.Infoln("TUN address: %v", tunListener.Address())
 		th.listener = tunListener
+		th.callbacks.activate()
 		return true
 	}
 	th.clear()
 	return false
 }
 
-func (th *TunHandler) close() {
-	_ = th.limit.Acquire(context.TODO(), 4)
-	defer th.limit.Release(4)
-	th.clear()
-}
+func (th *TunHandler) close() { th.clear() }
 
 func (th *TunHandler) clear() {
-	th.removeHook()
+	th.callbacks.close()
 	if th.listener != nil {
 		_ = th.listener.Close()
 	}
-	if th.callback != nil {
-		releaseObject(th.callback)
-	}
-	th.callback = nil
+	th.removeHook()
 	th.listener = nil
 }
 
-func (th *TunHandler) handleProtect(fd int) {
-	_ = th.limit.Acquire(context.Background(), 1)
-	defer th.limit.Release(1)
-
-	if th.listener == nil {
-		return
-	}
-
-	protect(th.callback, fd)
+func (th *TunHandler) handleProtect(fd int) error {
+	return th.callbacks.protect(fd, func(fd int) bool { return protect(th.callback, fd) })
 }
 
 func (th *TunHandler) handleResolveProcess(source, target net.Addr) string {
-	_ = th.limit.Acquire(context.Background(), 1)
-	defer th.limit.Release(1)
-
-	if th.listener == nil {
-		return ""
-	}
-	var protocol int
-	uid := -1
-	switch source.Network() {
-	case "udp", "udp4", "udp6":
-		protocol = syscall.IPPROTO_UDP
-	case "tcp", "tcp4", "tcp6":
-		protocol = syscall.IPPROTO_TCP
-	}
-	if version < 29 {
-		uid = platform.QuerySocketUidFromProcFs(source, target)
-	}
-	return resolveProcess(th.callback, protocol, source.String(), target.String(), uid)
+	var result string
+	th.callbacks.use(func() {
+		var protocol int
+		uid := -1
+		switch source.Network() {
+		case "udp", "udp4", "udp6":
+			protocol = syscall.IPPROTO_UDP
+		case "tcp", "tcp4", "tcp6":
+			protocol = syscall.IPPROTO_TCP
+		}
+		if version < 29 {
+			uid = platform.QuerySocketUidFromProcFs(source, target)
+		}
+		result = resolveProcess(th.callback, protocol, source.String(), target.String(), uid)
+	})
+	return result
 }
 
-func (th *TunHandler) initHook() {
+var activeTunHandler atomic.Pointer[TunHandler]
+
+// Install function pointers before any Core goroutines can read them. Only the
+// active handler changes on start/stop; an old callback cannot clear a new one.
+func init() {
 	dialer.DefaultSocketHook = func(network, address string, conn syscall.RawConn) error {
 		if platform.ShouldBlockConnection() {
 			return errBlocked
 		}
-		return conn.Control(func(fd uintptr) {
-			th.handleProtect(int(fd))
-		})
+		th := activeTunHandler.Load()
+		if th == nil {
+			return nil
+		}
+		return protectSocket(conn, th.handleProtect)
 	}
 	process.DefaultPackageNameResolver = func(metadata *constant.Metadata) (string, error) {
+		th := activeTunHandler.Load()
+		if th == nil {
+			return "", process.ErrInvalidNetwork
+		}
 		src, dst := metadata.RawSrcAddr, metadata.RawDstAddr
 		if src == nil || dst == nil {
 			return "", process.ErrInvalidNetwork
@@ -121,10 +116,8 @@ func (th *TunHandler) initHook() {
 	}
 }
 
-func (th *TunHandler) removeHook() {
-	dialer.DefaultSocketHook = nil
-	process.DefaultPackageNameResolver = nil
-}
+func (th *TunHandler) initHook()   { activeTunHandler.Store(th) }
+func (th *TunHandler) removeHook() { activeTunHandler.CompareAndSwap(th, nil) }
 
 var (
 	tunLock    sync.Mutex
@@ -149,8 +142,8 @@ func handleStartTun(callback unsafe.Pointer, fd int, stack, address, dns string)
 		tunHandler.close()
 		tunHandler = nil
 	}
-	if fd <= 0 {
-		if fd == 0 {
+	if fd <= 0 || callback == nil {
+		if fd >= 0 {
 			_ = syscall.Close(fd)
 		}
 		if callback != nil {
@@ -160,15 +153,21 @@ func handleStartTun(callback unsafe.Pointer, fd int, stack, address, dns string)
 		return false
 	}
 	tunHandler = &TunHandler{
-		callback: callback,
-		limit:    semaphore.NewWeighted(4),
+		callback:  callback,
+		callbacks: tunCallbackLease{release: func() { releaseObject(callback) }},
 	}
 	if !tunHandler.start(fd, stack, address, dns) {
 		tunHandler = nil
 		handleStopListener()
 		return false
 	}
-	return handleStartListener()
+	if !handleStartListener() {
+		tunHandler.close()
+		tunHandler = nil
+		handleStopListener()
+		return false
+	}
+	return true
 }
 
 func handleUpdateDns(value string) {
@@ -180,12 +179,12 @@ func handleUpdateDns(value string) {
 }
 
 func (response MethodResponse) send() {
+	defer releaseObject(response.callback)
 	data, err := response.JSON()
 	if err != nil {
 		return
 	}
 	invokeResult(response.callback, string(data))
-	releaseObject(response.callback)
 }
 
 //export invokeMethod
@@ -243,6 +242,8 @@ func quickSetup(callback unsafe.Pointer, initParamsChar *C.char, setupParamsChar
 
 //export setEventListener
 func setEventListener(listener unsafe.Pointer) {
+	eventListenerLock.Lock()
+	defer eventListenerLock.Unlock()
 	if eventListener != nil {
 		releaseObject(eventListener)
 	}
@@ -268,6 +269,8 @@ func marshalResult(value any) string {
 }
 
 func sendMessageBatch(messages []Message) {
+	eventListenerLock.RLock()
+	defer eventListenerLock.RUnlock()
 	if eventListener == nil {
 		return
 	}
