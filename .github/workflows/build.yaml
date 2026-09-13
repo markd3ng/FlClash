@@ -147,8 +147,8 @@ jobs:
         env:
           CGO_ENABLED: '0'
         run: |
-          go vet -tags with_gvisor ./component/trie ./common/httputils ./transport/openvpn
-          go test -tags with_gvisor ./component/trie ./common/httputils ./transport/openvpn
+          go vet -tags with_gvisor ./component/trie ./common/httputils ./transport/openvpn ./transport/restls ./transport/sudoku/obfs/sudoku ./transport/shadowsocks/shadowstream
+          go test -tags with_gvisor ./component/trie ./common/httputils ./transport/openvpn ./transport/restls ./transport/sudoku/obfs/sudoku ./transport/shadowsocks/shadowstream
       - name: Check native callback and file ownership races
         working-directory: core
         run: |
@@ -159,7 +159,7 @@ jobs:
           go test -C Clash.Meta -race -tags with_gvisor ./config ./listener ./hub/executor
           go test -C Clash.Meta -race -tags with_gvisor ./common/convert ./listener/sing_hysteria2 ./component/ca ./component/tls ./component/ech
           go test -C Clash.Meta -race -run '^TestKeyUpdateSpamPostHandshakeTLS13$' github.com/metacubex/tls
-          go test -C Clash.Meta -race -tags with_gvisor ./component/trie ./common/httputils ./transport/openvpn
+          go test -C Clash.Meta -race -tags with_gvisor ./component/trie ./common/httputils ./transport/openvpn ./transport/restls ./transport/sudoku/obfs/sudoku ./transport/shadowsocks/shadowstream
 
   android-core-test:
     name: Android core (${{ matrix.arch }})
