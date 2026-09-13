@@ -156,6 +156,13 @@ jobs:
         run: |
           go vet -tags with_gvisor ./component/sniffer
           go test -tags with_gvisor ./component/sniffer
+      - name: Check persistent cache regressions
+        working-directory: core/Clash.Meta
+        run: |
+          go vet -tags with_gvisor ./component/profile/cachefile ./component/fakeip
+          go test -race -tags with_gvisor -timeout=180s ./component/profile/cachefile ./component/fakeip
+          go test -short -race -count=1 -timeout=300s github.com/metacubex/bbolt/...
+          TEST_CONCURRENT_CASE_DURATION=3s go test -race -count=1 -timeout=300s -run '^(TestConcurrentGenericReadAndWrite|TestConcurrentRepeatableRead|TestOpen_MultipleGoroutines|TestSimulate_1000op_10p|TestSimulateNoFreeListSync_1000op_10p)$' github.com/metacubex/bbolt
       - name: Check interface prefix lookup regressions
         working-directory: core/Clash.Meta
         run: |
