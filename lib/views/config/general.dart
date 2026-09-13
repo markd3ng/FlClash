@@ -5,6 +5,7 @@ import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/widgets/ua_dialog.dart';
+import 'package:fl_clash/widgets/proxy_authentication.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -742,6 +743,7 @@ final generalItems = <Widget>[
   const AutoIpv6Item(),
   const Ipv6Item(),
   const AllowLanItem(),
+  const ProxyAuthenticationItem(),
   const UnifiedDelayItem(),
   const AppendSystemDNSItem(),
   const FindProcessItem(),

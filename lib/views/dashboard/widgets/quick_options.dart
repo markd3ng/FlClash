@@ -130,19 +130,26 @@ class SystemProxyButton extends StatelessWidget {
               ),
               Consumer(
                 builder: (_, ref, _) {
+                  final authenticated = ref.watch(
+                    networkSettingProvider.select(
+                      (state) => state.authentication.enable,
+                    ),
+                  );
                   final systemProxy = ref.watch(
                     networkSettingProvider.select((state) => state.systemProxy),
                   );
                   return Switch(
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    value: systemProxy,
-                    onChanged: (value) {
-                      ref
-                          .read(networkSettingProvider.notifier)
-                          .update(
-                            (state) => state.copyWith(systemProxy: value),
-                          );
-                    },
+                    value: systemProxy && !authenticated,
+                    onChanged: authenticated
+                        ? null
+                        : (value) {
+                            ref
+                                .read(networkSettingProvider.notifier)
+                                .update(
+                                  (state) => state.copyWith(systemProxy: value),
+                                );
+                          },
                   );
                 },
               ),

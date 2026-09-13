@@ -3,10 +3,101 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:fl_clash/common/http.dart';
+import 'package:fl_clash/common/proxy_auth.dart';
+import 'package:fl_clash/models/config.dart';
 import 'package:fl_clash/controller.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test(
+    'HTTPS CONNECT authenticates without leaking credentials to the origin',
+    () async {
+      final context = SecurityContext()
+        ..useCertificateChainBytes(utf8.encode(_certificate))
+        ..usePrivateKeyBytes(utf8.encode(_privateKey));
+      final origin = await HttpServer.bindSecure(
+        InternetAddress.loopbackIPv4,
+        0,
+        context,
+      );
+      final proxy = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      final tunnels = <Socket>[];
+      addTearDown(() async {
+        for (final socket in tunnels) {
+          socket.destroy();
+        }
+        await proxy.close(force: true);
+        await origin.close(force: true);
+      });
+      const password = ' ;:@ 中文 ';
+      var auth = const AuthenticationProps(
+        enable: true,
+        username: 'local',
+        password: 'wrong',
+      );
+      var connects = 0;
+      var originRequests = 0;
+      origin.listen((request) async {
+        originRequests++;
+        expect(
+          request.headers.value(HttpHeaders.proxyAuthorizationHeader),
+          isNull,
+        );
+        if (request.uri.path == '/test') {
+          request.response.statusCode = HttpStatus.found;
+          request.response.headers.set(HttpHeaders.locationHeader, '/final');
+        } else {
+          request.response.write('secure');
+        }
+        await request.response.close();
+      }, onError: (_) {});
+      proxy.listen((request) async {
+        expect(request.method, 'CONNECT');
+        connects++;
+        if (request.headers.value(HttpHeaders.proxyAuthorizationHeader) !=
+            'Basic ${base64Encode(utf8.encode('local:$password'))}') {
+          request.response.statusCode = HttpStatus.forbidden;
+          await request.response.close();
+          return;
+        }
+        final upstream = await Socket.connect(
+          InternetAddress.loopbackIPv4,
+          origin.port,
+        );
+        request.response.statusCode = HttpStatus.ok;
+        request.response.contentLength = 0;
+        final downstream = await request.response.detachSocket();
+        tunnels.addAll([upstream, downstream]);
+        downstream.listen(
+          upstream.add,
+          onDone: upstream.destroy,
+          onError: (_) => upstream.destroy(),
+        );
+        upstream.listen(
+          downstream.add,
+          onDone: downstream.destroy,
+          onError: (_) => downstream.destroy(),
+        );
+      });
+      final client = ProxyAuthenticatedHttpClient(
+        create: HttpClient.new,
+        read: () => (port: proxy.port, authentication: auth),
+      )..findProxy = ((_) => 'PROXY localhost:${proxy.port}');
+      addTearDown(() => client.close(force: true));
+      final url = Uri.parse('https://localhost:${origin.port}/test');
+      await expectLater(client.getUrl(url), throwsA(isA<HttpException>()));
+      expect(originRequests, 0);
+      auth = auth.copyWith(password: password);
+      await expectLater(client.getUrl(url), throwsA(isA<HandshakeException>()));
+      expect(originRequests, 0);
+      client.badCertificateCallback = (_, _, _) => true;
+      final request = await client.getUrl(url);
+      expect(await utf8.decoder.bind(await request.close()).join(), 'secure');
+      expect(connects, 3);
+      expect(originRequests, 2);
+    },
+  );
+
   test('installer downloads reject temporary certificate exemptions', () async {
     final context = SecurityContext()
       ..useCertificateChainBytes(utf8.encode(_certificate))

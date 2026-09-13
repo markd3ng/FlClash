@@ -169,6 +169,22 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "application": MessageLookupByLibrary.simpleMessage("アプリケーション"),
     "applicationDesc": MessageLookupByLibrary.simpleMessage("アプリ関連設定を変更"),
+    "authentication": MessageLookupByLibrary.simpleMessage("ローカルプロキシ認証"),
+    "authenticationApplyFailed": MessageLookupByLibrary.simpleMessage(
+      "認証設定を適用できませんでした",
+    ),
+    "authenticationDesc": MessageLookupByLibrary.simpleMessage(
+      "HTTP/SOCKS プロキシにユーザー名とパスワードを設定します。システム HTTP プロキシの自動設定は停止しますが、TUN/VPN は利用できます。",
+    ),
+    "authenticationPasswordInvalid": MessageLookupByLibrary.simpleMessage(
+      "制御文字を含まない 1～255 UTF-8 バイトを入力してください",
+    ),
+    "authenticationSystemProxyDesc": MessageLookupByLibrary.simpleMessage(
+      "ローカルプロキシ認証が有効な間は設定されません",
+    ),
+    "authenticationUsernameInvalid": MessageLookupByLibrary.simpleMessage(
+      "コロンや制御文字を含まない 1～255 UTF-8 バイトを入力してください",
+    ),
     "auto": MessageLookupByLibrary.simpleMessage("自動"),
     "autoCloseConnections": MessageLookupByLibrary.simpleMessage("接続を自動閉じる"),
     "autoCloseConnectionsDesc": MessageLookupByLibrary.simpleMessage(

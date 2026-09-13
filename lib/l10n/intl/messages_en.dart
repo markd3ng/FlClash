@@ -208,6 +208,24 @@ class MessageLookup extends MessageLookupByLibrary {
     "applicationDesc": MessageLookupByLibrary.simpleMessage(
       "Modify application related settings",
     ),
+    "authentication": MessageLookupByLibrary.simpleMessage(
+      "Local proxy authentication",
+    ),
+    "authenticationApplyFailed": MessageLookupByLibrary.simpleMessage(
+      "Could not apply authentication settings",
+    ),
+    "authenticationDesc": MessageLookupByLibrary.simpleMessage(
+      "Require a username and password for HTTP/SOCKS proxies. Automatic system HTTP proxy is suspended; TUN/VPN remains available.",
+    ),
+    "authenticationPasswordInvalid": MessageLookupByLibrary.simpleMessage(
+      "Use 1–255 UTF-8 bytes, without control characters",
+    ),
+    "authenticationSystemProxyDesc": MessageLookupByLibrary.simpleMessage(
+      "Not applied while local proxy authentication is enabled",
+    ),
+    "authenticationUsernameInvalid": MessageLookupByLibrary.simpleMessage(
+      "Use 1–255 UTF-8 bytes, without colons or control characters",
+    ),
     "auto": MessageLookupByLibrary.simpleMessage("Auto"),
     "autoCloseConnections": MessageLookupByLibrary.simpleMessage(
       "Auto close connections",

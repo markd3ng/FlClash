@@ -118,6 +118,7 @@ jobs:
         run: |
           go test -race tun_callbacks.go tun_callbacks_test.go
           go test -race ownership_unix.go ownership_test.go ownership_stat_linux_test.go
+          go test -C Clash.Meta -race ./listener/auth ./adapter/inbound
 
   android-core-test:
     name: Android core (${{ matrix.arch }})

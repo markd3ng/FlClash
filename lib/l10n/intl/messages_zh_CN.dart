@@ -160,6 +160,22 @@ class MessageLookup extends MessageLookupByLibrary {
     "appendSystemDnsTip": MessageLookupByLibrary.simpleMessage("强制为配置附加系统DNS"),
     "application": MessageLookupByLibrary.simpleMessage("应用程序"),
     "applicationDesc": MessageLookupByLibrary.simpleMessage("修改应用程序相关设置"),
+    "authentication": MessageLookupByLibrary.simpleMessage("本地代理认证"),
+    "authenticationApplyFailed": MessageLookupByLibrary.simpleMessage(
+      "未能应用认证设置",
+    ),
+    "authenticationDesc": MessageLookupByLibrary.simpleMessage(
+      "为 HTTP/SOCKS 代理设置用户名和密码。启用后暂停自动设置系统 HTTP 代理，TUN/VPN 仍可使用",
+    ),
+    "authenticationPasswordInvalid": MessageLookupByLibrary.simpleMessage(
+      "请输入 1–255 字节的密码，不支持控制字符",
+    ),
+    "authenticationSystemProxyDesc": MessageLookupByLibrary.simpleMessage(
+      "启用本地代理认证时不设置系统 HTTP 代理",
+    ),
+    "authenticationUsernameInvalid": MessageLookupByLibrary.simpleMessage(
+      "请输入 1–255 字节的用户名，不支持冒号或控制字符",
+    ),
     "auto": MessageLookupByLibrary.simpleMessage("自动"),
     "autoCloseConnections": MessageLookupByLibrary.simpleMessage("自动关闭连接"),
     "autoCloseConnectionsDesc": MessageLookupByLibrary.simpleMessage(

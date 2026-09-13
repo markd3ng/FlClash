@@ -28,6 +28,7 @@ import 'package:path/path.dart' as p;
 import 'package:url_launcher/url_launcher.dart';
 
 import 'common/common.dart';
+import 'common/proxy_auth.dart';
 import 'database/database.dart';
 import 'models/models.dart';
 import 'providers/database.dart';
@@ -605,6 +606,7 @@ class AppController {
   int _persistentLogLength = 0;
   bool _persistentLogWritesSuspended = false;
   final _geoRecoveryLock = AsyncStorageLock();
+  final _proxyAuthenticationLock = AsyncStorageLock();
   bool _checkingUpdate = false;
   Future<bool>? _listenerStartFuture;
   int _startIntentGeneration = 0;
@@ -1876,6 +1878,50 @@ extension SetupControllerExt on AppController {
     return setupState.needSetup(globalState.lastSetupState) == true;
   }
 
+  Future<void> updateProxyAuthentication(AuthenticationProps next) =>
+      _proxyAuthenticationLock.synchronized(() async {
+        next.credentials;
+        final previous = _ref.read(networkSettingProvider).authentication;
+        if (previous == next) return;
+        final restart = needsVpnRestartForAuthentication(
+          android: system.isAndroid,
+          running: this.isStart,
+          vpn: _ref.read(vpnSettingProvider),
+          before: previous.enable,
+          after: next.enable,
+        );
+        if (system.isDesktop &&
+            next.enable &&
+            !await stopSystemProxyIfNeeded()) {
+          throw StateError('Could not restore the system proxy settings');
+        }
+        final generation = _startIntentGeneration + (restart ? 1 : 0);
+        if (restart) await updateStatus(false);
+        _ref
+            .read(networkSettingProvider.notifier)
+            .update((state) => state.copyWith(authentication: next));
+        try {
+          if (!await _saveConfigSerialized(config)) {
+            throw StateError('Could not save authentication settings');
+          }
+        } catch (_) {
+          _ref
+              .read(networkSettingProvider.notifier)
+              .update((state) => state.copyWith(authentication: previous));
+          if (restart && generation == _startIntentGeneration) {
+            await updateStatus(true);
+          }
+          rethrow;
+        }
+        if (system.isAndroid) {
+          await preferences.saveShareState(this.sharedState);
+        }
+        // A later user Stop must win over this settings-triggered restart.
+        if (restart && generation == _startIntentGeneration) {
+          await updateStatus(true);
+        }
+      });
+
   Future<void> updateConfigDebounce() async {
     final generation = ++_configUpdateGeneration;
     debouncer.call(FunctionTag.updateConfig, () async {
@@ -2222,6 +2268,10 @@ extension SetupControllerExt on AppController {
         dockerMode: system.isDocker,
         blockQuic: setupState.blockQuic,
         blockWebRtc: setupState.blockWebRtc,
+        authentication: _ref
+            .read(networkSettingProvider)
+            .authentication
+            .credentials,
       ),
     );
     try {
@@ -2633,6 +2683,10 @@ extension SystemControllerExt on AppController {
   }
 
   void updateSystemProxy() {
+    if (_ref.read(networkSettingProvider).authentication.enable) {
+      globalState.showNotifier(appLocalizations.authenticationSystemProxyDesc);
+      return;
+    }
     _ref
         .read(networkSettingProvider.notifier)
         .update((state) => state.copyWith(systemProxy: !state.systemProxy));

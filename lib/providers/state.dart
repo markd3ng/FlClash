@@ -75,6 +75,9 @@ NavigationItemsState currentNavigationItemsState(Ref ref) {
 
 @riverpod
 UpdateParams updateParams(Ref ref) {
+  final authentication = ref.watch(
+    networkSettingProvider.select((state) => state.authentication),
+  );
   final routeMode = ref.watch(
     networkSettingProvider.select((state) => state.routeMode),
   );
@@ -101,6 +104,7 @@ UpdateParams updateParams(Ref ref) {
         geoAutoUpdate: state.geoAutoUpdate,
         geoUpdateInterval: normalizeGeoUpdateInterval(state.geoUpdateInterval),
         suspendOnIdle: suspendOnIdle,
+        authentication: authentication.credentials,
       ),
     ),
   );
@@ -108,6 +112,9 @@ UpdateParams updateParams(Ref ref) {
 
 @riverpod
 ProxyState proxyState(Ref ref) {
+  final authenticated = ref.watch(
+    networkSettingProvider.select((state) => state.authentication.enable),
+  );
   final isStart = ref.watch(runTimeProvider.select((state) => state != null));
   final vm2 = ref.watch(
     networkSettingProvider.select(
@@ -119,7 +126,7 @@ ProxyState proxyState(Ref ref) {
   );
   return ProxyState(
     isStart: isStart,
-    systemProxy: vm2.a,
+    systemProxy: vm2.a && !authenticated,
     bassDomain: vm2.b,
     port: mixedPort,
   );
@@ -129,7 +136,7 @@ ProxyState proxyState(Ref ref) {
 TrayState trayState(Ref ref) {
   final isStart = ref.watch(runTimeProvider.select((state) => state != null));
   final systemProxy = ref.watch(
-    networkSettingProvider.select((state) => state.systemProxy),
+    proxyStateProvider.select((state) => state.systemProxy),
   );
   final clashConfigVm3 = ref.watch(
     patchClashConfigProvider.select(
@@ -173,7 +180,13 @@ TrayTitleState trayTitleState(Ref ref) {
 
 @riverpod
 VpnState vpnState(Ref ref) {
-  final vpnProps = ref.watch(vpnSettingProvider);
+  final authenticated = ref.watch(
+    networkSettingProvider.select((state) => state.authentication.enable),
+  );
+  final savedVpnProps = ref.watch(vpnSettingProvider);
+  final vpnProps = savedVpnProps.copyWith(
+    systemProxy: savedVpnProps.systemProxy && !authenticated,
+  );
   final stack = ref.watch(
     patchClashConfigProvider.select((state) => state.tun.stack),
   );
@@ -540,7 +553,7 @@ SharedState sharedState(Ref ref) {
       (state) => VM2(state.tun.stack.name, state.mixedPort),
     ),
   );
-  final vpnSetting = ref.watch(vpnSettingProvider);
+  final vpnSetting = ref.watch(vpnStateProvider).vpnProps;
   final suspendOnIdle = ref.watch(
     networkSettingProvider.select((state) => state.suspendOnIdle),
   );

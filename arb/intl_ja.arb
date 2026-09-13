@@ -712,5 +712,11 @@
   "coreBlockedByPolicyTip": "Windows がプロキシコアの起動をブロックしました（システムエラー {code}）。Windows セキュリティの保護の履歴とアプリ制御ポリシーを確認し、インストーラーの入手元と署名を確認してください。",
   "@coreBlockedByPolicyTip": {"placeholders": {"code": {"type": "int"}}},
   "startupRecoveryTitle": "起動の復旧",
-  "startupRecoveryTip": "直近2回の起動に失敗したため、今回は設定の自動適用とVPNの自動起動を一時停止しました。選択中のプロファイルと設定は保持されています。設定を確認し、「開始」を押して再試行してください。実行中のVPN接続は維持されます。"
+  "startupRecoveryTip": "直近2回の起動に失敗したため、今回は設定の自動適用とVPNの自動起動を一時停止しました。選択中のプロファイルと設定は保持されています。設定を確認し、「開始」を押して再試行してください。実行中のVPN接続は維持されます。",
+  "authentication": "ローカルプロキシ認証",
+  "authenticationDesc": "HTTP/SOCKS プロキシにユーザー名とパスワードを設定します。システム HTTP プロキシの自動設定は停止しますが、TUN/VPN は利用できます。",
+  "authenticationSystemProxyDesc": "ローカルプロキシ認証が有効な間は設定されません",
+  "authenticationUsernameInvalid": "コロンや制御文字を含まない 1～255 UTF-8 バイトを入力してください",
+  "authenticationPasswordInvalid": "制御文字を含まない 1～255 UTF-8 バイトを入力してください",
+  "authenticationApplyFailed": "認証設定を適用できませんでした"
 }

@@ -5968,6 +5968,66 @@ class AppLocalizations {
       args: [],
     );
   }
+
+  /// `Local proxy authentication`
+  String get authentication {
+    return Intl.message(
+      'Local proxy authentication',
+      name: 'authentication',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Require a username and password for HTTP/SOCKS proxies. Automatic system HTTP proxy is suspended; TUN/VPN remains available.`
+  String get authenticationDesc {
+    return Intl.message(
+      'Require a username and password for HTTP/SOCKS proxies. Automatic system HTTP proxy is suspended; TUN/VPN remains available.',
+      name: 'authenticationDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Not applied while local proxy authentication is enabled`
+  String get authenticationSystemProxyDesc {
+    return Intl.message(
+      'Not applied while local proxy authentication is enabled',
+      name: 'authenticationSystemProxyDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Use 1–255 UTF-8 bytes, without colons or control characters`
+  String get authenticationUsernameInvalid {
+    return Intl.message(
+      'Use 1–255 UTF-8 bytes, without colons or control characters',
+      name: 'authenticationUsernameInvalid',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Use 1–255 UTF-8 bytes, without control characters`
+  String get authenticationPasswordInvalid {
+    return Intl.message(
+      'Use 1–255 UTF-8 bytes, without control characters',
+      name: 'authenticationPasswordInvalid',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Could not apply authentication settings`
+  String get authenticationApplyFailed {
+    return Intl.message(
+      'Could not apply authentication settings',
+      name: 'authenticationApplyFailed',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<AppLocalizations> {

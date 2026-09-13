@@ -266,6 +266,9 @@ Future<Map<String, dynamic>> _makeRealProfileTask(
     realPatchConfig.externalControllerAddress,
   );
   rawConfig['secret'] = resolveExternalControllerSecret(realPatchConfig.secret);
+  // The app owns local inbound auth, including after a profile script has run.
+  rawConfig['authentication'] = data.authentication;
+  rawConfig['skip-auth-prefixes'] = <String>[];
   rawConfig['external-ui'] = '';
   rawConfig['interface-name'] = '';
   rawConfig['external-ui-url'] = '';

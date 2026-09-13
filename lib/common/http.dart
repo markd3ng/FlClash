@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/controller.dart';
+import 'package:fl_clash/common/proxy_auth.dart';
 
 String resolveCloudApiProxy({required bool isCoreRunning, required int port}) {
   if (!isCoreRunning || port <= 0 || port > 65535) {
@@ -57,7 +58,10 @@ IOHttpClientAdapter createFlClashHttpClientAdapter({
 }) {
   return _FlClashHttpClientAdapter(
     createHttpClient: () {
-      final client = HttpClient();
+      final client = ProxyAuthenticatedHttpClient.wrap(
+        HttpClient(),
+        FlClashHttpOverrides.readProxyAuthentication,
+      );
       client.badCertificateCallback = (_, _, _) =>
           allowBadCertificate?.call() ?? false;
       client.findProxy = (uri) {
@@ -92,6 +96,15 @@ class _FlClashHttpClientAdapter extends IOHttpClientAdapter {
 }
 
 class FlClashHttpOverrides extends HttpOverrides {
+  static ProxyAuthenticationState? readProxyAuthentication() {
+    if (!appController.isAttach || !appController.isStart) return null;
+    final config = appController.config;
+    return (
+      port: config.patchClashConfig.mixedPort,
+      authentication: config.networkProps.authentication,
+    );
+  }
+
   static bool _isLocalHost(String host) {
     final normalizedHost = host.trim().toLowerCase();
     return normalizedHost == localhost ||
@@ -140,7 +153,11 @@ class FlClashHttpOverrides extends HttpOverrides {
 
   @override
   HttpClient createHttpClient(SecurityContext? context) {
-    final client = super.createHttpClient(context);
+    final client = ProxyAuthenticatedHttpClient(
+      create: () => super.createHttpClient(context),
+      read: readProxyAuthentication,
+      securityContext: context,
+    );
     client.connectionTimeout = const Duration(seconds: 10);
     client.badCertificateCallback = (_, _, _) =>
         FlClashTemporaryTls.allowBadCertificate;

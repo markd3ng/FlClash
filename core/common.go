@@ -14,6 +14,7 @@ import (
 	"github.com/metacubex/mihomo/adapter/inbound"
 	"github.com/metacubex/mihomo/adapter/outboundgroup"
 	"github.com/metacubex/mihomo/adapter/provider"
+	"github.com/metacubex/mihomo/component/auth"
 	"github.com/metacubex/mihomo/component/dialer"
 	"github.com/metacubex/mihomo/component/resolver"
 	"github.com/metacubex/mihomo/component/updater"
@@ -245,7 +246,15 @@ func readFile(path string) ([]byte, error) {
 	return decryptFlClashIfNeeded(data)
 }
 
-func updateConfig(params *UpdateParams) {
+func updateConfig(params *UpdateParams) error {
+	var users []auth.AuthUser
+	if params.Authentication != nil {
+		var err error
+		users, err = parseAuthentication(*params.Authentication)
+		if err != nil {
+			return err
+		}
+	}
 	runLock.Lock()
 	defer runLock.Unlock()
 	if params.SuspendOnIdle != nil {
@@ -253,7 +262,7 @@ func updateConfig(params *UpdateParams) {
 		reconcileIdleSuspendLocked()
 	}
 	if currentConfig == nil || currentConfig.General == nil {
-		return
+		return nil
 	}
 	general := currentConfig.General
 	restartGeo :=
@@ -330,10 +339,14 @@ func updateConfig(params *UpdateParams) {
 		general.Tun.Stack = *params.Tun.Stack
 	}
 
+	if params.Authentication != nil {
+		applyAuthentication(currentConfig, *params.Authentication, users)
+	}
 	updateListeners()
 	if restartGeo {
 		restartGeoScheduler()
 	}
+	return nil
 }
 
 func applyConfig(params *SetupParams) error {

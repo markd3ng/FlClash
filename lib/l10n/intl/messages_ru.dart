@@ -209,6 +209,24 @@ class MessageLookup extends MessageLookupByLibrary {
     "applicationDesc": MessageLookupByLibrary.simpleMessage(
       "Изменение настроек, связанных с приложением",
     ),
+    "authentication": MessageLookupByLibrary.simpleMessage(
+      "Аутентификация локального прокси",
+    ),
+    "authenticationApplyFailed": MessageLookupByLibrary.simpleMessage(
+      "Не удалось применить настройки аутентификации",
+    ),
+    "authenticationDesc": MessageLookupByLibrary.simpleMessage(
+      "Имя пользователя и пароль для HTTP/SOCKS. Автонастройка системного HTTP-прокси приостановлена; TUN/VPN остаётся доступен.",
+    ),
+    "authenticationPasswordInvalid": MessageLookupByLibrary.simpleMessage(
+      "От 1 до 255 байт UTF-8, без управляющих символов",
+    ),
+    "authenticationSystemProxyDesc": MessageLookupByLibrary.simpleMessage(
+      "Не применяется при включённой аутентификации локального прокси",
+    ),
+    "authenticationUsernameInvalid": MessageLookupByLibrary.simpleMessage(
+      "От 1 до 255 байт UTF-8, без двоеточий и управляющих символов",
+    ),
     "auto": MessageLookupByLibrary.simpleMessage("Авто"),
     "autoCloseConnections": MessageLookupByLibrary.simpleMessage(
       "Автоматическое закрытие соединений",

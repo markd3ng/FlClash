@@ -712,5 +712,11 @@
   "coreBlockedByPolicyTip": "Windows blocked the proxy core from starting (system error {code}). Check Protection history in Windows Security and your app control policy, and verify the installer source and signature.",
   "@coreBlockedByPolicyTip": {"placeholders": {"code": {"type": "int"}}},
   "startupRecoveryTitle": "Startup recovery",
-  "startupRecoveryTip": "Two recent startup attempts failed. Automatic profile application and VPN start are paused for this launch. Your selected profile and settings are preserved. Check the configuration, then press Start to retry. An already running VPN is kept active."
+  "startupRecoveryTip": "Two recent startup attempts failed. Automatic profile application and VPN start are paused for this launch. Your selected profile and settings are preserved. Check the configuration, then press Start to retry. An already running VPN is kept active.",
+  "authentication": "Local proxy authentication",
+  "authenticationDesc": "Require a username and password for HTTP/SOCKS proxies. Automatic system HTTP proxy is suspended; TUN/VPN remains available.",
+  "authenticationSystemProxyDesc": "Not applied while local proxy authentication is enabled",
+  "authenticationUsernameInvalid": "Use 1–255 UTF-8 bytes, without colons or control characters",
+  "authenticationPasswordInvalid": "Use 1–255 UTF-8 bytes, without control characters",
+  "authenticationApplyFailed": "Could not apply authentication settings"
 }

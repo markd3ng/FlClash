@@ -56,6 +56,29 @@ void main() {
     pathProviderDir.deleteSync(recursive: true);
   });
 
+  test(
+    'app-owned authentication overrides profile and script exemptions',
+    () async {
+      final state = _makeRealProfileState(
+        rawConfig: {
+          'rules': ['MATCH,DIRECT'],
+          'authentication': ['profile:password'],
+          'skip-auth-prefixes': ['127.0.0.0/8', '::1/128'],
+        },
+      );
+      final enabled = await makeRealProfileTask(
+        state.copyWith(authentication: ['local:pass']),
+      );
+      expect(enabled['authentication'], ['local:pass']);
+      expect(enabled['skip-auth-prefixes'], isEmpty);
+      final disabled = await makeRealProfileTask(
+        state.copyWith(authentication: []),
+      );
+      expect(disabled['authentication'], isEmpty);
+      expect(disabled['skip-auth-prefixes'], isEmpty);
+    },
+  );
+
   group('resolveSafeArchivePath', () {
     test('allows normalized child paths', () {
       expect(

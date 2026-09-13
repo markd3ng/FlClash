@@ -86,19 +86,28 @@ class VpnSystemProxyItem extends ConsumerWidget {
   @override
   Widget build(BuildContext context, ref) {
     final appLocalizations = context.appLocalizations;
+    final authenticated = ref.watch(
+      networkSettingProvider.select((state) => state.authentication.enable),
+    );
     final systemProxy = ref.watch(
       vpnSettingProvider.select((state) => state.systemProxy),
     );
     return ListItem.switchItem(
       title: Text(appLocalizations.systemProxy),
-      subtitle: Text(appLocalizations.systemProxyDesc),
+      subtitle: Text(
+        authenticated
+            ? appLocalizations.authenticationSystemProxyDesc
+            : appLocalizations.systemProxyDesc,
+      ),
       delegate: SwitchDelegate(
-        value: systemProxy,
-        onChanged: (bool value) async {
-          ref
-              .read(vpnSettingProvider.notifier)
-              .update((state) => state.copyWith(systemProxy: value));
-        },
+        value: systemProxy && !authenticated,
+        onChanged: authenticated
+            ? null
+            : (bool value) async {
+                ref
+                    .read(vpnSettingProvider.notifier)
+                    .update((state) => state.copyWith(systemProxy: value));
+              },
       ),
     );
   }
@@ -110,20 +119,29 @@ class SystemProxyItem extends ConsumerWidget {
   @override
   Widget build(BuildContext context, ref) {
     final appLocalizations = context.appLocalizations;
+    final authenticated = ref.watch(
+      networkSettingProvider.select((state) => state.authentication.enable),
+    );
     final systemProxy = ref.watch(
       networkSettingProvider.select((state) => state.systemProxy),
     );
 
     return ListItem.switchItem(
       title: Text(appLocalizations.systemProxy),
-      subtitle: Text(appLocalizations.systemProxyDesc),
+      subtitle: Text(
+        authenticated
+            ? appLocalizations.authenticationSystemProxyDesc
+            : appLocalizations.systemProxyDesc,
+      ),
       delegate: SwitchDelegate(
-        value: systemProxy,
-        onChanged: (bool value) async {
-          ref
-              .read(networkSettingProvider.notifier)
-              .update((state) => state.copyWith(systemProxy: value));
-        },
+        value: systemProxy && !authenticated,
+        onChanged: authenticated
+            ? null
+            : (bool value) async {
+                ref
+                    .read(networkSettingProvider.notifier)
+                    .update((state) => state.copyWith(systemProxy: value));
+              },
       ),
     );
   }

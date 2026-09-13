@@ -40,6 +40,11 @@ _UpdateParams _$UpdateParamsFromJson(Map<String, dynamic> json) =>
       geoAutoUpdate: json['geo-auto-update'] as bool? ?? true,
       geoUpdateInterval: (json['geo-update-interval'] as num?)?.toInt() ?? 24,
       suspendOnIdle: json['suspend-on-idle'] as bool? ?? false,
+      authentication:
+          (json['authentication'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const [],
     );
 
 Map<String, dynamic> _$UpdateParamsToJson(_UpdateParams instance) =>
@@ -58,6 +63,7 @@ Map<String, dynamic> _$UpdateParamsToJson(_UpdateParams instance) =>
       'geo-auto-update': instance.geoAutoUpdate,
       'geo-update-interval': instance.geoUpdateInterval,
       'suspend-on-idle': instance.suspendOnIdle,
+      'authentication': instance.authentication,
     };
 
 const _$FindProcessModeEnumMap = {

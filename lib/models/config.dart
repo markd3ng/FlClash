@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:flutter/material.dart';
@@ -162,6 +164,44 @@ abstract class VpnProps with _$VpnProps {
       json == null ? defaultVpnProps : _$VpnPropsFromJson(json);
 }
 
+@Freezed(toStringOverride: false)
+abstract class AuthenticationProps with _$AuthenticationProps {
+  const AuthenticationProps._();
+
+  const factory AuthenticationProps({
+    @Default(false) bool enable,
+    @Default('') String username,
+    @Default('') String password,
+  }) = _AuthenticationProps;
+
+  factory AuthenticationProps.fromJson(Map<String, Object?>? json) =>
+      json == null
+      ? const AuthenticationProps()
+      : _$AuthenticationPropsFromJson(json);
+
+  static bool validUsername(String value) =>
+      validPassword(value) && !value.contains(':');
+
+  // SOCKS5 encodes each field with a one-byte length. HTTP Basic also splits
+  // at the first colon; rejecting control characters keeps both protocols valid.
+  static bool validPassword(String value) =>
+      value.isNotEmpty &&
+      utf8.encode(value).length <= 255 &&
+      !RegExp(r'[\x00-\x1f\x7f]').hasMatch(value);
+
+  List<String> get credentials {
+    if (!enable) return const [];
+    if (!validUsername(username) || !validPassword(password)) {
+      throw const FormatException('Invalid local proxy credentials');
+    }
+    return ['$username:$password'];
+  }
+
+  @override
+  String toString() =>
+      'AuthenticationProps(enable: $enable, credentials: [redacted])';
+}
+
 @freezed
 abstract class NetworkProps with _$NetworkProps {
   const factory NetworkProps({
@@ -175,6 +215,7 @@ abstract class NetworkProps with _$NetworkProps {
     @Default(false) bool blockQuic,
     @Default(false) bool blockWebRtc,
     @Default(false) bool suspendOnIdle,
+    @Default(AuthenticationProps()) AuthenticationProps authentication,
   }) = _NetworkProps;
 
   factory NetworkProps.fromJson(Map<String, Object?>? json) =>

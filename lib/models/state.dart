@@ -292,6 +292,7 @@ abstract class MakeRealProfileState with _$MakeRealProfileState {
     @Default(false) bool dockerMode,
     @Default(false) bool blockQuic,
     @Default(false) bool blockWebRtc,
+    @Default([]) List<String> authentication,
   }) = _MakeRealProfileState;
 }
 
