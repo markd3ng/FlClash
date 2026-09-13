@@ -6093,6 +6093,76 @@ class AppLocalizations {
       args: [],
     );
   }
+
+  /// `The encryption key for your existing configuration is missing or invalid. Try the original system account on the original device or restore a backup. Retrying cannot recreate a lost key.`
+  String get configRecoveryMissingKey {
+    return Intl.message(
+      'The encryption key for your existing configuration is missing or invalid. Try the original system account on the original device or restore a backup. Retrying cannot recreate a lost key.',
+      name: 'configRecoveryMissingKey',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The local configuration cannot be decrypted or is damaged. Existing files have been kept. Restore the matching key and configuration backup, or back up and reset.`
+  String get configRecoveryUnreadable {
+    return Intl.message(
+      'The local configuration cannot be decrypted or is damaged. Existing files have been kept. Restore the matching key and configuration backup, or back up and reset.',
+      name: 'configRecoveryUnreadable',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The local configuration or its encryption key could not be read or saved. Check access to the application data folder and the system secure storage, then retry.`
+  String get configRecoveryStorage {
+    return Intl.message(
+      'The local configuration or its encryption key could not be read or saved. Check access to the application data folder and the system secure storage, then retry.',
+      name: 'configRecoveryStorage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Back up and reset`
+  String get configRecoveryReset {
+    return Intl.message(
+      'Back up and reset',
+      name: 'configRecoveryReset',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Create an encrypted backup of all local settings, subscriptions, rules and account data, then reset the application? You will need to sign in again and restore or import your subscriptions and settings. The backup is protected by this Windows account; it cannot recover a lost encryption key.`
+  String get configRecoveryResetConfirm {
+    return Intl.message(
+      'Create an encrypted backup of all local settings, subscriptions, rules and account data, then reset the application? You will need to sign in again and restore or import your subscriptions and settings. The backup is protected by this Windows account; it cannot recover a lost encryption key.',
+      name: 'configRecoveryResetConfirm',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `An encrypted backup of your original data has been saved in the folder below. Exit and reopen the application to set it up again.`
+  String get configRecoveryResetDone {
+    return Intl.message(
+      'An encrypted backup of your original data has been saved in the folder below. Exit and reopen the application to set it up again.',
+      name: 'configRecoveryResetDone',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The encrypted backup and reset could not be completed. Surviving original data will not be removed without a verified backup. Retry this operation, or exit and reopen the application to finish it.`
+  String get configRecoveryResetFailed {
+    return Intl.message(
+      'The encrypted backup and reset could not be completed. Surviving original data will not be removed without a verified backup. Retry this operation, or exit and reopen the application to finish it.',
+      name: 'configRecoveryResetFailed',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<AppLocalizations> {

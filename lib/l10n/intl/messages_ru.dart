@@ -343,9 +343,30 @@ class MessageLookup extends MessageLookupByLibrary {
     "configRecoveryMessage": MessageLookupByLibrary.simpleMessage(
       "Локальные настройки временно недоступны. Ваши данные сохранены. Разблокируйте устройство и повторите попытку или откройте приложение позже.",
     ),
+    "configRecoveryMissingKey": MessageLookupByLibrary.simpleMessage(
+      "Ключ шифрования существующих настроек отсутствует или недействителен. Запустите приложение от исходного пользователя на исходном устройстве или восстановите резервную копию. Повторная попытка не воссоздаст утерянный ключ.",
+    ),
+    "configRecoveryReset": MessageLookupByLibrary.simpleMessage(
+      "Создать копию и сбросить",
+    ),
+    "configRecoveryResetConfirm": MessageLookupByLibrary.simpleMessage(
+      "Создать зашифрованную резервную копию всех локальных настроек, подписок, правил и данных аккаунта, затем сбросить приложение? Потребуется снова войти и восстановить или импортировать подписки и настройки. Копия защищена текущим пользователем Windows, но не восстановит утерянный ключ шифрования.",
+    ),
+    "configRecoveryResetDone": MessageLookupByLibrary.simpleMessage(
+      "Зашифрованная резервная копия исходных данных сохранена в указанной ниже папке. Закройте и снова откройте приложение для повторной настройки.",
+    ),
+    "configRecoveryResetFailed": MessageLookupByLibrary.simpleMessage(
+      "Не удалось завершить зашифрованное резервное копирование и сброс. Оставшиеся исходные данные не будут удалены без проверенной копии. Повторите операцию или закройте и снова откройте приложение для её завершения.",
+    ),
     "configRecoveryRetry": MessageLookupByLibrary.simpleMessage("Повторить"),
+    "configRecoveryStorage": MessageLookupByLibrary.simpleMessage(
+      "Не удалось прочитать или сохранить локальные настройки либо ключ шифрования. Проверьте доступ к папке данных приложения и системному защищённому хранилищу, затем повторите попытку.",
+    ),
     "configRecoveryTitle": MessageLookupByLibrary.simpleMessage(
       "Восстановление локальных настроек",
+    ),
+    "configRecoveryUnreadable": MessageLookupByLibrary.simpleMessage(
+      "Локальные настройки не удаётся расшифровать, либо файл повреждён. Исходные файлы сохранены. Восстановите подходящие ключ и резервную копию настроек или создайте копию и выполните сброс.",
     ),
     "configTypeMismatch": m2,
     "configValueTypeBoolean": MessageLookupByLibrary.simpleMessage(

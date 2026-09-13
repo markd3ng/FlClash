@@ -9,6 +9,7 @@ import 'package:fl_clash/providers/cloud_account_provider.dart';
 import 'package:fl_clash/services/cloud_api_service.dart';
 import 'package:fl_clash/services/config_key_store.dart';
 import 'package:fl_clash/services/config_recovery.dart';
+import 'package:fl_clash/services/config_reset.dart';
 import 'package:fl_clash/models/profile.dart';
 import 'package:fl_clash/state.dart';
 import 'package:flutter/material.dart';
@@ -73,7 +74,7 @@ Future<Map<String, Object?>?> _loadStartupConfig() async {
         }
         return preferences.getConfigMap();
       },
-      showRecovery: (retry) {
+      showRecovery: (retry, failure) {
         commonPrint.log('Waiting for local configuration recovery');
         if (system.isDesktop) {
           windowExtManager.addListener(exitListener);
@@ -88,7 +89,15 @@ Future<Map<String, Object?>?> _loadStartupConfig() async {
               GlobalWidgetsLocalizations.delegate,
             ],
             supportedLocales: AppLocalizations.delegate.supportedLocales,
-            home: ConfigRecoveryScreen(onRetry: retry, onExit: () => exit(0)),
+            home: ConfigRecoveryScreen(
+              onRetry: retry,
+              initialReason: failure.reason,
+              onReset: Platform.isWindows
+                  ? () async =>
+                        ConfigReset(await appPath.homeDirPath).backupAndReset()
+                  : null,
+              onExit: () => exit(0),
+            ),
           ),
         );
         WidgetsBinding.instance.addPostFrameCallback((_) async {

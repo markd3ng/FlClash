@@ -98,7 +98,7 @@ void main() {
     expect(
       await loadWithConfigRecovery(
         load: (_) async => 'config',
-        showRecovery: (_) => fail('unexpected recovery screen'),
+        showRecovery: (_, _) => fail('unexpected recovery screen'),
       ),
       'config',
     );
@@ -117,7 +117,7 @@ void main() {
             expect(retry, isTrue);
             return loading.future;
           },
-          showRecovery: shown.complete,
+          showRecovery: (retry, _) => shown.complete(retry),
         ).then((value) {
           resumed++;
           return value;
@@ -142,7 +142,7 @@ void main() {
     await expectLater(
       loadWithConfigRecovery<String>(
         load: (_) async => throw const FormatException('unrelated'),
-        showRecovery: (_) => fail('unexpected key recovery'),
+        showRecovery: (_, _) => fail('unexpected key recovery'),
       ),
       throwsFormatException,
     );
@@ -157,7 +157,7 @@ void main() {
           if (!retry) throw const ConfigKeyUnavailableException();
           throw const FormatException('invalid preference config');
         },
-        showRecovery: shown.complete,
+        showRecovery: (retry, _) => shown.complete(retry),
       );
       final failedStartup = expectLater(startup, throwsFormatException);
       final retry = await shown.future;

@@ -15,11 +15,18 @@ bool shouldPreserveConfigSeed({
   return !hasValidSeed && durableConfigExists;
 }
 
+enum ConfigRecoveryReason { storageUnavailable, missingKey, unreadableConfig }
+
 /// Storage can be retried without discarding the existing encrypted data.
 class ConfigKeyUnavailableException implements Exception {
   final Object? cause;
 
-  const ConfigKeyUnavailableException([this.cause]);
+  final ConfigRecoveryReason reason;
+
+  const ConfigKeyUnavailableException([
+    this.cause,
+    this.reason = ConfigRecoveryReason.storageUnavailable,
+  ]);
 
   @override
   String toString() => 'Config encryption key is temporarily unavailable';
@@ -51,7 +58,12 @@ Future<String> loadConfigSeed({
         hasValidSeed: false,
         durableConfigExists: durableConfigExists,
       )) {
-    throw ConfigKeyUnavailableException(readError);
+    throw ConfigKeyUnavailableException(
+      readError,
+      readError == null
+          ? ConfigRecoveryReason.missingKey
+          : ConfigRecoveryReason.storageUnavailable,
+    );
   }
   final generated = base64Encode(ConfigKeyStore._randomSeed());
   try {

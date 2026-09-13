@@ -731,5 +731,12 @@
   "installedAppsPermissionDesc": "Allow access to the installed app list to choose which apps use the VPN.",
   "installedAppsPermissionDeniedMessage": "Permission was not granted. You can enable it in system settings.",
   "installedAppsPermissionGrant": "Allow access",
-  "installedAppsLoadFailed": "Could not load installed apps. Please try again."
+  "installedAppsLoadFailed": "Could not load installed apps. Please try again.",
+  "configRecoveryMissingKey": "The encryption key for your existing configuration is missing or invalid. Try the original system account on the original device or restore a backup. Retrying cannot recreate a lost key.",
+  "configRecoveryUnreadable": "The local configuration cannot be decrypted or is damaged. Existing files have been kept. Restore the matching key and configuration backup, or back up and reset.",
+  "configRecoveryStorage": "The local configuration or its encryption key could not be read or saved. Check access to the application data folder and the system secure storage, then retry.",
+  "configRecoveryReset": "Back up and reset",
+  "configRecoveryResetConfirm": "Create an encrypted backup of all local settings, subscriptions, rules and account data, then reset the application? You will need to sign in again and restore or import your subscriptions and settings. The backup is protected by this Windows account; it cannot recover a lost encryption key.",
+  "configRecoveryResetDone": "An encrypted backup of your original data has been saved in the folder below. Exit and reopen the application to set it up again.",
+  "configRecoveryResetFailed": "The encrypted backup and reset could not be completed. Surviving original data will not be removed without a verified backup. Retry this operation, or exit and reopen the application to finish it."
 }

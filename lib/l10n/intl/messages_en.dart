@@ -330,9 +330,30 @@ class MessageLookup extends MessageLookupByLibrary {
     "configRecoveryMessage": MessageLookupByLibrary.simpleMessage(
       "Local configuration is temporarily unavailable. Your existing data has been kept. Unlock your device and retry, or reopen the app later.",
     ),
+    "configRecoveryMissingKey": MessageLookupByLibrary.simpleMessage(
+      "The encryption key for your existing configuration is missing or invalid. Try the original system account on the original device or restore a backup. Retrying cannot recreate a lost key.",
+    ),
+    "configRecoveryReset": MessageLookupByLibrary.simpleMessage(
+      "Back up and reset",
+    ),
+    "configRecoveryResetConfirm": MessageLookupByLibrary.simpleMessage(
+      "Create an encrypted backup of all local settings, subscriptions, rules and account data, then reset the application? You will need to sign in again and restore or import your subscriptions and settings. The backup is protected by this Windows account; it cannot recover a lost encryption key.",
+    ),
+    "configRecoveryResetDone": MessageLookupByLibrary.simpleMessage(
+      "An encrypted backup of your original data has been saved in the folder below. Exit and reopen the application to set it up again.",
+    ),
+    "configRecoveryResetFailed": MessageLookupByLibrary.simpleMessage(
+      "The encrypted backup and reset could not be completed. Surviving original data will not be removed without a verified backup. Retry this operation, or exit and reopen the application to finish it.",
+    ),
     "configRecoveryRetry": MessageLookupByLibrary.simpleMessage("Retry"),
+    "configRecoveryStorage": MessageLookupByLibrary.simpleMessage(
+      "The local configuration or its encryption key could not be read or saved. Check access to the application data folder and the system secure storage, then retry.",
+    ),
     "configRecoveryTitle": MessageLookupByLibrary.simpleMessage(
       "Recover local configuration",
+    ),
+    "configRecoveryUnreadable": MessageLookupByLibrary.simpleMessage(
+      "The local configuration cannot be decrypted or is damaged. Existing files have been kept. Restore the matching key and configuration backup, or back up and reset.",
     ),
     "configTypeMismatch": m2,
     "configValueTypeBoolean": MessageLookupByLibrary.simpleMessage("a boolean"),

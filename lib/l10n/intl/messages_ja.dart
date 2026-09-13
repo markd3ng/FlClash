@@ -265,8 +265,27 @@ class MessageLookup extends MessageLookupByLibrary {
     "configRecoveryMessage": MessageLookupByLibrary.simpleMessage(
       "現在、ローカル設定を読み込めません。既存のデータは保持されています。端末のロックを解除して再試行するか、後でアプリを開き直してください",
     ),
+    "configRecoveryMissingKey": MessageLookupByLibrary.simpleMessage(
+      "既存の設定の暗号化キーが見つからないか無効です。元のデバイスの元のユーザーで実行するか、バックアップを復元してください。再試行しても失われたキーは再生成できません",
+    ),
+    "configRecoveryReset": MessageLookupByLibrary.simpleMessage("バックアップしてリセット"),
+    "configRecoveryResetConfirm": MessageLookupByLibrary.simpleMessage(
+      "すべてのローカル設定、サブスクリプション、ルール、アカウントデータを暗号化してバックアップし、アプリをリセットしますか？再ログインと、設定およびサブスクリプションの復元またはインポートが必要です。バックアップは現在の Windows ユーザーで保護されますが、失われた暗号化キーは復元できません",
+    ),
+    "configRecoveryResetDone": MessageLookupByLibrary.simpleMessage(
+      "元のデータを以下のフォルダーに暗号化してバックアップしました。アプリを終了して再度開き、設定を行ってください",
+    ),
+    "configRecoveryResetFailed": MessageLookupByLibrary.simpleMessage(
+      "暗号化バックアップとリセットを完了できませんでした。バックアップを検証するまで残っている元のデータは削除されません。再試行するか、アプリを終了して再度開いて完了してください",
+    ),
     "configRecoveryRetry": MessageLookupByLibrary.simpleMessage("再試行"),
+    "configRecoveryStorage": MessageLookupByLibrary.simpleMessage(
+      "ローカル設定または暗号化キーを読み書きできません。アプリのデータフォルダーとシステムの安全なストレージへのアクセス権を確認して再試行してください",
+    ),
     "configRecoveryTitle": MessageLookupByLibrary.simpleMessage("ローカル設定の復元"),
+    "configRecoveryUnreadable": MessageLookupByLibrary.simpleMessage(
+      "ローカル設定を復号できないか、ファイルが破損しています。元のファイルは保持されています。対応するキーと設定のバックアップを復元するか、バックアップしてリセットしてください",
+    ),
     "configTypeMismatch": m2,
     "configValueTypeBoolean": MessageLookupByLibrary.simpleMessage("真偽値"),
     "configValueTypeInteger": MessageLookupByLibrary.simpleMessage("整数"),

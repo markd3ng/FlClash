@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:animations/animations.dart';
+import 'package:fl_clash/services/config_reset.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:fl_clash/common/periodic_task_runner.dart';
 import 'package:fl_clash/common/theme.dart';
@@ -101,6 +102,9 @@ class GlobalState {
     final appStateOverrides = buildAppStateOverrides(appState);
     packageInfo = await PackageInfo.fromPlatform();
     await window?.ensureSingleInstance();
+    if (system.isWindows) {
+      await ConfigReset(await appPath.homeDirPath).resumePending();
+    }
     await appPath.migrateLegacyApplicationSupportData();
     await recoverPendingRestore(
       homePath: await appPath.homeDirPath,

@@ -8,6 +8,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'windows_secure_storage.dart';
+
 String? legacySecureStorageValue(String? payload, String key) {
   if (payload == null || payload.isEmpty) return null;
   final decoded = jsonDecode(payload);
@@ -29,6 +31,24 @@ bool shouldReadLegacyMacStorage({
 
 class SafeStorage {
   static const _secureStorage = FlutterSecureStorage();
+
+  static Future<WindowsSecureStorage> get _windowsStorage async =>
+      WindowsSecureStorage(
+        path: '${await appPath.homeDirPath}/flutter_secure_storage.dat',
+      );
+
+  static Future<String?> _readSecure(String key) async => Platform.isWindows
+      ? (await _windowsStorage).read(key)
+      : _secureStorage.read(key: key);
+
+  static Future<void> _deleteSecure(String key) async {
+    if (Platform.isWindows) {
+      await (await _windowsStorage).delete(key);
+    } else {
+      await _secureStorage.delete(key: key);
+    }
+  }
+
   static const _legacyMacOptions = MacOsOptions(
     usesDataProtectionKeychain: false,
     authenticationUIBehavior: 'u_AuthUIF',
@@ -67,7 +87,7 @@ class SafeStorage {
         await _deleteLegacyValue(prefs, key);
         if (!_isMacOS) {
           try {
-            await _secureStorage.delete(key: key);
+            await _deleteSecure(key);
           } catch (_) {}
         }
       });
@@ -123,7 +143,7 @@ class SafeStorage {
     if (!migrated && legacyValue != null) {
       return migrate(legacyValue);
     }
-    final secureValue = await _secureStorage.read(key: key);
+    final secureValue = await _readSecure(key);
     if (accepts(secureValue)) {
       return migrate(secureValue!, fromSecure: true);
     }
@@ -170,8 +190,8 @@ class SafeStorage {
     if (_isMacOS) {
       return;
     }
-    await _secureStorage.delete(key: key);
-    if (await _secureStorage.read(key: key) != null) {
+    await _deleteSecure(key);
+    if (await _readSecure(key) != null) {
       throw StateError('secure storage delete verification failed');
     }
   }
@@ -236,8 +256,12 @@ class SafeStorage {
   }
 
   static Future<void> _writeSecure(String key, String value) async {
-    await _secureStorage.write(key: key, value: value);
-    if (await _secureStorage.read(key: key) != value) {
+    if (Platform.isWindows) {
+      await (await _windowsStorage).write(key, value);
+    } else {
+      await _secureStorage.write(key: key, value: value);
+    }
+    if (await _readSecure(key) != value) {
       throw StateError('secure storage write verification failed');
     }
   }

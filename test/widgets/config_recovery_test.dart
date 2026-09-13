@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:fl_clash/l10n/l10n.dart';
 import 'package:fl_clash/pages/config_recovery.dart';
+import 'package:fl_clash/services/config_key_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -108,6 +109,119 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets(
+    'backup reset requires confirmation and cancellation keeps retry available',
+    (tester) async {
+      var resets = 0;
+      await _showRecovery(
+        tester,
+        onRetry: () async {},
+        onReset: () async {
+          resets++;
+          return '/backup';
+        },
+      );
+      await tester.tap(find.text('Back up and reset'));
+      await tester.pumpAndSettle();
+      expect(resets, 0);
+      expect(find.byType(AlertDialog), findsOneWidget);
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(resets, 0);
+      expect(
+        tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
+        isNotNull,
+      );
+    },
+  );
+
+  testWidgets(
+    'confirmed reset blocks retry and displays backup and restart guidance',
+    (tester) async {
+      final pending = Completer<String>();
+      var retries = 0;
+      var resets = 0;
+      var exits = 0;
+      await _showRecovery(
+        tester,
+        onRetry: () async => retries++,
+        onReset: () {
+          resets++;
+          return pending.future;
+        },
+        onExit: () => exits++,
+      );
+      await tester.tap(find.text('Back up and reset'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Back up and reset'));
+      await tester.pump();
+      expect(resets, 1);
+      expect(find.text('Retry'), findsNothing);
+      expect(
+        tester.widget<OutlinedButton>(find.byType(OutlinedButton)).onPressed,
+        isNull,
+      );
+      expect(
+        tester
+            .widget<TextButton>(find.widgetWithText(TextButton, 'Exit'))
+            .onPressed,
+        isNull,
+      );
+      pending.complete('/local/backup');
+      await tester.pumpAndSettle();
+      expect(find.text('/local/backup'), findsOneWidget);
+      expect(find.textContaining('Exit and reopen'), findsOneWidget);
+      expect(find.text('Back up and reset'), findsNothing);
+      expect(retries, 0);
+      await tester.tap(find.text('Exit'));
+      expect(exits, 1);
+    },
+  );
+
+  testWidgets(
+    'interrupted reset can only resume reset or exit and hides raw errors',
+    (tester) async {
+      var resets = 0;
+      await _showRecovery(
+        tester,
+        onRetry: () => fail('must not reload partial data'),
+        onReset: () async {
+          if (++resets == 1) throw StateError('private data');
+          return '/backup';
+        },
+      );
+      await tester.tap(find.text('Back up and reset'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Back up and reset'));
+      await tester.pumpAndSettle();
+      expect(find.text('Retry'), findsNothing);
+      expect(find.textContaining('private data'), findsNothing);
+      expect(find.textContaining('could not be completed'), findsOneWidget);
+      await tester.tap(find.text('Back up and reset'));
+      await tester.pumpAndSettle();
+      expect(resets, 2);
+      expect(find.text('/backup'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'retry reports the updated failure reason without exposing its cause',
+    (tester) async {
+      await _showRecovery(
+        tester,
+        initialReason: ConfigRecoveryReason.storageUnavailable,
+        onRetry: () async => throw const ConfigKeyUnavailableException(
+          'private seed',
+          ConfigRecoveryReason.missingKey,
+        ),
+      );
+      await tester.tap(find.text('Retry'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('missing or invalid'), findsOneWidget);
+      expect(find.textContaining('private seed'), findsNothing);
+    },
+  );
+
   testWidgets('offers exit and disables it while retrying', (tester) async {
     final pending = Completer<void>();
     var exits = 0;
@@ -140,6 +254,8 @@ Future<void> _showRecovery(
   WidgetTester tester, {
   required Future<void> Function() onRetry,
   VoidCallback? onExit,
+  Future<String> Function()? onReset,
+  ConfigRecoveryReason? initialReason,
   Locale locale = const Locale('en'),
 }) async {
   await tester.pumpWidget(
@@ -152,7 +268,12 @@ Future<void> _showRecovery(
         GlobalWidgetsLocalizations.delegate,
       ],
       supportedLocales: AppLocalizations.delegate.supportedLocales,
-      home: ConfigRecoveryScreen(onRetry: onRetry, onExit: onExit),
+      home: ConfigRecoveryScreen(
+        onRetry: onRetry,
+        onExit: onExit,
+        onReset: onReset,
+        initialReason: initialReason,
+      ),
     ),
   );
   await tester.pumpAndSettle();

@@ -30,6 +30,7 @@ class DurableConfigStore {
     } catch (error) {
       throw ConfigKeyUnavailableException(error);
     }
+    var readFailed = false;
     for (final candidate in candidates) {
       if (!await candidate.exists()) {
         continue;
@@ -43,6 +44,9 @@ class DurableConfigStore {
         value = Map<String, Object?>.from(
           jsonDecode(utf8.decode(plaintext)) as Map,
         );
+      } on FileSystemException {
+        readFailed = true;
+        continue;
       } catch (_) {
         continue;
       }
@@ -62,7 +66,12 @@ class DurableConfigStore {
     }
     // Existing ciphertext must never be replaced by a sanitized preference
     // fallback just because its key is inaccessible or does not match.
-    throw const ConfigKeyUnavailableException();
+    throw ConfigKeyUnavailableException(
+      null,
+      readFailed
+          ? ConfigRecoveryReason.storageUnavailable
+          : ConfigRecoveryReason.unreadableConfig,
+    );
   }
 
   Future<void> write(String path, Object config) async {

@@ -250,8 +250,27 @@ class MessageLookup extends MessageLookupByLibrary {
     "configRecoveryMessage": MessageLookupByLibrary.simpleMessage(
       "暂时无法读取本地配置，原有数据已保留。请解锁设备后重试，或稍后重新打开应用",
     ),
+    "configRecoveryMissingKey": MessageLookupByLibrary.simpleMessage(
+      "原配置的加密密钥缺失或无效。请尝试使用原设备上的原系统用户，或恢复备份。重试无法重新生成已丢失的原密钥",
+    ),
+    "configRecoveryReset": MessageLookupByLibrary.simpleMessage("备份并重置"),
+    "configRecoveryResetConfirm": MessageLookupByLibrary.simpleMessage(
+      "将本地设置、订阅、规则和账号数据全部加密备份后重置应用？之后需要重新登录，并恢复或导入订阅和设置。备份受当前 Windows 用户保护，但无法找回已丢失的加密密钥",
+    ),
+    "configRecoveryResetDone": MessageLookupByLibrary.simpleMessage(
+      "原有数据已加密备份至以下目录。请退出并重新打开应用，重新完成配置",
+    ),
+    "configRecoveryResetFailed": MessageLookupByLibrary.simpleMessage(
+      "未能完成加密备份和重置。未验证备份前不会删除仍保留的原始数据。请重试此操作，或退出后重新打开应用以继续完成",
+    ),
     "configRecoveryRetry": MessageLookupByLibrary.simpleMessage("重试"),
+    "configRecoveryStorage": MessageLookupByLibrary.simpleMessage(
+      "无法读取或保存本地配置及其加密密钥。请检查应用数据目录和系统安全存储的访问权限后重试",
+    ),
     "configRecoveryTitle": MessageLookupByLibrary.simpleMessage("恢复本地配置"),
+    "configRecoveryUnreadable": MessageLookupByLibrary.simpleMessage(
+      "本地配置无法解密或文件已损坏，原文件已保留。请恢复匹配的密钥与配置备份，或备份后重置",
+    ),
     "configTypeMismatch": m2,
     "configValueTypeBoolean": MessageLookupByLibrary.simpleMessage("布尔值"),
     "configValueTypeInteger": MessageLookupByLibrary.simpleMessage("整数"),
