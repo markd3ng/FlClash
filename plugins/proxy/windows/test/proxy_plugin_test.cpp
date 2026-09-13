@@ -88,5 +88,50 @@ TEST(ProxyPlugin, StartProxyRejectsInvalidArguments) {
   EXPECT_EQ(error_code, "bad_args");
 }
 
+class SessionProxyPlugin : public ProxyPlugin {
+ public:
+  int restore_attempts = 0;
+  bool restore_result = true;
+
+ protected:
+  bool RestoreProxy() override {
+    ++restore_attempts;
+    return restore_result;
+  }
+};
+
+TEST(ProxyPlugin, ConfirmedSessionEndRestoresWithoutConsumingTheMessage) {
+  SessionProxyPlugin plugin;
+  EXPECT_FALSE(plugin.HandleWindowProc(nullptr, WM_ENDSESSION, TRUE, 0).has_value());
+  EXPECT_EQ(plugin.restore_attempts, 1);
+  EXPECT_FALSE(plugin.HandleWindowProc(
+      nullptr, WM_ENDSESSION, TRUE, ENDSESSION_LOGOFF).has_value());
+  EXPECT_EQ(plugin.restore_attempts, 2);
+}
+
+TEST(ProxyPlugin, CancelledShutdownAndWindowCloseKeepTheProxy) {
+  SessionProxyPlugin plugin;
+  plugin.HandleWindowProc(nullptr, WM_QUERYENDSESSION, TRUE, 0);
+  plugin.HandleWindowProc(nullptr, WM_ENDSESSION, FALSE, 0);
+  plugin.HandleWindowProc(nullptr, WM_CLOSE, TRUE, 0);
+  EXPECT_EQ(plugin.restore_attempts, 0);
+}
+
+TEST(ProxyPlugin, FailedRestorationCanBeRetriedByTheNormalStopPath) {
+  SessionProxyPlugin plugin;
+  plugin.restore_result = false;
+  EXPECT_FALSE(plugin.HandleWindowProc(nullptr, WM_ENDSESSION, TRUE, 0).has_value());
+  plugin.restore_result = true;
+  bool restored = false;
+  plugin.HandleMethodCall(
+      MethodCall("StopProxy", std::make_unique<EncodableValue>()),
+      std::make_unique<MethodResultFunctions<>>(
+          [&restored](const EncodableValue* value) {
+            restored = value != nullptr && std::get<bool>(*value);
+          }, nullptr, nullptr));
+  EXPECT_TRUE(restored);
+  EXPECT_EQ(plugin.restore_attempts, 2);
+}
+
 }  // namespace test
 }  // namespace proxy

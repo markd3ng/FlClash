@@ -1159,7 +1159,7 @@ namespace proxy
             registrar->messenger(), "proxy",
             &flutter::StandardMethodCodec::GetInstance());
 
-    auto plugin = std::make_unique<ProxyPlugin>();
+    auto plugin = std::make_unique<ProxyPlugin>(registrar);
 
     channel->SetMethodCallHandler(
         [plugin_pointer = plugin.get()](const auto &call, auto result)
@@ -1170,9 +1170,45 @@ namespace proxy
     registrar->AddPlugin(std::move(plugin));
   }
 
-  ProxyPlugin::ProxyPlugin() {}
+  ProxyPlugin::ProxyPlugin(flutter::PluginRegistrarWindows* registrar)
+      : registrar_(registrar)
+  {
+    if (registrar_ != nullptr)
+    {
+      window_proc_id_ = registrar_->RegisterTopLevelWindowProcDelegate(
+          [this](HWND window, UINT message, WPARAM wparam, LPARAM lparam)
+          {
+            return HandleWindowProc(window, message, wparam, lparam);
+          });
+    }
+  }
 
-  ProxyPlugin::~ProxyPlugin() {}
+  ProxyPlugin::~ProxyPlugin()
+  {
+    if (registrar_ != nullptr)
+    {
+      registrar_->UnregisterTopLevelWindowProcDelegate(window_proc_id_);
+    }
+  }
+
+  bool ProxyPlugin::RestoreProxy()
+  {
+    return stopProxy();
+  }
+
+  std::optional<LRESULT> ProxyPlugin::HandleWindowProc(
+      HWND, UINT message, WPARAM wparam, LPARAM)
+  {
+    // Windows may terminate us before Dart gets its normal exit callback.
+    // The existing restore routine only restores fields we still own and
+    // retains its persisted snapshot when restoration fails.
+    if (message == WM_ENDSESSION && wparam != FALSE)
+    {
+      RestoreProxy();
+    }
+    // Other plugins and the runner must still receive this message.
+    return std::nullopt;
+  }
 
   void ProxyPlugin::HandleMethodCall(
       const flutter::MethodCall<flutter::EncodableValue> &method_call,
@@ -1180,7 +1216,7 @@ namespace proxy
   {
     if (method_call.method_name().compare("StopProxy") == 0)
     {
-      result->Success(stopProxy());
+      result->Success(RestoreProxy());
     }
     else if (method_call.method_name().compare("StartProxy") == 0)
     {

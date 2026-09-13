@@ -237,6 +237,10 @@ jobs:
       - name: Check Windows process liveness and Helper client
         run: flutter test --no-pub test/core/desktop/process_probe_test.dart test/core/desktop/helper_client_test.dart test/core/desktop/launch_policy_test.dart test/widgets/init_error_screen_test.dart
 
+      - name: Check Windows native proxy shutdown handling
+        shell: pwsh
+        run: ./tool/check_windows_proxy.ps1
+
   build:
     name: "Build ${{ matrix.name }}"
     needs: [version, test, go-test, android-core-test, android-test, rust-test, windows-helper-test]
