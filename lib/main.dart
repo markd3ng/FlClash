@@ -23,9 +23,7 @@ import 'common/common.dart';
 Future<void> main(List<String> arguments) async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
-    if (system.isDesktop) {
-      await RustLib.init();
-    }
+    await RustLib.init();
     registerFetchManagedConfig(CloudApiService().fetchManagedConfig);
     final version = await system.version;
     final container = await globalState.init(

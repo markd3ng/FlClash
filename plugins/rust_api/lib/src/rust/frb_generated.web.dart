@@ -7,6 +7,7 @@
 // ignore_for_file: argument_type_not_assignable
 
 import 'api/ipc.dart';
+import 'api/script.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'frb_generated.dart';
@@ -38,6 +39,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
 
   @protected
+  List<ScriptLog> dco_decode_list_script_log(dynamic raw);
+
+  @protected
+  String? dco_decode_opt_String(dynamic raw);
+
+  @protected
+  ScriptEvaluation dco_decode_script_evaluation(dynamic raw);
+
+  @protected
+  ScriptLog dco_decode_script_log(dynamic raw);
+
+  @protected
   int dco_decode_u_8(dynamic raw);
 
   @protected
@@ -59,6 +72,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
+
+  @protected
+  List<ScriptLog> sse_decode_list_script_log(SseDeserializer deserializer);
+
+  @protected
+  String? sse_decode_opt_String(SseDeserializer deserializer);
+
+  @protected
+  ScriptEvaluation sse_decode_script_evaluation(SseDeserializer deserializer);
+
+  @protected
+  ScriptLog sse_decode_script_log(SseDeserializer deserializer);
 
   @protected
   int sse_decode_u_8(SseDeserializer deserializer);
@@ -95,6 +120,24 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     Uint8List self,
     SseSerializer serializer,
   );
+
+  @protected
+  void sse_encode_list_script_log(
+    List<ScriptLog> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_opt_String(String? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_script_evaluation(
+    ScriptEvaluation self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_script_log(ScriptLog self, SseSerializer serializer);
 
   @protected
   void sse_encode_u_8(int self, SseSerializer serializer);

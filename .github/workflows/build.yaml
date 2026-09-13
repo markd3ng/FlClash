@@ -82,8 +82,12 @@ jobs:
           go build -tags with_gvisor -trimpath -o "$RUNNER_TEMP/FlClashCore" .
           go test -tags with_gvisor -c -o "$RUNNER_TEMP/flclash-routing-checker" .
 
+      - name: Build native script test library
+        run: cargo build --locked --manifest-path plugins/rust_api/rust/Cargo.toml
+
       - name: Run tests
         env:
+          FLCLASH_TEST_SCRIPT_LIB: ${{ github.workspace }}/plugins/rust_api/rust/target/debug/librust_api.so
           FLCLASH_TEST_CORE: ${{ runner.temp }}/FlClashCore
           FLCLASH_TEST_ROUTING_CHECKER: ${{ runner.temp }}/flclash-routing-checker
         run: flutter test --reporter expanded test plugins/proxy/test/proxy_test.dart
@@ -159,6 +163,8 @@ jobs:
       - uses: nttld/setup-ndk@v1
         with:
           ndk-version: r28c
+      - name: Install script binding dependencies
+        run: sudo apt-get update && sudo apt-get install -y libclang-dev
       - name: Cache Gradle
         uses: actions/cache@v4
         with:
@@ -180,6 +186,8 @@ jobs:
           test -d "$wrapper" || flutter precache --android
           cp -R "$wrapper/." .
           chmod +x gradlew
+          ./gradlew :rust_api:cargokitCargoBuildRust_apiDebug \
+            -Ptarget-platform=android-arm64,android-arm,android-x64 --no-daemon
           ./gradlew :app:testDebugUnitTest :service:testDebugUnitTest :common:testDebugUnitTest \
             -x :app:compileFlutterBuildDebug -x :app:copyFlutterAssetsDebug --no-daemon
 
@@ -386,6 +394,10 @@ jobs:
           rm -f "$CERT_PATH"
           echo "Available Developer ID signing identities:"
           security find-identity -v -p codesigning "$KEYCHAIN_PATH"
+
+      - name: Install Android script binding dependencies
+        if: matrix.platform == 'android'
+        run: sudo apt-get update && sudo apt-get install -y libclang-dev
 
       - name: Build Application
         id: build

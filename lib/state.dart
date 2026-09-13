@@ -1,6 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:ffi' as ffi;
 
 import 'package:animations/animations.dart';
 import 'package:dynamic_color/dynamic_color.dart';
@@ -15,7 +13,7 @@ import 'package:fl_clash/widgets/dialog.dart';
 import 'package:fl_clash/widgets/list.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_js/flutter_js.dart';
+import 'package:fl_clash/common/javascript.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -335,59 +333,7 @@ class GlobalState {
     Map<String, dynamic> config, {
     void Function(String level, String output)? onConsole,
   }) async {
-    if (config['proxy-providers'] == null) {
-      config['proxy-providers'] = {};
-    }
-    final configJs = json.encode(config);
-    String? lastError;
-    Future<Map<String, dynamic>?> run() async {
-      final runtime = getJavascriptRuntime();
-      final engineId = runtime.getEngineInstanceId();
-      try {
-        if (onConsole != null) {
-          JavascriptRuntime
-                  .channelFunctionsRegistered[engineId]?['ConsoleLog'] =
-              (dynamic args) {
-                try {
-                  final list = List<dynamic>.from(args as List);
-                  final level = list.isNotEmpty
-                      ? list.removeAt(0).toString()
-                      : 'log';
-                  onConsole(level, list.join(' '));
-                } catch (_) {}
-              };
-        }
-        final res = await runtime.evaluateAsync('''
-      $scriptContent
-      main($configJs)
-    ''');
-        if (res.isError) {
-          lastError = res.stringResult;
-          return null;
-        }
-        return switch (res.rawResult is ffi.Pointer) {
-          true => runtime.convertValue<Map<String, dynamic>>(res),
-          false => Map<String, dynamic>.from(res.rawResult),
-        };
-      } finally {
-        JavascriptRuntime.channelFunctionsRegistered.remove(engineId);
-        if (!system.isMacOS) {
-          try {
-            runtime.dispose();
-          } catch (_) {}
-        }
-      }
-    }
-
-    var value = await run();
-    if (value == null && lastError != null) {
-      lastError = null;
-      value = await run();
-      if (value == null && lastError != null) {
-        throw lastError!;
-      }
-    }
-    return value ?? config;
+    return evaluateProfileScript(scriptContent, config, onConsole: onConsole);
   }
 }
 

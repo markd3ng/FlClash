@@ -1,46 +1,76 @@
-import 'dart:io';
+import 'dart:convert';
 
-import 'package:fl_clash/common/constant.dart';
-import 'package:fl_clash/state.dart';
+import 'package:fl_clash/common/javascript.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:rust_api/rust_api.dart';
 
 void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
+  final nativeEvaluator = scriptEvaluator;
+  tearDown(() => scriptEvaluator = nativeEvaluator);
+
+  test('adds proxy providers without modifying the caller config', () async {
+    final original = <String, dynamic>{'proxies': <dynamic>[]};
+    scriptEvaluator = ({required script, required config}) async {
+      expect(script, 'script');
+      expect(jsonDecode(config)['proxy-providers'], isEmpty);
+      return ScriptEvaluation(config: config, logs: []);
+    };
+    final result = await evaluateProfileScript('script', original);
+    expect(result['proxy-providers'], isEmpty);
+    expect(original.containsKey('proxy-providers'), isFalse);
+  });
 
   test(
-    'default script with trailing whitespace can be evaluated repeatedly',
+    'delivers console output on failure and never retries failed scripts',
     () async {
-      for (var index = 0; index < 10; index++) {
-        final result = await globalState.handleEvaluate(
-          '$scriptTemplate ',
-          <String, dynamic>{'proxies': <dynamic>[]},
+      var calls = 0;
+      scriptEvaluator = ({required script, required config}) async {
+        calls++;
+        return const ScriptEvaluation(
+          error: 'timeout',
+          logs: [ScriptLog(level: 'warn', output: 'before failure')],
         );
-
-        expect(result['proxies'], isEmpty);
-        expect(result['proxy-providers'], isEmpty);
-      }
+      };
+      final lines = <String>[];
+      await expectLater(
+        evaluateProfileScript(
+          '',
+          {},
+          onConsole: (level, text) {
+            lines.add('$level:$text');
+          },
+        ),
+        throwsA('timeout'),
+      );
+      expect(calls, 1);
+      expect(lines, ['warn:before failure']);
     },
-    skip: !Platform.isMacOS,
   );
 
   test(
-    'script evaluation recovers after an error',
+    'logging callback errors do not discard a valid configuration',
     () async {
-      await expectLater(
-        globalState.handleEvaluate('const main = (', <String, dynamic>{
-          'proxies': <dynamic>[],
-        }),
-        throwsA(isA<String>()),
+      scriptEvaluator = ({required script, required config}) async =>
+          const ScriptEvaluation(
+            config: '{"ok":true}',
+            logs: [ScriptLog(level: 'log', output: 'line')],
+          );
+      expect(
+        await evaluateProfileScript(
+          '',
+          {},
+          onConsole: (_, _) => throw StateError('closed'),
+        ),
+        {'ok': true},
       );
-
-      final result = await globalState.handleEvaluate(
-        scriptTemplate,
-        <String, dynamic>{'proxies': <dynamic>[]},
-      );
-
-      expect(result['proxies'], isEmpty);
-      expect(result['proxy-providers'], isEmpty);
     },
-    skip: !Platform.isMacOS,
   );
+
+  test('validates decoded output including custom toJSON results', () async {
+    for (final output in [null, 'null', '[]', '42', '"text"']) {
+      scriptEvaluator = ({required script, required config}) async =>
+          ScriptEvaluation(config: output, logs: []);
+      await expectLater(evaluateProfileScript('', {}), throwsA(isA<String>()));
+    }
+  });
 }

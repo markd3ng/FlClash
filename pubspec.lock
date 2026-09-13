@@ -502,15 +502,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.0"
-  flutter_js:
-    dependency: "direct main"
-    description:
-      path: "."
-      ref: master
-      resolved-ref: c0e10a5dab0e22cd616ec92ae71471d76369cbfe
-      url: "https://github.com/chen08209/flutter_js"
-    source: git
-    version: "0.8.3"
   flutter_lints:
     dependency: "direct dev"
     description:
@@ -541,7 +532,7 @@ packages:
     source: hosted
     version: "3.3.1"
   flutter_rust_bridge:
-    dependency: transitive
+    dependency: "direct dev"
     description:
       name: flutter_rust_bridge
       sha256: e87d6b9ee934dcd24a128ccb2bd91905d2d5fe5c06245d6a8f5477d4907a437a
@@ -1577,14 +1568,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.4.1"
-  sync_http:
-    dependency: transitive
-    description:
-      name: sync_http
-      sha256: "7f0cd72eca000d2e026bcd6f990b81d0ca06022ef4e32fb257b30d3d1014a961"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.3.1"
   synchronized:
     dependency: transitive
     description:

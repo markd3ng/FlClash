@@ -151,6 +151,9 @@ class AndroidEnvironment {
         Platform.environment['CARGOKIT_TOOL_TEMP_DIR'] ?? targetTempDir;
 
     return {
+      // Bindgen must parse the same Android headers as the C compiler.
+      'BINDGEN_EXTRA_CLANG_ARGS_${target.rust.replaceAll('-', '_')}':
+          '$targetArg --sysroot=${path.join(toolchainPath, '..', 'sysroot')}',
       arKey: arValue,
       ccKey: ccValue,
       cfFlagsKey: cFlagsValue,
