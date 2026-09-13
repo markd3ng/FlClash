@@ -507,6 +507,20 @@ class MessageLookup extends MessageLookupByLibrary {
     "infiniteTime": MessageLookupByLibrary.simpleMessage("长期有效"),
     "init": MessageLookupByLibrary.simpleMessage("初始化"),
     "inputCorrectHotkey": MessageLookupByLibrary.simpleMessage("请输入正确的快捷键"),
+    "installedAppsLoadFailed": MessageLookupByLibrary.simpleMessage(
+      "无法读取应用列表，请重试",
+    ),
+    "installedAppsPermissionDeniedMessage":
+        MessageLookupByLibrary.simpleMessage("尚未获得权限，可在系统设置中允许读取应用列表"),
+    "installedAppsPermissionDesc": MessageLookupByLibrary.simpleMessage(
+      "允许读取已安装应用列表，以选择哪些应用使用 VPN",
+    ),
+    "installedAppsPermissionGrant": MessageLookupByLibrary.simpleMessage(
+      "授权访问",
+    ),
+    "installedAppsPermissionRequired": MessageLookupByLibrary.simpleMessage(
+      "需要读取应用列表的权限",
+    ),
     "intelligentSelected": MessageLookupByLibrary.simpleMessage("智能选择"),
     "internet": MessageLookupByLibrary.simpleMessage("互联网"),
     "interval": MessageLookupByLibrary.simpleMessage("间隔"),

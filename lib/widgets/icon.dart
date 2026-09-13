@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:fl_clash/common/common.dart';
@@ -142,13 +143,23 @@ class PackageIcon extends StatefulWidget {
 }
 
 class _PackageIconState extends State<PackageIcon> {
+  StreamSubscription<void>? _iconChanges;
   ImageProvider? _icon;
   int _generation = 0;
 
   @override
   void initState() {
     super.initState();
+    _iconChanges = app?.iconChanges.listen((_) {
+      if (mounted) setState(_loadIcon);
+    });
     _loadIcon();
+  }
+
+  @override
+  void dispose() {
+    _iconChanges?.cancel();
+    super.dispose();
   }
 
   @override

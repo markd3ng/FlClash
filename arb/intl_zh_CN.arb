@@ -710,7 +710,13 @@
   "editCustomRouting": "编辑自定义",
   "customRoutingDraftHint": "先填写自定义内容，再切换至自定义模式。编辑草稿不会切换当前模式",
   "coreBlockedByPolicyTip": "Windows 阻止了代理内核启动（系统错误 {code}）。请检查 Windows 安全中心的保护历史记录及应用控制策略，并确认安装包来源和签名。",
-  "@coreBlockedByPolicyTip": {"placeholders": {"code": {"type": "int"}}},
+  "@coreBlockedByPolicyTip": {
+    "placeholders": {
+      "code": {
+        "type": "int"
+      }
+    }
+  },
   "startupRecoveryTitle": "启动恢复",
   "startupRecoveryTip": "最近两次启动未能完成。本次已暂停自动应用配置和启动 VPN，当前配置选择与设置均已保留。请检查配置后点击“启动”重试；已经运行的 VPN 会继续保持连接。",
   "authentication": "本地代理认证",
@@ -718,5 +724,10 @@
   "authenticationSystemProxyDesc": "启用本地代理认证时不设置系统 HTTP 代理",
   "authenticationUsernameInvalid": "请输入 1–255 字节的用户名，不支持冒号或控制字符",
   "authenticationPasswordInvalid": "请输入 1–255 字节的密码，不支持控制字符",
-  "authenticationApplyFailed": "未能应用认证设置"
+  "authenticationApplyFailed": "未能应用认证设置",
+  "installedAppsPermissionRequired": "需要读取应用列表的权限",
+  "installedAppsPermissionDesc": "允许读取已安装应用列表，以选择哪些应用使用 VPN",
+  "installedAppsPermissionDeniedMessage": "尚未获得权限，可在系统设置中允许读取应用列表",
+  "installedAppsPermissionGrant": "授权访问",
+  "installedAppsLoadFailed": "无法读取应用列表，请重试"
 }

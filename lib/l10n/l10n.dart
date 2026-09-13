@@ -6028,6 +6028,56 @@ class AppLocalizations {
       args: [],
     );
   }
+
+  /// `Installed apps permission required`
+  String get installedAppsPermissionRequired {
+    return Intl.message(
+      'Installed apps permission required',
+      name: 'installedAppsPermissionRequired',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Allow access to the installed app list to choose which apps use the VPN.`
+  String get installedAppsPermissionDesc {
+    return Intl.message(
+      'Allow access to the installed app list to choose which apps use the VPN.',
+      name: 'installedAppsPermissionDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Permission was not granted. You can enable it in system settings.`
+  String get installedAppsPermissionDeniedMessage {
+    return Intl.message(
+      'Permission was not granted. You can enable it in system settings.',
+      name: 'installedAppsPermissionDeniedMessage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Allow access`
+  String get installedAppsPermissionGrant {
+    return Intl.message(
+      'Allow access',
+      name: 'installedAppsPermissionGrant',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Could not load installed apps. Please try again.`
+  String get installedAppsLoadFailed {
+    return Intl.message(
+      'Could not load installed apps. Please try again.',
+      name: 'installedAppsLoadFailed',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<AppLocalizations> {

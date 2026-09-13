@@ -701,6 +701,22 @@ class MessageLookup extends MessageLookupByLibrary {
     "inputCorrectHotkey": MessageLookupByLibrary.simpleMessage(
       "Please enter the correct hotkey",
     ),
+    "installedAppsLoadFailed": MessageLookupByLibrary.simpleMessage(
+      "Could not load installed apps. Please try again.",
+    ),
+    "installedAppsPermissionDeniedMessage":
+        MessageLookupByLibrary.simpleMessage(
+          "Permission was not granted. You can enable it in system settings.",
+        ),
+    "installedAppsPermissionDesc": MessageLookupByLibrary.simpleMessage(
+      "Allow access to the installed app list to choose which apps use the VPN.",
+    ),
+    "installedAppsPermissionGrant": MessageLookupByLibrary.simpleMessage(
+      "Allow access",
+    ),
+    "installedAppsPermissionRequired": MessageLookupByLibrary.simpleMessage(
+      "Installed apps permission required",
+    ),
     "intelligentSelected": MessageLookupByLibrary.simpleMessage(
       "Intelligent selection",
     ),

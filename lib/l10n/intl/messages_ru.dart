@@ -732,6 +732,21 @@ class MessageLookup extends MessageLookupByLibrary {
     "inputCorrectHotkey": MessageLookupByLibrary.simpleMessage(
       "Пожалуйста, введите правильную горячую клавишу",
     ),
+    "installedAppsLoadFailed": MessageLookupByLibrary.simpleMessage(
+      "Не удалось загрузить список приложений. Повторите попытку.",
+    ),
+    "installedAppsPermissionDeniedMessage": MessageLookupByLibrary.simpleMessage(
+      "Разрешение не предоставлено. Его можно включить в системных настройках.",
+    ),
+    "installedAppsPermissionDesc": MessageLookupByLibrary.simpleMessage(
+      "Разрешите доступ к списку установленных приложений, чтобы выбрать приложения для VPN.",
+    ),
+    "installedAppsPermissionGrant": MessageLookupByLibrary.simpleMessage(
+      "Разрешить доступ",
+    ),
+    "installedAppsPermissionRequired": MessageLookupByLibrary.simpleMessage(
+      "Нужно разрешение на доступ к списку приложений",
+    ),
     "intelligentSelected": MessageLookupByLibrary.simpleMessage(
       "Интеллектуальный выбор",
     ),

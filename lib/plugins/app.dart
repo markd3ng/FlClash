@@ -11,11 +11,18 @@ class App {
   static App? _instance;
   late MethodChannel methodChannel;
   Function()? onExit;
+  final _packageChanges = StreamController<void>.broadcast(sync: true);
+  Stream<void> get packageChanges => _packageChanges.stream;
+  final _iconChanges = StreamController<void>.broadcast(sync: true);
+  Stream<void> get iconChanges => _iconChanges.stream;
 
   App._internal() {
     methodChannel = const MethodChannel('$packageName/app');
     methodChannel.setMethodCallHandler((call) async {
       switch (call.method) {
+        case 'packagesChanged':
+          clearPackageIconCache();
+          _packageChanges.add(null);
         case 'exit':
           if (onExit != null) {
             await onExit!();
@@ -41,13 +48,32 @@ class App {
     return methodChannel.invokeMethod<bool>('moveTaskToBack');
   }
 
-  Future<List<Package>> getPackages() async {
+  Future<List<Package>> getPackages({bool refresh = false}) async {
     final packagesString = await methodChannel.invokeMethod<String>(
       'getPackages',
+      {'refresh': refresh},
     );
     final List<dynamic> packagesRaw =
         (await packagesString?.commonToJSON<List<dynamic>>()) ?? [];
     return packagesRaw.map((e) => Package.fromJson(e)).toSet().toList();
+  }
+
+  Future<bool> isInstalledAppsPermissionGranted() async {
+    return await methodChannel.invokeMethod<bool>(
+          'isInstalledAppsPermissionGranted',
+        ) ??
+        false;
+  }
+
+  Future<bool> requestInstalledAppsPermission() async {
+    return await methodChannel.invokeMethod<bool>(
+          'requestInstalledAppsPermission',
+        ) ??
+        false;
+  }
+
+  Future<bool> openAppSettings() async {
+    return await methodChannel.invokeMethod<bool>('openAppSettings') ?? false;
   }
 
   Future<List<String>> getChinaPackageNames() async {
@@ -68,6 +94,7 @@ class App {
         false;
   }
 
+  int _iconRevision = 0;
   final Map<String, ImageProvider?> _packageIcons = {};
   final Map<String, Future<ImageProvider?>> _packageIconTasks = {};
 
@@ -90,24 +117,27 @@ class App {
   }
 
   Future<ImageProvider?> _loadPackageIcon(String packageName) async {
+    final revision = _iconRevision;
     ImageProvider? icon;
     try {
       final path = await methodChannel.invokeMethod<String>('getPackageIcon', {
         'packageName': packageName,
       });
-      icon = path == null ? null : FileImage(File(path));
+      icon = path == null || path.isEmpty ? null : FileImage(File(path));
     } catch (error) {
       commonPrint.log('getPackageIcon error: $error');
     }
+    if (revision != _iconRevision) return null;
     _packageIcons[packageName] = icon;
     _packageIconTasks.remove(packageName);
     return icon;
   }
 
-  @visibleForTesting
   void clearPackageIconCache() {
+    _iconRevision++;
     _packageIcons.clear();
     _packageIconTasks.clear();
+    _iconChanges.add(null);
   }
 
   Future<bool?> tip(String? message) async {

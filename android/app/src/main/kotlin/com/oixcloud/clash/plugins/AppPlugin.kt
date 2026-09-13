@@ -3,12 +3,17 @@ package com.oixcloud.clash.plugins
 import android.Manifest
 import android.app.Activity
 import android.app.ActivityManager
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.ApplicationInfo
 import android.content.pm.ComponentInfo
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.net.VpnService
 import android.os.Build
+import android.provider.Settings
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.getSystemService
@@ -17,19 +22,22 @@ import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
 import com.android.tools.smali.dexlib2.dexbacked.DexBackedDexFile
-import com.oixcloud.clash.ProcessExitRecord
-import com.oixcloud.clash.latestMainProcessExit
-import com.oixcloud.clash.R
+import com.google.gson.Gson
 import com.oixcloud.clash.ChinaPackageMatcher
-import com.oixcloud.clash.common.PendingCallback
+import com.oixcloud.clash.ProcessExitRecord
+import com.oixcloud.clash.R
 import com.oixcloud.clash.common.Components
 import com.oixcloud.clash.common.GlobalState
+import com.oixcloud.clash.common.PendingCallback
 import com.oixcloud.clash.common.QuickAction
 import com.oixcloud.clash.common.quickIntent
+import com.oixcloud.clash.common.registerReceiverCompat
 import com.oixcloud.clash.getPackageIconPath
+import com.oixcloud.clash.latestMainProcessExit
 import com.oixcloud.clash.models.Package
+import com.oixcloud.clash.packages.PackageSnapshotCache
+import com.oixcloud.clash.packages.PermissionRequestBroker
 import com.oixcloud.clash.showToast
-import com.google.gson.Gson
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
@@ -37,19 +45,22 @@ import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.Result
+import io.flutter.plugin.common.PluginRegistry.ActivityResultListener
+import io.flutter.plugin.common.PluginRegistry.RequestPermissionsResultListener
+import java.io.File
+import java.lang.ref.WeakReference
+import java.util.zip.ZipFile
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.withContext
-import java.io.File
-import java.lang.ref.WeakReference
-import java.util.zip.ZipFile
 
 class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware {
 
     companion object {
         const val VPN_PERMISSION_REQUEST_CODE = 1001
         const val NOTIFICATION_PERMISSION_REQUEST_CODE = 1002
+        private const val GET_INSTALLED_APPS = "com.android.permission.GET_INSTALLED_APPS"
     }
 
     private var activityRef: WeakReference<Activity>? = null
@@ -62,7 +73,13 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
 
     private val requestNotificationCallback = PendingCallback<Unit>()
 
-    private val packages = mutableListOf<Package>()
+    private val packages = PackageSnapshotCache { loadPackages() }
+    private val installedAppsRequest = PermissionRequestBroker()
+    private var packageChangeContext: Context? = null
+    private var packageChangeReceiver: BroadcastReceiver? = null
+    private var activityBinding: ActivityPluginBinding? = null
+    private val activityResultListener = ActivityResultListener(::onActivityResult)
+    private val permissionResultListener = RequestPermissionsResultListener(::onRequestPermissionsResultListener)
 
     private var isBlockNotification = false
 
@@ -86,7 +103,28 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
                 result.success(true)
             }
 
-            "getPackages" -> platformCalls.submit(result) { getPackagesToJson() }
+            "getPackages" -> platformCalls.submit(result) {
+                if (call.argument<Boolean>("refresh") == true) packages.invalidate()
+                getPackagesToJson()
+            }
+
+            "isInstalledAppsPermissionGranted" -> platformCalls.submit(result) {
+                hasInstalledAppsPermission()
+            }
+
+            "requestInstalledAppsPermission" -> requestInstalledAppsPermission(result)
+
+            "openAppSettings" -> {
+                val context = activityRef?.get() ?: GlobalState.application
+                val opened = runCatching {
+                    context.startActivity(Intent(
+                        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                        Uri.fromParts("package", context.packageName, null),
+                    ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                    true
+                }.getOrDefault(false)
+                result.success(opened)
+            }
 
             "getChinaPackageNames" -> platformCalls.submit(result) { getChinaPackageNames() }
 
@@ -211,23 +249,73 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
     }
 
 
-    @Synchronized
+    private fun hasInstalledAppsPermission(): Boolean {
+        val manager = GlobalState.application.packageManager
+        try {
+            @Suppress("DEPRECATION")
+            manager.getPermissionInfo(GET_INSTALLED_APPS, 0)
+        } catch (_: PackageManager.NameNotFoundException) {
+            return true // Stock Android has no vendor runtime permission.
+        }
+        return manager.checkPermission(GET_INSTALLED_APPS, GlobalState.application.packageName) ==
+            PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun requestInstalledAppsPermission(result: Result) {
+        try {
+            if (hasInstalledAppsPermission()) {
+                result.success(true)
+                return
+            }
+            val activity = activityRef?.get()
+            if (activity == null) {
+                result.success(false)
+                return
+            }
+            val requestCode = installedAppsRequest.begin { result.success(it) } ?: return
+            try {
+                ActivityCompat.requestPermissions(activity, arrayOf(GET_INSTALLED_APPS), requestCode)
+            } catch (_: Exception) {
+                installedAppsRequest.complete(requestCode, false)
+            }
+        } catch (_: Exception) {
+            result.error("PLATFORM_ERROR", "Could not request installed apps permission", null)
+        }
+    }
+
     private fun getPackages(): List<Package> {
-        val packageManager = GlobalState.application.packageManager
-        if (packages.isNotEmpty()) return packages.toList()
-        packageManager?.getInstalledPackages(PackageManager.GET_META_DATA or PackageManager.GET_PERMISSIONS)
-            ?.filter {
-                it.packageName != GlobalState.application.packageName && it.packageName != "android"
-            }?.map {
-                Package(
-                    packageName = it.packageName,
-                    label = it.applicationInfo?.loadLabel(packageManager).toString(),
-                    system = (it.applicationInfo?.flags?.and(ApplicationInfo.FLAG_SYSTEM)) != 0,
-                    lastUpdateTime = it.lastUpdateTime,
-                    internet = it.requestedPermissions?.contains(Manifest.permission.INTERNET) == true
-                )
-            }?.let { packages.addAll(it) }
-        return packages.toList()
+        if (!hasInstalledAppsPermission()) {
+            packages.invalidate()
+            return emptyList()
+        }
+        val loaded = packages.get()
+        if (hasInstalledAppsPermission()) return loaded
+        packages.invalidate()
+        return emptyList()
+    }
+
+    private fun loadPackages(): List<Package> {
+        val manager = GlobalState.application.packageManager
+        val flags = PackageManager.GET_PERMISSIONS
+        val installed = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            manager.getInstalledPackages(PackageManager.PackageInfoFlags.of(flags.toLong()))
+        } else {
+            @Suppress("DEPRECATION")
+            manager.getInstalledPackages(flags)
+        }
+        return installed.filter {
+            it.packageName != GlobalState.application.packageName && it.packageName != "android"
+        }.map {
+            Package(
+                packageName = it.packageName,
+                label = it.applicationInfo?.loadLabel(manager)?.toString() ?: it.packageName,
+                system = it.applicationInfo?.let { info ->
+                    info.flags and ApplicationInfo.FLAG_SYSTEM != 0
+                } == true,
+                lastUpdateTime = it.lastUpdateTime,
+                internet = it.requestedPermissions?.contains(Manifest.permission.INTERNET) == true,
+            )
+        }
     }
 
     private suspend fun getPackagesToJson(): String {
@@ -238,9 +326,10 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
 
     private suspend fun getChinaPackageNames(): String {
         return withContext(Dispatchers.Default) {
-            val packages: List<String> =
-                getPackages().map { it.packageName }.filter { isChinaPackage(it) }
-            Gson().toJson(packages)
+            check(hasInstalledAppsPermission()) { "Installed apps permission is required" }
+            val names = getPackages().map { it.packageName }.filter { isChinaPackage(it) }
+            check(hasInstalledAppsPermission()) { "Installed apps permission was revoked" }
+            Gson().toJson(names)
         }
     }
 
@@ -371,24 +460,61 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
         channel =
             MethodChannel(flutterPluginBinding.binaryMessenger, "${Components.PACKAGE_NAME}/app")
         channel.setMethodCallHandler(this)
+        packages.invalidate()
+        val context = flutterPluginBinding.applicationContext
+        val attachedChannel = channel
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                if (packageChangeReceiver !== this || intent?.data?.scheme != "package") return
+                // Replacements send REMOVED + ADDED before REPLACED; refresh once at the end.
+                if (intent.action != Intent.ACTION_PACKAGE_REPLACED &&
+                    intent.getBooleanExtra(Intent.EXTRA_REPLACING, false)) return
+                packages.invalidate()
+                attachedChannel.invokeMethod("packagesChanged", null)
+            }
+        }
+        val filter = IntentFilter().apply {
+            addAction(Intent.ACTION_PACKAGE_ADDED)
+            addAction(Intent.ACTION_PACKAGE_REPLACED)
+            addAction(Intent.ACTION_PACKAGE_REMOVED)
+            addDataScheme("package")
+        }
+        context.registerReceiverCompat(receiver, filter)
+        packageChangeContext = context
+        packageChangeReceiver = receiver
     }
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         channel.setMethodCallHandler(null)
-        activityRef = null
+        val receiver = packageChangeReceiver
+        packageChangeReceiver = null
+        receiver?.let { runCatching { packageChangeContext?.unregisterReceiver(it) } }
+        packageChangeContext = null
+        detachActivityListeners()
+        installedAppsRequest.cancel()
+        packages.invalidate()
         invokeRequestNotificationCallback()
         invokeVpnPrepareCallback(false)
         platformCalls.close()
     }
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
+        detachActivityListeners()
+        activityBinding = binding
         activityRef = WeakReference(binding.activity)
-        binding.addActivityResultListener(::onActivityResult)
-        binding.addRequestPermissionsResultListener(::onRequestPermissionsResultListener)
+        binding.addActivityResultListener(activityResultListener)
+        binding.addRequestPermissionsResultListener(permissionResultListener)
+    }
+
+    private fun detachActivityListeners() {
+        activityRef = null
+        activityBinding?.removeActivityResultListener(activityResultListener)
+        activityBinding?.removeRequestPermissionsResultListener(permissionResultListener)
+        activityBinding = null
     }
 
     override fun onDetachedFromActivityForConfigChanges() {
-        activityRef = null
+        detachActivityListeners()
     }
 
     override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
@@ -397,7 +523,8 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
 
     override fun onDetachedFromActivity() {
         channel.invokeMethod("exit", null)
-        activityRef = null
+        detachActivityListeners()
+        installedAppsRequest.cancel()
         invokeRequestNotificationCallback()
         invokeVpnPrepareCallback(false)
     }
@@ -411,6 +538,18 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
     private fun onRequestPermissionsResultListener(
         requestCode: Int, permissions: Array<String>, grantResults: IntArray
     ): Boolean {
+        if (requestCode >= 0x2000) {
+            if (permissions.isNotEmpty() && !permissions.contains(GET_INSTALLED_APPS)) return false
+            val granted = permissions.contains(GET_INSTALLED_APPS) &&
+                grantResults.isNotEmpty() &&
+                runCatching { hasInstalledAppsPermission() }.getOrDefault(false)
+            if (installedAppsRequest.complete(requestCode, granted)) {
+                packages.invalidate()
+                channel.invokeMethod("packagesChanged", null)
+                return true
+            }
+            return false
+        }
         if (requestCode != NOTIFICATION_PERMISSION_REQUEST_CODE) return false
         isBlockNotification = true
         invokeRequestNotificationCallback()

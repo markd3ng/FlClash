@@ -560,6 +560,20 @@ class MessageLookup extends MessageLookupByLibrary {
     "infiniteTime": MessageLookupByLibrary.simpleMessage("長期有効"),
     "init": MessageLookupByLibrary.simpleMessage("初期化"),
     "inputCorrectHotkey": MessageLookupByLibrary.simpleMessage("正しいホットキーを入力"),
+    "installedAppsLoadFailed": MessageLookupByLibrary.simpleMessage(
+      "アプリ一覧を読み込めませんでした。再試行してください。",
+    ),
+    "installedAppsPermissionDeniedMessage":
+        MessageLookupByLibrary.simpleMessage("許可されませんでした。システム設定でアクセスを許可できます。"),
+    "installedAppsPermissionDesc": MessageLookupByLibrary.simpleMessage(
+      "VPN を使用するアプリを選ぶには、インストール済みアプリ一覧へのアクセスを許可してください。",
+    ),
+    "installedAppsPermissionGrant": MessageLookupByLibrary.simpleMessage(
+      "アクセスを許可",
+    ),
+    "installedAppsPermissionRequired": MessageLookupByLibrary.simpleMessage(
+      "アプリ一覧へのアクセス許可が必要です",
+    ),
     "intelligentSelected": MessageLookupByLibrary.simpleMessage("インテリジェント選択"),
     "internet": MessageLookupByLibrary.simpleMessage("インターネット"),
     "interval": MessageLookupByLibrary.simpleMessage("インターバル"),

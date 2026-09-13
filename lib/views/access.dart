@@ -1,11 +1,9 @@
-import 'dart:async';
-
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/controller.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
-import 'package:fl_clash/plugins/app.dart';
 import 'package:fl_clash/providers/providers.dart';
+import 'package:fl_clash/providers/installed_apps.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/material.dart';
@@ -19,24 +17,27 @@ class AccessView extends ConsumerStatefulWidget {
   ConsumerState<AccessView> createState() => _AccessViewState();
 }
 
-class _AccessViewState extends ConsumerState<AccessView> {
+class _AccessViewState extends ConsumerState<AccessView>
+    with WidgetsBindingObserver {
   final GlobalKey<CommonScaffoldState> _scaffoldKey = GlobalKey();
   late ScrollController _controller;
   List<String>? _pinedList;
   bool _isInit = false;
   AccessControlMode? _lastMode;
 
-  final _completer = Completer();
+  bool _requestingPermission = false;
+  bool _permissionDenied = false;
 
   @override
   void initState() {
     super.initState();
     _controller = ScrollController();
-    _completer.complete(appController.getPackages());
+    WidgetsBinding.instance.addObserver(this);
     final accessControl = ref
         .read(vpnSettingProvider.select((state) => state.accessControlProps))
         .copyWith();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       ref.read(accessControlStateProvider.notifier).value = accessControl;
       _isInit = true;
     });
@@ -44,8 +45,62 @@ class _AccessViewState extends ConsumerState<AccessView> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _controller.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _reloadPackages();
+  }
+
+  void _reloadPackages() {
+    ref.read(installedAppsAppProvider)?.clearPackageIconCache();
+    ref.invalidate(installedAppsProvider);
+  }
+
+  List<Package> get _loadedPackages {
+    final result = ref.read(installedAppsProvider);
+    if (result.isLoading ||
+        result.hasError ||
+        result.value?.permissionGranted != true) {
+      return const [];
+    }
+    return result.value!.packages;
+  }
+
+  Future<void> _requestPermission() async {
+    if (_requestingPermission) return;
+    setState(() => _requestingPermission = true);
+    var granted = false;
+    try {
+      granted =
+          await ref
+              .read(installedAppsAppProvider)
+              ?.requestInstalledAppsPermission() ??
+          false;
+    } catch (_) {
+      granted = false;
+    } finally {
+      if (mounted) {
+        setState(() {
+          _requestingPermission = false;
+          _permissionDenied = !granted;
+        });
+        _reloadPackages();
+      }
+    }
+  }
+
+  Future<void> _openSettings() async {
+    try {
+      final opened =
+          await ref.read(installedAppsAppProvider)?.openAppSettings() ?? false;
+      if (mounted && !opened) setState(() => _permissionDenied = true);
+    } catch (_) {
+      if (mounted) setState(() => _permissionDenied = true);
+    }
   }
 
   Widget _buildSelectedAllButton({
@@ -85,17 +140,20 @@ class _AccessViewState extends ConsumerState<AccessView> {
   }
 
   Future<void> _intelligentSelected() async {
-    final packageNames = ref.read(
-      packagesProvider.select((state) => state.map((item) => item.packageName)),
-    );
+    final packageNames = _loadedPackages
+        .map((item) => item.packageName)
+        .toList();
     if (packageNames.isEmpty) {
       return;
     }
-    final selectedPackageNames =
-        (await appController.loadingRun<List<String>>(() async {
-          return await app?.getChinaPackageNames() ?? [];
-        }, tag: LoadingTag.access))?.toSet() ??
-        {};
+    final api = ref.read(installedAppsAppProvider);
+    if (api == null) return;
+    final selected = await appController.loadingRun<List<String>>(
+      api.getChinaPackageNames,
+      tag: LoadingTag.access,
+    );
+    if (!mounted || selected == null || _loadedPackages.isEmpty) return;
+    final selectedPackageNames = selected.toSet();
     final acceptList = packageNames
         .where((item) => !selectedPackageNames.contains(item))
         .toList();
@@ -155,37 +213,11 @@ class _AccessViewState extends ConsumerState<AccessView> {
     }
   }
 
-  AccessControlProps _getRealAccessControlProps(
-    AccessControlProps accessControl,
-  ) {
-    final packages = ref.read(packagesProvider);
-    if (packages.isEmpty) {
-      return accessControl;
-    }
-    final viewPackageNames = packages
-        .getViewList(
-          pinedList: [],
-          sortType: accessControl.sort,
-          isFilterSystemApp: accessControl.isFilterSystemApp,
-          isFilterNonInternetApp: accessControl.isFilterNonInternetApp,
-        )
-        .map((item) => item.packageName)
-        .toSet()
-        .toList();
-    return accessControl.copyWithNewList(
-      accessControl.currentList.intersection(viewPackageNames),
-    );
-  }
-
   void _handleSave() {
     final accessControl = ref.read(accessControlStateProvider);
     ref
         .read(vpnSettingProvider.notifier)
-        .update(
-          (state) => state.copyWith(
-            accessControlProps: _getRealAccessControlProps(accessControl),
-          ),
-        );
+        .update((state) => state.copyWith(accessControlProps: accessControl));
   }
 
   Widget _buildConfirm() {
@@ -194,9 +226,7 @@ class _AccessViewState extends ConsumerState<AccessView> {
         final accessControl = ref.watch(accessControlStateProvider);
         final noSave = ref.watch(
           vpnSettingProvider.select(
-            (state) =>
-                state.accessControlProps ==
-                _getRealAccessControlProps(accessControl),
+            (state) => state.accessControlProps == accessControl,
           ),
         );
         if (noSave) {
@@ -262,6 +292,11 @@ class _AccessViewState extends ConsumerState<AccessView> {
               onPressed: _handleToggle,
             ),
             PopupMenuItemData(
+              icon: Icons.refresh,
+              label: appLocalizations.refresh,
+              onPressed: _reloadPackages,
+            ),
+            PopupMenuItemData(
               icon: Icons.search,
               label: appLocalizations.search,
               onPressed: _handleSearch,
@@ -302,34 +337,92 @@ class _AccessViewState extends ConsumerState<AccessView> {
     required List<Package> packages,
     required List<String> valueList,
   }) {
-    return FutureBuilder(
-      future: _completer.future,
-      builder: (_, snapshot) {
-        if (snapshot.connectionState != ConnectionState.done) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        return packages.isEmpty
-            ? NullStatus(label: appLocalizations.noData)
-            : CommonScrollBar(
-                controller: _controller,
-                child: ListView.builder(
-                  controller: _controller,
-                  itemCount: packages.length,
-                  itemExtent: 72,
-                  itemBuilder: (_, index) {
-                    final package = packages[index];
-                    return PackageListItem(
-                      key: Key(package.packageName),
-                      package: package,
-                      value: valueList.contains(package.packageName),
-                      onChanged: (value) {
-                        _handleSelected(package.packageName);
-                      },
-                    );
-                  },
+    final status = ref.watch(installedAppsProvider);
+    if (status.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (status.hasError) {
+      return _buildPackageStatus(permission: false);
+    }
+    if (status.value?.permissionGranted != true) {
+      return _buildPackageStatus(permission: true);
+    }
+    return packages.isEmpty
+        ? NullStatus(label: appLocalizations.noData)
+        : CommonScrollBar(
+            controller: _controller,
+            child: ListView.builder(
+              controller: _controller,
+              itemCount: packages.length,
+              itemExtent: 72,
+              itemBuilder: (_, index) {
+                final package = packages[index];
+                return PackageListItem(
+                  key: ValueKey((package.packageName, package.lastUpdateTime)),
+                  package: package,
+                  value: valueList.contains(package.packageName),
+                  onChanged: (_) => _handleSelected(package.packageName),
+                );
+              },
+            ),
+          );
+  }
+
+  Widget _buildPackageStatus({required bool permission}) {
+    final l10n = context.appLocalizations;
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                permission
+                    ? l10n.installedAppsPermissionRequired
+                    : l10n.installedAppsLoadFailed,
+                style: context.textTheme.titleMedium,
+                textAlign: TextAlign.center,
+              ),
+              if (permission) ...[
+                const SizedBox(height: 12),
+                Text(
+                  _permissionDenied
+                      ? l10n.installedAppsPermissionDeniedMessage
+                      : l10n.installedAppsPermissionDesc,
+                  textAlign: TextAlign.center,
                 ),
-              );
-      },
+              ],
+              const SizedBox(height: 16),
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 12,
+                runSpacing: 8,
+                children: [
+                  FilledButton(
+                    onPressed: _requestingPermission
+                        ? null
+                        : permission
+                        ? _requestPermission
+                        : _reloadPackages,
+                    child: Text(
+                      permission
+                          ? l10n.installedAppsPermissionGrant
+                          : l10n.refresh,
+                    ),
+                  ),
+                  if (permission)
+                    OutlinedButton(
+                      onPressed: _requestingPermission ? null : _openSettings,
+                      child: Text(l10n.settings),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -374,7 +467,10 @@ class _AccessViewState extends ConsumerState<AccessView> {
   Widget build(BuildContext context) {
     final isLoading = ref.watch(loadingProvider(LoadingTag.access));
     final query = ref.watch(queryProvider(QueryTag.access));
-    final packages = ref.watch(packagesProvider);
+    final installed = ref.watch(installedAppsProvider);
+    final packages = installed.value?.permissionGranted == true
+        ? installed.value!.packages
+        : const <Package>[];
     final accessControl = ref.watch(accessControlStateProvider);
     if (_isInit) {
       if (_lastMode != accessControl.mode) {
@@ -423,10 +519,17 @@ class _AccessViewState extends ConsumerState<AccessView> {
           ],
         ),
       ),
-      floatingActionButton: _buildSelectedAllButton(
-        isSelectedAll: valueList.length == viewPackageNameList.length,
-        allValueList: viewPackageNameList,
-      ),
+      floatingActionButton:
+          accessControl.enable &&
+              !installed.isLoading &&
+              !installed.hasError &&
+              installed.value?.permissionGranted == true &&
+              viewPackages.isNotEmpty
+          ? _buildSelectedAllButton(
+              isSelectedAll: valueList.length == viewPackageNameList.length,
+              allValueList: viewPackageNameList,
+            )
+          : null,
     );
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:fl_clash/common/constant.dart';
 import 'package:fl_clash/plugins/app.dart';
 import 'package:flutter/services.dart';
@@ -82,4 +84,93 @@ void main() {
     expect(await app.getPackageIcon('com.a'), isNull);
     expect(iconCallCount, 1);
   });
+  Future<void> packagesChanged() async {
+    final completed = Completer<void>();
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .handlePlatformMessage(
+          channel.name,
+          const StandardMethodCodec().encodeMethodCall(
+            const MethodCall('packagesChanged'),
+          ),
+          (_) => completed.complete(),
+        );
+    await completed.future;
+  }
+
+  test(
+    'package events invalidate both cached missing icons and app list subscribers',
+    () async {
+      var calls = 0;
+      var changes = 0;
+      var exits = 0;
+      final api = App();
+      final previousExit = api.onExit;
+      api.onExit = () {
+        exits++;
+      };
+      addTearDown(() => api.onExit = previousExit);
+      final subscription = api.packageChanges.listen((_) => changes++);
+      addTearDown(subscription.cancel);
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(
+            channel,
+            (_) async => ++calls == 1 ? null : '/icons/updated.png',
+          );
+      expect(await api.getPackageIcon('updated.app'), isNull);
+      await packagesChanged();
+      expect(changes, 1);
+      expect(exits, 0);
+      expect(await api.getPackageIcon('updated.app'), isNotNull);
+      expect(calls, 2);
+    },
+  );
+
+  test(
+    'an old icon completion cannot overwrite or remove a new lookup',
+    () async {
+      final old = Completer<String>();
+      final fresh = Completer<String>();
+      var calls = 0;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(
+            channel,
+            (_) => ++calls == 1 ? old.future : fresh.future,
+          );
+      final api = App();
+      final oldTask = api.getPackageIcon('replaced.app');
+      await Future<void>.delayed(Duration.zero);
+      await packagesChanged();
+      final newTask = api.getPackageIcon('replaced.app');
+      await Future<void>.delayed(Duration.zero);
+      old.complete('/icons/old.png');
+      expect(await oldTask, isNull);
+      expect(api.hasPackageIcon('replaced.app'), isFalse);
+      expect(api.getPackageIcon('replaced.app'), same(newTask));
+      fresh.complete('/icons/new.png');
+      final icon = await newTask;
+      expect(api.getCachedPackageIcon('replaced.app'), same(icon));
+      expect(calls, 2);
+    },
+  );
+
+  test(
+    'permission and settings methods preserve denial and missing results',
+    () async {
+      final seen = <String>[];
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (call) async {
+            seen.add(call.method);
+            return call.method == 'openAppSettings' ? true : null;
+          });
+      final api = App();
+      expect(await api.isInstalledAppsPermissionGranted(), isFalse);
+      expect(await api.requestInstalledAppsPermission(), isFalse);
+      expect(await api.openAppSettings(), isTrue);
+      expect(seen, [
+        'isInstalledAppsPermissionGranted',
+        'requestInstalledAppsPermission',
+        'openAppSettings',
+      ]);
+    },
+  );
 }
