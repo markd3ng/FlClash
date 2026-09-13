@@ -73,13 +73,29 @@ func handleInitClash(params *InitParams) bool {
 	return true
 }
 
+// networkExcluded is guarded by runLock and never changes user run intent.
+var networkExcluded bool
+
+func handleSetNetworkExcluded(excluded bool) bool {
+	runLock.Lock()
+	defer runLock.Unlock()
+	networkExcluded = excluded
+	if excluded {
+		listener.StopListener()
+	} else {
+		updateListeners()
+	}
+	resolver.ResetConnection()
+	return true
+}
+
 func handleStartListener() bool {
 	runLock.Lock()
 	defer runLock.Unlock()
 	isRunning = true
 	updateListeners()
 	resolver.ResetConnection()
-	if features.Android {
+	if features.Android || networkExcluded {
 		return true
 	}
 	if currentConfig == nil {

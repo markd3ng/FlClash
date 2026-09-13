@@ -6,6 +6,7 @@
 // Static analysis wrongly picks the IO variant, thus ignore this
 // ignore_for_file: argument_type_not_assignable
 
+import 'api/hotkey.dart';
 import 'api/ipc.dart';
 import 'api/script.dart';
 import 'dart:async';
@@ -30,7 +31,31 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  RustStreamSink<int> dco_decode_StreamSink_u_32_Sse(dynamic raw);
+
+  @protected
   String dco_decode_String(dynamic raw);
+
+  @protected
+  HotKeyFailure dco_decode_hot_key_failure(dynamic raw);
+
+  @protected
+  HotKeyModifier dco_decode_hot_key_modifier(dynamic raw);
+
+  @protected
+  HotKeySpec dco_decode_hot_key_spec(dynamic raw);
+
+  @protected
+  int dco_decode_i_32(dynamic raw);
+
+  @protected
+  List<HotKeyFailure> dco_decode_list_hot_key_failure(dynamic raw);
+
+  @protected
+  List<HotKeyModifier> dco_decode_list_hot_key_modifier(dynamic raw);
+
+  @protected
+  List<HotKeySpec> dco_decode_list_hot_key_spec(dynamic raw);
 
   @protected
   List<int> dco_decode_list_prim_u_8_loose(dynamic raw);
@@ -51,6 +76,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ScriptLog dco_decode_script_log(dynamic raw);
 
   @protected
+  int dco_decode_u_32(dynamic raw);
+
+  @protected
   int dco_decode_u_8(dynamic raw);
 
   @protected
@@ -65,7 +93,37 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  RustStreamSink<int> sse_decode_StreamSink_u_32_Sse(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   String sse_decode_String(SseDeserializer deserializer);
+
+  @protected
+  HotKeyFailure sse_decode_hot_key_failure(SseDeserializer deserializer);
+
+  @protected
+  HotKeyModifier sse_decode_hot_key_modifier(SseDeserializer deserializer);
+
+  @protected
+  HotKeySpec sse_decode_hot_key_spec(SseDeserializer deserializer);
+
+  @protected
+  int sse_decode_i_32(SseDeserializer deserializer);
+
+  @protected
+  List<HotKeyFailure> sse_decode_list_hot_key_failure(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<HotKeyModifier> sse_decode_list_hot_key_modifier(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<HotKeySpec> sse_decode_list_hot_key_spec(SseDeserializer deserializer);
 
   @protected
   List<int> sse_decode_list_prim_u_8_loose(SseDeserializer deserializer);
@@ -86,13 +144,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ScriptLog sse_decode_script_log(SseDeserializer deserializer);
 
   @protected
+  int sse_decode_u_32(SseDeserializer deserializer);
+
+  @protected
   int sse_decode_u_8(SseDeserializer deserializer);
 
   @protected
   void sse_decode_unit(SseDeserializer deserializer);
-
-  @protected
-  int sse_decode_i_32(SseDeserializer deserializer);
 
   @protected
   bool sse_decode_bool(SseDeserializer deserializer);
@@ -110,7 +168,46 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_StreamSink_u_32_Sse(
+    RustStreamSink<int> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_String(String self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_hot_key_failure(HotKeyFailure self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_hot_key_modifier(
+    HotKeyModifier self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_hot_key_spec(HotKeySpec self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_i_32(int self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_hot_key_failure(
+    List<HotKeyFailure> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_hot_key_modifier(
+    List<HotKeyModifier> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_hot_key_spec(
+    List<HotKeySpec> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_prim_u_8_loose(List<int> self, SseSerializer serializer);
@@ -140,13 +237,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_script_log(ScriptLog self, SseSerializer serializer);
 
   @protected
+  void sse_encode_u_32(int self, SseSerializer serializer);
+
+  @protected
   void sse_encode_u_8(int self, SseSerializer serializer);
 
   @protected
   void sse_encode_unit(void self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_i_32(int self, SseSerializer serializer);
 
   @protected
   void sse_encode_bool(bool self, SseSerializer serializer);

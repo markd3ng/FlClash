@@ -17,5 +17,7 @@ interface IBaseService {
 
     fun start()
 
+    fun setNetworkExcluded(excluded: Boolean) {}
+
     fun stop()
 }

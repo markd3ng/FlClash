@@ -9,7 +9,7 @@ import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:hotkey_manager/hotkey_manager.dart';
+import 'package:rust_api/rust_api.dart' show HotKeyModifier;
 
 enum SupportPlatform {
   Windows,

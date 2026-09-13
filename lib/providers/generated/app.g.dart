@@ -9,6 +9,109 @@ part of '../app.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
+@ProviderFor(CurrentSSID)
+final currentSSIDProvider = CurrentSSIDProvider._();
+
+final class CurrentSSIDProvider
+    extends $NotifierProvider<CurrentSSID, String?> {
+  CurrentSSIDProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'currentSSIDProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$currentSSIDHash();
+
+  @$internal
+  @override
+  CurrentSSID create() => CurrentSSID();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(String? value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<String?>(value),
+    );
+  }
+}
+
+String _$currentSSIDHash() => r'3507c984e17ad499469554eb326ce7a8a0d4f393';
+
+abstract class _$CurrentSSID extends $Notifier<String?> {
+  String? build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<String?, String?>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<String?, String?>,
+              String?,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, build);
+  }
+}
+
+@ProviderFor(SsidRefresh)
+final ssidRefreshProvider = SsidRefreshProvider._();
+
+final class SsidRefreshProvider extends $NotifierProvider<SsidRefresh, int> {
+  SsidRefreshProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'ssidRefreshProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$ssidRefreshHash();
+
+  @$internal
+  @override
+  SsidRefresh create() => SsidRefresh();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(int value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<int>(value),
+    );
+  }
+}
+
+String _$ssidRefreshHash() => r'e448f6c9d5515b7a02fb4bcc2614530b39acf207';
+
+abstract class _$SsidRefresh extends $Notifier<int> {
+  int build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<int, int>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<int, int>,
+              int,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, build);
+  }
+}
+
 @ProviderFor(RealTunEnable)
 final realTunEnableProvider = RealTunEnableProvider._();
 

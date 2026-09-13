@@ -6163,6 +6163,76 @@ class AppLocalizations {
       args: [],
     );
   }
+
+  /// `Exclude SSIDs`
+  String get excludeSsids {
+    return Intl.message(
+      'Exclude SSIDs',
+      name: 'excludeSsids',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Pause proxying on the listed Wi-Fi networks; resume after leaving only while the app remains started.`
+  String get excludeSsidsDesc {
+    return Intl.message(
+      'Pause proxying on the listed Wi-Fi networks; resume after leaving only while the app remains started.',
+      name: 'excludeSsidsDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Location permission`
+  String get locationPermission {
+    return Intl.message(
+      'Location permission',
+      name: 'locationPermission',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Location permission required`
+  String get locationPermissionRequired {
+    return Intl.message(
+      'Location permission required',
+      name: 'locationPermissionRequired',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Location permission was denied, so the current Wi-Fi name cannot be read. Please enable location permission manually in system settings.`
+  String get locationPermissionDeniedMessage {
+    return Intl.message(
+      'Location permission was denied, so the current Wi-Fi name cannot be read. Please enable location permission manually in system settings.',
+      name: 'locationPermissionDeniedMessage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `1. Open System Settings > Privacy & Security\n2. Choose Location Services\n3. Find and check {appName} in the list\n\nWhen you are done, return to the app to continue. Thank you for your cooperation.`
+  String locationPermissionGuide(Object appName) {
+    return Intl.message(
+      '1. Open System Settings > Privacy & Security\n2. Choose Location Services\n3. Find and check $appName in the list\n\nWhen you are done, return to the app to continue. Thank you for your cooperation.',
+      name: 'locationPermissionGuide',
+      desc: '',
+      args: [appName],
+    );
+  }
+
+  /// `Allow location access to read Wi-Fi names. On Android, allow precise location all the time and enable system location services.`
+  String get ssidPermissionGuide {
+    return Intl.message(
+      'Allow location access to read Wi-Fi names. On Android, allow precise location all the time and enable system location services.',
+      name: 'ssidPermissionGuide',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<AppLocalizations> {

@@ -16,4 +16,5 @@ interface IRemoteInterface {
     void stopService(in IResultInterface result);
     void setEventListener(in IEventInterface event);
     long getRunTime();
+    void updateExcludeSSIDs(in String[] ssids);
 }

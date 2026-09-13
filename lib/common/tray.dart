@@ -3,7 +3,7 @@ import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
-import 'package:tray_manager/tray_manager.dart';
+import 'package:tray/tray.dart' as native;
 
 import 'app_localizations.dart';
 import 'constant.dart';
@@ -24,11 +24,7 @@ class Tray {
     return system.isWindows ? 'ico' : 'png';
   }
 
-  Future<void> destroy() async {
-    await trayManager.destroy();
-    _lastIconPath = null;
-    _lastTitle = null;
-  }
+  Future<void> destroy() => native.Tray.instance.hide();
 
   String getTryIcon({required bool isStart, required bool tunEnable}) {
     if (system.isMacOS || !isStart) {
@@ -40,28 +36,6 @@ class Tray {
     return 'assets/images/icon/status_3.$trayIconSuffix';
   }
 
-  String? _lastIconPath;
-
-  Future<void> _updateSystemTray({
-    required bool isStart,
-    required bool tunEnable,
-  }) async {
-    final isLinux = system.isLinux;
-    final iconPath = getTryIcon(isStart: isStart, tunEnable: tunEnable);
-    final hasIcon = _lastIconPath != null;
-    final iconChanged = _lastIconPath != iconPath;
-    if (isLinux && hasIcon && iconChanged) {
-      await destroy();
-    }
-    if (iconChanged || isLinux) {
-      _lastIconPath = iconPath;
-      await trayManager.setIcon(iconPath, isTemplate: true);
-    }
-    if (!isLinux) {
-      await trayManager.setToolTip(appName);
-    }
-  }
-
   Future<void> update({
     required TrayState trayState,
     required Traffic traffic,
@@ -69,157 +43,144 @@ class Tray {
     if (system.isAndroid) {
       return;
     }
-    if (!system.isLinux) {
-      await _updateSystemTray(
-        isStart: trayState.isStart,
-        tunEnable: trayState.tunEnable,
-      );
-    }
-    final menuItems = <MenuItem>[];
-    final showMenuItem = MenuItem(
+    final menuItems = <native.TrayMenuItem>[];
+    final showMenuItem = native.TrayMenuAction(
       label: appLocalizations.show,
-      onClick: (_) {
+      onSelected: () {
         window?.show();
       },
     );
     menuItems.add(showMenuItem);
-    final startMenuItem = MenuItem.checkbox(
+    final startMenuItem = native.TrayMenuCheckbox(
       label: trayState.isStart ? appLocalizations.stop : appLocalizations.start,
-      onClick: (_) async {
+      onSelected: () async {
         appController.updateStart();
       },
       checked: false,
     );
     menuItems.add(startMenuItem);
     if (system.isMacOS) {
-      final speedStatistics = MenuItem.checkbox(
+      final speedStatistics = native.TrayMenuCheckbox(
         label: appLocalizations.speedStatistics,
-        onClick: (_) async {
+        onSelected: () async {
           appController.updateSpeedStatistics();
         },
         checked: trayState.showTrayTitle,
       );
       menuItems.add(speedStatistics);
     }
-    menuItems.add(MenuItem.separator());
+    menuItems.add(const native.TrayMenuSeparator());
     for (final mode in Mode.values) {
       menuItems.add(
-        MenuItem.checkbox(
+        native.TrayMenuCheckbox(
           label: Intl.message(mode.name),
-          onClick: (_) {
+          onSelected: () {
             appController.changeMode(mode);
           },
           checked: mode == trayState.mode,
         ),
       );
     }
-    menuItems.add(MenuItem.separator());
+    menuItems.add(const native.TrayMenuSeparator());
     if (system.isMacOS) {
       for (final group in trayState.groups) {
-        final subMenuItems = <MenuItem>[];
+        final subMenuItems = <native.TrayMenuItem>[];
         for (final proxy in group.all) {
           subMenuItems.add(
-            MenuItem.checkbox(
+            native.TrayMenuCheckbox(
               label: proxy.name,
               checked:
                   appController.getSelectedProxyName(group.name) == proxy.name,
-              onClick: (_) {
+              onSelected: () {
                 appController.changeProxyDebounce(group.name, proxy.name);
               },
             ),
           );
         }
         menuItems.add(
-          MenuItem.submenu(
-            label: group.name,
-            submenu: Menu(items: subMenuItems),
-          ),
+          native.TrayMenuSubmenu(label: group.name, items: subMenuItems),
         );
       }
       if (trayState.groups.isNotEmpty) {
-        menuItems.add(MenuItem.separator());
+        menuItems.add(const native.TrayMenuSeparator());
       }
     }
     if (trayState.isStart) {
       menuItems.add(
-        MenuItem.checkbox(
+        native.TrayMenuCheckbox(
           label: appLocalizations.tun,
-          onClick: (_) {
+          onSelected: () {
             appController.updateTun();
           },
           checked: trayState.tunEnable,
         ),
       );
       menuItems.add(
-        MenuItem.checkbox(
+        native.TrayMenuCheckbox(
           label: appLocalizations.systemProxy,
-          onClick: (_) {
+          onSelected: () {
             appController.updateSystemProxy();
           },
           checked: trayState.systemProxy,
         ),
       );
-      menuItems.add(MenuItem.separator());
+      menuItems.add(const native.TrayMenuSeparator());
     }
-    final autoStartMenuItem = MenuItem.checkbox(
+    final autoStartMenuItem = native.TrayMenuCheckbox(
       label: appLocalizations.autoLaunch,
-      onClick: (_) async {
+      onSelected: () async {
         appController.updateAutoLaunch();
       },
       checked: trayState.autoLaunch,
     );
-    final copyEnvVarMenuItem = MenuItem.submenu(
+    final copyEnvVarMenuItem = native.TrayMenuSubmenu(
       label: appLocalizations.copyEnvVar,
-      disabled: trayState.port <= 0,
-      submenu: Menu(
-        items: [
-          for (final shell in _EnvShell.values)
-            MenuItem(
-              label: shell.label,
-              onClick: (_) async {
-                await _copyEnv(trayState.port, shell);
-              },
-            ),
-        ],
-      ),
+      enabled: trayState.port > 0,
+      items: [
+        for (final shell in _EnvShell.values)
+          native.TrayMenuAction(
+            label: shell.label,
+            onSelected: () async {
+              await _copyEnv(trayState.port, shell);
+            },
+          ),
+      ],
     );
     menuItems.add(autoStartMenuItem);
     menuItems.add(copyEnvVarMenuItem);
-    menuItems.add(MenuItem.separator());
-    final exitMenuItem = MenuItem(
+    menuItems.add(const native.TrayMenuSeparator());
+    final exitMenuItem = native.TrayMenuAction(
       label: appLocalizations.exit,
-      onClick: (_) async {
+      onSelected: () async {
         await appController.handleExit();
       },
     );
     menuItems.add(exitMenuItem);
-    final menu = Menu(items: menuItems);
-    await trayManager.setContextMenu(menu);
-    if (system.isLinux) {
-      await _updateSystemTray(
-        isStart: trayState.isStart,
-        tunEnable: trayState.tunEnable,
-      );
-    }
-    // _updateTrayTitle could be optimized too, but it's okay to call frequently since
-    // it reflects traffic which changes quickly
-    updateTrayTitle(showTrayTitle: trayState.showTrayTitle, traffic: traffic);
+    await native.Tray.instance.show(
+      native.TraySpec(
+        icon: native.TrayIcon.asset(
+          getTryIcon(
+            isStart: trayState.isStart,
+            tunEnable: trayState.tunEnable,
+          ),
+          isTemplate: system.isMacOS,
+        ),
+        toolTip: appName,
+        menu: menuItems,
+      ),
+    );
+    await updateTrayTitle(
+      showTrayTitle: trayState.showTrayTitle,
+      traffic: traffic,
+    );
   }
-
-  String? _lastTitle;
 
   Future<void> updateTrayTitle({
     required bool showTrayTitle,
     required Traffic traffic,
   }) async {
-    if (!system.isMacOS) {
-      return;
-    }
-    final title = !showTrayTitle ? '' : traffic.trayTitle;
-    if (_lastTitle != title) {
-      _lastTitle = title;
-      await trayManager.setTitle(title);
-    }
+    if (!system.isMacOS) return;
+    await native.Tray.instance.setTitle(showTrayTitle ? traffic.trayTitle : '');
   }
 
   Future<void> _copyEnv(int port, _EnvShell shell) async {

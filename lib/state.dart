@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:fl_clash/common/listener_state_scheduler.dart';
+import 'package:fl_clash/providers/state.dart';
 
 import 'package:animations/animations.dart';
 import 'package:fl_clash/services/config_reset.dart';
@@ -34,6 +36,28 @@ class GlobalState {
       commonPrint.log('update task failed: $error\n$stackTrace');
     },
   );
+  int _runRequest = 0;
+  late final _listeners = ListenerStateScheduler((running) async {
+    if (coreController.isCompleted) {
+      if (running) {
+        if (!await coreController.startListener()) {
+          throw PortConflictException(appLocalizations.portConflictTip);
+        }
+      } else {
+        await coreController.stopListener();
+      }
+    } else if (running && system.isDesktop) {
+      throw StateError('Core is not connected');
+    }
+  });
+
+  Future<void> syncNetworkSuspension() => system.isAndroid
+      ? Future.value()
+      : _listeners.apply(
+          running: isStart,
+          suspended: !system.isAndroid && container.read(suspendProvider),
+        );
+
   bool isPre = true;
   late final PackageInfo packageInfo;
   Function? updateCurrentDelayDebounce;
@@ -169,19 +193,19 @@ class GlobalState {
   }
 
   Future<void> handleStart([UpdateTasks? tasks]) async {
+    final request = ++_runRequest;
     startTime ??= DateTime.now();
     try {
-      if (coreController.isCompleted) {
-        if (!await coreController.startListener()) {
-          throw PortConflictException(appLocalizations.portConflictTip);
-        }
-      } else if (system.isDesktop) {
-        throw StateError('Core is not connected');
-      }
+      await _listeners.apply(
+        running: true,
+        suspended: !system.isAndroid && container.read(suspendProvider),
+      );
+      if (request != _runRequest) return;
       await service?.start();
+      if (request != _runRequest) return;
       startUpdateTasks(tasks);
     } catch (_) {
-      startTime = null;
+      if (request == _runRequest) startTime = null;
       rethrow;
     }
   }
@@ -191,12 +215,11 @@ class GlobalState {
   }
 
   Future handleStop() async {
+    ++_runRequest;
     startTime = null;
     stopUpdateTasks();
     try {
-      if (coreController.isCompleted) {
-        await coreController.stopListener();
-      }
+      await _listeners.apply(running: false, suspended: false);
     } finally {
       await service?.stop();
     }

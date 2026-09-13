@@ -70,6 +70,13 @@ class _AppStateManagerState extends ConsumerState<AppStateManager>
         appController.updateGroupsDebounce();
       }
     });
+    ref.listenManual(suspendProvider, (previous, next) {
+      if (previous == next) return;
+      unawaited(globalState.syncNetworkSuspension().catchError((Object error) {
+        commonPrint.log('Network suspension failed: ${error.runtimeType}');
+      }));
+      appController.addCheckIp();
+    });
     if (window == null) {
       return;
     }

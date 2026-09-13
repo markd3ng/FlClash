@@ -9,6 +9,7 @@ import kotlinx.coroutines.sync.Mutex
 
 object State {
     var options: VpnOptions? = null
+    @Volatile var networkExcluded: Boolean = false
     var notificationParamsFlow: MutableStateFlow<NotificationParams?> = MutableStateFlow(
         NotificationParams()
     )

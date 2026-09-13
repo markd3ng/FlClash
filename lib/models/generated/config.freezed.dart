@@ -966,7 +966,7 @@ as AccessControlProps,
 @override
 @pragma('vm:prefer-inline')
 $AccessControlPropsCopyWith<$Res> get accessControlProps {
-  
+
   return $AccessControlPropsCopyWith<$Res>(_self.accessControlProps, (value) {
     return _then(_self.copyWith(accessControlProps: value));
   });
@@ -1185,7 +1185,7 @@ as AccessControlProps,
 @override
 @pragma('vm:prefer-inline')
 $AccessControlPropsCopyWith<$Res> get accessControlProps {
-  
+
   return $AccessControlPropsCopyWith<$Res>(_self.accessControlProps, (value) {
     return _then(_self.copyWith(accessControlProps: value));
   });
@@ -1457,7 +1457,7 @@ as String,
 /// @nodoc
 mixin _$NetworkProps {
 
- bool get systemProxy; List<String> get bypassDomain; RouteMode get routeMode; bool get autoSetSystemDns; bool get appendSystemDns; bool get autoSetIpv6;@JsonKey(includeIfNull: false) bool? get manualIpv6; bool get blockQuic; bool get blockWebRtc; bool get suspendOnIdle; AuthenticationProps get authentication;
+ bool get systemProxy; List<String> get bypassDomain; RouteMode get routeMode; bool get autoSetSystemDns; bool get appendSystemDns; bool get autoSetIpv6;@JsonKey(includeIfNull: false) bool? get manualIpv6; bool get blockQuic; bool get blockWebRtc; bool get suspendOnIdle; List<String> get excludeSSIDs; AuthenticationProps get authentication;
 /// Create a copy of NetworkProps
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1470,16 +1470,16 @@ $NetworkPropsCopyWith<NetworkProps> get copyWith => _$NetworkPropsCopyWithImpl<N
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is NetworkProps&&(identical(other.systemProxy, systemProxy) || other.systemProxy == systemProxy)&&const DeepCollectionEquality().equals(other.bypassDomain, bypassDomain)&&(identical(other.routeMode, routeMode) || other.routeMode == routeMode)&&(identical(other.autoSetSystemDns, autoSetSystemDns) || other.autoSetSystemDns == autoSetSystemDns)&&(identical(other.appendSystemDns, appendSystemDns) || other.appendSystemDns == appendSystemDns)&&(identical(other.autoSetIpv6, autoSetIpv6) || other.autoSetIpv6 == autoSetIpv6)&&(identical(other.manualIpv6, manualIpv6) || other.manualIpv6 == manualIpv6)&&(identical(other.blockQuic, blockQuic) || other.blockQuic == blockQuic)&&(identical(other.blockWebRtc, blockWebRtc) || other.blockWebRtc == blockWebRtc)&&(identical(other.suspendOnIdle, suspendOnIdle) || other.suspendOnIdle == suspendOnIdle)&&(identical(other.authentication, authentication) || other.authentication == authentication));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is NetworkProps&&(identical(other.systemProxy, systemProxy) || other.systemProxy == systemProxy)&&const DeepCollectionEquality().equals(other.bypassDomain, bypassDomain)&&(identical(other.routeMode, routeMode) || other.routeMode == routeMode)&&(identical(other.autoSetSystemDns, autoSetSystemDns) || other.autoSetSystemDns == autoSetSystemDns)&&(identical(other.appendSystemDns, appendSystemDns) || other.appendSystemDns == appendSystemDns)&&(identical(other.autoSetIpv6, autoSetIpv6) || other.autoSetIpv6 == autoSetIpv6)&&(identical(other.manualIpv6, manualIpv6) || other.manualIpv6 == manualIpv6)&&(identical(other.blockQuic, blockQuic) || other.blockQuic == blockQuic)&&(identical(other.blockWebRtc, blockWebRtc) || other.blockWebRtc == blockWebRtc)&&(identical(other.suspendOnIdle, suspendOnIdle) || other.suspendOnIdle == suspendOnIdle)&&const DeepCollectionEquality().equals(other.excludeSSIDs, excludeSSIDs)&&(identical(other.authentication, authentication) || other.authentication == authentication));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,systemProxy,const DeepCollectionEquality().hash(bypassDomain),routeMode,autoSetSystemDns,appendSystemDns,autoSetIpv6,manualIpv6,blockQuic,blockWebRtc,suspendOnIdle,authentication);
+int get hashCode => Object.hash(runtimeType,systemProxy,const DeepCollectionEquality().hash(bypassDomain),routeMode,autoSetSystemDns,appendSystemDns,autoSetIpv6,manualIpv6,blockQuic,blockWebRtc,suspendOnIdle,const DeepCollectionEquality().hash(excludeSSIDs),authentication);
 
 @override
 String toString() {
-  return 'NetworkProps(systemProxy: $systemProxy, bypassDomain: $bypassDomain, routeMode: $routeMode, autoSetSystemDns: $autoSetSystemDns, appendSystemDns: $appendSystemDns, autoSetIpv6: $autoSetIpv6, manualIpv6: $manualIpv6, blockQuic: $blockQuic, blockWebRtc: $blockWebRtc, suspendOnIdle: $suspendOnIdle, authentication: $authentication)';
+  return 'NetworkProps(systemProxy: $systemProxy, bypassDomain: $bypassDomain, routeMode: $routeMode, autoSetSystemDns: $autoSetSystemDns, appendSystemDns: $appendSystemDns, autoSetIpv6: $autoSetIpv6, manualIpv6: $manualIpv6, blockQuic: $blockQuic, blockWebRtc: $blockWebRtc, suspendOnIdle: $suspendOnIdle, excludeSSIDs: $excludeSSIDs, authentication: $authentication)';
 }
 
 
@@ -1490,7 +1490,7 @@ abstract mixin class $NetworkPropsCopyWith<$Res>  {
   factory $NetworkPropsCopyWith(NetworkProps value, $Res Function(NetworkProps) _then) = _$NetworkPropsCopyWithImpl;
 @useResult
 $Res call({
- bool systemProxy, List<String> bypassDomain, RouteMode routeMode, bool autoSetSystemDns, bool appendSystemDns, bool autoSetIpv6,@JsonKey(includeIfNull: false) bool? manualIpv6, bool blockQuic, bool blockWebRtc, bool suspendOnIdle, AuthenticationProps authentication
+ bool systemProxy, List<String> bypassDomain, RouteMode routeMode, bool autoSetSystemDns, bool appendSystemDns, bool autoSetIpv6,@JsonKey(includeIfNull: false) bool? manualIpv6, bool blockQuic, bool blockWebRtc, bool suspendOnIdle, List<String> excludeSSIDs, AuthenticationProps authentication
 });
 
 
@@ -1507,7 +1507,7 @@ class _$NetworkPropsCopyWithImpl<$Res>
 
 /// Create a copy of NetworkProps
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? systemProxy = null,Object? bypassDomain = null,Object? routeMode = null,Object? autoSetSystemDns = null,Object? appendSystemDns = null,Object? autoSetIpv6 = null,Object? manualIpv6 = freezed,Object? blockQuic = null,Object? blockWebRtc = null,Object? suspendOnIdle = null,Object? authentication = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? systemProxy = null,Object? bypassDomain = null,Object? routeMode = null,Object? autoSetSystemDns = null,Object? appendSystemDns = null,Object? autoSetIpv6 = null,Object? manualIpv6 = freezed,Object? blockQuic = null,Object? blockWebRtc = null,Object? suspendOnIdle = null,Object? excludeSSIDs = null,Object? authentication = null,}) {
   return _then(_self.copyWith(
 systemProxy: null == systemProxy ? _self.systemProxy : systemProxy // ignore: cast_nullable_to_non_nullable
 as bool,bypassDomain: null == bypassDomain ? _self.bypassDomain : bypassDomain // ignore: cast_nullable_to_non_nullable
@@ -1519,7 +1519,8 @@ as bool,manualIpv6: freezed == manualIpv6 ? _self.manualIpv6 : manualIpv6 // ign
 as bool?,blockQuic: null == blockQuic ? _self.blockQuic : blockQuic // ignore: cast_nullable_to_non_nullable
 as bool,blockWebRtc: null == blockWebRtc ? _self.blockWebRtc : blockWebRtc // ignore: cast_nullable_to_non_nullable
 as bool,suspendOnIdle: null == suspendOnIdle ? _self.suspendOnIdle : suspendOnIdle // ignore: cast_nullable_to_non_nullable
-as bool,authentication: null == authentication ? _self.authentication : authentication // ignore: cast_nullable_to_non_nullable
+as bool,excludeSSIDs: null == excludeSSIDs ? _self.excludeSSIDs : excludeSSIDs // ignore: cast_nullable_to_non_nullable
+as List<String>,authentication: null == authentication ? _self.authentication : authentication // ignore: cast_nullable_to_non_nullable
 as AuthenticationProps,
   ));
 }
@@ -1614,10 +1615,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool systemProxy,  List<String> bypassDomain,  RouteMode routeMode,  bool autoSetSystemDns,  bool appendSystemDns,  bool autoSetIpv6, @JsonKey(includeIfNull: false)  bool? manualIpv6,  bool blockQuic,  bool blockWebRtc,  bool suspendOnIdle,  AuthenticationProps authentication)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool systemProxy,  List<String> bypassDomain,  RouteMode routeMode,  bool autoSetSystemDns,  bool appendSystemDns,  bool autoSetIpv6, @JsonKey(includeIfNull: false)  bool? manualIpv6,  bool blockQuic,  bool blockWebRtc,  bool suspendOnIdle,  List<String> excludeSSIDs,  AuthenticationProps authentication)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _NetworkProps() when $default != null:
-return $default(_that.systemProxy,_that.bypassDomain,_that.routeMode,_that.autoSetSystemDns,_that.appendSystemDns,_that.autoSetIpv6,_that.manualIpv6,_that.blockQuic,_that.blockWebRtc,_that.suspendOnIdle,_that.authentication);case _:
+return $default(_that.systemProxy,_that.bypassDomain,_that.routeMode,_that.autoSetSystemDns,_that.appendSystemDns,_that.autoSetIpv6,_that.manualIpv6,_that.blockQuic,_that.blockWebRtc,_that.suspendOnIdle,_that.excludeSSIDs,_that.authentication);case _:
   return orElse();
 
 }
@@ -1635,10 +1636,10 @@ return $default(_that.systemProxy,_that.bypassDomain,_that.routeMode,_that.autoS
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool systemProxy,  List<String> bypassDomain,  RouteMode routeMode,  bool autoSetSystemDns,  bool appendSystemDns,  bool autoSetIpv6, @JsonKey(includeIfNull: false)  bool? manualIpv6,  bool blockQuic,  bool blockWebRtc,  bool suspendOnIdle,  AuthenticationProps authentication)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool systemProxy,  List<String> bypassDomain,  RouteMode routeMode,  bool autoSetSystemDns,  bool appendSystemDns,  bool autoSetIpv6, @JsonKey(includeIfNull: false)  bool? manualIpv6,  bool blockQuic,  bool blockWebRtc,  bool suspendOnIdle,  List<String> excludeSSIDs,  AuthenticationProps authentication)  $default,) {final _that = this;
 switch (_that) {
 case _NetworkProps():
-return $default(_that.systemProxy,_that.bypassDomain,_that.routeMode,_that.autoSetSystemDns,_that.appendSystemDns,_that.autoSetIpv6,_that.manualIpv6,_that.blockQuic,_that.blockWebRtc,_that.suspendOnIdle,_that.authentication);case _:
+return $default(_that.systemProxy,_that.bypassDomain,_that.routeMode,_that.autoSetSystemDns,_that.appendSystemDns,_that.autoSetIpv6,_that.manualIpv6,_that.blockQuic,_that.blockWebRtc,_that.suspendOnIdle,_that.excludeSSIDs,_that.authentication);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1655,10 +1656,10 @@ return $default(_that.systemProxy,_that.bypassDomain,_that.routeMode,_that.autoS
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool systemProxy,  List<String> bypassDomain,  RouteMode routeMode,  bool autoSetSystemDns,  bool appendSystemDns,  bool autoSetIpv6, @JsonKey(includeIfNull: false)  bool? manualIpv6,  bool blockQuic,  bool blockWebRtc,  bool suspendOnIdle,  AuthenticationProps authentication)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool systemProxy,  List<String> bypassDomain,  RouteMode routeMode,  bool autoSetSystemDns,  bool appendSystemDns,  bool autoSetIpv6, @JsonKey(includeIfNull: false)  bool? manualIpv6,  bool blockQuic,  bool blockWebRtc,  bool suspendOnIdle,  List<String> excludeSSIDs,  AuthenticationProps authentication)?  $default,) {final _that = this;
 switch (_that) {
 case _NetworkProps() when $default != null:
-return $default(_that.systemProxy,_that.bypassDomain,_that.routeMode,_that.autoSetSystemDns,_that.appendSystemDns,_that.autoSetIpv6,_that.manualIpv6,_that.blockQuic,_that.blockWebRtc,_that.suspendOnIdle,_that.authentication);case _:
+return $default(_that.systemProxy,_that.bypassDomain,_that.routeMode,_that.autoSetSystemDns,_that.appendSystemDns,_that.autoSetIpv6,_that.manualIpv6,_that.blockQuic,_that.blockWebRtc,_that.suspendOnIdle,_that.excludeSSIDs,_that.authentication);case _:
   return null;
 
 }
@@ -1670,7 +1671,7 @@ return $default(_that.systemProxy,_that.bypassDomain,_that.routeMode,_that.autoS
 @JsonSerializable()
 
 class _NetworkProps implements NetworkProps {
-  const _NetworkProps({this.systemProxy = true, final  List<String> bypassDomain = defaultBypassDomain, this.routeMode = RouteMode.config, this.autoSetSystemDns = true, this.appendSystemDns = false, this.autoSetIpv6 = false, @JsonKey(includeIfNull: false) this.manualIpv6, this.blockQuic = false, this.blockWebRtc = false, this.suspendOnIdle = false, this.authentication = const AuthenticationProps()}): _bypassDomain = bypassDomain;
+  const _NetworkProps({this.systemProxy = true, final  List<String> bypassDomain = defaultBypassDomain, this.routeMode = RouteMode.config, this.autoSetSystemDns = true, this.appendSystemDns = false, this.autoSetIpv6 = false, @JsonKey(includeIfNull: false) this.manualIpv6, this.blockQuic = false, this.blockWebRtc = false, this.suspendOnIdle = false, final  List<String> excludeSSIDs = const [], this.authentication = const AuthenticationProps()}): _bypassDomain = bypassDomain,_excludeSSIDs = excludeSSIDs;
   factory _NetworkProps.fromJson(Map<String, dynamic> json) => _$NetworkPropsFromJson(json);
 
 @override@JsonKey() final  bool systemProxy;
@@ -1689,6 +1690,13 @@ class _NetworkProps implements NetworkProps {
 @override@JsonKey() final  bool blockQuic;
 @override@JsonKey() final  bool blockWebRtc;
 @override@JsonKey() final  bool suspendOnIdle;
+ final  List<String> _excludeSSIDs;
+@override@JsonKey() List<String> get excludeSSIDs {
+  if (_excludeSSIDs is EqualUnmodifiableListView) return _excludeSSIDs;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_excludeSSIDs);
+}
+
 @override@JsonKey() final  AuthenticationProps authentication;
 
 /// Create a copy of NetworkProps
@@ -1704,16 +1712,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _NetworkProps&&(identical(other.systemProxy, systemProxy) || other.systemProxy == systemProxy)&&const DeepCollectionEquality().equals(other._bypassDomain, _bypassDomain)&&(identical(other.routeMode, routeMode) || other.routeMode == routeMode)&&(identical(other.autoSetSystemDns, autoSetSystemDns) || other.autoSetSystemDns == autoSetSystemDns)&&(identical(other.appendSystemDns, appendSystemDns) || other.appendSystemDns == appendSystemDns)&&(identical(other.autoSetIpv6, autoSetIpv6) || other.autoSetIpv6 == autoSetIpv6)&&(identical(other.manualIpv6, manualIpv6) || other.manualIpv6 == manualIpv6)&&(identical(other.blockQuic, blockQuic) || other.blockQuic == blockQuic)&&(identical(other.blockWebRtc, blockWebRtc) || other.blockWebRtc == blockWebRtc)&&(identical(other.suspendOnIdle, suspendOnIdle) || other.suspendOnIdle == suspendOnIdle)&&(identical(other.authentication, authentication) || other.authentication == authentication));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _NetworkProps&&(identical(other.systemProxy, systemProxy) || other.systemProxy == systemProxy)&&const DeepCollectionEquality().equals(other._bypassDomain, _bypassDomain)&&(identical(other.routeMode, routeMode) || other.routeMode == routeMode)&&(identical(other.autoSetSystemDns, autoSetSystemDns) || other.autoSetSystemDns == autoSetSystemDns)&&(identical(other.appendSystemDns, appendSystemDns) || other.appendSystemDns == appendSystemDns)&&(identical(other.autoSetIpv6, autoSetIpv6) || other.autoSetIpv6 == autoSetIpv6)&&(identical(other.manualIpv6, manualIpv6) || other.manualIpv6 == manualIpv6)&&(identical(other.blockQuic, blockQuic) || other.blockQuic == blockQuic)&&(identical(other.blockWebRtc, blockWebRtc) || other.blockWebRtc == blockWebRtc)&&(identical(other.suspendOnIdle, suspendOnIdle) || other.suspendOnIdle == suspendOnIdle)&&const DeepCollectionEquality().equals(other._excludeSSIDs, _excludeSSIDs)&&(identical(other.authentication, authentication) || other.authentication == authentication));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,systemProxy,const DeepCollectionEquality().hash(_bypassDomain),routeMode,autoSetSystemDns,appendSystemDns,autoSetIpv6,manualIpv6,blockQuic,blockWebRtc,suspendOnIdle,authentication);
+int get hashCode => Object.hash(runtimeType,systemProxy,const DeepCollectionEquality().hash(_bypassDomain),routeMode,autoSetSystemDns,appendSystemDns,autoSetIpv6,manualIpv6,blockQuic,blockWebRtc,suspendOnIdle,const DeepCollectionEquality().hash(_excludeSSIDs),authentication);
 
 @override
 String toString() {
-  return 'NetworkProps(systemProxy: $systemProxy, bypassDomain: $bypassDomain, routeMode: $routeMode, autoSetSystemDns: $autoSetSystemDns, appendSystemDns: $appendSystemDns, autoSetIpv6: $autoSetIpv6, manualIpv6: $manualIpv6, blockQuic: $blockQuic, blockWebRtc: $blockWebRtc, suspendOnIdle: $suspendOnIdle, authentication: $authentication)';
+  return 'NetworkProps(systemProxy: $systemProxy, bypassDomain: $bypassDomain, routeMode: $routeMode, autoSetSystemDns: $autoSetSystemDns, appendSystemDns: $appendSystemDns, autoSetIpv6: $autoSetIpv6, manualIpv6: $manualIpv6, blockQuic: $blockQuic, blockWebRtc: $blockWebRtc, suspendOnIdle: $suspendOnIdle, excludeSSIDs: $excludeSSIDs, authentication: $authentication)';
 }
 
 
@@ -1724,7 +1732,7 @@ abstract mixin class _$NetworkPropsCopyWith<$Res> implements $NetworkPropsCopyWi
   factory _$NetworkPropsCopyWith(_NetworkProps value, $Res Function(_NetworkProps) _then) = __$NetworkPropsCopyWithImpl;
 @override @useResult
 $Res call({
- bool systemProxy, List<String> bypassDomain, RouteMode routeMode, bool autoSetSystemDns, bool appendSystemDns, bool autoSetIpv6,@JsonKey(includeIfNull: false) bool? manualIpv6, bool blockQuic, bool blockWebRtc, bool suspendOnIdle, AuthenticationProps authentication
+ bool systemProxy, List<String> bypassDomain, RouteMode routeMode, bool autoSetSystemDns, bool appendSystemDns, bool autoSetIpv6,@JsonKey(includeIfNull: false) bool? manualIpv6, bool blockQuic, bool blockWebRtc, bool suspendOnIdle, List<String> excludeSSIDs, AuthenticationProps authentication
 });
 
 
@@ -1741,7 +1749,7 @@ class __$NetworkPropsCopyWithImpl<$Res>
 
 /// Create a copy of NetworkProps
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? systemProxy = null,Object? bypassDomain = null,Object? routeMode = null,Object? autoSetSystemDns = null,Object? appendSystemDns = null,Object? autoSetIpv6 = null,Object? manualIpv6 = freezed,Object? blockQuic = null,Object? blockWebRtc = null,Object? suspendOnIdle = null,Object? authentication = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? systemProxy = null,Object? bypassDomain = null,Object? routeMode = null,Object? autoSetSystemDns = null,Object? appendSystemDns = null,Object? autoSetIpv6 = null,Object? manualIpv6 = freezed,Object? blockQuic = null,Object? blockWebRtc = null,Object? suspendOnIdle = null,Object? excludeSSIDs = null,Object? authentication = null,}) {
   return _then(_NetworkProps(
 systemProxy: null == systemProxy ? _self.systemProxy : systemProxy // ignore: cast_nullable_to_non_nullable
 as bool,bypassDomain: null == bypassDomain ? _self._bypassDomain : bypassDomain // ignore: cast_nullable_to_non_nullable
@@ -1753,7 +1761,8 @@ as bool,manualIpv6: freezed == manualIpv6 ? _self.manualIpv6 : manualIpv6 // ign
 as bool?,blockQuic: null == blockQuic ? _self.blockQuic : blockQuic // ignore: cast_nullable_to_non_nullable
 as bool,blockWebRtc: null == blockWebRtc ? _self.blockWebRtc : blockWebRtc // ignore: cast_nullable_to_non_nullable
 as bool,suspendOnIdle: null == suspendOnIdle ? _self.suspendOnIdle : suspendOnIdle // ignore: cast_nullable_to_non_nullable
-as bool,authentication: null == authentication ? _self.authentication : authentication // ignore: cast_nullable_to_non_nullable
+as bool,excludeSSIDs: null == excludeSSIDs ? _self._excludeSSIDs : excludeSSIDs // ignore: cast_nullable_to_non_nullable
+as List<String>,authentication: null == authentication ? _self.authentication : authentication // ignore: cast_nullable_to_non_nullable
 as AuthenticationProps,
   ));
 }
@@ -2381,7 +2390,7 @@ as TextScale,
 @override
 @pragma('vm:prefer-inline')
 $TextScaleCopyWith<$Res> get textScale {
-  
+
   return $TextScaleCopyWith<$Res>(_self.textScale, (value) {
     return _then(_self.copyWith(textScale: value));
   });
@@ -2606,7 +2615,7 @@ as TextScale,
 @override
 @pragma('vm:prefer-inline')
 $TextScaleCopyWith<$Res> get textScale {
-  
+
   return $TextScaleCopyWith<$Res>(_self.textScale, (value) {
     return _then(_self.copyWith(textScale: value));
   });
@@ -2688,7 +2697,7 @@ as ClashConfig,
 @override
 @pragma('vm:prefer-inline')
 $AppSettingPropsCopyWith<$Res> get appSettingProps {
-  
+
   return $AppSettingPropsCopyWith<$Res>(_self.appSettingProps, (value) {
     return _then(_self.copyWith(appSettingProps: value));
   });
@@ -2709,7 +2718,7 @@ $DAVPropsCopyWith<$Res>? get davProps {
 @override
 @pragma('vm:prefer-inline')
 $NetworkPropsCopyWith<$Res> get networkProps {
-  
+
   return $NetworkPropsCopyWith<$Res>(_self.networkProps, (value) {
     return _then(_self.copyWith(networkProps: value));
   });
@@ -2718,7 +2727,7 @@ $NetworkPropsCopyWith<$Res> get networkProps {
 @override
 @pragma('vm:prefer-inline')
 $VpnPropsCopyWith<$Res> get vpnProps {
-  
+
   return $VpnPropsCopyWith<$Res>(_self.vpnProps, (value) {
     return _then(_self.copyWith(vpnProps: value));
   });
@@ -2727,7 +2736,7 @@ $VpnPropsCopyWith<$Res> get vpnProps {
 @override
 @pragma('vm:prefer-inline')
 $ThemePropsCopyWith<$Res> get themeProps {
-  
+
   return $ThemePropsCopyWith<$Res>(_self.themeProps, (value) {
     return _then(_self.copyWith(themeProps: value));
   });
@@ -2736,7 +2745,7 @@ $ThemePropsCopyWith<$Res> get themeProps {
 @override
 @pragma('vm:prefer-inline')
 $ProxiesStylePropsCopyWith<$Res> get proxiesStyleProps {
-  
+
   return $ProxiesStylePropsCopyWith<$Res>(_self.proxiesStyleProps, (value) {
     return _then(_self.copyWith(proxiesStyleProps: value));
   });
@@ -2745,7 +2754,7 @@ $ProxiesStylePropsCopyWith<$Res> get proxiesStyleProps {
 @override
 @pragma('vm:prefer-inline')
 $WindowPropsCopyWith<$Res> get windowProps {
-  
+
   return $WindowPropsCopyWith<$Res>(_self.windowProps, (value) {
     return _then(_self.copyWith(windowProps: value));
   });
@@ -2754,7 +2763,7 @@ $WindowPropsCopyWith<$Res> get windowProps {
 @override
 @pragma('vm:prefer-inline')
 $ClashConfigCopyWith<$Res> get patchClashConfig {
-  
+
   return $ClashConfigCopyWith<$Res>(_self.patchClashConfig, (value) {
     return _then(_self.copyWith(patchClashConfig: value));
   });
@@ -2989,7 +2998,7 @@ as ClashConfig,
 @override
 @pragma('vm:prefer-inline')
 $AppSettingPropsCopyWith<$Res> get appSettingProps {
-  
+
   return $AppSettingPropsCopyWith<$Res>(_self.appSettingProps, (value) {
     return _then(_self.copyWith(appSettingProps: value));
   });
@@ -3010,7 +3019,7 @@ $DAVPropsCopyWith<$Res>? get davProps {
 @override
 @pragma('vm:prefer-inline')
 $NetworkPropsCopyWith<$Res> get networkProps {
-  
+
   return $NetworkPropsCopyWith<$Res>(_self.networkProps, (value) {
     return _then(_self.copyWith(networkProps: value));
   });
@@ -3019,7 +3028,7 @@ $NetworkPropsCopyWith<$Res> get networkProps {
 @override
 @pragma('vm:prefer-inline')
 $VpnPropsCopyWith<$Res> get vpnProps {
-  
+
   return $VpnPropsCopyWith<$Res>(_self.vpnProps, (value) {
     return _then(_self.copyWith(vpnProps: value));
   });
@@ -3028,7 +3037,7 @@ $VpnPropsCopyWith<$Res> get vpnProps {
 @override
 @pragma('vm:prefer-inline')
 $ThemePropsCopyWith<$Res> get themeProps {
-  
+
   return $ThemePropsCopyWith<$Res>(_self.themeProps, (value) {
     return _then(_self.copyWith(themeProps: value));
   });
@@ -3037,7 +3046,7 @@ $ThemePropsCopyWith<$Res> get themeProps {
 @override
 @pragma('vm:prefer-inline')
 $ProxiesStylePropsCopyWith<$Res> get proxiesStyleProps {
-  
+
   return $ProxiesStylePropsCopyWith<$Res>(_self.proxiesStyleProps, (value) {
     return _then(_self.copyWith(proxiesStyleProps: value));
   });
@@ -3046,7 +3055,7 @@ $ProxiesStylePropsCopyWith<$Res> get proxiesStyleProps {
 @override
 @pragma('vm:prefer-inline')
 $WindowPropsCopyWith<$Res> get windowProps {
-  
+
   return $WindowPropsCopyWith<$Res>(_self.windowProps, (value) {
     return _then(_self.copyWith(windowProps: value));
   });
@@ -3055,7 +3064,7 @@ $WindowPropsCopyWith<$Res> get windowProps {
 @override
 @pragma('vm:prefer-inline')
 $ClashConfigCopyWith<$Res> get patchClashConfig {
-  
+
   return $ClashConfigCopyWith<$Res>(_self.patchClashConfig, (value) {
     return _then(_self.copyWith(patchClashConfig: value));
   });

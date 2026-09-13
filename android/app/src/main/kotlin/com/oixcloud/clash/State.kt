@@ -172,6 +172,7 @@ object State {
     }
 
     suspend fun syncState() {
+        Service.updateExcludeSSIDs(sharedState.vpnOptions?.excludeSSIDs.orEmpty())
         Service.updateNotificationParams(
             NotificationParams(
                 title = sharedState.currentProfileName,

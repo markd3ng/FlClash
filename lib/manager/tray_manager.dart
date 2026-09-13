@@ -3,7 +3,8 @@ import 'package:fl_clash/controller.dart';
 import 'package:fl_clash/providers/state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tray_manager/tray_manager.dart';
+import 'dart:async';
+import 'package:tray/tray.dart' as native;
 
 class TrayManager extends ConsumerStatefulWidget {
   final Widget child;
@@ -14,11 +15,25 @@ class TrayManager extends ConsumerStatefulWidget {
   ConsumerState<TrayManager> createState() => _TrayContainerState();
 }
 
-class _TrayContainerState extends ConsumerState<TrayManager> with TrayListener {
+class _TrayContainerState extends ConsumerState<TrayManager> {
+  StreamSubscription<native.TrayEvent>? _subscription;
   @override
   void initState() {
     super.initState();
-    trayManager.addListener(this);
+    _subscription = native.Tray.instance.events.listen((event) {
+      switch (event) {
+        case native.TrayIconActivated():
+          window?.show();
+        case native.TrayMenuRequested():
+          unawaited(
+            native.Tray.instance.openMenu().catchError((Object error) {
+              commonPrint.log('Tray menu failed: $error');
+            }),
+          );
+        case native.TrayMenuItemSelected():
+          render?.active();
+      }
+    });
     ref.listenManual(trayStateProvider, (prev, next) {
       if (prev != next) {
         appController.updateTray();
@@ -42,25 +57,8 @@ class _TrayContainerState extends ConsumerState<TrayManager> with TrayListener {
   }
 
   @override
-  void onTrayIconRightMouseDown() {
-    // ignore: deprecated_member_use
-    trayManager.popUpContextMenu(bringAppToFront: true);
-  }
-
-  @override
-  void onTrayMenuItemClick(MenuItem menuItem) {
-    render?.active();
-    super.onTrayMenuItemClick(menuItem);
-  }
-
-  @override
-  void onTrayIconMouseDown() {
-    window?.show();
-  }
-
-  @override
   void dispose() {
-    trayManager.removeListener(this);
+    _subscription?.cancel();
     super.dispose();
   }
 }

@@ -711,7 +711,7 @@
   "routingChanged": "编辑或检查期间配置发生变化，请重新打开编辑器或再次检查",
   "editCustomRouting": "编辑自定义",
   "customRoutingDraftHint": "先填写自定义内容，再切换至自定义模式。编辑草稿不会切换当前模式",
-  "coreBlockedByPolicyTip": "Windows 阻止了代理内核启动（系统错误 {code}）。请检查 Windows 安全中心的保护历史记录及应用控制策略，并确认安装包来源和签名。",
+  "coreBlockedByPolicyTip": "Windows 阻止了代理内核启动（系统错误 {code}）。请检查 Windows 安全中心的保护历史记录及应用控制策略，并确认安装包来源和签名",
   "@coreBlockedByPolicyTip": {
     "placeholders": {
       "code": {
@@ -720,7 +720,7 @@
     }
   },
   "startupRecoveryTitle": "启动恢复",
-  "startupRecoveryTip": "最近两次启动未能完成。本次已暂停自动应用配置和启动 VPN，当前配置选择与设置均已保留。请检查配置后点击“启动”重试；已经运行的 VPN 会继续保持连接。",
+  "startupRecoveryTip": "最近两次启动未能完成。本次已暂停自动应用配置和启动 VPN，当前配置选择与设置均已保留。请检查配置后点击“启动”重试；已经运行的 VPN 会继续保持连接",
   "authentication": "本地代理认证",
   "authenticationDesc": "为 HTTP/SOCKS 代理设置用户名和密码。启用后暂停自动设置系统 HTTP 代理，TUN/VPN 仍可使用",
   "authenticationSystemProxyDesc": "启用本地代理认证时不设置系统 HTTP 代理",
@@ -738,5 +738,12 @@
   "configRecoveryReset": "备份并重置",
   "configRecoveryResetConfirm": "将本地设置、订阅、规则和账号数据全部加密备份后重置应用？之后需要重新登录，并恢复或导入订阅和设置。备份受当前 Windows 用户保护，但无法找回已丢失的加密密钥",
   "configRecoveryResetDone": "原有数据已加密备份至以下目录。请退出并重新打开应用，重新完成配置",
-  "configRecoveryResetFailed": "未能完成加密备份和重置。未验证备份前不会删除仍保留的原始数据。请重试此操作，或退出后重新打开应用以继续完成"
+  "configRecoveryResetFailed": "未能完成加密备份和重置。未验证备份前不会删除仍保留的原始数据。请重试此操作，或退出后重新打开应用以继续完成",
+  "excludeSsids": "排除SSIDs",
+  "excludeSsidsDesc": "连接所列 Wi-Fi 时暂停代理；离开后仅在应用仍为启动状态时恢复",
+  "locationPermission": "位置权限",
+  "locationPermissionRequired": "需要位置权限",
+  "locationPermissionDeniedMessage": "位置权限已被拒绝，无法获取当前 Wi-Fi 名称。请前往系统设置手动开启位置权限",
+  "locationPermissionGuide": "1. 打开 系统设置 > 隐私与安全性\n2. 选择 定位服务\n3. 在右侧列表中找到并勾选 {appName}\n\n完成设置后，返回应用即可正常使用。感谢您的配合",
+  "ssidPermissionGuide": "读取 Wi-Fi 名称需要定位权限。Android 请允许始终使用精确位置，并开启系统定位服务"
 }

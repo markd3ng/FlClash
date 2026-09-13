@@ -738,5 +738,12 @@
   "configRecoveryReset": "Back up and reset",
   "configRecoveryResetConfirm": "Create an encrypted backup of all local settings, subscriptions, rules and account data, then reset the application? You will need to sign in again and restore or import your subscriptions and settings. The backup is protected by this Windows account; it cannot recover a lost encryption key.",
   "configRecoveryResetDone": "An encrypted backup of your original data has been saved in the folder below. Exit and reopen the application to set it up again.",
-  "configRecoveryResetFailed": "The encrypted backup and reset could not be completed. Surviving original data will not be removed without a verified backup. Retry this operation, or exit and reopen the application to finish it."
+  "configRecoveryResetFailed": "The encrypted backup and reset could not be completed. Surviving original data will not be removed without a verified backup. Retry this operation, or exit and reopen the application to finish it.",
+  "excludeSsids": "Exclude SSIDs",
+  "excludeSsidsDesc": "Pause proxying on the listed Wi-Fi networks; resume after leaving only while the app remains started.",
+  "locationPermission": "Location permission",
+  "locationPermissionRequired": "Location permission required",
+  "locationPermissionDeniedMessage": "Location permission was denied, so the current Wi-Fi name cannot be read. Please enable location permission manually in system settings.",
+  "locationPermissionGuide": "1. Open System Settings > Privacy & Security\n2. Choose Location Services\n3. Find and check {appName} in the list\n\nWhen you are done, return to the app to continue. Thank you for your cooperation.",
+  "ssidPermissionGuide": "Allow location access to read Wi-Fi names. On Android, allow precise location all the time and enable system location services."
 }

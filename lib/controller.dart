@@ -946,6 +946,8 @@ extension StateControllerExt on AppController {
     return _ref.read(isMobileViewProvider);
   }
 
+  bool get isProxyActive => isStart && !_ref.read(suspendProvider);
+
   bool get isStart {
     return _ref.read(isStartProvider);
   }

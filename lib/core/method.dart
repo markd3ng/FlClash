@@ -32,6 +32,7 @@ enum CoreMethod {
   stopLog,
   startListener,
   stopListener,
+  setNetworkExcluded,
   getCountryCode,
   getMemory,
   crash,

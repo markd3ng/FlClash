@@ -1,7 +1,10 @@
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/controller.dart';
 import 'package:fl_clash/enum/enum.dart';
-import 'package:fl_clash/providers/config.dart';
+import 'package:fl_clash/providers/providers.dart';
+import 'package:fl_clash/plugins/app.dart';
+import 'package:fl_clash/state.dart';
+import 'package:wifi_ssid/wifi_ssid.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -212,6 +215,101 @@ class SuspendOnIdleItem extends ConsumerWidget {
               .update((state) => state.copyWith(suspendOnIdle: value));
         },
       ),
+    );
+  }
+}
+
+class ExcludeSsidsItem extends ConsumerWidget {
+  const ExcludeSsidsItem({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.appLocalizations;
+    final ssids = ref.watch(
+      networkSettingProvider.select((s) => s.excludeSSIDs),
+    );
+    return ListItem.open(
+      title: Text(l10n.excludeSsids),
+      subtitle: Text(l10n.excludeSsidsDesc),
+      delegate: OpenDelegate(
+        blur: false,
+        widget: ListInputPage(
+          title: l10n.excludeSsids,
+          items: ssids,
+          itemMaxLength: 32,
+          titleBuilder: Text.new,
+        ),
+        onChanged: (items) {
+          ref
+              .read(networkSettingProvider.notifier)
+              .update(
+                (s) => s.copyWith(
+                  excludeSSIDs: List<String>.from(
+                    items,
+                  ).where((s) => s.isNotEmpty).toSet().toList(),
+                ),
+              );
+        },
+      ),
+    );
+  }
+}
+
+class SsidPermissionItem extends ConsumerStatefulWidget {
+  const SsidPermissionItem({super.key});
+
+  @override
+  ConsumerState<SsidPermissionItem> createState() => _SsidPermissionItemState();
+}
+
+class _SsidPermissionItemState extends ConsumerState<SsidPermissionItem> {
+  bool _requesting = false;
+
+  Future<void> _request() async {
+    if (_requesting) return;
+    setState(() => _requesting = true);
+    try {
+      var permission = await wifiSsidManager.checkPermission();
+      if (permission != WifiSsidPermission.granted) {
+        permission = await wifiSsidManager.requestPermission();
+      }
+      if (!mounted) return;
+      ref.read(ssidRefreshProvider.notifier).update((v) => v + 1);
+      if (permission != WifiSsidPermission.granted) {
+        final l10n = context.appLocalizations;
+        final open = await globalState.showMessage(
+          title: l10n.locationPermissionRequired,
+          message: TextSpan(
+            text: system.isMacOS
+                ? l10n.locationPermissionGuide(appName)
+                : l10n.ssidPermissionGuide,
+          ),
+        );
+        if (open == true && system.isAndroid) await app?.openAppSettings();
+      }
+    } catch (error) {
+      if (mounted) context.showNotifier(error.toString());
+    } finally {
+      if (mounted) setState(() => _requesting = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (ref.watch(networkSettingProvider).excludeSSIDs.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    final l10n = context.appLocalizations;
+    return ListItem(
+      title: Text(l10n.locationPermission),
+      subtitle: Text(l10n.ssidPermissionGuide),
+      onTap: _requesting ? null : _request,
+      trailing: _requesting
+          ? const SizedBox.square(
+              dimension: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : const Icon(Icons.location_on_outlined),
     );
   }
 }
@@ -453,6 +551,8 @@ class NetworkListView extends StatelessWidget {
           if (system.isDesktop) const TUNItem(),
           if (system.isMacOS) const AutoSetSystemDnsItem(),
           if (system.isAndroid) const SuspendOnIdleItem(),
+          const ExcludeSsidsItem(),
+          if (system.isAndroid || system.isMacOS) const SsidPermissionItem(),
           const TunStackItem(),
           const BlockQuicItem(),
           const BlockWebRtcItem(),

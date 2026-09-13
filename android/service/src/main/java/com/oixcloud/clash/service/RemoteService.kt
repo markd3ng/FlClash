@@ -3,6 +3,9 @@ package com.oixcloud.clash.service
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
+import com.google.gson.JsonParser
+import com.oixcloud.clash.service.modules.WifiSsidMonitor
+import kotlinx.coroutines.withTimeout
 import com.oixcloud.clash.common.GlobalState
 import com.oixcloud.clash.common.BroadcastAction
 import com.oixcloud.clash.common.ServiceDelegate
@@ -26,6 +29,46 @@ import kotlin.coroutines.resume
 
 class RemoteService : Service(),
     CoroutineScope by CoroutineScope(SupervisorJob() + Dispatchers.Default) {
+    private val ssidMonitor by lazy { WifiSsidMonitor(this) {
+        launch {
+            runLock.withLock {
+                if (State.runTime == 0L) return@withLock
+                runCatching { applyNetworkPolicy() }.onFailure {
+                    GlobalState.log("Wi-Fi policy transition failed: ${it.javaClass.simpleName}")
+                }
+            }
+        }
+    } }
+
+    private suspend fun setCoreNetworkExcluded(excluded: Boolean) = withTimeout(5_000) {
+        suspendCancellableCoroutine<Unit> { continuation ->
+            Core.invokeMethod("{\"method\":\"setNetworkExcluded\",\"arguments\":$excluded}") { result ->
+                val response = runCatching { JsonParser.parseString(result).asJsonObject }.getOrNull()
+                val ok = response?.get("result")?.toString() == "true" && response.get("error") == null
+                val failure = if (ok) null else IllegalStateException("Core rejected Wi-Fi policy")
+                if (continuation.isActive) {
+                    continuation.resumeWith(if (failure == null) Result.success(Unit) else Result.failure(failure))
+                }
+            }
+        }
+    }
+
+    private fun configureSsidMonitor() {
+        if (State.options?.excludeSSIDs.isNullOrEmpty()) ssidMonitor.stop() else ssidMonitor.start()
+    }
+
+    private suspend fun applyNetworkPolicy(initial: Boolean = false) {
+        val ssid = if (State.options?.excludeSSIDs.isNullOrEmpty()) null else ssidMonitor.current()
+        val excluded = ssid != null && State.options?.excludeSSIDs.orEmpty().contains(ssid)
+        if (!initial && excluded == State.networkExcluded) return
+        // Release Android's VPN before closing proxy listeners; on resume, open
+        // listeners before restoring the VPN. runLock also owns manual stop.
+        if (excluded) delegate?.useService { it.setNetworkExcluded(true) }?.getOrThrow()
+        setCoreNetworkExcluded(excluded)
+        if (!excluded) delegate?.useService { it.setNetworkExcluded(false) }?.getOrThrow()
+        State.networkExcluded = excluded
+    }
+
     private fun handleStopService(result: IResultInterface) {
         launch {
             runLock.withLock {
@@ -38,6 +81,7 @@ class RemoteService : Service(),
                 stopped.onSuccess {
                     clearBinding(currentDelegate)
                     State.runTime = 0
+                    ssidMonitor.stop()
                 }.onFailure {
                     GlobalState.log("Background service stop failed: $it")
                 }
@@ -63,6 +107,7 @@ class RemoteService : Service(),
                 if (delegate !== currentDelegate) return@withLock
                 clearBinding(currentDelegate)
                 State.runTime = 0L
+                ssidMonitor.stop()
                 BroadcastAction.SERVICE_DESTROYED.sendBroadcast()
             }
         }
@@ -74,6 +119,8 @@ class RemoteService : Service(),
                 var startingService: IBaseService? = null
                 val started = runCatching {
                     State.options = options
+                    configureSsidMonitor()
+                    applyNetworkPolicy(initial = true)
                     val nextIntent = when (options.enable) {
                         true -> VpnService::class.intent
                         false -> CommonService::class.intent
@@ -119,6 +166,7 @@ class RemoteService : Service(),
                     }
                     GlobalState.log("Background service start failed: $error")
                     clearBinding(delegate)
+                    ssidMonitor.stop()
                     0L
                 }
                 result.onResult(State.runTime)
@@ -228,6 +276,19 @@ class RemoteService : Service(),
         }
 
 
+        override fun updateExcludeSSIDs(ssids: Array<out String>?) {
+            launch {
+                runLock.withLock {
+                    State.options = State.options?.copy(excludeSSIDs = ssids?.toList().orEmpty())
+                    if (State.runTime == 0L) return@withLock
+                    configureSsidMonitor()
+                    runCatching { applyNetworkPolicy() }.onFailure {
+                        GlobalState.log("Wi-Fi policy update failed: ${it.javaClass.simpleName}")
+                    }
+                }
+            }
+        }
+
         override fun getRunTime(): Long {
             return State.runTime
         }
@@ -238,6 +299,7 @@ class RemoteService : Service(),
     }
 
     override fun onDestroy() {
+        ssidMonitor.stop()
         GlobalState.log("Remote service destroy")
         super.onDestroy()
     }

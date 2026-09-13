@@ -194,6 +194,11 @@ _NetworkProps _$NetworkPropsFromJson(Map<String, dynamic> json) =>
       blockQuic: json['blockQuic'] as bool? ?? false,
       blockWebRtc: json['blockWebRtc'] as bool? ?? false,
       suspendOnIdle: json['suspendOnIdle'] as bool? ?? false,
+      excludeSSIDs:
+          (json['excludeSSIDs'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const [],
       authentication: json['authentication'] == null
           ? const AuthenticationProps()
           : AuthenticationProps.fromJson(
@@ -213,6 +218,7 @@ Map<String, dynamic> _$NetworkPropsToJson(_NetworkProps instance) =>
       'blockQuic': instance.blockQuic,
       'blockWebRtc': instance.blockWebRtc,
       'suspendOnIdle': instance.suspendOnIdle,
+      'excludeSSIDs': instance.excludeSSIDs,
       'authentication': instance.authentication,
     };
 

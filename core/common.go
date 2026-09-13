@@ -104,7 +104,7 @@ func sideUpdateExternalProvider(p cp.Provider, data []byte) error {
 }
 
 func updateListeners() {
-	if !isRunning {
+	if !isRunning || networkExcluded {
 		return
 	}
 	if currentConfig == nil {

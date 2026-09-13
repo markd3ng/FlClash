@@ -215,6 +215,7 @@ abstract class NetworkProps with _$NetworkProps {
     @Default(false) bool blockQuic,
     @Default(false) bool blockWebRtc,
     @Default(false) bool suspendOnIdle,
+    @Default([]) List<String> excludeSSIDs,
     @Default(AuthenticationProps()) AuthenticationProps authentication,
   }) = _NetworkProps;
 

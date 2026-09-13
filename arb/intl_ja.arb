@@ -711,7 +711,7 @@
   "routingChanged": "編集中または確認中に設定が変更されました。エディターを開き直すか、再度確認してください",
   "editCustomRouting": "カスタム設定を編集",
   "customRoutingDraftHint": "カスタム設定を入力してから、カスタムモードに切り替えてください。下書きの編集では現在のモードは変わりません",
-  "coreBlockedByPolicyTip": "Windows がプロキシコアの起動をブロックしました（システムエラー {code}）。Windows セキュリティの保護の履歴とアプリ制御ポリシーを確認し、インストーラーの入手元と署名を確認してください。",
+  "coreBlockedByPolicyTip": "Windows がプロキシコアの起動をブロックしました（システムエラー {code}）。Windows セキュリティの保護の履歴とアプリ制御ポリシーを確認し、インストーラーの入手元と署名を確認してください",
   "@coreBlockedByPolicyTip": {
     "placeholders": {
       "code": {
@@ -720,23 +720,30 @@
     }
   },
   "startupRecoveryTitle": "起動の復旧",
-  "startupRecoveryTip": "直近2回の起動に失敗したため、今回は設定の自動適用とVPNの自動起動を一時停止しました。選択中のプロファイルと設定は保持されています。設定を確認し、「開始」を押して再試行してください。実行中のVPN接続は維持されます。",
+  "startupRecoveryTip": "直近2回の起動に失敗したため、今回は設定の自動適用とVPNの自動起動を一時停止しました。選択中のプロファイルと設定は保持されています。設定を確認し、「開始」を押して再試行してください。実行中のVPN接続は維持されます",
   "authentication": "ローカルプロキシ認証",
-  "authenticationDesc": "HTTP/SOCKS プロキシにユーザー名とパスワードを設定します。システム HTTP プロキシの自動設定は停止しますが、TUN/VPN は利用できます。",
+  "authenticationDesc": "HTTP/SOCKS プロキシにユーザー名とパスワードを設定します。システム HTTP プロキシの自動設定は停止しますが、TUN/VPN は利用できます",
   "authenticationSystemProxyDesc": "ローカルプロキシ認証が有効な間は設定されません",
   "authenticationUsernameInvalid": "コロンや制御文字を含まない 1～255 UTF-8 バイトを入力してください",
   "authenticationPasswordInvalid": "制御文字を含まない 1～255 UTF-8 バイトを入力してください",
   "authenticationApplyFailed": "認証設定を適用できませんでした",
   "installedAppsPermissionRequired": "アプリ一覧へのアクセス許可が必要です",
-  "installedAppsPermissionDesc": "VPN を使用するアプリを選ぶには、インストール済みアプリ一覧へのアクセスを許可してください。",
-  "installedAppsPermissionDeniedMessage": "許可されませんでした。システム設定でアクセスを許可できます。",
+  "installedAppsPermissionDesc": "VPN を使用するアプリを選ぶには、インストール済みアプリ一覧へのアクセスを許可してください",
+  "installedAppsPermissionDeniedMessage": "許可されませんでした。システム設定でアクセスを許可できます",
   "installedAppsPermissionGrant": "アクセスを許可",
-  "installedAppsLoadFailed": "アプリ一覧を読み込めませんでした。再試行してください。",
+  "installedAppsLoadFailed": "アプリ一覧を読み込めませんでした。再試行してください",
   "configRecoveryMissingKey": "既存の設定の暗号化キーが見つからないか無効です。元のデバイスの元のユーザーで実行するか、バックアップを復元してください。再試行しても失われたキーは再生成できません",
   "configRecoveryUnreadable": "ローカル設定を復号できないか、ファイルが破損しています。元のファイルは保持されています。対応するキーと設定のバックアップを復元するか、バックアップしてリセットしてください",
   "configRecoveryStorage": "ローカル設定または暗号化キーを読み書きできません。アプリのデータフォルダーとシステムの安全なストレージへのアクセス権を確認して再試行してください",
   "configRecoveryReset": "バックアップしてリセット",
   "configRecoveryResetConfirm": "すべてのローカル設定、サブスクリプション、ルール、アカウントデータを暗号化してバックアップし、アプリをリセットしますか？再ログインと、設定およびサブスクリプションの復元またはインポートが必要です。バックアップは現在の Windows ユーザーで保護されますが、失われた暗号化キーは復元できません",
   "configRecoveryResetDone": "元のデータを以下のフォルダーに暗号化してバックアップしました。アプリを終了して再度開き、設定を行ってください",
-  "configRecoveryResetFailed": "暗号化バックアップとリセットを完了できませんでした。バックアップを検証するまで残っている元のデータは削除されません。再試行するか、アプリを終了して再度開いて完了してください"
+  "configRecoveryResetFailed": "暗号化バックアップとリセットを完了できませんでした。バックアップを検証するまで残っている元のデータは削除されません。再試行するか、アプリを終了して再度開いて完了してください",
+  "excludeSsids": "除外SSID",
+  "excludeSsidsDesc": "指定した Wi-Fi ではプロキシを一時停止し、アプリが開始状態の場合のみ離れると再開します",
+  "locationPermission": "位置情報の権限",
+  "locationPermissionRequired": "位置情報の権限が必要です",
+  "locationPermissionDeniedMessage": "位置情報の権限が拒否されたため、現在の Wi-Fi 名を取得できません。システム設定で位置情報の権限を手動で有効にしてください",
+  "locationPermissionGuide": "1. システム設定 > プライバシーとセキュリティ を開く\n2. 位置情報サービス を選択\n3. リストで {appName} を見つけてチェックを入れる\n\n設定が完了したらアプリに戻ると、通常どおり使用できます。ご協力ありがとうございます",
+  "ssidPermissionGuide": "Wi-Fi 名の取得には位置情報の許可が必要です。Android では正確な位置情報を常に許可し、位置情報サービスを有効にしてください"
 }

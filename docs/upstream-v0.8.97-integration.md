@@ -197,3 +197,7 @@ ANDROID_NDK_HOME=/path/to/ndk bash tool/check_android_core.sh arm64
 - TUN、Tailscale、ZeroTier、OpenVPN 的真实网络部署和外部控制平面未在此执行；
   本次通过的是本地协议回归、静态检查和编译。
 - 仅创建本地提交；没有推送、移动标签、生成签名安装包或部署。
+
+## 后续 UI 与平台迁移
+
+用户已授权继续四组保留项，SSID、Rust 热键和新托盘已接入，详细实现、验证和剩余范围见 [迁移记录](upstream-v0.8.97-ui-platform-migration.md)

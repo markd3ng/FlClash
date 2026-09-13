@@ -97,7 +97,7 @@ class _FlClashHttpClientAdapter extends IOHttpClientAdapter {
 
 class FlClashHttpOverrides extends HttpOverrides {
   static ProxyAuthenticationState? readProxyAuthentication() {
-    if (!appController.isAttach || !appController.isStart) return null;
+    if (!appController.isAttach || !appController.isProxyActive) return null;
     final config = appController.config;
     return (
       port: config.patchClashConfig.mixedPort,
@@ -117,7 +117,7 @@ class FlClashHttpOverrides extends HttpOverrides {
       return 'DIRECT';
     }
     final port = appController.config.patchClashConfig.mixedPort;
-    final isStart = appController.isStart;
+    final isStart = appController.isProxyActive;
     final displayUrl = Uri(
       scheme: url.scheme,
       host: url.host,
@@ -135,7 +135,7 @@ class FlClashHttpOverrides extends HttpOverrides {
     }
     final port = appController.config.patchClashConfig.mixedPort;
     return resolveCloudApiProxy(
-      isCoreRunning: appController.isStart,
+      isCoreRunning: appController.isProxyActive,
       port: port,
     );
   }
@@ -146,7 +146,7 @@ class FlClashHttpOverrides extends HttpOverrides {
     if (_isLocalHost(url.host) || !appController.isAttach) return 'DIRECT';
     if (Secrets.isApiDomain(url.host)) return handleCloudApiFindProxy(url);
     return resolveResourceProxy(
-      isCoreRunning: appController.isStart,
+      isCoreRunning: appController.isProxyActive,
       port: appController.config.patchClashConfig.mixedPort,
     );
   }

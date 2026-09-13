@@ -234,6 +234,12 @@ func handleMethodCall(call *MethodCall, response MethodResponse) {
 	case stopLogMethod:
 		handleStopLog()
 		response.success(true)
+	case setNetworkExcludedMethod:
+		var excluded bool
+		if !decodeMethodArguments(call, response, &excluded) {
+			return
+		}
+		response.success(handleSetNetworkExcluded(excluded))
 	case startListenerMethod:
 		response.success(handleStartListener())
 	case stopListenerMethod:

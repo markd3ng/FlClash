@@ -32,6 +32,7 @@ class VpnService : SystemVpnService(), IBaseService {
 
     private val lifecycleLock = Any()
     private var tunStarted = false
+    private var started = false
 
     private val self: VpnService
         get() = this
@@ -254,15 +255,30 @@ class VpnService : SystemVpnService(), IBaseService {
     }
 
     override fun start() = synchronized(lifecycleLock) {
-        if (tunStarted) return
+        if (started) return
         startWithCleanup(start = {
             loader.load()
-            handleStart(checkNotNull(State.options) { "VPN options are missing" })
-            tunStarted = true
+            if (!State.networkExcluded) {
+                handleStart(checkNotNull(State.options) { "VPN options are missing" })
+                tunStarted = true
+            }
+            started = true
         }, cleanup = ::stop)
     }
 
+    override fun setNetworkExcluded(excluded: Boolean) = synchronized(lifecycleLock) {
+        if (!started) return
+        if (excluded && tunStarted) {
+            Core.stopTun()
+            tunStarted = false
+        } else if (!excluded && !tunStarted) {
+            handleStart(checkNotNull(State.options) { "VPN options are missing" })
+            tunStarted = true
+        }
+    }
+
     override fun stop() = synchronized(lifecycleLock) {
+        started = false
         try {
             loader.cancel()
         } finally {

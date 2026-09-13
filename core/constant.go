@@ -129,6 +129,7 @@ const (
 	stopLogMethod                  CoreMethod = "stopLog"
 	startListenerMethod            CoreMethod = "startListener"
 	stopListenerMethod             CoreMethod = "stopListener"
+	setNetworkExcludedMethod       CoreMethod = "setNetworkExcluded"
 	crashMethod                    CoreMethod = "crash"
 	setupConfigMethod              CoreMethod = "setupConfig"
 	getConfigFromBytesMethod       CoreMethod = "getConfigFromBytes"

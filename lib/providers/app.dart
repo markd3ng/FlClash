@@ -10,6 +10,18 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'generated/app.g.dart';
 
+@Riverpod(keepAlive: true)
+class CurrentSSID extends _$CurrentSSID with NotifierMixin<String?> {
+  @override
+  String? build() => null;
+}
+
+@Riverpod(keepAlive: true)
+class SsidRefresh extends _$SsidRefresh with NotifierMixin<int> {
+  @override
+  int build() => 0;
+}
+
 SelectedItemsProvider itemsProvider(String key) => selectedItemsProvider(key);
 
 mixin NotifierMixin<T> {

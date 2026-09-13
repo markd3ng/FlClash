@@ -189,6 +189,46 @@ final class UpdateParamsProvider
 
 String _$updateParamsHash() => r'c52f642aa38b3c383c950b15d38a4085f4772ab9';
 
+@ProviderFor(suspend)
+final suspendProvider = SuspendProvider._();
+
+final class SuspendProvider extends $FunctionalProvider<bool, bool, bool>
+    with $Provider<bool> {
+  SuspendProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'suspendProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$suspendHash();
+
+  @$internal
+  @override
+  $ProviderElement<bool> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  bool create(Ref ref) {
+    return suspend(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(bool value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<bool>(value),
+    );
+  }
+}
+
+String _$suspendHash() => r'29201c3e1766a00b52e1ea0c57ce85d9682cd4bc';
+
 @ProviderFor(proxyState)
 final proxyStateProvider = ProxyStateProvider._();
 
@@ -228,7 +268,7 @@ final class ProxyStateProvider
   }
 }
 
-String _$proxyStateHash() => r'407f041c48c3e2991647fd4fef8aaf00d9d7c7a0';
+String _$proxyStateHash() => r'1a09e1d756d64c9d3f6a7ebdb66364d5c898a63d';
 
 @ProviderFor(trayState)
 final trayStateProvider = TrayStateProvider._();
@@ -1806,7 +1846,7 @@ final class AutoSetSystemDnsStateProvider
 }
 
 String _$autoSetSystemDnsStateHash() =>
-    r'a8805965efe78241613bfde55f4ea8fa12a6ea32';
+    r'e105d85957c2482ea02808a4a51eb9cf29af3ea1';
 
 @ProviderFor(needUpdateGroups)
 final needUpdateGroupsProvider = NeedUpdateGroupsProvider._();
@@ -1896,7 +1936,7 @@ final class SharedStateProvider
   }
 }
 
-String _$sharedStateHash() => r'b98770ea816c4e63f9d8e355eef0b4d8a27df21e';
+String _$sharedStateHash() => r'e988c264ff405ebd18b2c09c2eb443132a5b1f8f';
 
 @ProviderFor(overlayTopOffset)
 final overlayTopOffsetProvider = OverlayTopOffsetProvider._();

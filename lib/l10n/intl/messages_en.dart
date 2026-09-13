@@ -76,55 +76,58 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m21(count) => "${count} hours";
 
-  static String m22(count) =>
-      "${Intl.plural(count, one: '1 minute ago', other: '${count} minutes ago')}";
+  static String m22(appName) =>
+      "1. Open System Settings > Privacy & Security\n2. Choose Location Services\n3. Find and check ${appName} in the list\n\nWhen you are done, return to the app to continue. Thank you for your cooperation.";
 
   static String m23(count) =>
+      "${Intl.plural(count, one: '1 minute ago', other: '${count} minutes ago')}";
+
+  static String m24(count) =>
       "${Intl.plural(count, one: '1 month ago', other: '${count} months ago')}";
 
-  static String m24(label) => "No ${label} yet";
+  static String m25(label) => "No ${label} yet";
 
-  static String m25(label) => "${label} must be a number";
+  static String m26(label) => "${label} must be a number";
 
-  static String m26(name) =>
+  static String m27(name) =>
       "The name \"${name}\" is already used. Rename the personal group to keep both.";
 
-  static String m27(id) => "Plan #${id}";
+  static String m28(id) => "Plan #${id}";
 
-  static String m28(label) => "${label} must be between 1024 and 49151";
+  static String m29(label) => "${label} must be between 1024 and 49151";
 
-  static String m29(port) =>
+  static String m30(port) =>
       "The mixed port ${port} could not start listening and may be in use by another application. Change the port to retry immediately.";
 
-  static String m30(name) =>
+  static String m31(name) =>
       "Node ${name} is already used by another enabled chain or has a proxy chain relation conflict";
 
-  static String m31(name) => "Node ${name} is not available in this position";
+  static String m32(name) => "Node ${name} is not available in this position";
 
-  static String m32(count) => "${count}d";
+  static String m33(count) => "${count}d";
 
-  static String m33(count) => "${count}h";
+  static String m34(count) => "${count}h";
 
-  static String m34(count) => "${count}m";
+  static String m35(count) => "${count}m";
 
-  static String m35(time) => "Purchased ${time}";
+  static String m36(time) => "Purchased ${time}";
 
-  static String m36(name, path) =>
+  static String m37(name, path) =>
       "${name} is referenced by the original configuration at ${path}";
 
-  static String m37(value) => "Remaining: ${value}";
+  static String m38(value) => "Remaining: ${value}";
 
-  static String m38(count) => "Only ${count} left";
+  static String m39(count) => "Only ${count} left";
 
-  static String m39(seconds) => "Resend in ${seconds}s";
+  static String m40(seconds) => "Resend in ${seconds}s";
 
-  static String m40(count) => "${count} seconds";
+  static String m41(count) => "${count} seconds";
 
-  static String m41(count) => "${count} items have been selected";
+  static String m42(count) => "${count} items have been selected";
 
-  static String m42(label) => "${label} must be a url";
+  static String m43(label) => "${label} must be a url";
 
-  static String m43(count) =>
+  static String m44(count) =>
       "${Intl.plural(count, one: '1 year ago', other: '${count} years ago')}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
@@ -569,6 +572,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "excludeProxyFilter": MessageLookupByLibrary.simpleMessage(
       "Exclude proxy filter",
     ),
+    "excludeSsids": MessageLookupByLibrary.simpleMessage("Exclude SSIDs"),
+    "excludeSsidsDesc": MessageLookupByLibrary.simpleMessage(
+      "Pause proxying on the listed Wi-Fi networks; resume after leaving only while the app remains started.",
+    ),
     "excludeType": MessageLookupByLibrary.simpleMessage("Exclude type"),
     "existsTip": m14,
     "exit": MessageLookupByLibrary.simpleMessage("Exit"),
@@ -790,6 +797,16 @@ class MessageLookup extends MessageLookupByLibrary {
     "localBackupDesc": MessageLookupByLibrary.simpleMessage(
       "Backup local data to local",
     ),
+    "locationPermission": MessageLookupByLibrary.simpleMessage(
+      "Location permission",
+    ),
+    "locationPermissionDeniedMessage": MessageLookupByLibrary.simpleMessage(
+      "Location permission was denied, so the current Wi-Fi name cannot be read. Please enable location permission manually in system settings.",
+    ),
+    "locationPermissionGuide": m22,
+    "locationPermissionRequired": MessageLookupByLibrary.simpleMessage(
+      "Location permission required",
+    ),
     "log": MessageLookupByLibrary.simpleMessage("Log"),
     "logLevel": MessageLookupByLibrary.simpleMessage("LogLevel"),
     "logcat": MessageLookupByLibrary.simpleMessage("Logcat"),
@@ -836,11 +853,11 @@ class MessageLookup extends MessageLookupByLibrary {
     "minimizeOnExitDesc": MessageLookupByLibrary.simpleMessage(
       "Modify the default system exit event",
     ),
-    "minutesAgo": m22,
+    "minutesAgo": m23,
     "mixedPort": MessageLookupByLibrary.simpleMessage("Mixed Port"),
     "mode": MessageLookupByLibrary.simpleMessage("Mode"),
     "monochromeScheme": MessageLookupByLibrary.simpleMessage("Monochrome"),
-    "monthsAgo": m23,
+    "monthsAgo": m24,
     "more": MessageLookupByLibrary.simpleMessage("More"),
     "myOrders": MessageLookupByLibrary.simpleMessage("Purchased Plans"),
     "name": MessageLookupByLibrary.simpleMessage("Name"),
@@ -904,8 +921,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "nullProfileDesc": MessageLookupByLibrary.simpleMessage(
       "No profile, Please add a profile",
     ),
-    "nullTip": m24,
-    "numberTip": m25,
+    "nullTip": m25,
+    "numberTip": m26,
     "oixCloud": MessageLookupByLibrary.simpleMessage("oixCloud"),
     "onlyIcon": MessageLookupByLibrary.simpleMessage("Icon"),
     "onlyStatisticsProxy": MessageLookupByLibrary.simpleMessage(
@@ -933,7 +950,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "overlayHint": MessageLookupByLibrary.simpleMessage(
       "Saved separately from the subscription and reapplied after updates. New groups block connections when no members match.",
     ),
-    "overlayNameConflict": m26,
+    "overlayNameConflict": m27,
     "override": MessageLookupByLibrary.simpleMessage("Override"),
     "overrideDns": MessageLookupByLibrary.simpleMessage("Override Dns"),
     "overrideDnsDesc": MessageLookupByLibrary.simpleMessage(
@@ -985,7 +1002,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "planNotActivated": MessageLookupByLibrary.simpleMessage(
       "Pending activation",
     ),
-    "planNumber": m27,
+    "planNumber": m28,
     "pleaseBindWebDAV": MessageLookupByLibrary.simpleMessage(
       "Please bind WebDAV",
     ),
@@ -1003,8 +1020,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "portConflictTip": MessageLookupByLibrary.simpleMessage(
       "Please enter a different port",
     ),
-    "portTip": m28,
-    "portUnavailableMessage": m29,
+    "portTip": m29,
+    "portUnavailableMessage": m30,
     "portUnavailableTitle": MessageLookupByLibrary.simpleMessage(
       "Port unavailable",
     ),
@@ -1048,7 +1065,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "proxyChainAvailableNodes": MessageLookupByLibrary.simpleMessage(
       "Available nodes",
     ),
-    "proxyChainConflictTip": m30,
+    "proxyChainConflictTip": m31,
     "proxyChainCustomNode": MessageLookupByLibrary.simpleMessage("Custom node"),
     "proxyChainCustomNodes": MessageLookupByLibrary.simpleMessage(
       "Custom nodes",
@@ -1080,7 +1097,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "proxyChainSelectedNodes": MessageLookupByLibrary.simpleMessage(
       "Proxy chain",
     ),
-    "proxyChainUnavailableNodeTip": m31,
+    "proxyChainUnavailableNodeTip": m32,
     "proxyChainUriNodeSupportedFormats": MessageLookupByLibrary.simpleMessage(
       "Supported formats: ss://, ssr://, vmess://, vless://, trojan://, anytls://, hysteria:// / hy://, hysteria2:// / hy2://, tuic://, wireguard:// / wg://, http(s)://, socks(5)://",
     ),
@@ -1109,9 +1126,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "purchaseAutoRenewLabel": MessageLookupByLibrary.simpleMessage(
       "Auto-renew",
     ),
-    "purchaseDays": m32,
-    "purchaseHours": m33,
-    "purchaseMinutes": m34,
+    "purchaseDays": m33,
+    "purchaseHours": m34,
+    "purchaseMinutes": m35,
     "purchasePriceLabel": MessageLookupByLibrary.simpleMessage(
       "Purchase price",
     ),
@@ -1120,7 +1137,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "purchaseRenewalPriceLabel": MessageLookupByLibrary.simpleMessage(
       "Renewal price",
     ),
-    "purchaseTime": m35,
+    "purchaseTime": m36,
     "purchaseTotalTrafficLabel": MessageLookupByLibrary.simpleMessage(
       "Total traffic",
     ),
@@ -1132,7 +1149,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "quickFill": MessageLookupByLibrary.simpleMessage("Quick fill"),
     "rainbowScheme": MessageLookupByLibrary.simpleMessage("Rainbow"),
-    "rawOutboundInUse": m36,
+    "rawOutboundInUse": m37,
     "receivingAddress": MessageLookupByLibrary.simpleMessage(
       "Receiving address",
     ),
@@ -1157,8 +1174,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "relayGroupUnsupported": MessageLookupByLibrary.simpleMessage(
       "Relay groups were removed by the core. Choose another type.",
     ),
-    "remaining": m37,
-    "remainingStock": m38,
+    "remaining": m38,
+    "remainingStock": m39,
     "remainingTimeLabel": MessageLookupByLibrary.simpleMessage(
       "Remaining time",
     ),
@@ -1179,7 +1196,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "requestsDesc": MessageLookupByLibrary.simpleMessage(
       "View recently request records",
     ),
-    "resendCodeIn": m39,
+    "resendCodeIn": m40,
     "reset": MessageLookupByLibrary.simpleMessage("Reset"),
     "resetEmailSent": MessageLookupByLibrary.simpleMessage(
       "Reset email sent. Paste the reset link or code from the email below.",
@@ -1290,13 +1307,13 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "search": MessageLookupByLibrary.simpleMessage("Search"),
     "seconds": MessageLookupByLibrary.simpleMessage("Seconds"),
-    "secondsCount": m40,
+    "secondsCount": m41,
     "selectAll": MessageLookupByLibrary.simpleMessage("Select all"),
     "selectUpgradeTarget": MessageLookupByLibrary.simpleMessage(
       "Select upgrade target",
     ),
     "selected": MessageLookupByLibrary.simpleMessage("Selected"),
-    "selectedCountTitle": m41,
+    "selectedCountTitle": m42,
     "sendCode": MessageLookupByLibrary.simpleMessage("Send Code"),
     "sendResetEmail": MessageLookupByLibrary.simpleMessage("Send reset email"),
     "serviceCheckFailed": MessageLookupByLibrary.simpleMessage(
@@ -1319,6 +1336,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "specialProxy": MessageLookupByLibrary.simpleMessage("Special proxy"),
     "specialRules": MessageLookupByLibrary.simpleMessage("special rules"),
     "speedStatistics": MessageLookupByLibrary.simpleMessage("Speed statistics"),
+    "ssidPermissionGuide": MessageLookupByLibrary.simpleMessage(
+      "Allow location access to read Wi-Fi names. On Android, allow precise location all the time and enable system location services.",
+    ),
     "stackMode": MessageLookupByLibrary.simpleMessage("Stack mode"),
     "standard": MessageLookupByLibrary.simpleMessage("Standard"),
     "standardModeDesc": MessageLookupByLibrary.simpleMessage(
@@ -1434,7 +1454,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "urlDesc": MessageLookupByLibrary.simpleMessage(
       "Obtain profile through URL",
     ),
-    "urlTip": m42,
+    "urlTip": m43,
     "useHosts": MessageLookupByLibrary.simpleMessage("Use hosts"),
     "useSystemHosts": MessageLookupByLibrary.simpleMessage("Use system hosts"),
     "usedTrafficLabel": MessageLookupByLibrary.simpleMessage("Used traffic"),
@@ -1459,7 +1479,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "WebDAV configuration",
     ),
     "whitelistMode": MessageLookupByLibrary.simpleMessage("Whitelist mode"),
-    "yearsAgo": m43,
+    "yearsAgo": m44,
     "zh_CN": MessageLookupByLibrary.simpleMessage("Simplified Chinese"),
   };
 }

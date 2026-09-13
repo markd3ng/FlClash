@@ -111,6 +111,13 @@ UpdateParams updateParams(Ref ref) {
 }
 
 @riverpod
+bool suspend(Ref ref) {
+  final ssid = ref.watch(currentSSIDProvider);
+  return ssid != null &&
+      ref.watch(networkSettingProvider).excludeSSIDs.contains(ssid);
+}
+
+@riverpod
 ProxyState proxyState(Ref ref) {
   final authenticated = ref.watch(
     networkSettingProvider.select((state) => state.authentication.enable),
@@ -125,7 +132,7 @@ ProxyState proxyState(Ref ref) {
     patchClashConfigProvider.select((state) => state.mixedPort),
   );
   return ProxyState(
-    isStart: isStart,
+    isStart: isStart && !ref.watch(suspendProvider),
     systemProxy: vm2.a && !authenticated,
     bassDomain: vm2.b,
     port: mixedPort,
@@ -517,7 +524,10 @@ VM2<bool, bool> autoSetSystemDnsState(Ref ref) {
   final autoSetSystemDns = ref.watch(
     networkSettingProvider.select((state) => state.autoSetSystemDns),
   );
-  return VM2(isStart ? realTunEnable : false, autoSetSystemDns);
+  return VM2(
+    isStart && !ref.watch(suspendProvider) ? realTunEnable : false,
+    autoSetSystemDns,
+  );
 }
 
 @riverpod
@@ -575,6 +585,7 @@ SharedState sharedState(Ref ref) {
       suspendOnIdle: suspendOnIdle,
     ),
     vpnOptions: VpnOptions(
+      excludeSSIDs: ref.watch(networkSettingProvider).excludeSSIDs,
       enable: vpnSetting.enable,
       stack: stack,
       systemProxy: vpnSetting.systemProxy,
