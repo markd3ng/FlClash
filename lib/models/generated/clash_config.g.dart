@@ -235,6 +235,7 @@ _Dns _$DnsFromJson(Map<String, dynamic> json) => _Dns(
   fallback:
       (json['fallback'] as List<dynamic>?)?.map((e) => e as String).toList() ??
       const ['tls://8.8.4.4', 'tls://1.1.1.1'],
+  fallbackLazyQuery: json['fallback-lazy-query'] as bool? ?? false,
   proxyServerNameserver:
       (json['proxy-server-nameserver'] as List<dynamic>?)
           ?.map((e) => e as String)
@@ -262,6 +263,7 @@ Map<String, dynamic> _$DnsToJson(_Dns instance) => <String, dynamic>{
   'nameserver-policy': instance.nameserverPolicy,
   'nameserver': instance.nameserver,
   'fallback': instance.fallback,
+  'fallback-lazy-query': instance.fallbackLazyQuery,
   'proxy-server-nameserver': instance.proxyServerNameserver,
   'fallback-filter': instance.fallbackFilter,
 };

@@ -373,6 +373,9 @@ abstract class Dns with _$Dns {
     @Default(['https://doh.pub/dns-query', 'https://dns.alidns.com/dns-query'])
     List<String> nameserver,
     @Default(['tls://8.8.4.4', 'tls://1.1.1.1']) List<String> fallback,
+    @Default(false)
+    @JsonKey(name: 'fallback-lazy-query')
+    bool fallbackLazyQuery,
     @Default(['https://doh.pub/dns-query'])
     @JsonKey(name: 'proxy-server-nameserver')
     List<String> proxyServerNameserver,

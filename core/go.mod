@@ -7,7 +7,7 @@ replace github.com/metacubex/mihomo => ./Clash.Meta
 require (
 	github.com/Microsoft/go-winio v0.6.2
 	github.com/metacubex/chi v0.1.0
-	github.com/metacubex/http v0.1.6
+	github.com/metacubex/http v0.1.7
 	github.com/metacubex/mihomo v0.0.0-00010101000000-000000000000
 	github.com/metacubex/tls v0.1.8
 	github.com/oschwald/maxminddb-golang v1.12.0

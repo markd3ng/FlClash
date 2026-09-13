@@ -79,6 +79,25 @@ void main() {
     },
   );
 
+  test('DNS override preserves fallback lazy query policy', () async {
+    final state = _makeRealProfileState(
+      rawConfig: {
+        'rules': ['MATCH,DIRECT'],
+        'dns': {'enable': true, 'fallback-lazy-query': true},
+      },
+    );
+    final profileResult = await makeRealProfileTask(state);
+    expect(profileResult['dns']['fallback-lazy-query'], true);
+
+    final override = ClashConfig.fromJson({
+      'dns': {'enable': true, 'fallback-lazy-query': true},
+    });
+    final overriddenResult = await makeRealProfileTask(
+      state.copyWith(overrideDns: true, realPatchConfig: override),
+    );
+    expect(overriddenResult['dns']['fallback-lazy-query'], true);
+  });
+
   group('resolveSafeArchivePath', () {
     test('allows normalized child paths', () {
       expect(
