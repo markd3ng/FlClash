@@ -156,6 +156,11 @@ jobs:
         run: |
           go vet -tags with_gvisor ./component/sniffer
           go test -tags with_gvisor ./component/sniffer
+      - name: Check Mieru dependency regressions
+        run: python3 tool/check_mieru_dependencies.py
+      - name: Check Mieru inbound integration
+        working-directory: core/Clash.Meta
+        run: go test -race -tags with_gvisor -timeout=180s -run '^(TestNewMieru|TestInboundMieru)$' ./listener/inbound
       - name: Check QUIC dependency regressions
         run: python3 tool/check_quic_dependencies.py
       - name: Check native callback and file ownership races
