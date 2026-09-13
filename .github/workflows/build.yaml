@@ -95,7 +95,7 @@ jobs:
   go-test:
     name: Go core tests
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
         with:
@@ -113,73 +113,20 @@ jobs:
           go test -tags with_gvisor ./...
           cd Clash.Meta
           go test -tags with_gvisor ./component/mmdb ./component/updater
-      - name: Check selected upstream core regressions
-        working-directory: core/Clash.Meta
-        env:
-          CGO_ENABLED: '0'
-        run: |
-          go vet -tags with_gvisor ./rules/common ./common/net ./listener/hysteria2_realm ./tunnel ./dns ./component/resolver
-          go test -tags with_gvisor ./rules/common ./common/net ./listener/hysteria2_realm ./tunnel ./dns ./component/resolver
-      - name: Check selected upstream protocol regressions
-        working-directory: core/Clash.Meta
-        env:
-          CGO_ENABLED: '0'
-        run: |
-          go vet -tags with_gvisor ./transport/tuic/... ./adapter/outbound ./transport/trojan ./transport/vmess ./transport/xhttp
-          go test -tags with_gvisor ./transport/tuic/... ./adapter/outbound ./transport/trojan ./transport/vmess ./transport/xhttp
-      - name: Check listener and startup regressions
-        working-directory: core/Clash.Meta
-        env:
-          CGO_ENABLED: '0'
-        run: |
-          go vet -tags with_gvisor ./config ./listener ./hub/executor
-          go test -tags with_gvisor ./config ./listener ./hub/executor
-      - name: Check subscription conversion and TLS regressions
-        working-directory: core/Clash.Meta
-        env:
-          CGO_ENABLED: '0'
-        run: |
-          go vet -tags with_gvisor ./common/convert ./listener/sing_hysteria2 ./component/ca ./component/tls ./component/ech
-          go test -tags with_gvisor ./common/convert ./listener/sing_hysteria2 ./component/ca ./component/tls ./component/ech
-          go test -run '^TestKeyUpdateSpamPostHandshakeTLS13$' github.com/metacubex/tls
-      - name: Check certificate name verification regressions
+      - name: Validate integrated mihomo core
         working-directory: core/Clash.Meta
         run: |
-          go vet -tags with_gvisor ./adapter/provider ./transport/gost ./transport/sing-shadowtls ./transport/v2ray-plugin
-          go test -race -tags with_gvisor -timeout=120s ./component/ca ./adapter/provider ./transport/gost ./transport/sing-shadowtls ./transport/v2ray-plugin
-          go test -race -tags with_gvisor -parallel=8 -timeout=300s -run '^TestInboundNameCertVerify$' ./listener/inbound
-      - name: Check DNS matching and stream regressions
-        working-directory: core/Clash.Meta
-        env:
-          CGO_ENABLED: '0'
-        run: |
-          go vet -tags with_gvisor ./component/trie ./common/httputils ./transport/openvpn ./transport/restls ./transport/sudoku/obfs/sudoku ./transport/shadowsocks/shadowstream
-          go test -tags with_gvisor ./component/trie ./common/httputils ./transport/openvpn ./transport/restls ./transport/sudoku/obfs/sudoku ./transport/shadowsocks/shadowstream
-      - name: Check Sudoku multiplex regressions
+          go vet -tags with_gvisor ./...
+          go test -race -tags with_gvisor -p=2 -parallel=2 -timeout=900s ./...
+      - name: Check retained transport dependency fixes
         working-directory: core/Clash.Meta
         run: |
-          go vet -tags with_gvisor ./transport/sudoku/... ./listener/sudoku
-          go test -race -tags with_gvisor -timeout=180s ./transport/sudoku/... ./listener/sudoku
-          go test -race -tags with_gvisor -parallel=8 -timeout=300s -run '^TestInboundSudoku_' ./listener/inbound
-      - name: Check protocol sniffing regressions
-        working-directory: core/Clash.Meta
-        env:
-          CGO_ENABLED: '0'
-        run: |
-          go vet -tags with_gvisor ./component/sniffer
-          go test -tags with_gvisor ./component/sniffer
-      - name: Check proxy transport regressions
-        working-directory: core/Clash.Meta
-        run: |
-          go vet -tags with_gvisor ./transport/restls ./transport/vmess ./transport/gun ./adapter/outbound ./listener ./listener/restls ./listener/shadowsocks ./listener/sing_shadowsocks ./listener/sing_vmess ./listener/sing_vless ./listener/trojan ./transport/anytls/... ./listener/anytls ./transport/vless/...
-          go test -race -tags with_gvisor -timeout=120s ./transport/restls ./transport/vmess ./transport/gun ./adapter/outbound ./listener ./listener/restls ./listener/shadowsocks ./listener/sing_shadowsocks ./listener/sing_vmess ./listener/sing_vless ./listener/trojan ./transport/anytls/... ./listener/anytls ./transport/vless/...
-          go test -race -tags with_gvisor -parallel=8 -timeout=300s -run '^(TestInboundShadowSocks_|TestInboundRestls|TestInboundVMess_Restls|TestInboundVless_Restls|TestInboundTrojan_Restls|TestInboundAnyTLS_)' ./listener/inbound
+          go test -race -run '^TestKeyUpdateSpamPostHandshakeTLS13$' github.com/metacubex/tls
           go test -race -count=1 -timeout=180s -run '^(TestRestls|TestHandshakeMessageReaderAcrossRecords|TestNewRateLimitedConnDisabled|TestRateLimitedConn|TestBitRateLimiter)' github.com/metacubex/restls-client-go
-          go vet github.com/metacubex/sing-mux
+          go vet github.com/metacubex/sing-mux github.com/metacubex/smux github.com/metacubex/sing-shadowsocks2/...
+          go test -race -count=1 -timeout=120s github.com/metacubex/sing-shadowsocks2/...
           go test -race -count=1 -timeout=120s github.com/metacubex/sing-mux
-          go vet github.com/metacubex/smux
           go test -race -count=1 -timeout=120s -skip '^(Test8GBTransfer|TestRandomLengthRandomDataTransfer)' github.com/metacubex/smux
-          go test -race -tags with_gvisor -parallel=8 -timeout=300s -run '^(TestInboundVMess_|TestInboundVless_|TestInboundTrojan_)' ./listener/inbound
       - name: Check persistent cache regressions
         working-directory: core/Clash.Meta
         run: |
@@ -211,13 +158,6 @@ jobs:
         run: |
           go test -race tun_callbacks.go tun_callbacks_test.go
           go test -race ownership_unix.go ownership_test.go ownership_stat_linux_test.go
-          go test -C Clash.Meta -race -tags with_gvisor ./listener/auth ./adapter/inbound ./common/net ./component/resolver ./dns ./listener/hysteria2_realm
-          go test -C Clash.Meta -race -tags with_gvisor ./transport/tuic/... ./adapter/outbound ./transport/trojan ./transport/vmess ./transport/xhttp
-          go test -C Clash.Meta -race -tags with_gvisor ./config ./listener ./hub/executor
-          go test -C Clash.Meta -race -tags with_gvisor ./common/convert ./listener/sing_hysteria2 ./component/ca ./component/tls ./component/ech
-          go test -C Clash.Meta -race -run '^TestKeyUpdateSpamPostHandshakeTLS13$' github.com/metacubex/tls
-          go test -C Clash.Meta -race -tags with_gvisor ./component/trie ./common/httputils ./transport/openvpn ./transport/restls ./transport/sudoku/obfs/sudoku ./transport/shadowsocks/shadowstream
-          go test -C Clash.Meta -race -tags with_gvisor ./component/sniffer
 
   android-core-test:
     name: Android core (${{ matrix.arch }})

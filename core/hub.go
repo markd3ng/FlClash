@@ -111,6 +111,7 @@ func handleGetIsInit() bool {
 
 func handleForceGC() {
 	log.Infoln("[APP] request force GC")
+	tunnel.InvalidateAllProxies()
 	runtime.GC()
 	if features.Android {
 		debug.FreeOSMemory()
@@ -133,10 +134,10 @@ func handleShutdown() bool {
 }
 
 func closeCurrentProviders() {
-	for _, provider := range tunnel.Providers() {
+	for _, provider := range tunnel.ProvidersSnapshot() {
 		closeProvider(provider)
 	}
-	for _, provider := range tunnel.RuleProviders() {
+	for _, provider := range tunnel.RuleProvidersSnapshot() {
 		closeProvider(provider)
 	}
 	tunnel.UpdateProxies(
@@ -183,7 +184,7 @@ func handleGetProxies() ProxiesData {
 	for name, proxy := range tunnel.Proxies() {
 		proxies[name] = proxy
 	}
-	providers := tunnel.Providers()
+	providers := tunnel.ProvidersSnapshot()
 	providerNames := make([]string, 0, len(providers))
 	for name := range providers {
 		providerNames = append(providerNames, name)

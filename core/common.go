@@ -51,12 +51,12 @@ func init() {
 
 func getExternalProvidersRaw() map[string]cp.Provider {
 	eps := make(map[string]cp.Provider)
-	for n, p := range tunnel.Providers() {
+	for n, p := range tunnel.ProvidersSnapshot() {
 		if p.VehicleType() != cp.Compatible {
 			eps[n] = p
 		}
 	}
-	for n, p := range tunnel.RuleProviders() {
+	for n, p := range tunnel.RuleProvidersSnapshot() {
 		if p.VehicleType() != cp.Compatible {
 			eps[n] = p
 		}
