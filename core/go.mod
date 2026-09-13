@@ -84,7 +84,7 @@ require (
 	github.com/metacubex/qpack v0.6.0 // indirect
 	github.com/metacubex/quic-go v0.61.1-0.20260727080200-2548683b76f4 // indirect
 	github.com/metacubex/randv2 v0.2.0 // indirect
-	github.com/metacubex/restls-client-go v0.1.7 // indirect
+	github.com/metacubex/restls-client-go v0.1.9 // indirect
 	github.com/metacubex/sevenzip v1.6.4 // indirect
 	github.com/metacubex/sing v0.5.7 // indirect
 	github.com/metacubex/sing-mux v0.3.10 // indirect
@@ -143,3 +143,6 @@ require (
 	golang.org/x/tools v0.24.0 // indirect
 	google.golang.org/protobuf v1.34.2 // indirect
 )
+
+// Keep the Restls diagnostic race fix in Android and desktop builds.
+replace github.com/metacubex/restls-client-go => ./Clash.Meta/third_party/restls-client-go

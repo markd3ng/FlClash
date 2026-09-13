@@ -156,6 +156,12 @@ jobs:
         run: |
           go vet -tags with_gvisor ./component/sniffer
           go test -tags with_gvisor ./component/sniffer
+      - name: Check Restls client regressions
+        working-directory: core/Clash.Meta
+        run: |
+          go vet -tags with_gvisor ./transport/restls ./adapter/outbound
+          go test -race -tags with_gvisor -timeout=120s ./transport/restls ./adapter/outbound
+          go test -race -count=1 -timeout=180s -run '^(TestRestls|TestHandshakeMessageReaderAcrossRecords|TestNewRateLimitedConnDisabled|TestRateLimitedConn|TestBitRateLimiter)' github.com/metacubex/restls-client-go
       - name: Check persistent cache regressions
         working-directory: core/Clash.Meta
         run: |
