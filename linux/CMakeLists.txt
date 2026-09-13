@@ -112,6 +112,13 @@ set(CLASH_DIR "../libclash/linux")
 install(PROGRAMS "${CLASH_DIR}/FlClashCore" DESTINATION "${BUILD_BUNDLE_DIR}"
   COMPONENT Runtime)
 
+# setup.dart packages a matching Helper and Core manifest. A plain Flutter
+# development build can still use the existing direct Core launch path.
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${CLASH_DIR}/FlClashHelperService")
+  install(PROGRAMS "${CLASH_DIR}/FlClashHelperService" DESTINATION "${BUILD_BUNDLE_DIR}" COMPONENT Runtime)
+  install(FILES "${CLASH_DIR}/manifest.json" DESTINATION "${BUILD_BUNDLE_DIR}" COMPONENT Runtime)
+endif()
+
 # Copy the native assets provided by the build.dart from all packages.
 set(NATIVE_ASSETS_DIR "${PROJECT_BUILD_DIR}native_assets/linux/")
 install(DIRECTORY "${NATIVE_ASSETS_DIR}"

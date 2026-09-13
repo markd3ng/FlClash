@@ -23,9 +23,47 @@ String _obfV2(String plain) {
 }
 
 List<int> _obfMaster() {
-  const a = [0x5a, 0x1c, 0xe7, 0x93, 0x2f, 0xb8, 0x04, 0xd6, 0x69, 0xa1, 0x3e, 0xcf, 0x72, 0x8d, 0x15, 0xba];
-  const b = [0xc4, 0x37, 0x9e, 0x08, 0x51, 0xed, 0x2a, 0x7f, 0xd3, 0x60, 0x1b, 0x86, 0xf9, 0x42, 0xad, 0x0e];
-  return sha256.convert(<int>[...a, ...b, ...utf8.encode('oix-obf-v2-flclash')]).bytes;
+  const a = [
+    0x5a,
+    0x1c,
+    0xe7,
+    0x93,
+    0x2f,
+    0xb8,
+    0x04,
+    0xd6,
+    0x69,
+    0xa1,
+    0x3e,
+    0xcf,
+    0x72,
+    0x8d,
+    0x15,
+    0xba,
+  ];
+  const b = [
+    0xc4,
+    0x37,
+    0x9e,
+    0x08,
+    0x51,
+    0xed,
+    0x2a,
+    0x7f,
+    0xd3,
+    0x60,
+    0x1b,
+    0x86,
+    0xf9,
+    0x42,
+    0xad,
+    0x0e,
+  ];
+  return sha256.convert(<int>[
+    ...a,
+    ...b,
+    ...utf8.encode('oix-obf-v2-flclash'),
+  ]).bytes;
 }
 
 List<int> _obfKeystream(List<int> nonce, int count) {
@@ -33,14 +71,16 @@ List<int> _obfKeystream(List<int> nonce, int count) {
   final out = <int>[];
   var counter = 0;
   while (out.length < count) {
-    out.addAll(sha256.convert(<int>[
-      ...master,
-      ...nonce,
-      (counter >> 24) & 0xff,
-      (counter >> 16) & 0xff,
-      (counter >> 8) & 0xff,
-      counter & 0xff,
-    ]).bytes);
+    out.addAll(
+      sha256.convert(<int>[
+        ...master,
+        ...nonce,
+        (counter >> 24) & 0xff,
+        (counter >> 16) & 0xff,
+        (counter >> 8) & 0xff,
+        counter & 0xff,
+      ]).bytes,
+    );
     counter++;
   }
   return out.sublist(0, count);
@@ -219,10 +259,9 @@ class Build {
   }
 
   static String _redactOutput(String value) {
-    return _redactSensitive(value).replaceAllMapped(
-      _dartDefinesPattern,
-      (match) => '${match[1]}<redacted>',
-    );
+    return _redactSensitive(
+      value,
+    ).replaceAllMapped(_dartDefinesPattern, (match) => '${match[1]}<redacted>');
   }
 
   static String _redactCommand(List<String> executable) {
@@ -323,8 +362,8 @@ class Build {
       // fingerprint. Combined with -trimpath below (which drops source paths),
       // this matches the mihomo/Clash.Meta hardening baseline.
       final ldflags = StringBuffer('-w -s -buildid=');
-      final dnsAuthPrivateKey =
-          Platform.environment['DNS_AUTH_PRIVATE_KEY']?.trim();
+      final dnsAuthPrivateKey = Platform.environment['DNS_AUTH_PRIVATE_KEY']
+          ?.trim();
       if (dnsAuthPrivateKey != null && dnsAuthPrivateKey.isNotEmpty) {
         ldflags.write(
           ' -X main.GlobalDNSAuthPrivateKey=${_obfV2(dnsAuthPrivateKey)}',
@@ -332,7 +371,9 @@ class Build {
       }
       final dnsAuthDomains = Platform.environment['DNS_AUTH_DOMAINS']?.trim();
       if (dnsAuthDomains != null && dnsAuthDomains.isNotEmpty) {
-        ldflags.write(' -X main.GlobalDNSAuthDomains=${_obfV2(dnsAuthDomains)}');
+        ldflags.write(
+          ' -X main.GlobalDNSAuthDomains=${_obfV2(dnsAuthDomains)}',
+        );
       }
       final execLines = [
         'go',
@@ -359,11 +400,11 @@ class Build {
       }
     }
 
-    if (target == Target.windows && !isLib && corePaths.isNotEmpty) {
+    if ((target == Target.windows || target == Target.linux) &&
+        !isLib &&
+        corePaths.isNotEmpty) {
       final coreSha256 = await calcSha256(corePaths.first);
-      await File(
-        join(targetOutFilePath, coreManifestName),
-      ).writeAsString(
+      await File(join(targetOutFilePath, coreManifestName)).writeAsString(
         '${jsonEncode({'coreSha256': coreSha256})}\n',
         flush: true,
       );
@@ -398,8 +439,16 @@ class Build {
 
   static Future<void> buildHelper(Target target, String coreSha256) async {
     await exec(
-      ['cargo', 'build', '--release', '--features', 'windows-service'],
-      environment: {'CORE_SHA256': coreSha256, 'CORE_NAME': '$coreName.exe'},
+      [
+        'cargo',
+        'build',
+        '--release',
+        if (target == Target.windows) ...['--features', 'windows-service'],
+      ],
+      environment: {
+        'CORE_SHA256': coreSha256,
+        'CORE_NAME': '$coreName${target.executableExtensionName}',
+      },
       name: 'build helper',
       workingDirectory: _servicesDir,
     );
@@ -744,6 +793,10 @@ class BuildCommand extends Command {
         );
         return;
       case Target.linux:
+        await Build.buildHelper(
+          target,
+          await Build.calcSha256(corePaths.first),
+        );
         final targetMap = {Arch.arm64: 'linux-arm64', Arch.amd64: 'linux-x64'};
         final targets = [
           'deb',
@@ -787,8 +840,7 @@ class BuildCommand extends Command {
           await _buildDistributor(
             target: target,
             targets: 'apk',
-            args:
-                " --build-target-platform ${defaultTargets.join(",")}",
+            args: " --build-target-platform ${defaultTargets.join(",")}",
             env: env,
           );
         }

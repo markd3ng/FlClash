@@ -6,6 +6,7 @@ import 'package:ffi/ffi.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/common/macos_dns.dart';
 import 'package:fl_clash/core/desktop/helper_client.dart';
+import 'package:fl_clash/core/desktop/linux_helper.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/plugins/app.dart';
 import 'package:fl_clash/state.dart';
@@ -73,6 +74,10 @@ class System {
       }
       return false;
     } else if (Platform.isLinux) {
+      if (LinuxHelperInstaller().available) {
+        return await linuxHelperClient.readiness(logFailure: false) ==
+            HelperReadiness.ready;
+      }
       final result = await Process.run('stat', ['-c', '%U:%G %A', corePath]);
       final output = result.stdout.trim();
       if (output.startsWith('root:') && output.contains('rws')) {
@@ -114,6 +119,8 @@ class System {
       }
       return AuthorizeCode.success;
     } else if (Platform.isLinux) {
+      final installer = LinuxHelperInstaller();
+      if (installer.available) return installer.install();
       try {
         final result = await Process.run('pkexec', [
           'sh',

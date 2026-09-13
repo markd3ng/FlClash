@@ -29,13 +29,15 @@ class CoreService extends CoreHandlerInterface {
   factory CoreService._create() {
     final address = system.isWindows ? windowsPipeName : unixSocketPath;
     final directLauncher = DirectCoreLauncher();
+    final helper = system.isLinux ? linuxHelperClient : windowsHelperClient;
     final lifecycle = DesktopCoreLifecycle(
       transportFactory: () => IPCCoreTransport(address: address),
-      launcherResolver: WindowsHelperLauncherResolver(
+      launcherResolver: HelperLauncherResolver(
         isWindows: system.isWindows,
+        isLinux: system.isLinux,
         directLauncher: directLauncher,
-        helperLauncher: WindowsHelperLauncher(windowsHelperClient),
-        helperReady: () => windowsHelperClient.readiness(),
+        helperLauncher: HelperLauncher(helper),
+        helperReady: () => helper.readiness(),
       ),
       verifyPeerPid: system.isWindows,
     );

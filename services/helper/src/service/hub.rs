@@ -4,8 +4,12 @@ use sha2::{Digest, Sha256};
 use std::collections::VecDeque;
 use std::convert::Infallible;
 use std::fs::{File, OpenOptions};
-#[cfg(not(all(feature = "windows-service", target_os = "windows")))]
+#[cfg(all(
+    not(target_os = "linux"),
+    not(all(feature = "windows-service", target_os = "windows"))
+))]
 use std::future::pending;
+#[cfg(not(target_os = "linux"))]
 use std::future::Future;
 use std::io::{BufRead, Error, Read};
 #[cfg(windows)]
@@ -20,7 +24,9 @@ use warp::{Filter, Rejection, Reply};
 #[cfg(windows)]
 use windows_sys::Win32::Storage::FileSystem::FILE_SHARE_READ;
 
+#[cfg(not(target_os = "linux"))]
 const LISTEN_PORT: u16 = 47890;
+#[cfg(not(target_os = "linux"))]
 const CORE_PIPE_PREFIX: &str = r"\\.\pipe\FlClashCore_";
 const PROTOCOL_VERSION_HEADER: &str = "x-flclash-helper-protocol";
 const PROTOCOL_VERSION: &str = "6";
@@ -88,6 +94,21 @@ struct ManagedCore {
 
 impl ManagedCore {
     fn terminate(&mut self) -> Result<(), Error> {
+        #[cfg(target_os = "linux")]
+        {
+            // Let the owned child remove its TUN routes before falling back to
+            // the existing forced termination path. The PID is still unreaped.
+            unsafe {
+                libc::kill(self.child.id() as libc::pid_t, libc::SIGTERM);
+            }
+            let deadline = Instant::now() + Duration::from_secs(3);
+            while Instant::now() < deadline {
+                if self.child.try_wait()?.is_some() {
+                    return Ok(());
+                }
+                thread::sleep(CORE_EXIT_POLL_INTERVAL);
+            }
+        }
         let _ = self.child.kill();
         let deadline = Instant::now() + CORE_EXIT_TIMEOUT;
         loop {
@@ -123,12 +144,33 @@ impl VerifiedCore {
         })
     }
 
+    #[cfg(not(target_os = "linux"))]
     fn spawn(&self, address: &str) -> Result<Child, Error> {
         Command::new(&self.path)
             .current_dir(&self.directory)
             .stderr(Stdio::piped())
             .arg(address)
             .spawn()
+    }
+    #[cfg(target_os = "linux")]
+    fn spawn(&self, address: &str) -> Result<Child, Error> {
+        use std::os::unix::process::CommandExt;
+        let (uid, gid) = super::linux::core_owner()?;
+        let mut command = Command::new(&self.path);
+        command
+            .current_dir(&self.directory)
+            .stderr(Stdio::piped())
+            .arg(address);
+        // Only async-signal-safe credential operations run between fork/exec.
+        unsafe {
+            command.pre_exec(move || {
+                if libc::setresgid(gid, 0, 0) != 0 || libc::setresuid(uid, 0, 0) != 0 {
+                    return Err(Error::last_os_error());
+                }
+                Ok(())
+            });
+        }
+        command.spawn()
     }
 }
 
@@ -181,11 +223,23 @@ fn open_verified_core(path: &Path, expected_sha256: &str) -> Result<File, Error>
     Ok(core_file)
 }
 
+#[cfg(not(target_os = "linux"))]
 fn is_allowed_core_pipe(address: &str) -> bool {
     let Some(suffix) = address.strip_prefix(CORE_PIPE_PREFIX) else {
         return false;
     };
     is_valid_session_id(suffix)
+}
+
+#[cfg(target_os = "linux")]
+fn is_allowed_core_pipe(address: &str) -> bool {
+    let Some(id) = address
+        .strip_prefix("/tmp/FlClashSocket_")
+        .and_then(|s| s.strip_suffix(".sock"))
+    else {
+        return false;
+    };
+    !id.is_empty() && id.len() <= 10 && id.bytes().all(|b| b.is_ascii_digit())
 }
 
 fn is_valid_session_id(value: &str) -> bool {
@@ -288,6 +342,11 @@ fn start(start_params: StartParams) -> warp::reply::Response {
         }
     };
 
+    #[cfg(target_os = "linux")]
+    if let Err(error) = super::linux::ensure_owner_socket(&start_params.address) {
+        return error_response("invalidRequest", error.to_string(), StatusCode::BAD_REQUEST);
+    }
+
     match core.spawn(&start_params.address) {
         Ok(mut child) => {
             let process_id = child.id();
@@ -375,7 +434,7 @@ fn stop_core(stop_params: StopParams) -> warp::reply::Response {
     }
 }
 
-fn log_message(message: String) {
+pub(super) fn log_message(message: String) {
     let mut log_buffer = LOGS.lock().unwrap();
     while log_buffer.len() >= LOG_CAPACITY {
         log_buffer.pop_front();
@@ -514,7 +573,7 @@ async fn handle_rejection(rejection: Rejection) -> Result<warp::reply::Response,
     ))
 }
 
-fn routes() -> impl Filter<Extract = (impl Reply,), Error = Infallible> + Clone {
+pub(super) fn routes() -> impl Filter<Extract = (impl Reply,), Error = Infallible> + Clone {
     let api_ping = warp::get()
         .and(warp::path("ping"))
         .and(warp::path::end())
@@ -545,11 +604,15 @@ fn routes() -> impl Filter<Extract = (impl Reply,), Error = Infallible> + Clone 
         .recover(handle_rejection)
 }
 
-#[cfg(not(all(feature = "windows-service", target_os = "windows")))]
+#[cfg(all(
+    not(target_os = "linux"),
+    not(all(feature = "windows-service", target_os = "windows"))
+))]
 pub async fn run_service() -> anyhow::Result<()> {
     run_service_until(pending(), || Ok(())).await
 }
 
+#[cfg(not(target_os = "linux"))]
 pub(super) async fn run_service_until<F, S>(shutdown: F, on_started: S) -> anyhow::Result<()>
 where
     F: Future<Output = ()> + Send + 'static,
@@ -586,6 +649,11 @@ mod tests {
             .lock()
             .unwrap_or_else(|error| error.into_inner())
     }
+
+    #[cfg(not(target_os = "linux"))]
+    const TEST_CORE_ADDRESS: &str = r"\\.\pipe\FlClashCore_0123456789abcdef0123456789abcdef";
+    #[cfg(target_os = "linux")]
+    const TEST_CORE_ADDRESS: &str = "/tmp/FlClashSocket_4821.sock";
 
     fn spawn_placeholder_core() -> Child {
         #[cfg(windows)]
@@ -788,7 +856,7 @@ mod tests {
             .method("POST")
             .path("/start")
             .json(&StartParams {
-                address: r"\\.\pipe\FlClashCore_0123456789abcdef0123456789abcdef".to_string(),
+                address: TEST_CORE_ADDRESS.to_string(),
                 session_id: "0123456789abcdef0123456789abcdef".to_string(),
             })
             .reply(&routes())
@@ -868,7 +936,7 @@ mod tests {
             .method("POST")
             .path("/start")
             .json(&StartParams {
-                address: r"\\.\pipe\FlClashCore_0123456789abcdef0123456789abcdef".to_string(),
+                address: TEST_CORE_ADDRESS.to_string(),
                 session_id: "ABCDEF0123456789abcdef0123456789".to_string(),
             })
             .reply(&routes())
@@ -958,6 +1026,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(target_os = "linux"))]
     fn only_accepts_random_core_pipe_namespace() {
         assert!(is_allowed_core_pipe(
             r"\\.\pipe\FlClashCore_0123456789abcdef0123456789abcdef"
@@ -1004,4 +1073,32 @@ mod tests {
         assert_eq!(body["message"], "spawn refused");
         assert!(body.get("details").is_none());
     }
+}
+
+#[cfg(target_os = "linux")]
+pub(super) fn ensure_core_sha256_configured() -> anyhow::Result<()> {
+    if EXPECTED_CORE_SHA256.is_empty() {
+        anyhow::bail!("expected Core SHA256 is empty");
+    }
+    Ok(())
+}
+
+#[cfg(target_os = "linux")]
+pub(super) fn release_managed_core_on_shutdown() {
+    let mut managed = MANAGED_CORE.lock().unwrap();
+    if let Err(error) = release_managed_core(&mut managed) {
+        log_message(format!(
+            "Helper could not stop its Core on shutdown: {error}"
+        ));
+    }
+}
+
+#[cfg(target_os = "linux")]
+pub(super) fn verify_installation_core(path: &Path) -> Result<File, Error> {
+    open_verified_core(path, EXPECTED_CORE_SHA256)
+}
+
+#[cfg(target_os = "linux")]
+pub(super) fn expected_core_sha256() -> &'static str {
+    EXPECTED_CORE_SHA256
 }
