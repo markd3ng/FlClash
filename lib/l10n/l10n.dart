@@ -4599,6 +4599,21 @@ class AppLocalizations {
     return Intl.message('Refresh', name: 'refresh', desc: '', args: []);
   }
 
+  /// `All Nodes`
+  String get allNodes {
+    return Intl.message('All Nodes', name: 'allNodes', desc: '', args: []);
+  }
+
+  /// `Get all nodes available for your plan`
+  String get allNodesDesc {
+    return Intl.message(
+      'Get all nodes available for your plan',
+      name: 'allNodesDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Overseas Network Environment`
   String get overseasNetworkEnvironment {
     return Intl.message(

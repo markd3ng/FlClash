@@ -169,10 +169,10 @@ class CloudParams {
     return '&${segments.join('&')}';
   }
 
-  /// URL-suffix form guaranteed to include a `tfo` segment (defaults to true).
+  /// URL-suffix form guaranteed to include a `tfo` segment (defaults to false).
   /// Used when handing off to the fetcher, which always wants an explicit value.
   String encodeWithTfo() {
-    final withTfo = tfo == null ? copyWith(tfo: true) : this;
+    final withTfo = tfo == null ? copyWith(tfo: false) : this;
     return withTfo.encode();
   }
 
@@ -198,6 +198,10 @@ class CloudParams {
 
   String encodeEditableOptions() =>
       copyWith(tfo: null, simplerules: false).encode();
+
+  bool get isAllNodes => encodeEditableOptions().isEmpty;
+
+  CloudParams applyingAllNodes() => copyWith(level: null, extras: const {});
 
   CloudParams applyingTierDefaults(CloudParams defaults) {
     return copyWith(level: defaults.level);

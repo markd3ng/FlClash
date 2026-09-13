@@ -36,7 +36,7 @@ class CloudParamsStorage {
 
     // Migrate legacy `cloud_service_tfo` bool into the params object.
     if (parsed.tfo == null && prefs.containsKey(_kLegacyTfo)) {
-      parsed = parsed.copyWith(tfo: prefs.getBool(_kLegacyTfo) ?? true);
+      parsed = parsed.copyWith(tfo: prefs.getBool(_kLegacyTfo) ?? false);
       await prefs.remove(_kLegacyTfo);
       await prefs.setString(_kConfigParams, parsed.encode());
     }
@@ -86,7 +86,7 @@ class CloudParamsStorage {
         effective = userParams.applyingTierDefaults(newDefault);
       }
       effective = effective.adjustedForTier(tier);
-      effective = effective.copyWith(tfo: effective.tfo ?? true);
+      effective = effective.copyWith(tfo: effective.tfo ?? false);
 
       if (!hasUserParams || effective != userParams) {
         await prefs.setString(_kConfigParams, effective.encode());

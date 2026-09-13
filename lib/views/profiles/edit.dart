@@ -35,7 +35,7 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
   late final TextEditingController _oixParamsController;
   String _defaultEditableParams = '';
   late bool _autoUpdate;
-  bool _tfo = true;
+  bool _tfo = false;
   bool _minimalConfig = false;
   bool _saving = false;
   String? _rawText;
@@ -67,7 +67,7 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
         _defaultEditableParams = CloudParams.parse(
           defaultRaw,
         ).encodeEditableOptions();
-        _tfo = params.tfo ?? true;
+        _tfo = params.tfo ?? false;
         _minimalConfig = params.simplerules;
         _oixParamsController.text = params.encodeEditableOptions();
       });

@@ -567,6 +567,8 @@
   "apiAvailable": "API-сервис работает нормально",
   "checkApi": "Проверить API",
   "refresh": "Обновить",
+  "allNodes": "Все узлы",
+  "allNodesDesc": "Получить все узлы, доступные в вашем тарифе",
   "overseasNetworkEnvironment": "Зарубежная сетевая среда",
   "overseasNetworkEnvironmentDesc": "Включите эту опцию, если вы находитесь за пределами материкового Китая",
   "emergencyMode": "Аварийный режим",

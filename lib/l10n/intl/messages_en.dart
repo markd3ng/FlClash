@@ -177,6 +177,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "advancedConfigDesc": MessageLookupByLibrary.simpleMessage(
       "Provide diverse configuration options",
     ),
+    "allNodes": MessageLookupByLibrary.simpleMessage("All Nodes"),
+    "allNodesDesc": MessageLookupByLibrary.simpleMessage(
+      "Get all nodes available for your plan",
+    ),
     "allowBypass": MessageLookupByLibrary.simpleMessage(
       "Allow applications to bypass VPN",
     ),

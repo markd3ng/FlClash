@@ -161,6 +161,30 @@ class _CloudProfileCardState extends ConsumerState<CloudProfileCard> {
               profile.points,
             ),
             if (clashProfile != null && _paramsLoaded) ...[
+              if (tier != SubscriptionTier.none) ...[
+                const Divider(height: 16),
+                ListItem.switchItem(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 0,
+                    vertical: 8,
+                  ),
+                  title: Text(AppLocalizations.current.allNodes),
+                  subtitle: Text(
+                    AppLocalizations.current.allNodesDesc,
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                  delegate: SwitchDelegate<bool>(
+                    value: _params.isAllNodes,
+                    onChanged: (val) {
+                      _commit(
+                        val
+                            ? _params.applyingAllNodes()
+                            : _restoreDefault(tier),
+                      );
+                    },
+                  ),
+                ),
+              ],
               const Divider(height: 16),
               ListItem.switchItem(
                 padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),

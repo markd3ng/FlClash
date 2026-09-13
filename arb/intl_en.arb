@@ -567,6 +567,8 @@
   "apiAvailable": "API service is operational",
   "checkApi": "Check API",
   "refresh": "Refresh",
+  "allNodes": "All Nodes",
+  "allNodesDesc": "Get all nodes available for your plan",
   "overseasNetworkEnvironment": "Overseas Network Environment",
   "overseasNetworkEnvironmentDesc": "Turn on this option if you are currently outside mainland China",
   "emergencyMode": "Emergency Mode",

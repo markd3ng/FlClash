@@ -178,6 +178,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "advancedConfigDesc": MessageLookupByLibrary.simpleMessage(
       "Предоставляет разнообразные варианты конфигурации",
     ),
+    "allNodes": MessageLookupByLibrary.simpleMessage("Все узлы"),
+    "allNodesDesc": MessageLookupByLibrary.simpleMessage(
+      "Получить все узлы, доступные в вашем тарифе",
+    ),
     "allowBypass": MessageLookupByLibrary.simpleMessage(
       "Разрешить приложениям обходить VPN",
     ),

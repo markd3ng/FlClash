@@ -567,6 +567,8 @@
   "apiAvailable": "APIサービスは正常です",
   "checkApi": "APIをチェック",
   "refresh": "更新",
+  "allNodes": "すべてのノード",
+  "allNodesDesc": "現在のプランで利用可能なすべてのノードを取得します",
   "overseasNetworkEnvironment": "海外ネットワーク環境",
   "overseasNetworkEnvironmentDesc": "中国本土外にいる場合はこのオプションをオンにしてください",
   "emergencyMode": "緊急モード",
