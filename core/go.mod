@@ -146,3 +146,6 @@ require (
 
 // Keep the Restls diagnostic race fix in Android and desktop builds.
 replace github.com/metacubex/restls-client-go => ./Clash.Meta/third_party/restls-client-go
+
+// Own queued smux payloads after cancelled writes (see smux README.oix.md).
+replace github.com/metacubex/smux => ./Clash.Meta/third_party/smux
