@@ -159,9 +159,9 @@ jobs:
       - name: Check Restls client and server regressions
         working-directory: core/Clash.Meta
         run: |
-          go vet -tags with_gvisor ./transport/restls ./transport/vmess ./transport/gun ./adapter/outbound ./listener ./listener/restls ./listener/shadowsocks ./listener/sing_shadowsocks ./listener/sing_vmess ./listener/sing_vless ./listener/trojan
-          go test -race -tags with_gvisor -timeout=120s ./transport/restls ./transport/vmess ./transport/gun ./adapter/outbound ./listener ./listener/restls ./listener/shadowsocks ./listener/sing_shadowsocks ./listener/sing_vmess ./listener/sing_vless ./listener/trojan
-          go test -race -tags with_gvisor -parallel=8 -timeout=300s -run '^(TestInboundShadowSocks_|TestInboundRestls|TestInboundVMess_Restls|TestInboundVless_Restls|TestInboundTrojan_Restls)' ./listener/inbound
+          go vet -tags with_gvisor ./transport/restls ./transport/vmess ./transport/gun ./adapter/outbound ./listener ./listener/restls ./listener/shadowsocks ./listener/sing_shadowsocks ./listener/sing_vmess ./listener/sing_vless ./listener/trojan ./transport/anytls/... ./listener/anytls
+          go test -race -tags with_gvisor -timeout=120s ./transport/restls ./transport/vmess ./transport/gun ./adapter/outbound ./listener ./listener/restls ./listener/shadowsocks ./listener/sing_shadowsocks ./listener/sing_vmess ./listener/sing_vless ./listener/trojan ./transport/anytls/... ./listener/anytls
+          go test -race -tags with_gvisor -parallel=8 -timeout=300s -run '^(TestInboundShadowSocks_|TestInboundRestls|TestInboundVMess_Restls|TestInboundVless_Restls|TestInboundTrojan_Restls|TestInboundAnyTLS_)' ./listener/inbound
           go test -race -count=1 -timeout=180s -run '^(TestRestls|TestHandshakeMessageReaderAcrossRecords|TestNewRateLimitedConnDisabled|TestRateLimitedConn|TestBitRateLimiter)' github.com/metacubex/restls-client-go
           go vet github.com/metacubex/smux
           go test -race -count=1 -timeout=120s -skip '^(Test8GBTransfer|TestRandomLengthRandomDataTransfer)' github.com/metacubex/smux
