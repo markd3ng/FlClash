@@ -2,6 +2,7 @@ package com.oixcloud.clash.service
 
 import android.content.ComponentCallbacks2
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.net.ProxyInfo
 import android.os.Binder
@@ -57,7 +58,7 @@ class VpnService : SystemVpnService(), IBaseService {
     private val connectivity by lazy {
         getSystemService<ConnectivityManager>()
     }
-    private val uidPageNameMap = mutableMapOf<Int, String>()
+    private val uidPackages = UidPackageCache { uid -> packageManager.getPackagesForUid(uid) }
 
     private fun resolverProcess(
         protocol: Int,
@@ -70,13 +71,7 @@ class VpnService : SystemVpnService(), IBaseService {
         } else {
             uid
         }
-        if (nextUid == -1) {
-            return ""
-        }
-        if (!uidPageNameMap.containsKey(nextUid)) {
-            uidPageNameMap[nextUid] = this.packageManager?.getPackagesForUid(nextUid)?.first() ?: ""
-        }
-        return uidPageNameMap[nextUid] ?: ""
+        return uidPackages.resolve(nextUid)
     }
 
     val VpnOptions.address
@@ -206,14 +201,16 @@ class VpnService : SystemVpnService(), IBaseService {
                 if (accessControl.enable) {
                     when (accessControl.mode) {
                         AccessControlMode.ACCEPT_SELECTED -> {
-                            (accessControl.acceptList + packageName).forEach {
-                                addAllowedApplication(it)
+                            // Always add ourselves first: an empty allowlist means all apps.
+                            addAllowedApplication(packageName)
+                            (accessControl.acceptList - packageName).forEach { name ->
+                                addSelectedApplication(name) { addAllowedApplication(it) }
                             }
                         }
 
                         AccessControlMode.REJECT_SELECTED -> {
-                            (accessControl.rejectList - packageName).forEach {
-                                addDisallowedApplication(it)
+                            (accessControl.rejectList - packageName).forEach { name ->
+                                addSelectedApplication(name) { addDisallowedApplication(it) }
                             }
                         }
                     }
@@ -248,6 +245,14 @@ class VpnService : SystemVpnService(), IBaseService {
         )) { "Core TUN initialization failed" }
     }
 
+    private fun addSelectedApplication(name: String, add: (String) -> Unit) {
+        try {
+            add(name)
+        } catch (_: PackageManager.NameNotFoundException) {
+            GlobalState.log("Access control skipped an uninstalled package: $name")
+        }
+    }
+
     override fun start() = synchronized(lifecycleLock) {
         if (tunStarted) return
         startWithCleanup(start = {
@@ -267,6 +272,7 @@ class VpnService : SystemVpnService(), IBaseService {
                     Core.stopTun()
                 }
             } finally {
+                uidPackages.clear()
                 stopSelf()
             }
         }

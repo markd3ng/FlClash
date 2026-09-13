@@ -39,8 +39,7 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.Result
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.lang.ref.WeakReference
@@ -57,7 +56,7 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
 
     private lateinit var channel: MethodChannel
 
-    private lateinit var scope: CoroutineScope
+    private lateinit var platformCalls: PlatformCallDispatcher
 
     private val vpnPrepareCallback = PendingCallback<Boolean>()
 
@@ -69,11 +68,7 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
 
     override fun onMethodCall(call: MethodCall, result: Result) {
         when (call.method) {
-            "getLastExitInfo" -> {
-                scope.launch {
-                    result.success(lastExitInfo())
-                }
-            }
+            "getLastExitInfo" -> platformCalls.submit(result) { lastExitInfo() }
 
             "moveTaskToBack" -> {
                 activityRef?.get()?.moveTaskToBack(true)
@@ -91,17 +86,9 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
                 result.success(true)
             }
 
-            "getPackages" -> {
-                scope.launch {
-                    result.success(getPackagesToJson())
-                }
-            }
+            "getPackages" -> platformCalls.submit(result) { getPackagesToJson() }
 
-            "getChinaPackageNames" -> {
-                scope.launch {
-                    result.success(getChinaPackageNames())
-                }
-            }
+            "getChinaPackageNames" -> platformCalls.submit(result) { getChinaPackageNames() }
 
             "getPackageIcon" -> {
                 handleGetPackageIcon(call, result)
@@ -178,14 +165,9 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
     }
 
     private fun handleGetPackageIcon(call: MethodCall, result: Result) {
-        scope.launch {
-            val packageName = call.argument<String>("packageName")
-            if (packageName == null) {
-                result.success("")
-                return@launch
-            }
-            val path = GlobalState.application.packageManager.getPackageIconPath(packageName)
-            result.success(path)
+        platformCalls.submit(result) {
+            val packageName = call.argument<String>("packageName") ?: return@submit ""
+            GlobalState.application.packageManager.getPackageIconPath(packageName)
         }
     }
 
@@ -229,9 +211,10 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
     }
 
 
+    @Synchronized
     private fun getPackages(): List<Package> {
         val packageManager = GlobalState.application.packageManager
-        if (packages.isNotEmpty()) return packages
+        if (packages.isNotEmpty()) return packages.toList()
         packageManager?.getInstalledPackages(PackageManager.GET_META_DATA or PackageManager.GET_PERMISSIONS)
             ?.filter {
                 it.packageName != GlobalState.application.packageName && it.packageName != "android"
@@ -244,7 +227,7 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
                     internet = it.requestedPermissions?.contains(Manifest.permission.INTERNET) == true
                 )
             }?.let { packages.addAll(it) }
-        return packages
+        return packages.toList()
     }
 
     private suspend fun getPackagesToJson(): String {
@@ -384,7 +367,7 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
     }
 
     override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
-        scope = CoroutineScope(Dispatchers.Default)
+        platformCalls = PlatformCallDispatcher(CoroutineScope(SupervisorJob() + Dispatchers.IO))
         channel =
             MethodChannel(flutterPluginBinding.binaryMessenger, "${Components.PACKAGE_NAME}/app")
         channel.setMethodCallHandler(this)
@@ -395,7 +378,7 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
         activityRef = null
         invokeRequestNotificationCallback()
         invokeVpnPrepareCallback(false)
-        scope.cancel()
+        platformCalls.close()
     }
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {

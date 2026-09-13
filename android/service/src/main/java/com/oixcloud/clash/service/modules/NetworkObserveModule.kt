@@ -9,28 +9,21 @@ import android.net.NetworkCapabilities.TRANSPORT_SATELLITE
 import android.net.NetworkCapabilities.TRANSPORT_USB
 import android.net.NetworkRequest
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
+import android.os.SystemClock
 import androidx.core.content.getSystemService
 import com.oixcloud.clash.core.Core
 import java.net.Inet4Address
 import java.net.Inet6Address
 import java.net.InetAddress
-import java.util.concurrent.ConcurrentHashMap
-
-private data class NetworkInfo(
-    @Volatile var losingMs: Long = 0, @Volatile var dnsList: List<InetAddress> = emptyList()
-) {
-    fun isAvailable(): Boolean = losingMs < System.currentTimeMillis()
-}
 
 class NetworkObserveModule(private val service: Service) : Module() {
-
     private val lock = Any()
-    private var installed = false
-    private val networkInfos = ConcurrentHashMap<Network, NetworkInfo>()
-    private val connectivity by lazy {
-        service.getSystemService<ConnectivityManager>()
-    }
-    private var preDnsList = listOf<String>()
+    private val handler = Handler(Looper.getMainLooper())
+    private val connectivity by lazy { service.getSystemService<ConnectivityManager>() }
+    private var callback: ConnectivityManager.NetworkCallback? = null
+    private var tracker: NetworkDnsTracker<Network>? = null
 
     private val request = NetworkRequest.Builder().apply {
         addCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)
@@ -41,90 +34,67 @@ class NetworkObserveModule(private val service: Service) : Module() {
         addCapability(NetworkCapabilities.NET_CAPABILITY_NOT_RESTRICTED)
     }.build()
 
-    private val callback = object : ConnectivityManager.NetworkCallback() {
-        override fun onAvailable(network: Network) {
-            networkInfos[network] = NetworkInfo()
-            onUpdateNetwork()
-            super.onAvailable(network)
-        }
+    override fun onInstall(): Unit = synchronized(lock) {
+        if (callback != null) return
+        val session = NetworkDnsTracker<Network>(
+            now = SystemClock::elapsedRealtime,
+            schedule = { delay, action ->
+                val runnable = Runnable { action() }
+                handler.postDelayed(runnable, delay)
+                val cancel: () -> Unit = { handler.removeCallbacks(runnable) }
+                cancel
+            },
+            publish = { Core.updateDNS(it.joinToString(",")) },
+        )
+        val listener = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                // O+ delivers capabilities immediately after availability. Earlier
+                // releases need an initial query to preserve transport priority.
+                val priority = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+                    connectivity?.getNetworkCapabilities(network)?.let(::networkPriority) ?: 100
+                } else 100
+                session.available(network, priority)
+            }
 
-        override fun onLosing(network: Network, maxMsToLive: Int) {
-            networkInfos[network]?.losingMs = System.currentTimeMillis() + maxMsToLive
-            onUpdateNetwork()
-            setUnderlyingNetworks(network)
-            super.onLosing(network, maxMsToLive)
-        }
+            override fun onCapabilitiesChanged(network: Network, caps: NetworkCapabilities) =
+                session.capabilitiesChanged(network, networkPriority(caps))
 
-        override fun onLost(network: Network) {
-            networkInfos.remove(network)
-            onUpdateNetwork()
-            setUnderlyingNetworks(network)
-            super.onLost(network)
-        }
+            override fun onLosing(network: Network, maxMsToLive: Int) =
+                session.losing(network, maxMsToLive)
 
-        override fun onLinkPropertiesChanged(network: Network, linkProperties: LinkProperties) {
-            networkInfos[network]?.dnsList = linkProperties.dnsServers
-            onUpdateNetwork()
-            setUnderlyingNetworks(network)
-            super.onLinkPropertiesChanged(network, linkProperties)
+            override fun onLost(network: Network) = session.lost(network)
+
+            override fun onLinkPropertiesChanged(network: Network, properties: LinkProperties) =
+                session.linkPropertiesChanged(
+                    network, properties.dnsServers.map { it.asSocketAddressText(53) },
+                )
         }
+        tracker = session
+        callback = listener
+        connectivity?.registerNetworkCallback(request, listener)
     }
 
-
-    override fun onInstall() {
-        synchronized(lock) { installed = true }
-        onUpdateNetwork()
-        connectivity?.registerNetworkCallback(request, callback)
-    }
-
-    private fun networkToInt(entry: Map.Entry<Network, NetworkInfo>): Int {
-        val capabilities = connectivity?.getNetworkCapabilities(entry.key)
-        return when {
-            capabilities == null -> 100
-            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN) -> 90
-            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> 0
-            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> 1
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && capabilities.hasTransport(
-                TRANSPORT_USB
-            ) -> 2
-
-            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_BLUETOOTH) -> 3
-            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> 4
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM && capabilities.hasTransport(
-                TRANSPORT_SATELLITE
-            ) -> 5
-
-            else -> 20
-        } + (if (entry.value.isAvailable()) 0 else 10)
-    }
-
-    private fun onUpdateNetwork() = synchronized(lock) {
-        if (!installed) return
-        val dnsList = (networkInfos.asSequence().minByOrNull { networkToInt(it) }?.value?.dnsList
-            ?: emptyList()).map { x -> x.asSocketAddressText(53) }
-        if (dnsList == preDnsList) {
-            return
-        }
-        preDnsList = dnsList
-        Core.updateDNS(dnsList.toSet().joinToString(","))
-    }
-
-    fun setUnderlyingNetworks(network: Network) {
-//        if (service is VpnService && Build.VERSION.SDK_INT in 22..28) {
-//            service.setUnderlyingNetworks(arrayOf(network))
-//        }
+    private fun networkPriority(capabilities: NetworkCapabilities): Int = when {
+        capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN) -> 90
+        capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> 0
+        capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> 1
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+            capabilities.hasTransport(TRANSPORT_USB) -> 2
+        capabilities.hasTransport(NetworkCapabilities.TRANSPORT_BLUETOOTH) -> 3
+        capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> 4
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM &&
+            capabilities.hasTransport(TRANSPORT_SATELLITE) -> 5
+        else -> 20
     }
 
     override fun onUninstall(): Unit = synchronized(lock) {
-        installed = false
+        val listener = callback
+        callback = null
         try {
-            connectivity?.unregisterNetworkCallback(callback)
+            listener?.let { connectivity?.unregisterNetworkCallback(it) }
         } finally {
-            networkInfos.clear()
-            if (preDnsList.isNotEmpty()) {
-                preDnsList = emptyList()
-                Core.updateDNS("")
-            }
+            tracker?.stop()
+            tracker = null
         }
     }
 }
