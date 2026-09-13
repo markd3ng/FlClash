@@ -9,7 +9,7 @@ require (
 	github.com/metacubex/chi v0.1.0
 	github.com/metacubex/http v0.1.6
 	github.com/metacubex/mihomo v0.0.0-00010101000000-000000000000
-	github.com/metacubex/tls v0.1.7
+	github.com/metacubex/tls v0.1.8
 	github.com/oschwald/maxminddb-golang v1.12.0
 	golang.org/x/crypto v0.33.0
 	golang.org/x/exp v0.0.0-20240904232852-e7e105dedf7e

@@ -134,6 +134,14 @@ jobs:
         run: |
           go vet -tags with_gvisor ./config ./listener ./hub/executor
           go test -tags with_gvisor ./config ./listener ./hub/executor
+      - name: Check subscription conversion and TLS regressions
+        working-directory: core/Clash.Meta
+        env:
+          CGO_ENABLED: '0'
+        run: |
+          go vet -tags with_gvisor ./common/convert ./listener/sing_hysteria2 ./component/ca ./component/tls ./component/ech
+          go test -tags with_gvisor ./common/convert ./listener/sing_hysteria2 ./component/ca ./component/tls ./component/ech
+          go test -run '^TestKeyUpdateSpamPostHandshakeTLS13$' github.com/metacubex/tls
       - name: Check native callback and file ownership races
         working-directory: core
         run: |
@@ -142,6 +150,8 @@ jobs:
           go test -C Clash.Meta -race -tags with_gvisor ./listener/auth ./adapter/inbound ./common/net ./component/resolver ./dns ./listener/hysteria2_realm
           go test -C Clash.Meta -race -tags with_gvisor ./transport/tuic/... ./adapter/outbound ./transport/trojan ./transport/vmess ./transport/xhttp
           go test -C Clash.Meta -race -tags with_gvisor ./config ./listener ./hub/executor
+          go test -C Clash.Meta -race -tags with_gvisor ./common/convert ./listener/sing_hysteria2 ./component/ca ./component/tls ./component/ech
+          go test -C Clash.Meta -race -run '^TestKeyUpdateSpamPostHandshakeTLS13$' github.com/metacubex/tls
 
   android-core-test:
     name: Android core (${{ matrix.arch }})
