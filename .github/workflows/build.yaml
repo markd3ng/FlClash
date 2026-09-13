@@ -156,6 +156,8 @@ jobs:
         run: |
           go vet -tags with_gvisor ./component/sniffer
           go test -tags with_gvisor ./component/sniffer
+      - name: Check QUIC dependency regressions
+        run: python3 tool/check_quic_dependencies.py
       - name: Check native callback and file ownership races
         working-directory: core
         run: |
