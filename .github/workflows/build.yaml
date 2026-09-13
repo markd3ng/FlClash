@@ -155,6 +155,12 @@ jobs:
         run: |
           go vet -tags with_gvisor ./component/trie ./common/httputils ./transport/openvpn ./transport/restls ./transport/sudoku/obfs/sudoku ./transport/shadowsocks/shadowstream
           go test -tags with_gvisor ./component/trie ./common/httputils ./transport/openvpn ./transport/restls ./transport/sudoku/obfs/sudoku ./transport/shadowsocks/shadowstream
+      - name: Check Sudoku multiplex regressions
+        working-directory: core/Clash.Meta
+        run: |
+          go vet -tags with_gvisor ./transport/sudoku/... ./listener/sudoku
+          go test -race -tags with_gvisor -timeout=180s ./transport/sudoku/... ./listener/sudoku
+          go test -race -tags with_gvisor -parallel=8 -timeout=300s -run '^TestInboundSudoku_' ./listener/inbound
       - name: Check protocol sniffing regressions
         working-directory: core/Clash.Meta
         env:
