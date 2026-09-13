@@ -106,6 +106,9 @@ func runLifecycleGeoTask(action func(context.Context)) bool {
 type silentGeoUpdateKey struct{}
 
 func sendGeoUpdate(ctx context.Context, geoType string, updating bool, skipped bool, err error) {
+	if !updating {
+		scheduleReclaimOwnership()
+	}
 	silent, _ := ctx.Value(silentGeoUpdateKey{}).(bool)
 	data := GeoUpdateStatus{
 		Silent:   silent,

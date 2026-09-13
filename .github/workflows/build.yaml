@@ -109,8 +109,11 @@ jobs:
           go test -tags with_gvisor ./...
           cd Clash.Meta
           go test -tags with_gvisor ./component/mmdb ./component/updater
-      - name: Check concurrent TUN callback ownership
-        run: go test -race core/tun_callbacks.go core/tun_callbacks_test.go
+      - name: Check native callback and file ownership races
+        working-directory: core
+        run: |
+          go test -race tun_callbacks.go tun_callbacks_test.go
+          go test -race ownership_unix.go ownership_test.go ownership_stat_linux_test.go
 
   android-core-test:
     name: Android core (${{ matrix.arch }})

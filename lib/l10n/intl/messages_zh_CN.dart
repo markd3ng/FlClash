@@ -904,6 +904,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "startCorePromptTitle": MessageLookupByLibrary.simpleMessage("提示"),
     "startSuccess": MessageLookupByLibrary.simpleMessage("已启动"),
     "startVpn": MessageLookupByLibrary.simpleMessage("正在启动VPN..."),
+    "startupRecoveryTip": MessageLookupByLibrary.simpleMessage(
+      "最近两次启动未能完成。本次已暂停自动应用配置和启动 VPN，当前配置选择与设置均已保留。请检查配置后点击“启动”重试；已经运行的 VPN 会继续保持连接。",
+    ),
+    "startupRecoveryTitle": MessageLookupByLibrary.simpleMessage("启动恢复"),
     "status": MessageLookupByLibrary.simpleMessage("状态"),
     "statusDesc": MessageLookupByLibrary.simpleMessage("关闭后将使用系统DNS"),
     "stop": MessageLookupByLibrary.simpleMessage("暂停"),

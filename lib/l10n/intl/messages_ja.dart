@@ -1011,6 +1011,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "startCorePromptTitle": MessageLookupByLibrary.simpleMessage("プロンプト"),
     "startSuccess": MessageLookupByLibrary.simpleMessage("起動しました"),
     "startVpn": MessageLookupByLibrary.simpleMessage("VPNを開始中..."),
+    "startupRecoveryTip": MessageLookupByLibrary.simpleMessage(
+      "直近2回の起動に失敗したため、今回は設定の自動適用とVPNの自動起動を一時停止しました。選択中のプロファイルと設定は保持されています。設定を確認し、「開始」を押して再試行してください。実行中のVPN接続は維持されます。",
+    ),
+    "startupRecoveryTitle": MessageLookupByLibrary.simpleMessage("起動の復旧"),
     "status": MessageLookupByLibrary.simpleMessage("ステータス"),
     "statusDesc": MessageLookupByLibrary.simpleMessage("無効時はシステムDNSを使用"),
     "stop": MessageLookupByLibrary.simpleMessage("停止"),

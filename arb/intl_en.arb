@@ -710,5 +710,7 @@
   "editCustomRouting": "Edit custom routing",
   "customRoutingDraftHint": "Fill in your custom routing, then switch to Custom mode. Editing this draft does not change the current mode.",
   "coreBlockedByPolicyTip": "Windows blocked the proxy core from starting (system error {code}). Check Protection history in Windows Security and your app control policy, and verify the installer source and signature.",
-  "@coreBlockedByPolicyTip": {"placeholders": {"code": {"type": "int"}}}
+  "@coreBlockedByPolicyTip": {"placeholders": {"code": {"type": "int"}}},
+  "startupRecoveryTitle": "Startup recovery",
+  "startupRecoveryTip": "Two recent startup attempts failed. Automatic profile application and VPN start are paused for this launch. Your selected profile and settings are preserved. Check the configuration, then press Start to retry. An already running VPN is kept active."
 }

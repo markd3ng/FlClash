@@ -17,6 +17,8 @@ import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
 import com.android.tools.smali.dexlib2.dexbacked.DexBackedDexFile
+import com.oixcloud.clash.ProcessExitRecord
+import com.oixcloud.clash.latestMainProcessExit
 import com.oixcloud.clash.R
 import com.oixcloud.clash.ChinaPackageMatcher
 import com.oixcloud.clash.common.PendingCallback
@@ -67,6 +69,12 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
 
     override fun onMethodCall(call: MethodCall, result: Result) {
         when (call.method) {
+            "getLastExitInfo" -> {
+                scope.launch {
+                    result.success(lastExitInfo())
+                }
+            }
+
             "moveTaskToBack" -> {
                 activityRef?.get()?.moveTaskToBack(true)
                 result.success(true)
@@ -113,6 +121,20 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
                 result.notImplemented()
             }
         }
+    }
+
+    private fun lastExitInfo(): Map<String, Any>? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return null
+        val application = GlobalState.application
+        val manager = application.getSystemService(ActivityManager::class.java) ?: return null
+        return runCatching {
+            latestMainProcessExit(
+                manager.getHistoricalProcessExitReasons(application.packageName, 0, 0).map {
+                    ProcessExitRecord(it.processName, it.pid, it.timestamp, it.reason)
+                },
+                application.packageName,
+            )
+        }.getOrNull()
     }
 
     private fun handleOpenFile(call: MethodCall, result: Result) {

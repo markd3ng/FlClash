@@ -57,6 +57,7 @@ func handleInitClash(params *InitParams) bool {
 	}
 	version = params.Version
 	constant.SetHomeDir(params.HomeDir)
+	initOwnership(params.HomeDir)
 	GlobalValidationSourceHome = params.ValidationSourceHome
 	if GlobalValidationSourceHome == "" {
 		GlobalValidationSourceHome = params.HomeDir
@@ -126,6 +127,7 @@ func handleShutdown() bool {
 	listener.StopListener()
 	closeCurrentProviders()
 	executor.Shutdown()
+	flushReclaimOwnership()
 	handleForceGC()
 	return true
 }
@@ -561,6 +563,7 @@ func handleUpdateConfig(params *UpdateParams) string {
 }
 
 func handleSetupConfig(params *SetupParams) string {
+	defer scheduleReclaimOwnership()
 	if !isInit.Load() {
 		return "not initialized"
 	}
@@ -595,6 +598,7 @@ func init() {
 		sendMessage(requestMessage(c))
 	}
 	executor.DefaultProviderLoadedHook = func(providerName string) {
+		scheduleReclaimOwnership()
 		sendMessage(Message{
 			Type: LoadedMessage,
 			Data: providerName,

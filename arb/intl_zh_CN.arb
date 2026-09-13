@@ -710,5 +710,7 @@
   "editCustomRouting": "编辑自定义",
   "customRoutingDraftHint": "先填写自定义内容，再切换至自定义模式。编辑草稿不会切换当前模式",
   "coreBlockedByPolicyTip": "Windows 阻止了代理内核启动（系统错误 {code}）。请检查 Windows 安全中心的保护历史记录及应用控制策略，并确认安装包来源和签名。",
-  "@coreBlockedByPolicyTip": {"placeholders": {"code": {"type": "int"}}}
+  "@coreBlockedByPolicyTip": {"placeholders": {"code": {"type": "int"}}},
+  "startupRecoveryTitle": "启动恢复",
+  "startupRecoveryTip": "最近两次启动未能完成。本次已暂停自动应用配置和启动 VPN，当前配置选择与设置均已保留。请检查配置后点击“启动”重试；已经运行的 VPN 会继续保持连接。"
 }

@@ -5948,6 +5948,26 @@ class AppLocalizations {
       args: [code],
     );
   }
+
+  /// `Startup recovery`
+  String get startupRecoveryTitle {
+    return Intl.message(
+      'Startup recovery',
+      name: 'startupRecoveryTitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Two recent startup attempts failed. Automatic profile application and VPN start are paused for this launch. Your selected profile and settings are preserved. Check the configuration, then press Start to retry. An already running VPN is kept active.`
+  String get startupRecoveryTip {
+    return Intl.message(
+      'Two recent startup attempts failed. Automatic profile application and VPN start are paused for this launch. Your selected profile and settings are preserved. Check the configuration, then press Start to retry. An already running VPN is kept active.',
+      name: 'startupRecoveryTip',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<AppLocalizations> {

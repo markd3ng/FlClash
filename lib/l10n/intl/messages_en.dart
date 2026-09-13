@@ -1274,6 +1274,12 @@ class MessageLookup extends MessageLookupByLibrary {
       "Started successfully",
     ),
     "startVpn": MessageLookupByLibrary.simpleMessage("Starting VPN..."),
+    "startupRecoveryTip": MessageLookupByLibrary.simpleMessage(
+      "Two recent startup attempts failed. Automatic profile application and VPN start are paused for this launch. Your selected profile and settings are preserved. Check the configuration, then press Start to retry. An already running VPN is kept active.",
+    ),
+    "startupRecoveryTitle": MessageLookupByLibrary.simpleMessage(
+      "Startup recovery",
+    ),
     "status": MessageLookupByLibrary.simpleMessage("Status"),
     "statusDesc": MessageLookupByLibrary.simpleMessage(
       "System DNS will be used when turned off",

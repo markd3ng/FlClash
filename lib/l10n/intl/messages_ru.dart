@@ -1341,6 +1341,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "startCorePromptTitle": MessageLookupByLibrary.simpleMessage("Подсказка"),
     "startSuccess": MessageLookupByLibrary.simpleMessage("Запущено успешно"),
     "startVpn": MessageLookupByLibrary.simpleMessage("Запуск VPN..."),
+    "startupRecoveryTip": MessageLookupByLibrary.simpleMessage(
+      "Две последние попытки запуска завершились с ошибкой. В этот раз автоматическое применение профиля и запуск VPN приостановлены. Выбранный профиль и настройки сохранены. Проверьте конфигурацию и нажмите «Запустить» для повторной попытки. Уже работающее VPN-соединение сохраняется.",
+    ),
+    "startupRecoveryTitle": MessageLookupByLibrary.simpleMessage(
+      "Восстановление запуска",
+    ),
     "status": MessageLookupByLibrary.simpleMessage("Статус"),
     "statusDesc": MessageLookupByLibrary.simpleMessage(
       "Системный DNS будет использоваться при выключении",

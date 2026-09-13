@@ -5,6 +5,7 @@ import 'package:fl_clash/services/config_key_store.dart';
 import 'package:fl_clash/services/durable_config_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'boot_record.dart';
 import 'constant.dart';
 import 'path.dart';
 
@@ -34,6 +35,24 @@ class Preferences {
       return await SharedPreferences.getInstance();
     } catch (_) {
       return null;
+    }
+  }
+
+  Future<BootRecord?> getBootRecord() async {
+    final store = await _loadSharedPreferences();
+    final value = store?.getString('startup_boot_record_v1');
+    if (value == null) return null;
+    return BootRecord.fromJson(json.decode(value));
+  }
+
+  Future<void> saveBootRecord(BootRecord record) async {
+    final store = await _loadSharedPreferences();
+    if (await store?.setString(
+          'startup_boot_record_v1',
+          json.encode(record.toJson()),
+        ) !=
+        true) {
+      throw StateError('failed to persist startup journal');
     }
   }
 

@@ -15,6 +15,7 @@ import 'package:fl_clash/plugins/app.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/services/cloud_api_service.dart';
 import 'package:fl_clash/services/config_key_store.dart';
+import 'package:fl_clash/services/startup_recovery.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/utils/safe_storage.dart';
 import 'package:fl_clash/views/cloud/cloud_login_page.dart';
@@ -755,10 +756,34 @@ extension InitControllerExt on AppController {
       await window?.hide();
     }
     await _handleFailedPreference();
-    await _connectCore();
-    await _initCore();
-    await _initStatus();
-    _ref.read(initProvider.notifier).value = true;
+    final bootAttempt = await startupRecovery.begin(
+      profileId: _ref.read(currentProfileIdProvider),
+      version:
+          '${globalState.packageInfo.version}+${globalState.packageInfo.buildNumber}',
+      processId: pid,
+    );
+    if (!startupRecovery.isCurrent(bootAttempt)) return;
+    try {
+      await _connectCore();
+      if (!startupRecovery.isCurrent(bootAttempt)) return;
+      await _initCore();
+      if (!startupRecovery.isCurrent(bootAttempt)) return;
+      await _initStatus();
+      if (!startupRecovery.isCurrent(bootAttempt)) return;
+      _ref.read(initProvider.notifier).value = true;
+      await startupRecovery.markRunning(bootAttempt);
+    } catch (_) {
+      await startupRecovery.markFailed(bootAttempt);
+      rethrow;
+    }
+    if (startupRecovery.automaticSetupPaused) {
+      await window?.show();
+      await globalState.showMessage(
+        title: appLocalizations.startupRecoveryTitle,
+        message: TextSpan(text: appLocalizations.startupRecoveryTip),
+        cancelable: false,
+      );
+    }
   }
 
   Future<void> _handleFailedPreference() async {
@@ -784,6 +809,13 @@ extension InitControllerExt on AppController {
     commonPrint.log('init status');
     if (system.isAndroid) {
       await globalState.updateStartTime();
+    }
+    if (startupRecovery.automaticSetupPaused) {
+      globalState.needInitStatus = false;
+      if (globalState.isStart) {
+        await globalState.startUpdateTasks([updateRunTime, updateTraffic]);
+      }
+      return;
     }
     final hasProfile = _ref.read(currentProfileIdProvider) != null;
     final status = globalState.isStart == true
@@ -1770,6 +1802,8 @@ extension SetupControllerExt on AppController {
         globalState.needInitStatus = false;
       } else if (!_ref.read(initProvider)) {
         return;
+      } else {
+        startupRecovery.resumeAutomaticSetup();
       }
       // Load the selected profile before opening listeners. A freshly initialized
       // Core also rejects startListener when no config has been applied yet.
@@ -1968,6 +2002,7 @@ extension SetupControllerExt on AppController {
     bool force = false,
     FutureOr<void> Function()? preloadInvoke,
   }) {
+    if (startupRecovery.automaticSetupPaused) return Future.value(false);
     _profileApplyIntent.merge(force: force, preloadInvoke: preloadInvoke);
     final generation = ++_profileApplyGeneration;
     _groupsUpdateGeneration++;
@@ -2467,6 +2502,10 @@ extension CoreControllerExt on AppController {
   }
 
   Future<void> restartCore([bool start = false]) async {
+    if (startupRecovery.automaticSetupPaused) {
+      if (!start) return;
+      startupRecovery.resumeAutomaticSetup();
+    }
     await _serializeCoreLifecycle(() async {
       _ref.read(coreStatusProvider.notifier).value = CoreStatus.disconnected;
       clearDelay();
@@ -2508,6 +2547,7 @@ extension SystemControllerExt on AppController {
     });
     try {
       await runCleanupActions([
+        startupRecovery.markClosed,
         waitForPendingDatabaseWrites,
         if (needSave) savePreferences,
         if (macOS != null) () => macOS!.updateDns(true),
@@ -3139,6 +3179,7 @@ extension StoreControllerExt on AppController {
             _persistentLogFile = null;
             _persistentLogLength = 0;
             await runCleanupActions([
+              startupRecovery.markClosed,
               () => SafeStorage.delete('cloud_token'),
               ConfigKeyStore.clear,
               () => preferences.clearPreferences(

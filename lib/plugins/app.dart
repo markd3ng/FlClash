@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:fl_clash/common/common.dart';
+import 'package:fl_clash/common/boot_record.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -28,6 +29,12 @@ class App {
   factory App() {
     _instance ??= App._internal();
     return _instance!;
+  }
+
+  Future<AppExitInfo?> getLastExitInfo() async {
+    return AppExitInfo.fromJson(
+      await methodChannel.invokeMethod<Object?>('getLastExitInfo'),
+    );
   }
 
   Future<bool?> moveTaskToBack() async {
