@@ -142,6 +142,12 @@ jobs:
           go vet -tags with_gvisor ./common/convert ./listener/sing_hysteria2 ./component/ca ./component/tls ./component/ech
           go test -tags with_gvisor ./common/convert ./listener/sing_hysteria2 ./component/ca ./component/tls ./component/ech
           go test -run '^TestKeyUpdateSpamPostHandshakeTLS13$' github.com/metacubex/tls
+      - name: Check certificate name verification regressions
+        working-directory: core/Clash.Meta
+        run: |
+          go vet -tags with_gvisor ./adapter/provider ./transport/gost ./transport/sing-shadowtls ./transport/v2ray-plugin
+          go test -race -tags with_gvisor -timeout=120s ./component/ca ./adapter/provider ./transport/gost ./transport/sing-shadowtls ./transport/v2ray-plugin
+          go test -race -tags with_gvisor -parallel=8 -timeout=300s -run '^TestInboundNameCertVerify$' ./listener/inbound
       - name: Check DNS matching and stream regressions
         working-directory: core/Clash.Meta
         env:
@@ -163,6 +169,8 @@ jobs:
           go test -race -tags with_gvisor -timeout=120s ./transport/restls ./transport/vmess ./transport/gun ./adapter/outbound ./listener ./listener/restls ./listener/shadowsocks ./listener/sing_shadowsocks ./listener/sing_vmess ./listener/sing_vless ./listener/trojan ./transport/anytls/... ./listener/anytls ./transport/vless/...
           go test -race -tags with_gvisor -parallel=8 -timeout=300s -run '^(TestInboundShadowSocks_|TestInboundRestls|TestInboundVMess_Restls|TestInboundVless_Restls|TestInboundTrojan_Restls|TestInboundAnyTLS_)' ./listener/inbound
           go test -race -count=1 -timeout=180s -run '^(TestRestls|TestHandshakeMessageReaderAcrossRecords|TestNewRateLimitedConnDisabled|TestRateLimitedConn|TestBitRateLimiter)' github.com/metacubex/restls-client-go
+          go vet github.com/metacubex/sing-mux
+          go test -race -count=1 -timeout=120s github.com/metacubex/sing-mux
           go vet github.com/metacubex/smux
           go test -race -count=1 -timeout=120s -skip '^(Test8GBTransfer|TestRandomLengthRandomDataTransfer)' github.com/metacubex/smux
           go test -race -tags with_gvisor -parallel=8 -timeout=300s -run '^(TestInboundVMess_|TestInboundVless_|TestInboundTrojan_)' ./listener/inbound

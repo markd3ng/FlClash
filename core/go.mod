@@ -149,3 +149,6 @@ replace github.com/metacubex/restls-client-go => ./Clash.Meta/third_party/restls
 
 // Own queued smux payloads after cancelled writes (see smux README.oix.md).
 replace github.com/metacubex/smux => ./Clash.Meta/third_party/smux
+
+// Serialize h2mux session closure (see sing-mux README.oix.md).
+replace github.com/metacubex/sing-mux => ./Clash.Meta/third_party/sing-mux
