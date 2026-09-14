@@ -8,8 +8,7 @@ import 'package:fl_clash/services/config_key_store.dart';
 class DurableConfigStore {
   final Future<AgeIdentity> Function() _identityProvider;
 
-  DurableConfigStore({required Future<AgeIdentity> Function() identityProvider})
-    : _identityProvider = identityProvider;
+  DurableConfigStore({required this._identityProvider});
 
   Future<Map<String, Object?>?> read(String path) async {
     final target = File(path);

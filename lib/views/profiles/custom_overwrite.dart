@@ -2,7 +2,6 @@ import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/features/overwrite/proxy_group_editor.dart';
 import 'package:fl_clash/features/overwrite/routing_draft.dart';
 import 'package:fl_clash/features/overwrite/custom_rule_editor.dart';
-import 'package:fl_clash/controller.dart';
 import 'package:fl_clash/core/controller.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
@@ -10,7 +9,7 @@ import 'package:fl_clash/providers/database.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/widgets/widgets.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class CustomOverwriteDraftView extends StatelessWidget {
@@ -82,6 +81,9 @@ class CustomOverwriteContent extends ConsumerWidget {
   }
 
   Future<void> _quickFill(BuildContext context, WidgetRef ref) async {
+    final commonAction = context.commonAction;
+    final setupAction = context.setupAction;
+
     final original = ref.read(profileProvider(profileId));
     if (original == null) return;
     final confirmed = await globalState.showMessage(
@@ -95,8 +97,8 @@ class CustomOverwriteContent extends ConsumerWidget {
       context.showNotifier(appLocalizations.routingChanged);
       return;
     }
-    await appController.safeRun<void>(() async {
-      final rawConfig = await appController.getRawProfileConfig(profileId);
+    await commonAction.safeRun<void>(() async {
+      final rawConfig = await setupAction.getRawProfileConfig(profileId);
       if (!context.mounted) {
         return;
       }
@@ -261,6 +263,8 @@ class CustomProxyGroupsView extends ConsumerWidget {
     WidgetRef ref, [
     ProxyGroup? group,
   ]) async {
+    final setupAction = context.setupAction;
+
     final groups =
         ref.read(profileProvider(profileId))?.customProxyGroups ?? [];
     final profile = ref.read(profileProvider(profileId));
@@ -271,7 +275,7 @@ class CustomProxyGroupsView extends ConsumerWidget {
       ...profile.profileProxies.map((item) => item.name),
     };
     try {
-      rawConfig = await appController.getRawProfileConfig(profileId);
+      rawConfig = await setupAction.getRawProfileConfig(profileId);
       if (profile.overwriteType != OverwriteType.custom) {
         reservedNames.addAll(rawProxyGroupNames(rawConfig));
       }
@@ -326,15 +330,14 @@ class CustomProxyGroupsView extends ConsumerWidget {
           if (group != null && group.name != result.name) {
             final String? rawReference;
             try {
-              rawReference = await appController
-                  .findRawProfileOutboundReference(
-                    profileId,
-                    group.name,
-                    includeTopLevelRules:
-                        current.overwriteType != OverwriteType.custom,
-                    includeProxyGroups:
-                        current.overwriteType != OverwriteType.custom,
-                  );
+              rawReference = await setupAction.findRawProfileOutboundReference(
+                profileId,
+                group.name,
+                includeTopLevelRules:
+                    current.overwriteType != OverwriteType.custom,
+                includeProxyGroups:
+                    current.overwriteType != OverwriteType.custom,
+              );
             } catch (error) {
               throw ProxyGroupEditBlocked(error.toString());
             }
@@ -406,6 +409,8 @@ class CustomProxyGroupsView extends ConsumerWidget {
     WidgetRef ref,
     ProxyGroup group,
   ) async {
+    final setupAction = context.setupAction;
+
     final profile = ref.read(profileProvider(profileId));
     if (profile == null) {
       return;
@@ -418,7 +423,7 @@ class CustomProxyGroupsView extends ConsumerWidget {
       return;
     }
     try {
-      final rawReference = await appController.findRawProfileOutboundReference(
+      final rawReference = await setupAction.findRawProfileOutboundReference(
         profileId,
         group.name,
         includeTopLevelRules: profile.overwriteType != OverwriteType.custom,
@@ -560,11 +565,13 @@ class CustomRulesView extends ConsumerWidget {
   }
 
   Future<void> _edit(BuildContext context, WidgetRef ref, [Rule? rule]) async {
+    final setupAction = context.setupAction;
+
     final profile = ref.read(profileProvider(profileId));
     if (profile == null) return;
     Map<String, dynamic> raw;
     try {
-      raw = await appController.getRawProfileConfig(profileId);
+      raw = await setupAction.getRawProfileConfig(profileId);
     } catch (error) {
       if (context.mounted) context.showNotifier(error.toString());
       return;

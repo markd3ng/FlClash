@@ -1,13 +1,12 @@
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/common/common.dart';
-import 'package:fl_clash/controller.dart';
 import 'package:fl_clash/l10n/l10n.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/services/cloud_api_service.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/widgets/widgets.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -329,6 +328,8 @@ class _CloudAccountPageState extends ConsumerState<CloudAccountPage> {
   }
 
   Widget _buildLoggedOut() {
+    final commonAction = context.commonAction;
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -356,7 +357,7 @@ class _CloudAccountPageState extends ConsumerState<CloudAccountPage> {
             children: [
               FilledButton.icon(
                 onPressed: () =>
-                    appController.openCloudLogin(navigateToCloud: false),
+                    commonAction.openCloudLogin(navigateToCloud: false),
                 icon: const Icon(Icons.login),
                 label: Text(AppLocalizations.current.loginTitle),
               ),

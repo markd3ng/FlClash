@@ -4,7 +4,8 @@ import 'package:fl_clash/providers/state.dart';
 
 import 'package:animations/animations.dart';
 import 'package:fl_clash/services/config_reset.dart';
-import 'package:dynamic_color/dynamic_color.dart';
+import 'package:dynamic_color/dynamic_color.dart' show DynamicColorPlugin;
+import 'package:fl_clash/common/dynamic_color_scheme.dart';
 import 'package:fl_clash/common/periodic_task_runner.dart';
 import 'package:fl_clash/common/theme.dart';
 import 'package:fl_clash/core/core.dart';
@@ -14,7 +15,7 @@ import 'package:fl_clash/providers/config.dart';
 import 'package:fl_clash/providers/database.dart';
 import 'package:fl_clash/widgets/dialog.dart';
 import 'package:fl_clash/widgets/list.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:fl_clash/common/javascript.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -96,8 +97,8 @@ class GlobalState {
   Future<void> _initDynamicColor() async {
     try {
       final corePalette = await DynamicColorPlugin.getCorePalette();
-      lightDynamicColorScheme = corePalette?.toColorScheme();
-      darkDynamicColorScheme = corePalette?.toColorScheme(
+      lightDynamicColorScheme = corePalette?.toMaterialColorScheme();
+      darkDynamicColorScheme = corePalette?.toMaterialColorScheme(
         brightness: Brightness.dark,
       );
     } catch (_) {}

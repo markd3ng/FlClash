@@ -3,7 +3,7 @@ import 'package:fl_clash/controller.dart';
 import 'package:fl_clash/pages/scan.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/widgets/widgets.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class AddProfileView extends StatelessWidget {
   final BuildContext context;
@@ -11,27 +11,28 @@ class AddProfileView extends StatelessWidget {
   const AddProfileView({super.key, required this.context});
 
   Future<void> _handleAddProfileFormFile() async {
-    appController.addProfileFormFile();
-  }
+    final profileAction = context.profileAction;
 
-  Future<void> _handleAddProfileFormURL(String url) async {
-    appController.addProfileFormURL(url);
+    profileAction.addProfileFormFile();
   }
 
   Future<void> _toScan() async {
+    final profileAction = context.profileAction;
+
     if (system.isDesktop) {
-      appController.addProfileFormQrCode();
+      profileAction.addProfileFormQrCode();
       return;
     }
     final url = await BaseNavigator.push(context, const ScanPage());
     if (url != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _handleAddProfileFormURL(url);
+        profileAction.addProfileFormURL(url);
       });
     }
   }
 
   Future<void> _toAdd() async {
+    final profileAction = context.profileAction;
     final url = await globalState.showCommonDialog<String>(
       child: InputDialog(
         autovalidateMode: AutovalidateMode.onUnfocus,
@@ -50,7 +51,7 @@ class AddProfileView extends StatelessWidget {
       ),
     );
     if (url != null) {
-      _handleAddProfileFormURL(url);
+      profileAction.addProfileFormURL(url);
     }
   }
 

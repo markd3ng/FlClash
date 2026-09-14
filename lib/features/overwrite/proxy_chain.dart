@@ -1,5 +1,4 @@
 import 'package:fl_clash/common/common.dart';
-import 'package:fl_clash/controller.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/features/overwrite/profile_proxy.dart';
 import 'package:fl_clash/models/models.dart';
@@ -7,7 +6,7 @@ import 'package:fl_clash/providers/database.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/widgets/widgets.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class ProxyChainCandidateSection {
@@ -424,8 +423,10 @@ class ProfileProxyChainsView extends StatefulWidget {
 class _ProfileProxyChainsViewState extends State<ProfileProxyChainsView> {
   @override
   void dispose() {
+    final setupAction = context.setupAction;
+
     super.dispose();
-    appController.autoApplyProfile();
+    setupAction.autoApplyProfile();
   }
 
   @override
@@ -469,7 +470,9 @@ class _ProfileProxyChainsContentState
   Future<ProxyChainRawContext> _loadRawContext({
     Iterable<String> extra = const [],
   }) async {
-    final rawConfig = await appController.getProxyChainProfileConfig(
+    final setupAction = context.setupAction;
+
+    final rawConfig = await setupAction.getProxyChainProfileConfig(
       widget.profileId,
     );
     return buildProxyChainRawContext(
@@ -489,7 +492,9 @@ class _ProfileProxyChainsContentState
   }
 
   Future<void> _handleAddOrUpdateProxyChain([ProxyChain? proxyChain]) async {
-    final rawConfig = await appController.getProxyChainProfileConfig(
+    final setupAction = context.setupAction;
+
+    final rawConfig = await setupAction.getProxyChainProfileConfig(
       widget.profileId,
     );
     if (!mounted) return;
@@ -543,8 +548,10 @@ class _ProfileProxyChainsContentState
   }
 
   void _applyProfileChanges() {
+    final setupAction = context.setupAction;
+
     if (_isCurrentProfile) {
-      appController.applyProfileDebounce(silence: true);
+      setupAction.applyProfileDebounce(silence: true);
     }
   }
 
@@ -901,6 +908,8 @@ class _ProxyChainEditViewState extends ConsumerState<ProxyChainEditView> {
   }
 
   Future<void> _handleAddProfileProxy() async {
+    final setupAction = context.setupAction;
+
     final res = await BaseNavigator.push<ProfileProxy>(
       context,
       const ProfileProxyEditView(),
@@ -948,7 +957,7 @@ class _ProxyChainEditViewState extends ConsumerState<ProxyChainEditView> {
     _appendProxy(proxyName);
     _refreshCandidateSections();
     setState(() {});
-    appController.applyProfileDebounce(silence: true);
+    setupAction.applyProfileDebounce(silence: true);
     context.showNotifier(appLocalizations.proxyChainNodeAdded);
   }
 

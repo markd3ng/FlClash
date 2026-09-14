@@ -1,7 +1,7 @@
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/providers/config.dart';
 import 'package:fl_clash/widgets/widgets.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -224,7 +224,10 @@ class ApplicationSettingView extends StatelessWidget {
   Widget build(BuildContext context) {
     final List<Widget> items = [
       const MinimizeItem(),
-      if (system.isDesktop) ...[const AutoLaunchItem(), const SilentLaunchItem()],
+      if (system.isDesktop) ...[
+        const AutoLaunchItem(),
+        const SilentLaunchItem(),
+      ],
       const AutoRunItem(),
       if (system.isAndroid) ...[const HiddenItem()],
       const AnimateTabItem(),

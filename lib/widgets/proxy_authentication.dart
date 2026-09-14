@@ -7,7 +7,7 @@ import 'package:fl_clash/state.dart';
 import 'package:fl_clash/widgets/dialog.dart';
 import 'package:fl_clash/widgets/input.dart';
 import 'package:fl_clash/widgets/list.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class ProxyAuthenticationItem extends ConsumerStatefulWidget {
@@ -22,9 +22,11 @@ class _ProxyAuthenticationItemState
   bool _busy = false;
 
   Future<void> _toggle(AuthenticationProps current, bool enable) async {
+    final setupAction = context.setupAction;
+
     setState(() => _busy = true);
     try {
-      await appController.updateProxyAuthentication(
+      await setupAction.updateProxyAuthentication(
         enable
             ? enableProxyAuthentication(current)
             : current.copyWith(enable: false),
@@ -42,6 +44,8 @@ class _ProxyAuthenticationItemState
 
   @override
   Widget build(BuildContext context) {
+    final setupAction = context.setupAction;
+
     final l = context.appLocalizations;
     final auth = ref.watch(
       networkSettingProvider.select((state) => state.authentication),
@@ -67,7 +71,7 @@ class _ProxyAuthenticationItemState
                 : () => globalState.showCommonDialog(
                     child: ProxyAuthenticationDialog(
                       value: auth,
-                      onSave: appController.updateProxyAuthentication,
+                      onSave: setupAction.updateProxyAuthentication,
                     ),
                   ),
           ),

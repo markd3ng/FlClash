@@ -27,11 +27,10 @@ class DAVClient {
   DAVClient(
     DAVProps dav, {
     Iterable<String> Function(Uri)? resolveRoutes,
-    HttpClientAdapter Function(String)? createAdapter,
+    this._createAdapter,
     this.readTimeout = const Duration(seconds: 60),
   }) : _dav = dav,
-       _resolveRoutes = resolveRoutes ?? _defaultRoutes,
-       _createAdapter = createAdapter {
+       _resolveRoutes = resolveRoutes ?? _defaultRoutes {
     if (!isSafeDavFileName(dav.fileName)) {
       throw const FormatException('invalid WebDAV backup file name');
     }

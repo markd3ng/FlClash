@@ -843,7 +843,7 @@ as Map<String, Object?>,
 /// @nodoc
 mixin _$Profile {
 
- int get id; String get label; String? get currentGroupName; String get url; DateTime? get lastUpdateDate; Duration get autoUpdateDuration; SubscriptionInfo? get subscriptionInfo; bool get autoUpdate; Map<String, String> get selectedMap; Set<String> get unfoldSet; OverwriteType get overwriteType; List<ProxyChain> get proxyChains; List<ProfileProxy> get profileProxies; List<ProxyGroup> get customProxyGroups; List<Rule> get customRules; int? get scriptId; int? get order;
+ int get id; String get label; String? get currentGroupName; String get url; DateTime? get lastUpdateDate; Duration get autoUpdateDuration; SubscriptionInfo? get subscriptionInfo; bool get autoUpdate; Map<String, String> get selectedMap; Set<String> get unfoldSet; OverwriteType get overwriteType; List<ProxyChain> get proxyChains; List<ProfileProxy> get profileProxies; List<ProxyGroup> get customProxyGroups; List<Rule> get customRules; int? get scriptId; String? get matchTarget; int? get order;
 /// Create a copy of Profile
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -856,16 +856,16 @@ $ProfileCopyWith<Profile> get copyWith => _$ProfileCopyWithImpl<Profile>(this as
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Profile&&(identical(other.id, id) || other.id == id)&&(identical(other.label, label) || other.label == label)&&(identical(other.currentGroupName, currentGroupName) || other.currentGroupName == currentGroupName)&&(identical(other.url, url) || other.url == url)&&(identical(other.lastUpdateDate, lastUpdateDate) || other.lastUpdateDate == lastUpdateDate)&&(identical(other.autoUpdateDuration, autoUpdateDuration) || other.autoUpdateDuration == autoUpdateDuration)&&(identical(other.subscriptionInfo, subscriptionInfo) || other.subscriptionInfo == subscriptionInfo)&&(identical(other.autoUpdate, autoUpdate) || other.autoUpdate == autoUpdate)&&const DeepCollectionEquality().equals(other.selectedMap, selectedMap)&&const DeepCollectionEquality().equals(other.unfoldSet, unfoldSet)&&(identical(other.overwriteType, overwriteType) || other.overwriteType == overwriteType)&&const DeepCollectionEquality().equals(other.proxyChains, proxyChains)&&const DeepCollectionEquality().equals(other.profileProxies, profileProxies)&&const DeepCollectionEquality().equals(other.customProxyGroups, customProxyGroups)&&const DeepCollectionEquality().equals(other.customRules, customRules)&&(identical(other.scriptId, scriptId) || other.scriptId == scriptId)&&(identical(other.order, order) || other.order == order));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Profile&&(identical(other.id, id) || other.id == id)&&(identical(other.label, label) || other.label == label)&&(identical(other.currentGroupName, currentGroupName) || other.currentGroupName == currentGroupName)&&(identical(other.url, url) || other.url == url)&&(identical(other.lastUpdateDate, lastUpdateDate) || other.lastUpdateDate == lastUpdateDate)&&(identical(other.autoUpdateDuration, autoUpdateDuration) || other.autoUpdateDuration == autoUpdateDuration)&&(identical(other.subscriptionInfo, subscriptionInfo) || other.subscriptionInfo == subscriptionInfo)&&(identical(other.autoUpdate, autoUpdate) || other.autoUpdate == autoUpdate)&&const DeepCollectionEquality().equals(other.selectedMap, selectedMap)&&const DeepCollectionEquality().equals(other.unfoldSet, unfoldSet)&&(identical(other.overwriteType, overwriteType) || other.overwriteType == overwriteType)&&const DeepCollectionEquality().equals(other.proxyChains, proxyChains)&&const DeepCollectionEquality().equals(other.profileProxies, profileProxies)&&const DeepCollectionEquality().equals(other.customProxyGroups, customProxyGroups)&&const DeepCollectionEquality().equals(other.customRules, customRules)&&(identical(other.scriptId, scriptId) || other.scriptId == scriptId)&&(identical(other.matchTarget, matchTarget) || other.matchTarget == matchTarget)&&(identical(other.order, order) || other.order == order));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,label,currentGroupName,url,lastUpdateDate,autoUpdateDuration,subscriptionInfo,autoUpdate,const DeepCollectionEquality().hash(selectedMap),const DeepCollectionEquality().hash(unfoldSet),overwriteType,const DeepCollectionEquality().hash(proxyChains),const DeepCollectionEquality().hash(profileProxies),const DeepCollectionEquality().hash(customProxyGroups),const DeepCollectionEquality().hash(customRules),scriptId,order);
+int get hashCode => Object.hash(runtimeType,id,label,currentGroupName,url,lastUpdateDate,autoUpdateDuration,subscriptionInfo,autoUpdate,const DeepCollectionEquality().hash(selectedMap),const DeepCollectionEquality().hash(unfoldSet),overwriteType,const DeepCollectionEquality().hash(proxyChains),const DeepCollectionEquality().hash(profileProxies),const DeepCollectionEquality().hash(customProxyGroups),const DeepCollectionEquality().hash(customRules),scriptId,matchTarget,order);
 
 @override
 String toString() {
-  return 'Profile(id: $id, label: $label, currentGroupName: $currentGroupName, url: $url, lastUpdateDate: $lastUpdateDate, autoUpdateDuration: $autoUpdateDuration, subscriptionInfo: $subscriptionInfo, autoUpdate: $autoUpdate, selectedMap: $selectedMap, unfoldSet: $unfoldSet, overwriteType: $overwriteType, proxyChains: $proxyChains, profileProxies: $profileProxies, customProxyGroups: $customProxyGroups, customRules: $customRules, scriptId: $scriptId, order: $order)';
+  return 'Profile(id: $id, label: $label, currentGroupName: $currentGroupName, url: $url, lastUpdateDate: $lastUpdateDate, autoUpdateDuration: $autoUpdateDuration, subscriptionInfo: $subscriptionInfo, autoUpdate: $autoUpdate, selectedMap: $selectedMap, unfoldSet: $unfoldSet, overwriteType: $overwriteType, proxyChains: $proxyChains, profileProxies: $profileProxies, customProxyGroups: $customProxyGroups, customRules: $customRules, scriptId: $scriptId, matchTarget: $matchTarget, order: $order)';
 }
 
 
@@ -876,7 +876,7 @@ abstract mixin class $ProfileCopyWith<$Res>  {
   factory $ProfileCopyWith(Profile value, $Res Function(Profile) _then) = _$ProfileCopyWithImpl;
 @useResult
 $Res call({
- int id, String label, String? currentGroupName, String url, DateTime? lastUpdateDate, Duration autoUpdateDuration, SubscriptionInfo? subscriptionInfo, bool autoUpdate, Map<String, String> selectedMap, Set<String> unfoldSet, OverwriteType overwriteType, List<ProxyChain> proxyChains, List<ProfileProxy> profileProxies, List<ProxyGroup> customProxyGroups, List<Rule> customRules, int? scriptId, int? order
+ int id, String label, String? currentGroupName, String url, DateTime? lastUpdateDate, Duration autoUpdateDuration, SubscriptionInfo? subscriptionInfo, bool autoUpdate, Map<String, String> selectedMap, Set<String> unfoldSet, OverwriteType overwriteType, List<ProxyChain> proxyChains, List<ProfileProxy> profileProxies, List<ProxyGroup> customProxyGroups, List<Rule> customRules, int? scriptId, String? matchTarget, int? order
 });
 
 
@@ -893,7 +893,7 @@ class _$ProfileCopyWithImpl<$Res>
 
 /// Create a copy of Profile
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? label = null,Object? currentGroupName = freezed,Object? url = null,Object? lastUpdateDate = freezed,Object? autoUpdateDuration = null,Object? subscriptionInfo = freezed,Object? autoUpdate = null,Object? selectedMap = null,Object? unfoldSet = null,Object? overwriteType = null,Object? proxyChains = null,Object? profileProxies = null,Object? customProxyGroups = null,Object? customRules = null,Object? scriptId = freezed,Object? order = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? label = null,Object? currentGroupName = freezed,Object? url = null,Object? lastUpdateDate = freezed,Object? autoUpdateDuration = null,Object? subscriptionInfo = freezed,Object? autoUpdate = null,Object? selectedMap = null,Object? unfoldSet = null,Object? overwriteType = null,Object? proxyChains = null,Object? profileProxies = null,Object? customProxyGroups = null,Object? customRules = null,Object? scriptId = freezed,Object? matchTarget = freezed,Object? order = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
@@ -911,7 +911,8 @@ as List<ProxyChain>,profileProxies: null == profileProxies ? _self.profileProxie
 as List<ProfileProxy>,customProxyGroups: null == customProxyGroups ? _self.customProxyGroups : customProxyGroups // ignore: cast_nullable_to_non_nullable
 as List<ProxyGroup>,customRules: null == customRules ? _self.customRules : customRules // ignore: cast_nullable_to_non_nullable
 as List<Rule>,scriptId: freezed == scriptId ? _self.scriptId : scriptId // ignore: cast_nullable_to_non_nullable
-as int?,order: freezed == order ? _self.order : order // ignore: cast_nullable_to_non_nullable
+as int?,matchTarget: freezed == matchTarget ? _self.matchTarget : matchTarget // ignore: cast_nullable_to_non_nullable
+as String?,order: freezed == order ? _self.order : order // ignore: cast_nullable_to_non_nullable
 as int?,
   ));
 }
@@ -1009,10 +1010,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String label,  String? currentGroupName,  String url,  DateTime? lastUpdateDate,  Duration autoUpdateDuration,  SubscriptionInfo? subscriptionInfo,  bool autoUpdate,  Map<String, String> selectedMap,  Set<String> unfoldSet,  OverwriteType overwriteType,  List<ProxyChain> proxyChains,  List<ProfileProxy> profileProxies,  List<ProxyGroup> customProxyGroups,  List<Rule> customRules,  int? scriptId,  int? order)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String label,  String? currentGroupName,  String url,  DateTime? lastUpdateDate,  Duration autoUpdateDuration,  SubscriptionInfo? subscriptionInfo,  bool autoUpdate,  Map<String, String> selectedMap,  Set<String> unfoldSet,  OverwriteType overwriteType,  List<ProxyChain> proxyChains,  List<ProfileProxy> profileProxies,  List<ProxyGroup> customProxyGroups,  List<Rule> customRules,  int? scriptId,  String? matchTarget,  int? order)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Profile() when $default != null:
-return $default(_that.id,_that.label,_that.currentGroupName,_that.url,_that.lastUpdateDate,_that.autoUpdateDuration,_that.subscriptionInfo,_that.autoUpdate,_that.selectedMap,_that.unfoldSet,_that.overwriteType,_that.proxyChains,_that.profileProxies,_that.customProxyGroups,_that.customRules,_that.scriptId,_that.order);case _:
+return $default(_that.id,_that.label,_that.currentGroupName,_that.url,_that.lastUpdateDate,_that.autoUpdateDuration,_that.subscriptionInfo,_that.autoUpdate,_that.selectedMap,_that.unfoldSet,_that.overwriteType,_that.proxyChains,_that.profileProxies,_that.customProxyGroups,_that.customRules,_that.scriptId,_that.matchTarget,_that.order);case _:
   return orElse();
 
 }
@@ -1030,10 +1031,10 @@ return $default(_that.id,_that.label,_that.currentGroupName,_that.url,_that.last
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String label,  String? currentGroupName,  String url,  DateTime? lastUpdateDate,  Duration autoUpdateDuration,  SubscriptionInfo? subscriptionInfo,  bool autoUpdate,  Map<String, String> selectedMap,  Set<String> unfoldSet,  OverwriteType overwriteType,  List<ProxyChain> proxyChains,  List<ProfileProxy> profileProxies,  List<ProxyGroup> customProxyGroups,  List<Rule> customRules,  int? scriptId,  int? order)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String label,  String? currentGroupName,  String url,  DateTime? lastUpdateDate,  Duration autoUpdateDuration,  SubscriptionInfo? subscriptionInfo,  bool autoUpdate,  Map<String, String> selectedMap,  Set<String> unfoldSet,  OverwriteType overwriteType,  List<ProxyChain> proxyChains,  List<ProfileProxy> profileProxies,  List<ProxyGroup> customProxyGroups,  List<Rule> customRules,  int? scriptId,  String? matchTarget,  int? order)  $default,) {final _that = this;
 switch (_that) {
 case _Profile():
-return $default(_that.id,_that.label,_that.currentGroupName,_that.url,_that.lastUpdateDate,_that.autoUpdateDuration,_that.subscriptionInfo,_that.autoUpdate,_that.selectedMap,_that.unfoldSet,_that.overwriteType,_that.proxyChains,_that.profileProxies,_that.customProxyGroups,_that.customRules,_that.scriptId,_that.order);case _:
+return $default(_that.id,_that.label,_that.currentGroupName,_that.url,_that.lastUpdateDate,_that.autoUpdateDuration,_that.subscriptionInfo,_that.autoUpdate,_that.selectedMap,_that.unfoldSet,_that.overwriteType,_that.proxyChains,_that.profileProxies,_that.customProxyGroups,_that.customRules,_that.scriptId,_that.matchTarget,_that.order);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1050,10 +1051,10 @@ return $default(_that.id,_that.label,_that.currentGroupName,_that.url,_that.last
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String label,  String? currentGroupName,  String url,  DateTime? lastUpdateDate,  Duration autoUpdateDuration,  SubscriptionInfo? subscriptionInfo,  bool autoUpdate,  Map<String, String> selectedMap,  Set<String> unfoldSet,  OverwriteType overwriteType,  List<ProxyChain> proxyChains,  List<ProfileProxy> profileProxies,  List<ProxyGroup> customProxyGroups,  List<Rule> customRules,  int? scriptId,  int? order)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String label,  String? currentGroupName,  String url,  DateTime? lastUpdateDate,  Duration autoUpdateDuration,  SubscriptionInfo? subscriptionInfo,  bool autoUpdate,  Map<String, String> selectedMap,  Set<String> unfoldSet,  OverwriteType overwriteType,  List<ProxyChain> proxyChains,  List<ProfileProxy> profileProxies,  List<ProxyGroup> customProxyGroups,  List<Rule> customRules,  int? scriptId,  String? matchTarget,  int? order)?  $default,) {final _that = this;
 switch (_that) {
 case _Profile() when $default != null:
-return $default(_that.id,_that.label,_that.currentGroupName,_that.url,_that.lastUpdateDate,_that.autoUpdateDuration,_that.subscriptionInfo,_that.autoUpdate,_that.selectedMap,_that.unfoldSet,_that.overwriteType,_that.proxyChains,_that.profileProxies,_that.customProxyGroups,_that.customRules,_that.scriptId,_that.order);case _:
+return $default(_that.id,_that.label,_that.currentGroupName,_that.url,_that.lastUpdateDate,_that.autoUpdateDuration,_that.subscriptionInfo,_that.autoUpdate,_that.selectedMap,_that.unfoldSet,_that.overwriteType,_that.proxyChains,_that.profileProxies,_that.customProxyGroups,_that.customRules,_that.scriptId,_that.matchTarget,_that.order);case _:
   return null;
 
 }
@@ -1065,7 +1066,7 @@ return $default(_that.id,_that.label,_that.currentGroupName,_that.url,_that.last
 @JsonSerializable()
 
 class _Profile implements Profile {
-  const _Profile({required this.id, this.label = '', this.currentGroupName, this.url = '', this.lastUpdateDate, required this.autoUpdateDuration, this.subscriptionInfo, this.autoUpdate = true, final  Map<String, String> selectedMap = const {}, final  Set<String> unfoldSet = const {}, this.overwriteType = OverwriteType.standard, final  List<ProxyChain> proxyChains = const [], final  List<ProfileProxy> profileProxies = const [], final  List<ProxyGroup> customProxyGroups = const [], final  List<Rule> customRules = const [], this.scriptId, this.order}): _selectedMap = selectedMap,_unfoldSet = unfoldSet,_proxyChains = proxyChains,_profileProxies = profileProxies,_customProxyGroups = customProxyGroups,_customRules = customRules;
+  const _Profile({required this.id, this.label = '', this.currentGroupName, this.url = '', this.lastUpdateDate, required this.autoUpdateDuration, this.subscriptionInfo, this.autoUpdate = true, final  Map<String, String> selectedMap = const {}, final  Set<String> unfoldSet = const {}, this.overwriteType = OverwriteType.standard, final  List<ProxyChain> proxyChains = const [], final  List<ProfileProxy> profileProxies = const [], final  List<ProxyGroup> customProxyGroups = const [], final  List<Rule> customRules = const [], this.scriptId, this.matchTarget, this.order}): _selectedMap = selectedMap,_unfoldSet = unfoldSet,_proxyChains = proxyChains,_profileProxies = profileProxies,_customProxyGroups = customProxyGroups,_customRules = customRules;
   factory _Profile.fromJson(Map<String, dynamic> json) => _$ProfileFromJson(json);
 
 @override final  int id;
@@ -1120,6 +1121,7 @@ class _Profile implements Profile {
 }
 
 @override final  int? scriptId;
+@override final  String? matchTarget;
 @override final  int? order;
 
 /// Create a copy of Profile
@@ -1135,16 +1137,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Profile&&(identical(other.id, id) || other.id == id)&&(identical(other.label, label) || other.label == label)&&(identical(other.currentGroupName, currentGroupName) || other.currentGroupName == currentGroupName)&&(identical(other.url, url) || other.url == url)&&(identical(other.lastUpdateDate, lastUpdateDate) || other.lastUpdateDate == lastUpdateDate)&&(identical(other.autoUpdateDuration, autoUpdateDuration) || other.autoUpdateDuration == autoUpdateDuration)&&(identical(other.subscriptionInfo, subscriptionInfo) || other.subscriptionInfo == subscriptionInfo)&&(identical(other.autoUpdate, autoUpdate) || other.autoUpdate == autoUpdate)&&const DeepCollectionEquality().equals(other._selectedMap, _selectedMap)&&const DeepCollectionEquality().equals(other._unfoldSet, _unfoldSet)&&(identical(other.overwriteType, overwriteType) || other.overwriteType == overwriteType)&&const DeepCollectionEquality().equals(other._proxyChains, _proxyChains)&&const DeepCollectionEquality().equals(other._profileProxies, _profileProxies)&&const DeepCollectionEquality().equals(other._customProxyGroups, _customProxyGroups)&&const DeepCollectionEquality().equals(other._customRules, _customRules)&&(identical(other.scriptId, scriptId) || other.scriptId == scriptId)&&(identical(other.order, order) || other.order == order));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Profile&&(identical(other.id, id) || other.id == id)&&(identical(other.label, label) || other.label == label)&&(identical(other.currentGroupName, currentGroupName) || other.currentGroupName == currentGroupName)&&(identical(other.url, url) || other.url == url)&&(identical(other.lastUpdateDate, lastUpdateDate) || other.lastUpdateDate == lastUpdateDate)&&(identical(other.autoUpdateDuration, autoUpdateDuration) || other.autoUpdateDuration == autoUpdateDuration)&&(identical(other.subscriptionInfo, subscriptionInfo) || other.subscriptionInfo == subscriptionInfo)&&(identical(other.autoUpdate, autoUpdate) || other.autoUpdate == autoUpdate)&&const DeepCollectionEquality().equals(other._selectedMap, _selectedMap)&&const DeepCollectionEquality().equals(other._unfoldSet, _unfoldSet)&&(identical(other.overwriteType, overwriteType) || other.overwriteType == overwriteType)&&const DeepCollectionEquality().equals(other._proxyChains, _proxyChains)&&const DeepCollectionEquality().equals(other._profileProxies, _profileProxies)&&const DeepCollectionEquality().equals(other._customProxyGroups, _customProxyGroups)&&const DeepCollectionEquality().equals(other._customRules, _customRules)&&(identical(other.scriptId, scriptId) || other.scriptId == scriptId)&&(identical(other.matchTarget, matchTarget) || other.matchTarget == matchTarget)&&(identical(other.order, order) || other.order == order));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,label,currentGroupName,url,lastUpdateDate,autoUpdateDuration,subscriptionInfo,autoUpdate,const DeepCollectionEquality().hash(_selectedMap),const DeepCollectionEquality().hash(_unfoldSet),overwriteType,const DeepCollectionEquality().hash(_proxyChains),const DeepCollectionEquality().hash(_profileProxies),const DeepCollectionEquality().hash(_customProxyGroups),const DeepCollectionEquality().hash(_customRules),scriptId,order);
+int get hashCode => Object.hash(runtimeType,id,label,currentGroupName,url,lastUpdateDate,autoUpdateDuration,subscriptionInfo,autoUpdate,const DeepCollectionEquality().hash(_selectedMap),const DeepCollectionEquality().hash(_unfoldSet),overwriteType,const DeepCollectionEquality().hash(_proxyChains),const DeepCollectionEquality().hash(_profileProxies),const DeepCollectionEquality().hash(_customProxyGroups),const DeepCollectionEquality().hash(_customRules),scriptId,matchTarget,order);
 
 @override
 String toString() {
-  return 'Profile(id: $id, label: $label, currentGroupName: $currentGroupName, url: $url, lastUpdateDate: $lastUpdateDate, autoUpdateDuration: $autoUpdateDuration, subscriptionInfo: $subscriptionInfo, autoUpdate: $autoUpdate, selectedMap: $selectedMap, unfoldSet: $unfoldSet, overwriteType: $overwriteType, proxyChains: $proxyChains, profileProxies: $profileProxies, customProxyGroups: $customProxyGroups, customRules: $customRules, scriptId: $scriptId, order: $order)';
+  return 'Profile(id: $id, label: $label, currentGroupName: $currentGroupName, url: $url, lastUpdateDate: $lastUpdateDate, autoUpdateDuration: $autoUpdateDuration, subscriptionInfo: $subscriptionInfo, autoUpdate: $autoUpdate, selectedMap: $selectedMap, unfoldSet: $unfoldSet, overwriteType: $overwriteType, proxyChains: $proxyChains, profileProxies: $profileProxies, customProxyGroups: $customProxyGroups, customRules: $customRules, scriptId: $scriptId, matchTarget: $matchTarget, order: $order)';
 }
 
 
@@ -1155,7 +1157,7 @@ abstract mixin class _$ProfileCopyWith<$Res> implements $ProfileCopyWith<$Res> {
   factory _$ProfileCopyWith(_Profile value, $Res Function(_Profile) _then) = __$ProfileCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String label, String? currentGroupName, String url, DateTime? lastUpdateDate, Duration autoUpdateDuration, SubscriptionInfo? subscriptionInfo, bool autoUpdate, Map<String, String> selectedMap, Set<String> unfoldSet, OverwriteType overwriteType, List<ProxyChain> proxyChains, List<ProfileProxy> profileProxies, List<ProxyGroup> customProxyGroups, List<Rule> customRules, int? scriptId, int? order
+ int id, String label, String? currentGroupName, String url, DateTime? lastUpdateDate, Duration autoUpdateDuration, SubscriptionInfo? subscriptionInfo, bool autoUpdate, Map<String, String> selectedMap, Set<String> unfoldSet, OverwriteType overwriteType, List<ProxyChain> proxyChains, List<ProfileProxy> profileProxies, List<ProxyGroup> customProxyGroups, List<Rule> customRules, int? scriptId, String? matchTarget, int? order
 });
 
 
@@ -1172,7 +1174,7 @@ class __$ProfileCopyWithImpl<$Res>
 
 /// Create a copy of Profile
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? label = null,Object? currentGroupName = freezed,Object? url = null,Object? lastUpdateDate = freezed,Object? autoUpdateDuration = null,Object? subscriptionInfo = freezed,Object? autoUpdate = null,Object? selectedMap = null,Object? unfoldSet = null,Object? overwriteType = null,Object? proxyChains = null,Object? profileProxies = null,Object? customProxyGroups = null,Object? customRules = null,Object? scriptId = freezed,Object? order = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? label = null,Object? currentGroupName = freezed,Object? url = null,Object? lastUpdateDate = freezed,Object? autoUpdateDuration = null,Object? subscriptionInfo = freezed,Object? autoUpdate = null,Object? selectedMap = null,Object? unfoldSet = null,Object? overwriteType = null,Object? proxyChains = null,Object? profileProxies = null,Object? customProxyGroups = null,Object? customRules = null,Object? scriptId = freezed,Object? matchTarget = freezed,Object? order = freezed,}) {
   return _then(_Profile(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
@@ -1190,7 +1192,8 @@ as List<ProxyChain>,profileProxies: null == profileProxies ? _self._profileProxi
 as List<ProfileProxy>,customProxyGroups: null == customProxyGroups ? _self._customProxyGroups : customProxyGroups // ignore: cast_nullable_to_non_nullable
 as List<ProxyGroup>,customRules: null == customRules ? _self._customRules : customRules // ignore: cast_nullable_to_non_nullable
 as List<Rule>,scriptId: freezed == scriptId ? _self.scriptId : scriptId // ignore: cast_nullable_to_non_nullable
-as int?,order: freezed == order ? _self.order : order // ignore: cast_nullable_to_non_nullable
+as int?,matchTarget: freezed == matchTarget ? _self.matchTarget : matchTarget // ignore: cast_nullable_to_non_nullable
+as String?,order: freezed == order ? _self.order : order // ignore: cast_nullable_to_non_nullable
 as int?,
   ));
 }

@@ -546,6 +546,7 @@ abstract class Profile with _$Profile {
     @Default([]) List<ProxyGroup> customProxyGroups,
     @Default([]) List<Rule> customRules,
     int? scriptId,
+    String? matchTarget,
     int? order,
   }) = _Profile;
 
@@ -621,6 +622,7 @@ extension ProfileCustomOverwriteExt on Profile {
         .toSet();
 
     return copyWith(
+      matchTarget: matchTarget == previousName ? nextName : matchTarget,
       currentGroupName: currentGroupName == previousName
           ? nextName
           : currentGroupName,
@@ -647,7 +649,10 @@ extension ProfileCustomOverwriteExt on Profile {
     final chainReference =
         includeProxyChains &&
         proxyChains.any((chain) => chain.normalizedProxies.contains(name));
-    return groupReference || ruleReference || chainReference;
+    return groupReference ||
+        ruleReference ||
+        chainReference ||
+        matchTarget == name;
   }
 
   Profile copyAndRemoveCustomProxyGroup(ProxyGroup group) {
@@ -668,6 +673,7 @@ extension ProfileCustomOverwriteExt on Profile {
         (key, value) => names.contains(key) || names.contains(value),
       );
     return copyWith(
+      matchTarget: names.contains(matchTarget) ? null : matchTarget,
       currentGroupName: names.contains(currentGroupName)
           ? null
           : currentGroupName,

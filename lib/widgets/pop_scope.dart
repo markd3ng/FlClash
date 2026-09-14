@@ -52,20 +52,28 @@ class SystemBackBlock extends StatefulWidget {
 }
 
 class _SystemBackBlockState extends State<SystemBackBlock> {
+  late final BackBlockAction _action;
+  bool _blocked = false;
+
   @override
   void initState() {
     super.initState();
+    _action = context.backBlockAction;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      appController.backBlock();
+      if (!mounted) return;
+      _blocked = true;
+      _action.backBlock();
     });
   }
 
   @override
   void dispose() {
+    if (_blocked) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _action.unBackBlock();
+      });
+    }
     super.dispose();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      appController.unBackBlock();
-    });
   }
 
   @override

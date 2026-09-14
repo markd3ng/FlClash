@@ -1,7 +1,6 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:fl_clash/common/common.dart';
-import 'package:fl_clash/controller.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/features/overwrite/proxy_chain.dart';
 import 'package:fl_clash/features/overwrite/rule.dart';
@@ -12,7 +11,7 @@ import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/views/config/scripts.dart';
 import 'package:fl_clash/widgets/widgets.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'custom_overwrite.dart';
@@ -30,6 +29,8 @@ class _OverwriteViewState extends ConsumerState<OverwriteView> {
   bool _checking = false;
 
   Future<void> _checkAndApply() async {
+    final setupAction = context.setupAction;
+
     final profile = ref.read(profileProvider(widget.profileId));
     if (profile == null || _checking) return;
     setState(() => _checking = true);
@@ -41,7 +42,7 @@ class _OverwriteViewState extends ConsumerState<OverwriteView> {
         return;
       }
       if (ref.read(currentProfileIdProvider) == profile.id) {
-        final applied = await appController.applyProfile(force: true);
+        final applied = await setupAction.applyProfile(force: true);
         if (!mounted || ref.read(currentProfileIdProvider) != profile.id) {
           return;
         }
@@ -113,8 +114,10 @@ class _OverwriteViewState extends ConsumerState<OverwriteView> {
 
   @override
   void dispose() {
+    final setupAction = context.setupAction;
+
     super.dispose();
-    appController.autoApplyProfile();
+    setupAction.autoApplyProfile();
   }
 }
 
@@ -337,6 +340,50 @@ class _StandardContent extends ConsumerStatefulWidget {
 class __StandardContentState extends ConsumerState<_StandardContent> {
   final _key = utils.id;
 
+  Future<void> _selectMatchTarget() async {
+    final commonAction = context.commonAction;
+    final setupAction = context.setupAction;
+
+    final profile = ref.read(profileProvider(widget.profileId));
+    if (profile == null) return;
+    final raw = await commonAction.safeRun(
+      () => setupAction.getRawProfileConfig(widget.profileId),
+    );
+    if (!mounted) return;
+    final names = <String>{
+      '',
+      ...customRoutingTargets(profile, raw ?? {}),
+      if (profile.matchTarget != null) profile.matchTarget!,
+    }.toList();
+    final selected = await globalState.showCommonDialog<String>(
+      child: CommonDialog(
+        title: appLocalizations.matchTargetTitle,
+        overrideScroll: true,
+        child: ListView.builder(
+          shrinkWrap: true,
+          itemCount: names.length,
+          itemBuilder: (context, index) => ListTile(
+            selected: names[index] == (profile.matchTarget ?? ''),
+            title: Text(
+              names[index].isEmpty
+                  ? appLocalizations.followProfile
+                  : names[index],
+            ),
+            onTap: () => Navigator.of(context).pop(names[index]),
+          ),
+        ),
+      ),
+    );
+    if (selected == null || !mounted) return;
+    ref
+        .read(profilesProvider.notifier)
+        .updateProfile(
+          widget.profileId,
+          (profile) =>
+              profile.copyWith(matchTarget: selected.isEmpty ? null : selected),
+        );
+  }
+
   Future<void> _handleAddOrUpdate([Rule? rule]) async {
     final res = await globalState.showCommonDialog<Rule>(
       child: AddOrEditRuleDialog(rule: rule),
@@ -401,6 +448,18 @@ class __StandardContentState extends ConsumerState<_StandardContent> {
       },
       child: SliverMainAxisGroup(
         slivers: [
+          SliverToBoxAdapter(
+            child: ListTile(
+              leading: const Icon(Icons.route),
+              title: Text(appLocalizations.matchTargetTitle),
+              subtitle: Text(
+                ref.watch(profileProvider(widget.profileId))?.matchTarget ??
+                    appLocalizations.followProfile,
+              ),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: _selectMatchTarget,
+            ),
+          ),
           const SliverToBoxAdapter(child: SizedBox(height: 24)),
           SliverToBoxAdapter(
             child: Column(
@@ -656,7 +715,7 @@ class _EditGlobalAddedRules extends ConsumerWidget {
       body: rules.isEmpty
           ? NullStatus(
               label: appLocalizations.nullTip(appLocalizations.rule),
-              illustration: const RuleEmptyIllustration(),
+              illustration: NullStatusIllustration.rules,
             )
           : ListView.builder(
               padding: const EdgeInsets.all(16),

@@ -745,5 +745,16 @@
   "locationPermissionRequired": "Location permission required",
   "locationPermissionDeniedMessage": "Location permission was denied, so the current Wi-Fi name cannot be read. Please enable location permission manually in system settings.",
   "locationPermissionGuide": "1. Open System Settings > Privacy & Security\n2. Choose Location Services\n3. Find and check {appName} in the list\n\nWhen you are done, return to the app to continue. Thank you for your cooperation.",
-  "ssidPermissionGuide": "Allow location access to read Wi-Fi names. On Android, allow precise location all the time and enable system location services."
+  "ssidPermissionGuide": "Allow location access to read Wi-Fi names. On Android, allow precise location all the time and enable system location services.",
+  "matchTargetTitle": "Match target",
+  "matchTarget": "MATCH-TARGET",
+  "matchTargetDesc": "Where rules targeting MATCH-TARGET go. Defaults to the target of the final MATCH rule in this profile.",
+  "followProfile": "Follow profile",
+  "iconHistory": "Recent icons",
+  "exitFullScreen": "Exit full screen",
+  "unmaximize": "Restore down",
+  "maximize": "Maximize",
+  "unpinWindow": "Unpin window",
+  "pinWindow": "Pin window",
+  "minimize": "Minimize"
 }

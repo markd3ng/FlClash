@@ -3,9 +3,13 @@ import 'package:fl_clash/manager/manager.dart';
 import 'package:fl_clash/models/state.dart';
 import 'package:fl_clash/widgets/inherited.dart';
 import 'package:fl_clash/widgets/scaffold.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 extension BuildContextExtension on BuildContext {
+  bool get disableAnimations => MediaQuery.disableAnimationsOf(this);
+  Duration motionDuration(Duration duration) =>
+      MediaQuery.disableAnimationsOf(this) ? Duration.zero : duration;
+
   CommonScaffoldState? get commonScaffoldState {
     return findAncestorStateOfType<CommonScaffoldState>();
   }

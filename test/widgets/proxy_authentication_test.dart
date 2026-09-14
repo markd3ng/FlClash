@@ -2,8 +2,8 @@ import 'package:fl_clash/l10n/l10n.dart';
 import 'package:fl_clash/models/config.dart';
 import 'package:fl_clash/providers/app.dart';
 import 'package:fl_clash/widgets/proxy_authentication.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:material_ui/material_ui.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -17,9 +17,7 @@ Widget _app(Locale locale, Future<void> Function(AuthenticationProps) save) =>
         supportedLocales: AppLocalizations.delegate.supportedLocales,
         localizationsDelegates: const [
           AppLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
+          ...GlobalMaterialLocalizations.delegates,
         ],
         home: Scaffold(
           body: Builder(

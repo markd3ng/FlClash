@@ -62,7 +62,7 @@ final class HelperClient {
 
   HelperClient({
     Dio? dio,
-    String Function()? expectedHelperPath,
+    this._expectedHelperPath,
     Future<String> Function()? readCoreSha256,
     String? baseUrl,
     String? socketPath,
@@ -77,7 +77,6 @@ final class HelperClient {
            (isLinux
                ? 'http://flclash-helper'
                : 'http://$localhost:$helperPort'),
-       _expectedHelperPath = expectedHelperPath,
        _readCoreSha256 = readCoreSha256 ?? _readBundledCoreSha256;
 
   // The bundled manifest.json is a fixed build artifact; a usable value is read
@@ -516,10 +515,9 @@ final class HelperCoreLease implements CoreProcessLease {
   HelperCoreLease({
     required this.sessionId,
     required this.pid,
-    required HelperClient client,
-    ProcessLivenessProbe livenessProbe = isProcessAlive,
-  }) : _client = client,
-       _livenessProbe = livenessProbe;
+    required this._client,
+    this._livenessProbe = isProcessAlive,
+  });
 
   @override
   CoreProcessOwner get owner => _client.isLinux

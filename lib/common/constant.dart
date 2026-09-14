@@ -7,7 +7,7 @@ import 'package:collection/collection.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 const appName = 'FlClash for oixCloud';
 const appHelperService = 'FlClashHelperService';
@@ -60,11 +60,10 @@ const MMDB = 'GEOIP.metadb';
 const ASN = 'ASN.mmdb';
 const GEOIP = 'GEOIP.dat';
 const GEOSITE = 'GEOSITE.dat';
-final double kHeaderHeight = system.isDesktop
-    ? !system.isMacOS
-          ? 40
-          : 28
-    : 0;
+final double kHeaderHeight = getWindowHeaderHeight(
+  isDesktop: system.isDesktop,
+  isMacOS: system.isMacOS,
+);
 const profilesDirectoryName = 'profiles';
 const localhost = '127.0.0.1';
 const clashConfigKey = 'clash_config';

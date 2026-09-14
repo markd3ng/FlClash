@@ -1,11 +1,10 @@
 import 'package:fl_clash/common/common.dart';
-import 'package:fl_clash/controller.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/manager/app_manager.dart';
 import 'package:fl_clash/models/common.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/widgets/widgets.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -14,6 +13,8 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final commonAction = context.commonAction;
+
     return HomeBackScopeContainer(
       child: AppSidebarContainer(
         child: Material(
@@ -36,7 +37,7 @@ class HomePage extends StatelessWidget {
                       )
                       .toList(),
                   onDestinationSelected: (index) {
-                    appController.toPage(navigationItems[index].label);
+                    commonAction.toPage(navigationItems[index].label);
                   },
                   selectedIndex: currentIndex,
                 ),
@@ -272,6 +273,8 @@ class HomeBackScopeContainer extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, ref) {
+    final systemAction = context.systemAction;
+
     return CommonPopScope(
       onPop: (context) async {
         final pageLabel = ref.read(currentPageLabelProvider);
@@ -281,7 +284,7 @@ class HomeBackScopeContainer extends ConsumerWidget {
         if (canPop) {
           Navigator.of(realContext).pop();
         } else {
-          await appController.handleBackOrExit();
+          await systemAction.handleBackOrExit();
         }
         return false;
       },

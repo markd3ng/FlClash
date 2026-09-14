@@ -124,7 +124,9 @@ class AgeCrypto {
     final output = BytesBuilder(copy: false);
     output.add(nonce);
     final total = plaintext.length;
-    final chunkCount = total == 0 ? 1 : ((total + _chunkSize - 1) ~/ _chunkSize);
+    final chunkCount = total == 0
+        ? 1
+        : ((total + _chunkSize - 1) ~/ _chunkSize);
     for (var index = 0; index < chunkCount; index++) {
       final start = index * _chunkSize;
       var end = start + _chunkSize;
@@ -303,8 +305,7 @@ class AgeCrypto {
     }
     final payload = Uint8List.fromList(binary.sublist(macLineEnd + 1));
 
-    if (lines.isEmpty ||
-        ascii.decode(lines.first) != 'age-encryption.org/v1') {
+    if (lines.isEmpty || ascii.decode(lines.first) != 'age-encryption.org/v1') {
       throw const FormatException('unsupported age version');
     }
 

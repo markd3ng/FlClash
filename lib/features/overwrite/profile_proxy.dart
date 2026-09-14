@@ -1,14 +1,13 @@
 import 'dart:convert';
 
 import 'package:fl_clash/common/common.dart';
-import 'package:fl_clash/controller.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/database.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/widgets/widgets.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 String _decodeBase64(String value) {
@@ -1052,8 +1051,10 @@ class _ProfileProxiesContentState extends ConsumerState<ProfileProxiesContent> {
   final _profileProxyKey = utils.id;
 
   Future<String?> _findRawReference(String name) {
+    final setupAction = context.setupAction;
+
     final profile = ref.read(profileProvider(widget.profileId));
-    return appController.findRawProfileOutboundReference(
+    return setupAction.findRawProfileOutboundReference(
       widget.profileId,
       name,
       includeTopLevelRules: profile?.overwriteType != OverwriteType.custom,
@@ -1071,6 +1072,8 @@ class _ProfileProxiesContentState extends ConsumerState<ProfileProxiesContent> {
   Future<void> _handleAddOrUpdateProfileProxy([
     ProfileProxy? profileProxy,
   ]) async {
+    final setupAction = context.setupAction;
+
     final res = await BaseNavigator.push<ProfileProxy>(
       context,
       ProfileProxyEditView(profileProxy: profileProxy),
@@ -1097,9 +1100,7 @@ class _ProfileProxiesContentState extends ConsumerState<ProfileProxiesContent> {
       return;
     }
     try {
-      final rawConfig = await appController.getRawProfileConfig(
-        widget.profileId,
-      );
+      final rawConfig = await setupAction.getRawProfileConfig(widget.profileId);
       if (hasProfileProxyGroupNameConflict(rawConfig, res)) {
         if (mounted) {
           context.showNotifier(
@@ -1174,7 +1175,9 @@ class _ProfileProxiesContentState extends ConsumerState<ProfileProxiesContent> {
   }
 
   void _applyProfileChanges() {
-    appController.applyProfileDebounce(silence: true);
+    final setupAction = context.setupAction;
+
+    setupAction.applyProfileDebounce(silence: true);
   }
 
   void _handleProfileProxySelected(int profileProxyId) {

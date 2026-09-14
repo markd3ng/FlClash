@@ -95,7 +95,7 @@ request salt。服务端提前回复时，读线程可能判定合法回复的 s
 - Sudoku 填充请求/响应的死锁测试改用 testing/synctest 虚拟时间，避免密码表
   初始化和其他并行编译消耗一秒墙钟预算；测试仍检查超时退出，没有跳过用例。
 
-## 应用上游 10 个提交的处理清单
+## 首轮应用上游 10 个提交的处理清单
 
 “适配”表示按当前 oixCloud 架构接入行为；“保留差异”表示相应重构没有照搬。
 不能把下表理解为上游应用所有文件已经相同。
@@ -113,9 +113,9 @@ request salt。服务端提前回复时，读线程可能判定合法回复的 s
 | `d0b1562e` | 并行 CI 与缓存 | 已接入独立 Flutter/Go/Rust/Android 等门禁；本次核心门禁改为完整 vet/race 及本地依赖修复回归 |
 | `db038805` | 版本发布 | 核心指向的源码已合并；不改变应用版本号、签名、标签或发布状态 |
 
-## 明确保留、尚未移植的应用范围
+## 首轮保留范围（后续已完成代码接入）
 
-这些仍是功能或架构差异，不计入“已完成移植”：
+以下记录首轮核心移植结束时的差异；后续已按本地兼容边界接入全部四组，当前状态以 [UI 与平台迁移记录](upstream-v0.8.97-ui-platform-migration.md) 为准
 
 1. material_ui 全页面/控件改版，以及与之耦合的 provider action、profile/icon
    和数据库组织重构。需要连同 oixCloud 独有页面、持久化兼容和 TV 焦点整体适配。
@@ -126,8 +126,7 @@ request salt。服务端提前回复时，读线程可能判定合法回复的 s
 4. 新托盘、Rust 热键、窗口组件和原生 build hooks/打包拓扑整体迁移；保留现有
    系统代理所有权恢复、Windows Helper 会话校验和本地构建链。
 
-上述范围已作出保留决定；此前清单中的“完整核心分支合并、Sudoku HTTP-mask、
-OpenVPN rekey、Tailscale/gVisor/sing-tun 基线”不再作为下一批待移植项目。
+此前清单中的“完整核心分支合并、Sudoku HTTP-mask、OpenVPN rekey、Tailscale/gVisor/sing-tun 基线”已在首轮完成
 
 ## 本次验证
 
@@ -200,4 +199,4 @@ ANDROID_NDK_HOME=/path/to/ndk bash tool/check_android_core.sh arm64
 
 ## 后续 UI 与平台迁移
 
-用户已授权继续四组保留项，SSID、Rust 热键和新托盘已接入，详细实现、验证和剩余范围见 [迁移记录](upstream-v0.8.97-ui-platform-migration.md)
+四组保留项现已完成代码接入：Material UI／动作层／数据库、SSID、Linux Helper、新托盘／Rust 热键／窗口／Native Assets，详细兼容边界、构建入口、验证及设备验收项见 [迁移记录](upstream-v0.8.97-ui-platform-migration.md)

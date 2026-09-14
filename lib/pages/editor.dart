@@ -6,7 +6,7 @@ import 'package:fl_clash/models/common.dart';
 import 'package:fl_clash/providers/app.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/widgets/widgets.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:re_editor/re_editor.dart';
@@ -293,7 +293,8 @@ class _EditorPageState extends ConsumerState<EditorPage> {
                   ],
                 );
               },
-          shortcutsActivatorsBuilder: const DefaultCodeShortcutsActivatorsBuilder(),
+          shortcutsActivatorsBuilder:
+              const DefaultCodeShortcutsActivatorsBuilder(),
           controller: _controller,
           style: CodeEditorStyle(
             fontSize: context.textTheme.bodyLarge?.fontSize?.ap,
@@ -410,7 +411,11 @@ class FindPanel extends StatelessWidget implements PreferredSizeWidget {
       return Column(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [bar, const SizedBox(height: 4), _buildFindInput(context, value)],
+        children: [
+          bar,
+          const SizedBox(height: 4),
+          _buildFindInput(context, value),
+        ],
       );
     }
     return bar;

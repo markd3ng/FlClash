@@ -14,7 +14,7 @@ import 'package:fl_clash/widgets/input.dart';
 import 'package:fl_clash/widgets/list.dart';
 import 'package:fl_clash/widgets/scaffold.dart';
 import 'package:fl_clash/widgets/text.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -27,10 +27,13 @@ class BackupAndRestore extends ConsumerWidget {
     );
   }
 
-  Future<void> _backupOnWebDAV(DAVClient client) async {
-    final res = await appController.loadingRun<bool>(
+  Future<void> _backupOnWebDAV(BuildContext context, DAVClient client) async {
+    final commonAction = context.commonAction;
+    final backupAction = context.backupAction;
+
+    final res = await commonAction.loadingRun<bool>(
       () async {
-        final path = await appController.backup();
+        final path = await backupAction.backup();
         if (path.isEmpty) {
           return false;
         }
@@ -55,11 +58,14 @@ class BackupAndRestore extends ConsumerWidget {
     DAVClient client,
     RestoreOption option,
   ) async {
-    final res = await appController.loadingRun<bool>(
+    final commonAction = context.commonAction;
+    final backupAction = context.backupAction;
+
+    final res = await commonAction.loadingRun<bool>(
       () async {
         final path = await client.restore();
         try {
-          await appController.restore(option, backupPath: path);
+          await backupAction.restore(option, backupPath: path);
           return true;
         } finally {
           await File(path).safeDelete();
@@ -87,9 +93,12 @@ class BackupAndRestore extends ConsumerWidget {
   }
 
   Future<void> _backupOnLocal(BuildContext context) async {
-    final res = await appController.loadingRun<bool>(
+    final commonAction = context.commonAction;
+    final backupAction = context.backupAction;
+
+    final res = await commonAction.loadingRun<bool>(
       () async {
-        final path = await appController.backup();
+        final path = await backupAction.backup();
         if (path.isEmpty) {
           return false;
         }
@@ -114,13 +123,19 @@ class BackupAndRestore extends ConsumerWidget {
     );
   }
 
-  Future<void> _restoreOnLocal(RestoreOption option) async {
+  Future<void> _restoreOnLocal(
+    BuildContext context,
+    RestoreOption option,
+  ) async {
+    final commonAction = context.commonAction;
+    final backupAction = context.backupAction;
+
     final file = await picker.pickerFile(withData: false);
     final path = file?.path;
     if (path == null) return;
-    final res = await appController.loadingRun<bool>(
+    final res = await commonAction.loadingRun<bool>(
       () async {
-        await appController.restore(option, backupPath: path);
+        await backupAction.restore(option, backupPath: path);
         return true;
       },
       tag: LoadingTag.backup_restore,
@@ -138,7 +153,7 @@ class BackupAndRestore extends ConsumerWidget {
       child: const RestoreOptionsDialog(),
     );
     if (option == null || !context.mounted) return;
-    _restoreOnLocal(option);
+    _restoreOnLocal(context, option);
   }
 
   void _handleChange(String? value, WidgetRef ref) {
@@ -266,7 +281,7 @@ class BackupAndRestore extends ConsumerWidget {
             ),
             ListItem(
               onTap: () {
-                _backupOnWebDAV(client);
+                _backupOnWebDAV(context, client);
               },
               title: Text(appLocalizations.backup),
               subtitle: Text(appLocalizations.remoteBackupDesc),

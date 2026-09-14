@@ -181,12 +181,10 @@ class Request {
   );
 
   Request({
-    List<String> Function(Uri uri)? readRoutes,
+    this._readRoutes,
     bool Function(String host)? isApiDomain,
-    Duration readTimeout = const Duration(seconds: 30),
-  }) : _readRoutes = readRoutes,
-       _isApiDomain = isApiDomain ?? Secrets.isApiDomain,
-       _readTimeout = readTimeout {
+    this._readTimeout = const Duration(seconds: 30),
+  }) : _isApiDomain = isApiDomain ?? Secrets.isApiDomain {
     // IP detection must report the selected exit, even if that exit fails.
     dio = Dio(
       BaseOptions(

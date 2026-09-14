@@ -174,7 +174,7 @@ class Profiles extends _$Profiles {
     final newProfile = vm2.b;
     state = nextProfiles;
     return _queueWrite(
-      () => database.profiles.put(newProfile.toCompanion()),
+      () => database.putProfile(newProfile),
       reportOnWait: reportOnWait,
     );
   }
@@ -201,7 +201,7 @@ class Profiles extends _$Profiles {
     final newProfile = builder(profilesTemp[index]);
     profilesTemp[index] = newProfile;
     state = profilesTemp;
-    _queueWrite(() => database.profiles.put(newProfile.toCompanion()));
+    _queueWrite(() => database.putProfile(newProfile));
   }
 
   Future<void> setAndReorder(List<Profile> profiles) {

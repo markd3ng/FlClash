@@ -66,7 +66,7 @@ jobs:
         run: flutter pub get
 
       - name: Analyze
-        run: flutter analyze --no-fatal-infos
+        run: dart analyze --no-fatal-infos
 
       - name: Setup Go
         uses: actions/setup-go@v5
@@ -84,6 +84,16 @@ jobs:
 
       - name: Build native script test library
         run: cargo build --locked --manifest-path plugins/rust_api/rust/Cargo.toml
+
+      - name: Skip hooks for explicitly built unit-test fixtures
+        run: dart tool/set_native_build_assets.dart false
+
+      - name: Validate build hooks
+        working-directory: plugins/setup/setup_hooks
+        run: |
+          dart pub get
+          dart analyze
+          dart test
 
       - name: Run tests
         env:
@@ -187,7 +197,7 @@ jobs:
   android-test:
     name: Android unit tests
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
@@ -214,6 +224,14 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('android/**/*.gradle*', 'android/gradle/libs.versions.toml', 'android/gradle/wrapper/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
+      - name: Compile Android Native Assets for all supported ABIs
+        run: |
+          dart tool/set_native_build_assets.dart false
+          dart tool/set_native_build_assets.dart true rust_api
+          for target in android-arm64 android-arm android-x64; do
+            flutter build bundle --debug --target-platform "$target"
+          done
+
       - name: Run Android unit tests
         working-directory: android
         run: |
@@ -226,8 +244,6 @@ jobs:
           test -d "$wrapper" || flutter precache --android
           cp -R "$wrapper/." .
           chmod +x gradlew
-          ./gradlew :rust_api:cargokitCargoBuildRust_apiDebug \
-            -Ptarget-platform=android-arm64,android-arm,android-x64 --no-daemon
           ./gradlew :app:testDebugUnitTest :service:testDebugUnitTest :common:testDebugUnitTest \
             -x :app:compileFlutterBuildDebug -x :app:copyFlutterAssetsDebug --no-daemon
 
@@ -273,6 +289,8 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
       - run: flutter pub get
+      - name: Skip native build hooks for Windows unit tests
+        run: dart tool/set_native_build_assets.dart false
       - name: Check Windows process liveness and Helper client
         run: flutter test --no-pub test/core/desktop/process_probe_test.dart test/core/desktop/helper_client_test.dart test/core/desktop/launch_policy_test.dart test/widgets/init_error_screen_test.dart
 

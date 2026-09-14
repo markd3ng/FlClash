@@ -108,10 +108,9 @@ HttpClientAdapter _createCloudApiAdapter() => CloudReadRouteAdapter(
 @visibleForTesting
 class CloudReadRouteAdapter implements HttpClientAdapter {
   CloudReadRouteAdapter({
-    required HttpClientAdapter fallback,
-    required HttpClientAdapter Function(String route) createRouteAdapter,
-  }) : _fallback = fallback,
-       _createRouteAdapter = createRouteAdapter;
+    required this._fallback,
+    required this._createRouteAdapter,
+  });
 
   final HttpClientAdapter _fallback;
   final HttpClientAdapter Function(String route) _createRouteAdapter;
@@ -369,10 +368,9 @@ class CloudApiService {
   @visibleForTesting
   CloudApiService.forTesting({
     required Dio client,
-    Duration syncRequestTimeout = const Duration(seconds: 30),
+    this._syncRequestTimeout = const Duration(seconds: 30),
     List<String> readRoutes = const ['DIRECT'],
   }) : _dio = client,
-       _syncRequestTimeout = syncRequestTimeout,
        _readRoutes = ((_) => List<String>.of(readRoutes)) {
     _installInterceptors(client);
   }

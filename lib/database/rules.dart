@@ -1,6 +1,7 @@
 part of 'database.dart';
 
 @DataClassName('RawRule')
+@TableIndex(name: 'idx_rule_target', columns: {#ruleTarget})
 class Rules extends Table {
   @override
   String get tableName => 'rules';
@@ -9,6 +10,15 @@ class Rules extends Table {
 
   TextColumn get value => text()();
 
+  // Keep verbatim rule text for forward compatibility with new core actions.
+  TextColumn get ruleAction => textEnum<RuleAction>().nullable()();
+  TextColumn get content => text().nullable()();
+  TextColumn get ruleTarget => text().nullable()();
+  TextColumn get ruleProvider => text().nullable()();
+  TextColumn get subRule => text().nullable()();
+  BoolColumn get noResolve => boolean().withDefault(const Constant(false))();
+  BoolColumn get src => boolean().withDefault(const Constant(false))();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -16,6 +26,81 @@ class Rules extends Table {
 @DriftAccessor(tables: [Rules, ProfileRuleLinks])
 class RulesDao extends DatabaseAccessor<Database> with _$RulesDaoMixin {
   RulesDao(super.attachedDatabase);
+
+  Selectable<Rule> queryProfileCustomRules(int profileId) {
+    final query =
+        select(rules).join([
+            innerJoin(
+              profileRuleLinks,
+              profileRuleLinks.ruleId.equalsExp(rules.id),
+            ),
+          ])
+          ..where(
+            profileRuleLinks.profileId.equals(profileId) &
+                profileRuleLinks.scene.equalsValue(RuleScene.custom),
+          )
+          ..orderBy([OrderingTerm.asc(profileRuleLinks.order)]);
+    return query.map(
+      (row) => row
+          .readTable(rules)
+          .toRule(row.read(profileRuleLinks.order))
+          .copyWith(
+            id: row.read(profileRuleLinks.sourceId) ?? row.read(rules.id)!,
+          ),
+    );
+  }
+
+  Future<void> replaceCustomWithBatch(Batch batch, Profile profile) async {
+    final links =
+        await (select(profileRuleLinks)..where(
+              (row) =>
+                  row.profileId.equals(profile.id) &
+                  row.scene.equalsValue(RuleScene.custom),
+            ))
+            .get();
+    final keys = indexing.generateNKeys(profile.customRules.length);
+    batch.deleteWhere(
+      profileRuleLinks,
+      (row) =>
+          row.profileId.equals(profile.id) &
+          row.scene.equalsValue(RuleScene.custom),
+    );
+    for (var index = 0; index < profile.customRules.length; index++) {
+      final rule = profile.customRules[index];
+      final old = links.firstWhereOrNull((link) => link.sourceId == rule.id);
+      final internalId = old?.ruleId ?? snowflake.id;
+      batch.insertAllOnConflictUpdate(rules, [
+        rule.copyWith(id: internalId).toCompanion(),
+      ]);
+      batch.insert(
+        profileRuleLinks,
+        ProfileRuleLink(
+          profileId: profile.id,
+          ruleId: internalId,
+          scene: RuleScene.custom,
+          order: keys[index],
+        ).toCompanion().copyWith(sourceId: Value(rule.id)),
+      );
+    }
+    final linkedIds = selectOnly(profileRuleLinks)
+      ..addColumns([profileRuleLinks.ruleId]);
+    batch.deleteWhere(
+      rules,
+      (row) =>
+          row.id.isIn(links.map((link) => link.ruleId)) &
+          row.id.isNotInQuery(linkedIds),
+    );
+  }
+
+  Future<void> setCustomRules(int profileId, List<Rule> rules) =>
+      attachedDatabase.transaction(() async {
+        final profile = await (attachedDatabase.select(
+          attachedDatabase.profiles,
+        )..where((row) => row.id.equals(profileId))).getSingle();
+        await attachedDatabase.putProfile(
+          profile.toProfile().copyWith(customRules: rules),
+        );
+      });
 
   Selectable<Rule> allGlobalAddedRules() {
     return _get();
@@ -204,6 +289,17 @@ extension RawRuleExt on RawRule {
 
 extension RulesCompanionExt on Rule {
   RulesCompanion toCompanion() {
-    return RulesCompanion.insert(id: Value(id), value: value);
+    final parsed = ParsedRule.parseString(value);
+    return RulesCompanion.insert(
+      id: Value(id),
+      value: value,
+      ruleAction: Value(parsed.ruleAction),
+      content: Value(parsed.content),
+      ruleTarget: Value(parsed.ruleTarget),
+      ruleProvider: Value(parsed.ruleProvider),
+      subRule: Value(parsed.subRule),
+      noResolve: Value(parsed.noResolve),
+      src: Value(parsed.src),
+    );
   }
 }

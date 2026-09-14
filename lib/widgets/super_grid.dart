@@ -7,7 +7,7 @@ import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/widgets/activate_box.dart';
 import 'package:fl_clash/widgets/card.dart';
 import 'package:fl_clash/widgets/grid.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/physics.dart';
 
 typedef VoidCallback = void Function();

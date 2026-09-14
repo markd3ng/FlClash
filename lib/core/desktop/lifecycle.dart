@@ -190,8 +190,8 @@ final class DesktopCoreLifecycle implements DesktopCoreLifecycleController {
     required this.timeouts,
     required this.sessionIdFactory,
     required this.verifyPeerPid,
-    required DesktopCoreTransportBinding transport,
-  }) : _transport = transport {
+    required this._transport,
+  }) {
     _transportSubscription = _transport.events.listen(_handleTransportEvent);
   }
 

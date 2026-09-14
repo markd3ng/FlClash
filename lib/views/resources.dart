@@ -9,7 +9,7 @@ import 'package:fl_clash/providers/app.dart';
 import 'package:fl_clash/providers/config.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/widgets/widgets.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' hide context;
 
@@ -234,11 +234,14 @@ class _GeoDataListItemState extends ConsumerState<GeoDataListItem> {
   }
 
   Future<void> _handleUpdateGeoDataItem(String url) async {
+    final commonAction = context.commonAction;
+    final setupAction = context.setupAction;
+
     if (_updating) return;
     setState(() => _updating = true);
     try {
-      await appController.safeRun<void>(() async {
-        await appController.updateGeoResource(
+      await commonAction.safeRun<void>(() async {
+        await setupAction.updateGeoResource(
           geoItem.type,
           url,
           shouldContinue: () => mounted,

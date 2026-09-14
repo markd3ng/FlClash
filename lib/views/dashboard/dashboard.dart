@@ -2,12 +2,11 @@ import 'dart:math';
 
 import 'package:defer_pointer/defer_pointer.dart';
 import 'package:fl_clash/common/common.dart';
-import 'package:fl_clash/controller.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/widgets/widgets.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'widgets/start_button.dart';
@@ -43,6 +42,8 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
   }
 
   Future<void> _handleConnection() async {
+    final coreAction = context.coreAction;
+
     final coreStatus = ref.read(coreStatusProvider);
     if (coreStatus == CoreStatus.connecting) {
       return;
@@ -54,7 +55,7 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
     if (res != true) {
       return;
     }
-    appController.restartCore();
+    coreAction.restartCore();
   }
 
   List<Widget> _buildActions(bool isEdit) {
@@ -84,7 +85,10 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
                           },
                         ),
                         onPressed: _handleConnection,
-                        icon: const Icon(Icons.check, fontWeight: FontWeight.w900),
+                        icon: const Icon(
+                          Icons.check,
+                          fontWeight: FontWeight.w900,
+                        ),
                       )
                     : FilledButton.icon(
                         key: ValueKey(coreStatus),

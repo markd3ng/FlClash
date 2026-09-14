@@ -4,7 +4,7 @@ import 'package:fl_clash/l10n/l10n.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/database.dart';
 import 'package:fl_clash/widgets/widgets.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -38,6 +38,10 @@ class _CloudProfileCardState extends ConsumerState<CloudProfileCard> {
   }
 
   Future<void> _commit(CloudParams next) async {
+    final commonAction = context.commonAction;
+    final profileAction = context.profileAction;
+    final setupAction = context.setupAction;
+
     setState(() => _params = next);
     await CloudParamsStorage.save(next);
 
@@ -46,8 +50,8 @@ class _CloudProfileCardState extends ConsumerState<CloudProfileCard> {
         .where((p) => p.isoixCloudProfile)
         .toList();
     if (clashProfileList.isNotEmpty) {
-      final updatedProfile = await appController.safeRun(
-        () => appController.updateProfile(
+      final updatedProfile = await commonAction.safeRun(
+        () => profileAction.updateProfile(
           clashProfileList.first,
           showLoading: true,
           applyIfCurrent: false,
@@ -55,7 +59,7 @@ class _CloudProfileCardState extends ConsumerState<CloudProfileCard> {
         title: AppLocalizations.current.update,
       );
       if (updatedProfile != null) {
-        appController.applyProfileDebounce(silence: true);
+        setupAction.applyProfileDebounce(silence: true);
       }
     }
   }

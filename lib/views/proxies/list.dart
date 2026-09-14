@@ -8,7 +8,7 @@ import 'package:fl_clash/providers/config.dart';
 import 'package:fl_clash/providers/state.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'card.dart';
@@ -84,6 +84,8 @@ class _ProxiesListViewState extends State<ProxiesListView> {
   }
 
   void _handleChange(Set<String> currentUnfoldSet, String groupName) {
+    final proxiesAction = context.proxiesAction;
+
     _autoScrollToGroup(groupName);
     final tempUnfoldSet = Set<String>.from(currentUnfoldSet);
     if (tempUnfoldSet.contains(groupName)) {
@@ -91,7 +93,7 @@ class _ProxiesListViewState extends State<ProxiesListView> {
     } else {
       tempUnfoldSet.add(groupName);
     }
-    (widget.onUnfoldChanged ?? appController.updateCurrentUnfoldSet)(
+    (widget.onUnfoldChanged ?? proxiesAction.updateCurrentUnfoldSet)(
       tempUnfoldSet,
     );
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -298,7 +300,7 @@ class _ProxiesListViewState extends State<ProxiesListView> {
         if (state.groups.isEmpty) {
           _headerOffset = [];
           return NullStatus(
-            illustration: const ProxyEmptyIllustration(),
+            illustration: NullStatusIllustration.proxies,
             label: appLocalizations.nullTip(appLocalizations.proxies),
           );
         }
@@ -482,6 +484,7 @@ class _ListHeaderState extends State<ListHeader> {
   @override
   Widget build(BuildContext context) {
     return CommonCard(
+      enterActionsOnRight: true,
       enterAnimated: widget.enterAnimated,
       key: widget.key,
       radius: 18.ap,

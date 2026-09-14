@@ -1,5 +1,4 @@
 import 'package:fl_clash/common/common.dart';
-import 'package:fl_clash/controller.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
@@ -7,7 +6,7 @@ import 'package:fl_clash/state.dart';
 import 'package:fl_clash/widgets/ua_dialog.dart';
 import 'package:fl_clash/widgets/proxy_authentication.dart';
 import 'package:fl_clash/widgets/widgets.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -258,6 +257,8 @@ class AutoIpv6Item extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, ref) {
+    final setupAction = context.setupAction;
+
     final appLocalizations = context.appLocalizations;
     final autoSetIpv6 = ref.watch(
       networkSettingProvider.select((state) => state.autoSetIpv6),
@@ -269,7 +270,7 @@ class AutoIpv6Item extends ConsumerWidget {
       delegate: SwitchDelegate(
         value: autoSetIpv6,
         onChanged: (bool value) async {
-          await appController.setAutoIpv6(value);
+          await setupAction.setAutoIpv6(value);
         },
       ),
     );

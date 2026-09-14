@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:fl_clash/common/common.dart';
-import 'package:fl_clash/controller.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/core/controller.dart';
 import 'package:fl_clash/models/models.dart';
@@ -54,11 +53,11 @@ Future<String> validateCustomRoutingDraft(
     final patchConfig = ref.read(patchClashConfigProvider);
     final network = ref.read(networkSettingProvider);
     final state = await ref.read(setupStateProvider(profile.id).future);
-    if (!context.mounted || !await appController.ensureCoreReady()) {
+    if (!context.mounted || !await context.coreAction.ensureCoreReady()) {
       return appLocalizations.routingApplyFailed;
     }
     if (!context.mounted) return appLocalizations.routingApplyFailed;
-    final config = await appController.getProfile(
+    final config = await context.setupAction.getProfile(
       setupState: state.copyWith(
         overwriteType: profile.overwriteType,
         customProxyGroups: profile.customProxyGroups,

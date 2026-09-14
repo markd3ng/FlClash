@@ -4,7 +4,7 @@ import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/clash_config.dart';
 import 'package:fl_clash/widgets/dialog.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// A visual editor for common rules, with a lossless text editor for advanced
 /// expressions. [validate] can check the candidate in its complete configuration

@@ -1,7 +1,7 @@
 import 'package:fl_clash/common/input_limits.dart';
 import 'package:fl_clash/l10n/l10n.dart';
 import 'package:fl_clash/widgets/dialog.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class PortConflictDialog extends StatefulWidget {
   final int port;

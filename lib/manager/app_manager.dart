@@ -2,13 +2,12 @@ import 'dart:async';
 
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/common/periodic_task_runner.dart';
-import 'package:fl_clash/controller.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/manager/window_manager.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -72,9 +71,11 @@ class _AppStateManagerState extends ConsumerState<AppStateManager>
     });
     ref.listenManual(suspendProvider, (previous, next) {
       if (previous == next) return;
-      unawaited(globalState.syncNetworkSuspension().catchError((Object error) {
-        commonPrint.log('Network suspension failed: ${error.runtimeType}');
-      }));
+      unawaited(
+        globalState.syncNetworkSuspension().catchError((Object error) {
+          commonPrint.log('Network suspension failed: ${error.runtimeType}');
+        }),
+      );
       appController.addCheckIp();
     });
     if (window == null) {

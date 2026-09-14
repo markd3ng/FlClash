@@ -9,7 +9,7 @@ import 'package:fl_clash/models/core.dart';
 import 'package:fl_clash/providers/app.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/widgets/widgets.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class ProvidersView extends ConsumerStatefulWidget {
@@ -23,18 +23,20 @@ class ProvidersView extends ConsumerStatefulWidget {
 
 class _ProvidersViewState extends ConsumerState<ProvidersView> {
   Future<void> _updateProviders([String? type]) async {
+    final proxiesAction = context.proxiesAction;
+
     final providers = ref
         .read(providersProvider)
         .where((provider) => type == null || provider.type == type);
     final List<UpdatingMessage> messages = [];
     final updateProviders = providers.map<Future>((provider) async {
-      final message = await appController.updateProvider(provider);
+      final message = await proxiesAction.updateProvider(provider);
       if (message.isNotEmpty) {
         messages.add(UpdatingMessage(label: provider.name, message: message));
       }
     });
     await Future.wait(updateProviders);
-    appController.updateGroupsDebounce();
+    proxiesAction.updateGroupsDebounce();
     if (messages.isNotEmpty) {
       globalState.showAllUpdatingMessagesDialog(messages);
     }
@@ -91,17 +93,23 @@ class ProviderItem extends StatelessWidget {
 
   const ProviderItem({super.key, required this.provider});
 
-  Future<void> _handleUpdateProvider() async {
+  Future<void> _handleUpdateProvider(BuildContext context) async {
+    final commonAction = context.commonAction;
+    final proxiesAction = context.proxiesAction;
+
     if (provider.vehicleType != 'HTTP') return;
-    await appController.safeRun(() async {
-      final message = await appController.updateProvider(provider);
+    await commonAction.safeRun(() async {
+      final message = await proxiesAction.updateProvider(provider);
       if (message.isNotEmpty) throw message;
     }, silence: false);
-    appController.updateGroupsDebounce();
+    proxiesAction.updateGroupsDebounce();
   }
 
-  Future<void> _handleSideLoadProvider() async {
-    await appController.safeRun<void>(() async {
+  Future<void> _handleSideLoadProvider(BuildContext context) async {
+    final commonAction = context.commonAction;
+    final proxiesAction = context.proxiesAction;
+
+    await commonAction.safeRun<void>(() async {
       final platformFile = await picker.pickerFile();
       if (platformFile == null || provider.path == null) return;
       final bytes = await platformFile.readBytes();
@@ -112,12 +120,12 @@ class ProviderItem extends StatelessWidget {
         data: utf8.decode(bytes),
       );
       if (message.isNotEmpty) throw message;
-      appController.setProvider(
+      proxiesAction.setProvider(
         await coreController.getExternalProvider(provider.name),
       );
       if (message.isNotEmpty) throw message;
     });
-    appController.updateGroupsDebounce();
+    proxiesAction.updateGroupsDebounce();
   }
 
   String _buildProviderDesc() {
@@ -152,7 +160,7 @@ class ProviderItem extends StatelessWidget {
               CommonChip(
                 avatar: const Icon(Icons.upload),
                 label: appLocalizations.upload,
-                onPressed: _handleSideLoadProvider,
+                onPressed: () => _handleSideLoadProvider(context),
               ),
               if (provider.vehicleType == 'HTTP')
                 Consumer(
@@ -172,7 +180,7 @@ class ProviderItem extends StatelessWidget {
                         : CommonChip(
                             avatar: const Icon(Icons.sync),
                             label: appLocalizations.sync,
-                            onPressed: _handleUpdateProvider,
+                            onPressed: () => _handleUpdateProvider(context),
                           );
                   },
                 ),

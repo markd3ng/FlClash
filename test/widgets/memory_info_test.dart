@@ -6,8 +6,8 @@ import 'package:fl_clash/l10n/l10n.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/views/dashboard/widgets/memory_info.dart';
 import 'package:fl_clash/widgets/inherited.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:material_ui/material_ui.dart';
+
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -172,9 +172,7 @@ class _TestApp extends StatelessWidget {
       navigatorKey: globalState.navigatorKey,
       localizationsDelegates: const [
         AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
+        ...GlobalMaterialLocalizations.delegates,
       ],
       supportedLocales: AppLocalizations.delegate.supportedLocales,
       builder: (context, child) {

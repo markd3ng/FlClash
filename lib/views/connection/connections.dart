@@ -3,7 +3,7 @@ import 'package:fl_clash/core/controller.dart';
 import 'package:fl_clash/core/method.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/widgets/widgets.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:super_sliver_list/super_sliver_list.dart';
 
@@ -106,7 +106,7 @@ class _ConnectionsViewState extends ConsumerState<ConnectionsView>
           if (connections.isEmpty) {
             return NullStatus(
               label: appLocalizations.nullTip(appLocalizations.connections),
-              illustration: const ConnectionEmptyIllustration(),
+              illustration: NullStatusIllustration.connections,
             );
           }
           return SuperListView.separated(

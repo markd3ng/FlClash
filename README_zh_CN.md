@@ -108,7 +108,9 @@ macOS 和 Windows 上的 Docker Desktop 会为所有 Linux 容器运行一个共
    git submodule update --init --recursive
    ```
 
-2. 安装 `Flutter` 以及 `Golang` 环境
+2. 安装 Flutter 3.44+、Go 和 rustup（Rust API hook 固定 Rust 1.95.0），执行 `flutter pub get` 后再运行 setup.dart
+
+   Core／Helper 和 Rust 现通过 Dart hooks 自动编译，setup.dart 继续作为整包入口；构建参数准备和隔离测试见 [原生构建与迁移记录](docs/upstream-v0.8.97-ui-platform-migration.md)
 
 3. 构建应用
 

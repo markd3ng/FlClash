@@ -2,7 +2,7 @@ import 'dart:developer' as developer;
 
 import 'package:fl_clash/l10n/l10n.dart';
 import 'package:fl_clash/services/config_key_store.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class ConfigRecoveryScreen extends StatefulWidget {
   final Future<void> Function() onRetry;

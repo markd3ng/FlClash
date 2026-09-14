@@ -1,6 +1,6 @@
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/widgets/widgets.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Keeps selection order: fallback groups try their members in this order.
 class ProxyMemberPicker extends StatefulWidget {
@@ -52,45 +52,47 @@ class _ProxyMemberPickerState extends State<ProxyMemberPicker> {
       ],
       child: SizedBox(
         height: 400,
-        child: Column(
-          children: [
-            TextField(
-              autofocus: true,
-              decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.search),
-                hintText: appLocalizations.search,
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: TextField(
+                autofocus: true,
+                decoration: InputDecoration(
+                  prefixIcon: const Icon(Icons.search),
+                  hintText: appLocalizations.search,
+                ),
+                onChanged: (value) => setState(() => _query = value),
               ),
-              onChanged: (value) => setState(() => _query = value),
             ),
-            const SizedBox(height: 8),
-            Expanded(
-              child: names.isEmpty
-                  ? Center(child: Text(appLocalizations.noSearchResult))
-                  : ListView.builder(
-                      itemCount: names.length,
-                      itemBuilder: (context, index) {
-                        final name = names[index];
-                        final order = selectedOrder[name] ?? -1;
-                        return CheckboxListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: Text(name),
-                          subtitle: !available.contains(name)
-                              ? Text(appLocalizations.outboundUnavailable)
-                              : order >= 0
-                              ? Text('#${order + 1}')
-                              : null,
-                          value: order >= 0,
-                          onChanged: (checked) => setState(() {
-                            if (checked == true) {
-                              _selected.add(name);
-                            } else {
-                              _selected.remove(name);
-                            }
-                          }),
-                        );
-                      },
-                    ),
-            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 8)),
+            names.isEmpty
+                ? SliverToBoxAdapter(
+                    child: Center(child: Text(appLocalizations.noSearchResult)),
+                  )
+                : SliverList.builder(
+                    itemCount: names.length,
+                    itemBuilder: (context, index) {
+                      final name = names[index];
+                      final order = selectedOrder[name] ?? -1;
+                      return CheckboxListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(name),
+                        subtitle: !available.contains(name)
+                            ? Text(appLocalizations.outboundUnavailable)
+                            : order >= 0
+                            ? Text('#${order + 1}')
+                            : null,
+                        value: order >= 0,
+                        onChanged: (checked) => setState(() {
+                          if (checked == true) {
+                            _selected.add(name);
+                          } else {
+                            _selected.remove(name);
+                          }
+                        }),
+                      );
+                    },
+                  ),
           ],
         ),
       ),

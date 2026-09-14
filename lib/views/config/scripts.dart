@@ -15,7 +15,7 @@ import 'package:fl_clash/widgets/null_status.dart';
 import 'package:fl_clash/widgets/pop_scope.dart';
 import 'package:fl_clash/widgets/scaffold.dart';
 import 'package:fl_clash/widgets/theme.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class ScriptsView extends ConsumerStatefulWidget {
@@ -29,6 +29,8 @@ class _ScriptsViewState extends ConsumerState<ScriptsView> {
   final _key = utils.id;
 
   Future<void> _handleDelScript(int id) async {
+    final setupAction = context.setupAction;
+
     final res = await globalState.showMessage(
       message: TextSpan(
         text: appLocalizations.deleteTip(appLocalizations.script),
@@ -56,7 +58,7 @@ class _ScriptsViewState extends ConsumerState<ScriptsView> {
     });
     ref.read(selectedItemProvider(_key).notifier).value = null;
     if (affectedProfileIds.contains(ref.read(currentProfileIdProvider))) {
-      await appController.applyProfile(force: true);
+      await setupAction.applyProfile(force: true);
     }
   }
 
@@ -72,7 +74,7 @@ class _ScriptsViewState extends ConsumerState<ScriptsView> {
   Widget _buildContent(List<Script> scripts, int? selectedScriptId) {
     if (scripts.isEmpty) {
       return NullStatus(
-        illustration: const ScriptEmptyIllustration(),
+        illustration: NullStatusIllustration.scripts,
         label: appLocalizations.nullTip(appLocalizations.script),
       );
     }

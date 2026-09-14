@@ -1,11 +1,10 @@
 import 'package:fl_clash/common/common.dart';
-import 'package:fl_clash/controller.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/widgets/widgets.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:super_sliver_list/super_sliver_list.dart';
 
@@ -68,8 +67,11 @@ class _LogsViewState extends ConsumerState<LogsView> {
   }
 
   Future<void> _handleExport() async {
-    final res = await appController.safeRun<bool>(() async {
-      return appController.exportLogs();
+    final commonAction = context.commonAction;
+    final logsAction = context.logsAction;
+
+    final res = await commonAction.safeRun<bool>(() async {
+      return logsAction.exportLogs();
     }, title: appLocalizations.exportLogs);
     if (res != true) return;
     globalState.showMessage(
@@ -132,7 +134,7 @@ class _LogsViewState extends ConsumerState<LogsView> {
           final logs = state.list;
           if (logs.isEmpty) {
             return NullStatus(
-              illustration: const LogEmptyIllustration(),
+              illustration: NullStatusIllustration.logs,
               label: appLocalizations.nullTip(appLocalizations.logs),
             );
           }

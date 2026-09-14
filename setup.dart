@@ -2,89 +2,12 @@
 
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math';
 
 import 'package:args/command_runner.dart';
 import 'package:crypto/crypto.dart';
 import 'package:path/path.dart';
-
-// Obfuscate compile-time secrets (v2) so plaintext keys/domains are not left in
-// the Go core binary or the Flutter dart-defines. Restored at runtime by
-// core/secrets.go and lib/common/secrets.dart, which share this exact scheme:
-// keystream = SHA256-CTR(master, nonce), master = SHA256(a||b||"oix-obf-v2-flclash").
-final Random _obfRandom = Random.secure();
-
-String _obfV2(String plain) {
-  final data = utf8.encode(plain);
-  final nonce = List<int>.generate(8, (_) => _obfRandom.nextInt(256));
-  final ks = _obfKeystream(nonce, data.length);
-  final out = List<int>.generate(data.length, (i) => data[i] ^ ks[i]);
-  return 'v2:${base64.encode(<int>[...nonce, ...out])}';
-}
-
-List<int> _obfMaster() {
-  const a = [
-    0x5a,
-    0x1c,
-    0xe7,
-    0x93,
-    0x2f,
-    0xb8,
-    0x04,
-    0xd6,
-    0x69,
-    0xa1,
-    0x3e,
-    0xcf,
-    0x72,
-    0x8d,
-    0x15,
-    0xba,
-  ];
-  const b = [
-    0xc4,
-    0x37,
-    0x9e,
-    0x08,
-    0x51,
-    0xed,
-    0x2a,
-    0x7f,
-    0xd3,
-    0x60,
-    0x1b,
-    0x86,
-    0xf9,
-    0x42,
-    0xad,
-    0x0e,
-  ];
-  return sha256.convert(<int>[
-    ...a,
-    ...b,
-    ...utf8.encode('oix-obf-v2-flclash'),
-  ]).bytes;
-}
-
-List<int> _obfKeystream(List<int> nonce, int count) {
-  final master = _obfMaster();
-  final out = <int>[];
-  var counter = 0;
-  while (out.length < count) {
-    out.addAll(
-      sha256.convert(<int>[
-        ...master,
-        ...nonce,
-        (counter >> 24) & 0xff,
-        (counter >> 16) & 0xff,
-        (counter >> 8) & 0xff,
-        counter & 0xff,
-      ]).bytes,
-    );
-    counter++;
-  }
-  return out.sublist(0, count);
-}
+import 'package:yaml/yaml.dart';
+import 'package:setup_hooks/setup_hooks.dart' as hooks;
 
 enum Target { windows, linux, android, macos }
 
@@ -182,11 +105,17 @@ class Build {
 
   static String get outDir => join(current, libName);
 
-  static String get _coreDir => join(current, 'core');
-
-  static String get _servicesDir => join(current, 'services', 'helper');
-
   static String get distPath => join(current, 'dist');
+
+  static int get _androidApiLevel {
+    final source = File('android/gradle/libs.versions.toml').readAsStringSync();
+    final match = RegExp(
+      r'^minSdk\s*=\s*"(\d+)"',
+      multiLine: true,
+    ).firstMatch(source);
+    if (match == null) throw StateError('Android minSdk is missing');
+    return int.parse(match[1]!);
+  }
 
   static String _getCc(BuildItem buildItem) {
     final environment = Platform.environment;
@@ -201,10 +130,10 @@ class Build {
           .where((file) => !basename(file.path).startsWith('.'))
           .toList();
       final map = {
-        'armeabi-v7a': 'armv7a-linux-androideabi21-clang',
-        'arm64-v8a': 'aarch64-linux-android21-clang',
-        'x86': 'i686-linux-android21-clang',
-        'x86_64': 'x86_64-linux-android21-clang',
+        'armeabi-v7a': 'armv7a-linux-androideabi$_androidApiLevel-clang',
+        'arm64-v8a': 'aarch64-linux-android$_androidApiLevel-clang',
+        'x86': 'i686-linux-android$_androidApiLevel-clang',
+        'x86_64': 'x86_64-linux-android$_androidApiLevel-clang',
       };
       return join(prebuiltDirList.first.path, 'bin', map[buildItem.archName]);
     }
@@ -321,149 +250,48 @@ class Build {
     required Mode mode,
     required Target target,
     Arch? arch,
+    bool includeHelper = false,
   }) async {
-    final isLib = mode == Mode.lib;
-
-    final items = buildItems.where((element) {
-      return element.target == target &&
-          (arch == null ? true : element.arch == arch);
-    }).toList();
-
-    final List<String> corePaths = [];
-
-    final targetOutFilePath = join(outDir, target.name);
-    final targetOutDirectory = Directory(targetOutFilePath);
-    if (await targetOutDirectory.exists()) {
-      await targetOutDirectory.delete(recursive: true);
-    }
-    await targetOutDirectory.create(recursive: true);
-    for (final item in items) {
-      final outFilePath = join(targetOutFilePath, item.archName);
-
-      final fileName = isLib
-          ? '$libName${item.target.dynamicLibExtensionName}'
-          : '$coreName${item.target.executableExtensionName}';
-      final realOutPath = join(outFilePath, fileName);
-      corePaths.add(realOutPath);
-
-      final Map<String, String> env = {};
-      env['GOOS'] = item.target.os;
-      if (item.arch != null) {
-        env['GOARCH'] = item.arch!.name;
-      }
-      if (isLib) {
-        env['CGO_ENABLED'] = '1';
-        env['CC'] = _getCc(item);
-        env['CFLAGS'] = '-O3 -Werror';
-      } else {
-        env['CGO_ENABLED'] = '0';
-      }
-      // -w -s strips the symbol table and DWARF; -buildid= removes the build
-      // fingerprint. Combined with -trimpath below (which drops source paths),
-      // this matches the mihomo/Clash.Meta hardening baseline.
-      final ldflags = StringBuffer('-w -s -buildid=');
-      final dnsAuthPrivateKey = Platform.environment['DNS_AUTH_PRIVATE_KEY']
-          ?.trim();
-      if (dnsAuthPrivateKey != null && dnsAuthPrivateKey.isNotEmpty) {
-        ldflags.write(
-          ' -X main.GlobalDNSAuthPrivateKey=${_obfV2(dnsAuthPrivateKey)}',
+    final items = buildItems.where(
+      (item) => item.target == target && (arch == null || item.arch == arch),
+    );
+    final outputs = <String>[];
+    hooks.initLogging();
+    try {
+      for (final item in items) {
+        final nativeTarget = hooks.Target.resolve(
+          platform: target.name,
+          goarch: item.arch!.name,
+        );
+        final report = await hooks.buildPlatform(
+          hooks.BuildRequest(
+            rootDir: current,
+            target: nativeTarget,
+            harnessDir: join(current, 'plugins', 'setup', 'setup_hooks'),
+            includeHelper: includeHelper,
+            requireSecrets: true,
+            androidToolchain: mode == Mode.lib
+                ? hooks.AndroidToolchain(
+                    clangDirectory: dirname(_getCc(item)),
+                    apiLevel: _androidApiLevel,
+                  )
+                : null,
+          ),
+        );
+        outputs.add(
+          report.outputs.firstWhere(
+            (path) =>
+                basename(path) ==
+                (mode == Mode.lib
+                    ? '$libName.so'
+                    : '$coreName${target.executableExtensionName}'),
+          ),
         );
       }
-      final dnsAuthDomains = Platform.environment['DNS_AUTH_DOMAINS']?.trim();
-      if (dnsAuthDomains != null && dnsAuthDomains.isNotEmpty) {
-        ldflags.write(
-          ' -X main.GlobalDNSAuthDomains=${_obfV2(dnsAuthDomains)}',
-        );
-      }
-      final execLines = [
-        'go',
-        'build',
-        '-trimpath',
-        '-ldflags=$ldflags',
-        '-tags=$tags',
-        if (isLib) '-buildmode=c-shared',
-        '-o',
-        realOutPath,
-      ];
-      await exec(
-        execLines,
-        name: 'build core',
-        environment: env,
-        workingDirectory: _coreDir,
-      );
-      if (isLib && item.archName != null) {
-        await adjustLibOut(
-          targetOutFilePath: targetOutFilePath,
-          outFilePath: outFilePath,
-          archName: item.archName!,
-        );
-      }
+      return outputs;
+    } finally {
+      hooks.closeLogging();
     }
-
-    if ((target == Target.windows || target == Target.linux) &&
-        !isLib &&
-        corePaths.isNotEmpty) {
-      final coreSha256 = await calcSha256(corePaths.first);
-      await File(join(targetOutFilePath, coreManifestName)).writeAsString(
-        '${jsonEncode({'coreSha256': coreSha256})}\n',
-        flush: true,
-      );
-    }
-
-    return corePaths;
-  }
-
-  static Future<void> adjustLibOut({
-    required String targetOutFilePath,
-    required String outFilePath,
-    required String archName,
-  }) async {
-    final includesPath = join(targetOutFilePath, 'includes');
-    final realOutPath = join(includesPath, archName);
-    await Directory(realOutPath).create(recursive: true);
-    final targetOutFiles = Directory(outFilePath).listSync();
-    final coreFiles = Directory(_coreDir).listSync();
-    for (final file in [...targetOutFiles, ...coreFiles]) {
-      if (!file.path.endsWith('.h')) {
-        continue;
-      }
-      final targetFilePath = join(realOutPath, basename(file.path));
-      final realFile = File(file.path);
-      await realFile.copy(targetFilePath);
-      if (coreFiles.contains(file)) {
-        continue;
-      }
-      await realFile.delete();
-    }
-  }
-
-  static Future<void> buildHelper(Target target, String coreSha256) async {
-    await exec(
-      [
-        'cargo',
-        'build',
-        '--release',
-        if (target == Target.windows) ...['--features', 'windows-service'],
-      ],
-      environment: {
-        'CORE_SHA256': coreSha256,
-        'CORE_NAME': '$coreName${target.executableExtensionName}',
-      },
-      name: 'build helper',
-      workingDirectory: _servicesDir,
-    );
-    final outPath = join(
-      _servicesDir,
-      'target',
-      'release',
-      'helper${target.executableExtensionName}',
-    );
-    final targetPath = join(
-      outDir,
-      target.name,
-      'FlClashHelperService${target.executableExtensionName}',
-    );
-    await File(outPath).copy(targetPath);
   }
 
   static List<String> getExecutable(String command) {
@@ -558,7 +386,7 @@ class BuildCommand extends Command {
           // restored at runtime by lib/common/secrets.dart.
           final value = entry.key == 'APP_ENV'
               ? entry.value!
-              : _obfV2(entry.value!);
+              : hooks.obfuscateBuildSecret(entry.value!);
           return '$prefix=${entry.key}=$value';
         })
         .join(' ');
@@ -761,6 +589,15 @@ class BuildCommand extends Command {
       'DNS_AUTH_DOMAINS',
     ]);
     if (out == 'app') {
+      final config =
+          loadYaml(File('pubspec.yaml').readAsStringSync()) as YamlMap;
+      final defines =
+          (config['hooks'] as YamlMap?)?['user_defines'] as YamlMap?;
+      for (final package in ['setup', 'rust_api']) {
+        if ((defines?[package] as YamlMap?)?['build_assets'] == false) {
+          throw 'Enable native build assets for $package before packaging';
+        }
+      }
       Build.requireEnvironment(const [
         'PROFILE_KEY',
         'BASE_DOMAIN',
@@ -771,10 +608,11 @@ class BuildCommand extends Command {
       ]);
     }
 
-    final corePaths = await Build.buildCore(
+    await Build.buildCore(
       target: target,
       arch: arch,
       mode: mode,
+      includeHelper: out == 'app',
     );
 
     if (out != 'app') {
@@ -783,8 +621,6 @@ class BuildCommand extends Command {
 
     switch (target) {
       case Target.windows:
-        final coreSha256 = await Build.calcSha256(corePaths.first);
-        await Build.buildHelper(target, coreSha256);
         await _buildDistributor(
           target: target,
           targets: 'exe,zip',
@@ -793,10 +629,6 @@ class BuildCommand extends Command {
         );
         return;
       case Target.linux:
-        await Build.buildHelper(
-          target,
-          await Build.calcSha256(corePaths.first),
-        );
         final targetMap = {Arch.arm64: 'linux-arm64', Arch.amd64: 'linux-x64'};
         final targets = [
           'deb',

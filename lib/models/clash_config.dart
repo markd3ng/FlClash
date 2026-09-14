@@ -214,6 +214,9 @@ List<String>? _parseStringList(dynamic value) {
 @freezed
 abstract class ProxyGroup with _$ProxyGroup {
   const factory ProxyGroup({
+    @JsonKey(includeToJson: false) int? id,
+    @JsonKey(includeToJson: false) int? profileId,
+    @JsonKey(includeToJson: false) String? order,
     required String name,
     @JsonKey(fromJson: GroupType.parseProfileType) required GroupType type,
     @JsonKey(fromJson: _parseStringList) List<String>? proxies,

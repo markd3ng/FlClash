@@ -102,7 +102,7 @@
 		9740EEB21CF90195004384FC /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
 		9C9D4EF99A207AF51C53E0A3 /* Pods-RunnerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release.xcconfig"; sourceTree = "<group>"; };
 		CE90D6AE6AF7FF51A5D7A5BB /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
-		F51BB7CA2EF0267400E05D67 /* FlClashCore */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = FlClashCore; path = ../libclash/macos/FlClashCore; sourceTree = "<group>"; };
+		F51BB7CA2EF0267400E05D67 /* FlClashCore */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = FlClashCore; sourceTree = BUILT_PRODUCTS_DIR; };
 		78E0A7A72DC9AD7400C4905E /* FlutterGeneratedPluginSwiftPackage */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = FlutterGeneratedPluginSwiftPackage; path = ephemeral/Packages/FlutterGeneratedPluginSwiftPackage; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -263,6 +263,7 @@
 				33CC110E2044A8840003C045 /* Bundle Framework */,
 				3399D490228B24CF009A79C7 /* ShellScript */,
 				DD2258A65B871C474676AD18 /* [CP] Embed Pods Frameworks */,
+				F51BB7CC2EF0268000E05D67 /* Stage Core */,
 				F51BB7C92EF0265000E05D67 /* Copy Core */,
 			);
 			buildRules = (
@@ -448,6 +449,26 @@
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
+		};
+		F51BB7CC2EF0268000E05D67 /* Stage Core */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Stage Core";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(BUILT_PRODUCTS_DIR)/FlClashCore",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "core=\"$SRCROOT/../libclash/macos/FlClashCore\"\nif [ ! -f \"$core\" ]; then\n  echo \"error: $core is missing; the setup build hook produced no Core\"\n  exit 1\nfi\nslices=\"$(lipo -archs \"$core\")\"\nfor arch in $ARCHS; do\n  case \" $slices \" in\n    *\" $arch \"*) ;;\n    *) echo \"error: $core has no $arch slice (has: $slices)\"; exit 1 ;;\n  esac\ndone\nif ! cmp -s \"$core\" \"$BUILT_PRODUCTS_DIR/FlClashCore\"; then\n  cp -f \"$core\" \"$BUILT_PRODUCTS_DIR/FlClashCore\"\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 

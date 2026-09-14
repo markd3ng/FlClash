@@ -602,6 +602,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "excludeType": MessageLookupByLibrary.simpleMessage("Тип исключения"),
     "existsTip": m14,
     "exit": MessageLookupByLibrary.simpleMessage("Выход"),
+    "exitFullScreen": MessageLookupByLibrary.simpleMessage(
+      "Выйти из полноэкранного режима",
+    ),
     "expand": MessageLookupByLibrary.simpleMessage("Стандартный"),
     "expectedStatus": MessageLookupByLibrary.simpleMessage("Ожидаемый статус"),
     "expireDate": m15,
@@ -645,6 +648,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "findProcessModeDesc": MessageLookupByLibrary.simpleMessage(
       "При включении возможны небольшие потери производительности",
     ),
+    "followProfile": MessageLookupByLibrary.simpleMessage("Как в профиле"),
     "fontFamily": MessageLookupByLibrary.simpleMessage("Семейство шрифтов"),
     "forceRestartCoreTip": MessageLookupByLibrary.simpleMessage(
       "Вы уверены, что хотите принудительно перезапустить ядро?",
@@ -742,6 +746,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "hoursCount": m21,
     "iHavePaid": MessageLookupByLibrary.simpleMessage("Я оплатил"),
     "icon": MessageLookupByLibrary.simpleMessage("Иконка"),
+    "iconHistory": MessageLookupByLibrary.simpleMessage("Недавние значки"),
     "iconStyle": MessageLookupByLibrary.simpleMessage("Стиль иконки"),
     "iconUrl": MessageLookupByLibrary.simpleMessage("URL иконки"),
     "import": MessageLookupByLibrary.simpleMessage("Импорт"),
@@ -869,9 +874,15 @@ class MessageLookup extends MessageLookupByLibrary {
     "mainlandNetworkWarning": MessageLookupByLibrary.simpleMessage(
       "Может не подходить для сетей материкового Китая",
     ),
+    "matchTarget": MessageLookupByLibrary.simpleMessage("MATCH-TARGET"),
+    "matchTargetDesc": MessageLookupByLibrary.simpleMessage(
+      "Куда направляются правила с целью MATCH-TARGET. По умолчанию — цель последнего правила MATCH этого профиля.",
+    ),
+    "matchTargetTitle": MessageLookupByLibrary.simpleMessage("Цель MATCH"),
     "maxFailedTimes": MessageLookupByLibrary.simpleMessage(
       "Макс. количество неудач",
     ),
+    "maximize": MessageLookupByLibrary.simpleMessage("Развернуть"),
     "memberOrderHint": MessageLookupByLibrary.simpleMessage(
       "Порядок выбора определяет порядок переключения. Повторный выбор перемещает участника в конец.",
     ),
@@ -887,6 +898,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "minimalConfigurationDesc": MessageLookupByLibrary.simpleMessage(
       "Использовать сокращенный набор правил для меньшего профиля",
     ),
+    "minimize": MessageLookupByLibrary.simpleMessage("Свернуть"),
     "minimizeOnExit": MessageLookupByLibrary.simpleMessage(
       "Свернуть при выходе",
     ),
@@ -1046,6 +1058,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "personalRouting": MessageLookupByLibrary.simpleMessage(
       "Личная маршрутизация",
+    ),
+    "pinWindow": MessageLookupByLibrary.simpleMessage(
+      "Закрепить поверх всех окон",
     ),
     "planEnded": MessageLookupByLibrary.simpleMessage("Завершён"),
     "planInUse": MessageLookupByLibrary.simpleMessage("Используется"),
@@ -1516,7 +1531,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "unknownNetworkError": MessageLookupByLibrary.simpleMessage(
       "Неизвестная сетевая ошибка",
     ),
+    "unmaximize": MessageLookupByLibrary.simpleMessage("Свернуть в окно"),
     "unnamed": MessageLookupByLibrary.simpleMessage("Без имени"),
+    "unpinWindow": MessageLookupByLibrary.simpleMessage("Открепить окно"),
     "update": MessageLookupByLibrary.simpleMessage("Обновить"),
     "upgradePlan": MessageLookupByLibrary.simpleMessage("Улучшить тариф"),
     "upload": MessageLookupByLibrary.simpleMessage("Загрузка"),

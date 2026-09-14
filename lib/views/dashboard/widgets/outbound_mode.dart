@@ -6,7 +6,7 @@ import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/providers/config.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/widgets/widgets.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -15,6 +15,8 @@ class OutboundMode extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final setupAction = context.setupAction;
+
     final height = getWidgetHeight(2);
     return SizedBox(
       height: height,
@@ -30,6 +32,7 @@ class OutboundMode extends StatelessWidget {
               hoverColor: Colors.transparent,
             ),
             child: CommonCard(
+              skipTraversal: true,
               info: Info(
                 label: appLocalizations.outboundMode,
                 iconData: Icons.call_split_sharp,
@@ -42,7 +45,7 @@ class OutboundMode extends StatelessWidget {
                     if (value == null) {
                       return;
                     }
-                    appController.changeMode(value);
+                    setupAction.changeMode(value);
                   },
                   child: LayoutBuilder(
                     builder: (_, constraints) {
@@ -67,7 +70,7 @@ class OutboundMode extends StatelessWidget {
                               ),
                               delegate: RadioDelegate(
                                 onTap: () {
-                                  appController.changeMode(item);
+                                  setupAction.changeMode(item);
                                 },
                                 value: item,
                               ),
@@ -105,6 +108,8 @@ class OutboundModeV2 extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final setupAction = context.setupAction;
+
     final height = getWidgetHeight(1);
     return SizedBox(
       height: height,
@@ -160,7 +165,7 @@ class OutboundModeV2 extends StatelessWidget {
                             if (value == null) {
                               return;
                             }
-                            appController.changeMode(value);
+                            setupAction.changeMode(value);
                           },
                           thumbColor: thumbColor,
                         ),

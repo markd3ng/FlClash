@@ -1,5 +1,4 @@
 import 'package:fl_clash/common/common.dart';
-import 'package:fl_clash/controller.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/pages/editor.dart';
@@ -8,7 +7,7 @@ import 'package:fl_clash/state.dart';
 import 'package:fl_clash/features/overwrite/proxy_chain.dart';
 import 'package:fl_clash/views/profiles/overwrite.dart';
 import 'package:fl_clash/widgets/widgets.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -42,6 +41,8 @@ class _ProfilesViewState extends State<ProfilesView> {
   }
 
   Future<void> _updateProfiles(List<Profile> profiles) async {
+    final profileAction = context.profileAction;
+
     if (_isUpdating == true) {
       return;
     }
@@ -50,7 +51,7 @@ class _ProfilesViewState extends State<ProfilesView> {
     final updateProfiles = profiles.map<Future>((profile) async {
       if (profile.type == ProfileType.file) return;
       try {
-        await appController.updateProfile(profile, showLoading: true);
+        await profileAction.updateProfile(profile, showLoading: true);
       } catch (e) {
         final message = profile.isoixCloudProfile
             ? e.runtimeType.toString()
@@ -118,7 +119,7 @@ class _ProfilesViewState extends State<ProfilesView> {
           body: state.profiles.isEmpty
               ? NullStatus(
                   label: appLocalizations.nullProfileDesc,
-                  illustration: const ProfileEmptyIllustration(),
+                  illustration: NullStatusIllustration.profile,
                 )
               : Align(
                   alignment: Alignment.topCenter,
@@ -172,6 +173,8 @@ class ProfileItem extends StatelessWidget {
   });
 
   Future<void> _handleDeleteProfile(BuildContext context) async {
+    final profileAction = context.profileAction;
+
     final res = await globalState.showMessage(
       title: appLocalizations.tip,
       message: TextSpan(
@@ -181,11 +184,13 @@ class ProfileItem extends StatelessWidget {
     if (res != true) {
       return;
     }
-    await appController.deleteProfile(profile.id);
+    await profileAction.deleteProfile(profile.id);
   }
 
   Future<void> _handlePreview(BuildContext context) async {
-    final configMap = await appController.getProfileWithId(profile.id);
+    final setupAction = context.setupAction;
+
+    final configMap = await setupAction.getProfileWithId(profile.id);
     if (configMap.isEmpty) {
       return;
     }
@@ -198,10 +203,13 @@ class ProfileItem extends StatelessWidget {
     BaseNavigator.push<String>(context, previewPage);
   }
 
-  Future updateProfile() async {
+  Future updateProfile(BuildContext context) async {
+    final commonAction = context.commonAction;
+    final profileAction = context.profileAction;
+
     if (profile.type == ProfileType.file) return;
-    await appController.loadingRun(() async {
-      await appController.updateProfile(profile, showLoading: true);
+    await commonAction.loadingRun(() async {
+      await profileAction.updateProfile(profile, showLoading: true);
     }, tag: LoadingTag.profiles);
   }
 
@@ -249,8 +257,10 @@ class ProfileItem extends StatelessWidget {
   }
 
   Future<void> _handleExportFile(BuildContext context) async {
+    final commonAction = context.commonAction;
+
     if (profile.isoixCloudProfile) return;
-    final res = await appController.safeRun<bool>(() async {
+    final res = await commonAction.safeRun<bool>(() async {
       final mFile = await profile.file;
       final value = await picker.saveFile(
         profile.realLabel,
@@ -275,6 +285,7 @@ class ProfileItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CommonCard(
+      enterActionsOnRight: true,
       isSelected: profile.id == groupValue,
       onPressed: () {
         onChanged(profile.id);
@@ -322,7 +333,7 @@ class ProfileItem extends StatelessWidget {
                                 icon: Icons.sync_alt_sharp,
                                 label: appLocalizations.sync,
                                 onPressed: () {
-                                  updateProfile();
+                                  updateProfile(context);
                                 },
                               ),
                             ],
@@ -474,8 +485,10 @@ class _ReorderableProfilesSheetState extends State<ReorderableProfilesSheet> {
   }
 
   void _handleSave() {
+    final profileAction = context.profileAction;
+
     Navigator.of(context).pop();
-    appController.reorder(profiles);
+    profileAction.reorder(profiles);
   }
 
   @override

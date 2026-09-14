@@ -6233,6 +6233,96 @@ class AppLocalizations {
       args: [],
     );
   }
+
+  /// `Match target`
+  String get matchTargetTitle {
+    return Intl.message(
+      'Match target',
+      name: 'matchTargetTitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `MATCH-TARGET`
+  String get matchTarget {
+    return Intl.message(
+      'MATCH-TARGET',
+      name: 'matchTarget',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Where rules targeting MATCH-TARGET go. Defaults to the target of the final MATCH rule in this profile.`
+  String get matchTargetDesc {
+    return Intl.message(
+      'Where rules targeting MATCH-TARGET go. Defaults to the target of the final MATCH rule in this profile.',
+      name: 'matchTargetDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Follow profile`
+  String get followProfile {
+    return Intl.message(
+      'Follow profile',
+      name: 'followProfile',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Recent icons`
+  String get iconHistory {
+    return Intl.message(
+      'Recent icons',
+      name: 'iconHistory',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Exit full screen`
+  String get exitFullScreen {
+    return Intl.message(
+      'Exit full screen',
+      name: 'exitFullScreen',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Restore down`
+  String get unmaximize {
+    return Intl.message('Restore down', name: 'unmaximize', desc: '', args: []);
+  }
+
+  /// `Maximize`
+  String get maximize {
+    return Intl.message('Maximize', name: 'maximize', desc: '', args: []);
+  }
+
+  /// `Unpin window`
+  String get unpinWindow {
+    return Intl.message(
+      'Unpin window',
+      name: 'unpinWindow',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Pin window`
+  String get pinWindow {
+    return Intl.message('Pin window', name: 'pinWindow', desc: '', args: []);
+  }
+
+  /// `Minimize`
+  String get minimize {
+    return Intl.message('Minimize', name: 'minimize', desc: '', args: []);
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<AppLocalizations> {

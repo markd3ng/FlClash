@@ -6,13 +6,17 @@ import 'package:fl_clash/models/common.dart';
 import 'package:fl_clash/providers/config.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/widgets/widgets.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class DeveloperView extends ConsumerWidget {
   const DeveloperView({super.key});
 
   Widget _getDeveloperList(BuildContext context, WidgetRef ref) {
+    final logsAction = context.logsAction;
+    final storeAction = context.storeAction;
+    final backupAction = context.backupAction;
+
     return generateSectionV2(
       title: appLocalizations.options,
       items: [
@@ -28,7 +32,7 @@ class DeveloperView extends ConsumerWidget {
           minVerticalPadding: 12,
           onTap: () {
             for (int i = 0; i < 1000; i++) {
-              appController.addLog(
+              logsAction.addLog(
                 Log.app(
                   '[$i]${utils.generateRandomString(maxLength: 200, minLength: 20)}',
                 ),
@@ -60,7 +64,7 @@ class DeveloperView extends ConsumerWidget {
             if (res != true) {
               return;
             }
-            await appController.handleClear();
+            await storeAction.handleClear();
           },
         ),
         // ListItem(
@@ -76,7 +80,7 @@ class DeveloperView extends ConsumerWidget {
           title: Text(appLocalizations.pruneCache),
           minVerticalPadding: 12,
           onTap: () {
-            appController.shakingStore();
+            backupAction.shakingStore();
           },
         ),
       ],

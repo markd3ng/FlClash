@@ -2,7 +2,8 @@ import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/widgets/widgets.dart';
-import 'package:flutter/material.dart';
+import 'package:fl_clash/widgets/icon_history.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'member_picker.dart';
 
@@ -692,6 +693,22 @@ class _ProxyGroupDialogState extends State<ProxyGroupDialog> {
                           }
                           return null;
                         },
+                      ),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton.icon(
+                          icon: const Icon(Icons.history),
+                          label: Text(appLocalizations.iconHistory),
+                          onPressed: () async {
+                            final url = await showDialog<String>(
+                              context: context,
+                              builder: (_) => const IconHistoryDialog(),
+                            );
+                            if (url != null && mounted) {
+                              _iconController.text = url;
+                            }
+                          },
+                        ),
                       ),
                       if (_type == GroupType.LoadBalance) ...[
                         const SizedBox(height: 16),

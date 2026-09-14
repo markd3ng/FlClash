@@ -2,7 +2,7 @@ import 'package:fl_clash/common/geo_recovery.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/l10n/l10n.dart';
 import 'package:fl_clash/widgets/dialog.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class GeoRecoveryDialog extends StatefulWidget {
   final GeoResource resource;

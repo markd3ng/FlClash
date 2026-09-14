@@ -1,12 +1,11 @@
 import 'package:fl_clash/common/common.dart';
-import 'package:fl_clash/controller.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/views/proxies/common.dart';
 import 'package:fl_clash/widgets/widgets.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class ProxyCard extends StatelessWidget {
@@ -105,7 +104,9 @@ class ProxyCard extends StatelessWidget {
         true => currentProxyName == proxy.name ? '' : proxy.name,
         false => proxy.name,
       };
-      appController.changeProxyDebounce(groupName, nextProxyName);
+      ref
+          .read(proxiesActionProvider.notifier)
+          .changeProxyDebounce(groupName, nextProxyName);
       return;
     }
     globalState.showNotifier(appLocalizations.notSelectedTip);

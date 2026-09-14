@@ -1,12 +1,32 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:fl_clash/database/database.dart';
 
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/plugins/app.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:fl_clash/common/icon_file_service.dart';
+
+const _maxDecodedIcons = 64;
+
+final _decodedIcons = <String, Uint8List?>{};
+
+Uint8List? _decodeIcon(String src) {
+  if (!src.contains('base64,')) {
+    return null;
+  }
+  if (_decodedIcons.containsKey(src)) {
+    return _decodedIcons[src] = _decodedIcons.remove(src);
+  }
+  if (_decodedIcons.length >= _maxDecodedIcons) {
+    _decodedIcons.remove(_decodedIcons.keys.first);
+  }
+  return _decodedIcons[src] = src.getBase64;
+}
 
 class CommonTargetIcon extends StatelessWidget {
   final String src;
@@ -23,7 +43,7 @@ class CommonTargetIcon extends StatelessWidget {
       return _defaultIcon();
     }
 
-    final base64 = src.getBase64;
+    final base64 = _decodeIcon(src);
     if (base64 != null) {
       return Image.memory(
         base64,
@@ -64,6 +84,7 @@ class ImageCacheWidget extends StatefulWidget {
 class _ImageCacheWidgetState extends State<ImageCacheWidget> {
   final ValueNotifier<File?> _imageNotifier = ValueNotifier(null);
   int _retryCount = 0;
+  int _generation = 0;
 
   @override
   void initState() {
@@ -71,40 +92,51 @@ class _ImageCacheWidgetState extends State<ImageCacheWidget> {
     _getImageFormCache();
   }
 
+  @override
+  void didUpdateWidget(covariant ImageCacheWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.src != widget.src) {
+      _generation++;
+      _retryCount = 0;
+      _imageNotifier.value = null;
+      _getImageFormCache();
+    }
+  }
+
   void _getImageFormCache() async {
     final src = widget.src;
-    final cacheFile = await _cacheMange.getFileFromCache(src);
-    if (!mounted) {
-      return;
-    }
-    if (cacheFile != null) {
-      _imageNotifier.value = cacheFile.file;
-      if (cacheFile.validTill.isAfter(DateTime.now())) {
-        return;
-      }
-    }
-    if (!mounted) {
-      return;
-    }
+    final generation = _generation;
+    bool current() => mounted && generation == _generation;
     try {
-      final file = (await _cacheMange.downloadFile(src, key: src)).file;
-      if (!mounted) {
-        return;
+      final cacheFile = await _cacheMange.getFileFromCache(src);
+      if (!current()) return;
+      if (cacheFile != null) {
+        _imageNotifier.value = cacheFile.file;
+        _rememberIcon(src);
+        if (cacheFile.validTill.isAfter(DateTime.now())) return;
       }
+      final file = (await _cacheMange.downloadFile(src, key: src)).file;
+      if (!current()) return;
       _retryCount = 0;
       _imageNotifier.value = file;
+      _rememberIcon(src);
     } catch (_) {
-      // Keep the stale cached image (or default icon) when refresh fails.
-      if (!mounted || _imageNotifier.value != null || _retryCount >= 2) {
+      if (!current() || _imageNotifier.value != null || _retryCount >= 2) {
         return;
       }
       _retryCount++;
-      await Future.delayed(Duration(seconds: 2 * _retryCount));
-      if (!mounted) {
-        return;
-      }
-      _getImageFormCache();
+      await Future<void>.delayed(Duration(seconds: 2 * _retryCount));
+      if (current()) _getImageFormCache();
     }
+  }
+
+  void _rememberIcon(String src) {
+    unawaited(
+      database.iconRecordsDao.put(src).catchError((Object error) {
+        // History is optional; a storage error must not hide a downloaded icon.
+        commonPrint.log('Icon history update failed (${error.runtimeType})');
+      }),
+    );
   }
 
   @override

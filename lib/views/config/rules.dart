@@ -5,7 +5,7 @@ import 'package:fl_clash/providers/database.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/widgets/widgets.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class AddedRulesView extends ConsumerStatefulWidget {
@@ -103,7 +103,7 @@ class _AddedRulesViewState extends ConsumerState<AddedRulesView> {
         body: rules.isEmpty
             ? NullStatus(
                 label: appLocalizations.nullTip(appLocalizations.rule),
-                illustration: const RuleEmptyIllustration(),
+                illustration: NullStatusIllustration.rules,
               )
             : ReorderableList(
                 padding: const EdgeInsets.symmetric(vertical: 16),

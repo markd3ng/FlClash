@@ -11,7 +11,7 @@ import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/pages/editor.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/widgets/widgets.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 
 class EditProfileView extends ConsumerStatefulWidget {
@@ -43,9 +43,12 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
   final _fileInfoNotifier = ValueNotifier<FileInfo?>(null);
   Uint8List? _fileData;
 
+  late final SetupAction _setupAction;
+
   @override
   void initState() {
     super.initState();
+    _setupAction = context.setupAction;
     _labelController = TextEditingController(text: widget.profile.label);
     _urlController = TextEditingController(text: widget.profile.url);
     _oixParamsController = TextEditingController();
@@ -75,18 +78,20 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
   }
 
   Future<void> _saveoixParams(Profile currentProfile) async {
+    final profileAction = context.profileAction;
+
     final edited = CloudParams.parse(
       _oixParamsController.text,
     ).copyWith(tfo: _tfo, simplerules: _minimalConfig);
     final previous = await CloudParamsStorage.load();
-    final savedProfile = await appController.saveProfileMetadata(
+    final savedProfile = await profileAction.saveProfileMetadata(
       currentProfile,
     );
     // Scheduling preferences are local and can be saved while offline.
     if (previous.encodeWithTfo() == edited.encodeWithTfo()) return;
     await CloudParamsStorage.save(edited);
     try {
-      await appController.updateProfile(
+      await profileAction.updateProfile(
         savedProfile,
         showLoading: true,
         forceApplyIfCurrent: true,
@@ -114,6 +119,9 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
   }
 
   Future<void> _handleConfirm() async {
+    final commonAction = context.commonAction;
+    final profileAction = context.profileAction;
+
     if (_saving || !_formKey.currentState!.validate()) return;
     var profile = widget.profile.copyWith(
       url: widget.profile.isoixCloudProfile
@@ -131,7 +139,7 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
     );
     setState(() => _saving = true);
     try {
-      final saved = await appController.safeRun<bool>(() async {
+      final saved = await commonAction.safeRun<bool>(() async {
         if (widget.profile.isoixCloudProfile) {
           await _saveoixParams(profile);
           return true;
@@ -146,11 +154,11 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
               profile = profile.copyWith(autoUpdate: false);
             }
           }
-          await appController.saveProfileFile(profile, _fileData!);
+          await profileAction.saveProfileFile(profile, _fileData!);
         } else if (widget.profile.url == profile.url) {
-          await appController.saveProfileMetadata(profile);
+          await profileAction.saveProfileMetadata(profile);
         } else {
-          await appController.updateProfile(
+          await profileAction.updateProfile(
             profile,
             preserveCurrentState: false,
           );
@@ -189,9 +197,12 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
   }
 
   Future<void> _handleSaveEdit(BuildContext context, String data) async {
-    final message = await appController.safeRun<String>(() async {
-      if (!await appController.ensureCoreReady()) {
-        return appController.coreDisconnectedMessage;
+    final commonAction = context.commonAction;
+    final coreAction = context.coreAction;
+
+    final message = await commonAction.safeRun<String>(() async {
+      if (!await coreAction.ensureCoreReady()) {
+        return coreAction.coreDisconnectedMessage;
       }
       final message = await coreController.validateConfigWithData(data);
       return message;
@@ -260,7 +271,9 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
   }
 
   Future<void> _uploadProfileFile() async {
-    final platformFile = await appController.safeRun(picker.pickerFile);
+    final commonAction = context.commonAction;
+
+    final platformFile = await commonAction.safeRun(picker.pickerFile);
     if (platformFile == null) return;
     _fileData = await platformFile.readBytes();
     if (!mounted) {
@@ -293,7 +306,7 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
     _fileInfoNotifier.dispose();
     _autoUpdateDurationController.dispose();
     _oixParamsController.dispose();
-    if (appController.isAttach) appController.autoApplyProfile();
+    if (appController.isAttach) _setupAction.autoApplyProfile();
     super.dispose();
   }
 

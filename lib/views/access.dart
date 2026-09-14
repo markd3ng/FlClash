@@ -1,12 +1,11 @@
 import 'package:fl_clash/common/common.dart';
-import 'package:fl_clash/controller.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/providers/installed_apps.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/widgets/widgets.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -140,6 +139,8 @@ class _AccessViewState extends ConsumerState<AccessView>
   }
 
   Future<void> _intelligentSelected() async {
+    final commonAction = context.commonAction;
+
     final packageNames = _loadedPackages
         .map((item) => item.packageName)
         .toList();
@@ -148,7 +149,7 @@ class _AccessViewState extends ConsumerState<AccessView>
     }
     final api = ref.read(installedAppsAppProvider);
     if (api == null) return;
-    final selected = await appController.loadingRun<List<String>>(
+    final selected = await commonAction.loadingRun<List<String>>(
       api.getChinaPackageNames,
       tag: LoadingTag.access,
     );
@@ -250,7 +251,9 @@ class _AccessViewState extends ConsumerState<AccessView>
   }
 
   Future<void> _exportToClipboard() async {
-    await appController.safeRun(() {
+    final commonAction = context.commonAction;
+
+    await commonAction.safeRun(() {
       final currentList = ref.read(
         accessControlStateProvider.select((state) => state.currentList),
       );
@@ -259,7 +262,9 @@ class _AccessViewState extends ConsumerState<AccessView>
   }
 
   Future<void> _importFormClipboard() async {
-    await appController.safeRun(() async {
+    final commonAction = context.commonAction;
+
+    await commonAction.safeRun(() async {
       final data = await Clipboard.getData('text/plain');
       final text = data?.text;
       if (text == null) return;

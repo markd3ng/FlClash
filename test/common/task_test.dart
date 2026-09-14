@@ -786,7 +786,9 @@ void main() {
         await futureDatabase.profilesDao.all().get();
         await futureDatabase.close();
         final futureSqlite = sqlite.sqlite3.open(futurePath);
-        futureSqlite.execute('PRAGMA user_version = 4');
+        futureSqlite.execute(
+          'PRAGMA user_version = ${currentDatabaseSchemaVersion + 1}',
+        );
         futureSqlite.dispose();
         expect(await validateBackupDatabase(futurePath), false);
 
@@ -1086,6 +1088,21 @@ void main() {
     expect(result['allow-lan'], false);
     expect(result['bind-address'], '127.0.0.1');
   });
+
+  test(
+    'explicit MATCH target overrides inference without rewriting subscription rules',
+    () async {
+      final original = _makeRealProfileState().copyWith(
+        addedRules: const [Rule(id: 1, value: 'DOMAIN,example.com,MATCH')],
+      );
+      final inferred = await makeRealProfileTask(original);
+      expect(inferred['rules'], ['DOMAIN,example.com,DIRECT', 'MATCH,DIRECT']);
+      final explicit = await makeRealProfileTask(
+        original.copyWith(matchTarget: 'REJECT'),
+      );
+      expect(explicit['rules'], ['DOMAIN,example.com,REJECT', 'MATCH,DIRECT']);
+    },
+  );
 
   test('makeRealProfileTask injects QUIC block rule when enabled', () async {
     final result = await makeRealProfileTask(

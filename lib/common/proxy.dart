@@ -31,16 +31,12 @@ class SystemProxyController {
   Future<void> _task = Future.value();
 
   SystemProxyController({
-    required SystemProxyStarter? startProxy,
-    required SystemProxyStopper? stopProxy,
-    SystemProxyReadinessChecker? readinessChecker,
+    required this._startProxy,
+    required this._stopProxy,
+    this._readinessChecker,
     int setupAttempts = 1,
-    Duration setupRetryDelay = Duration.zero,
-  }) : _startProxy = startProxy,
-       _stopProxy = stopProxy,
-       _readinessChecker = readinessChecker,
-       _setupAttempts = setupAttempts,
-       _setupRetryDelay = setupRetryDelay,
+    this._setupRetryDelay = Duration.zero,
+  }) : _setupAttempts = setupAttempts,
        assert(setupAttempts > 0);
 
   bool get startedByFlClash => _startedByFlClash;

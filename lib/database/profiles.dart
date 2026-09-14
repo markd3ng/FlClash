@@ -19,6 +19,8 @@ class Profiles extends Table {
 
   IntColumn get scriptId => integer().nullable()();
 
+  TextColumn get matchTarget => text().nullable()();
+
   IntColumn get autoUpdateDurationMillis => integer()();
 
   TextColumn get subscriptionInfo =>
@@ -30,18 +32,19 @@ class Profiles extends Table {
 
   TextColumn get unfoldSet => text().map(const StringSetConverter())();
 
-  TextColumn get proxyChains =>
-      text().map(const ProxyChainListConverter()).withDefault(const Constant('[]'))();
+  TextColumn get proxyChains => text()
+      .map(const ProxyChainListConverter())
+      .withDefault(const Constant('[]'))();
 
   TextColumn get profileProxies => text()
       .map(const ProfileProxyListConverter())
       .withDefault(const Constant('[]'))();
 
-    TextColumn get customProxyGroups => text()
+  TextColumn get customProxyGroups => text()
       .map(const ProxyGroupListConverter())
       .withDefault(const Constant('[]'))();
 
-    TextColumn get customRules =>
+  TextColumn get customRules =>
       text().map(const RuleListConverter()).withDefault(const Constant('[]'))();
 
   IntColumn get order => integer().nullable()();
@@ -81,8 +84,14 @@ class ProfilesDao extends DatabaseAccessor<Database> with _$ProfilesDaoMixin {
   }
 
   Future<void> setAll(Iterable<Profile> profiles) async {
-    await batch((b) async {
-      setAllWithBatch(b, profiles);
+    await transaction(() async {
+      await batch((b) => setAllWithBatch(b, profiles));
+      await batch((b) async {
+        for (final profile in profiles) {
+          await attachedDatabase.proxyGroupsDao.replaceWithBatch(b, profile);
+          await attachedDatabase.rulesDao.replaceCustomWithBatch(b, profile);
+        }
+      });
     });
   }
 
@@ -110,48 +119,6 @@ class ProfilesDao extends DatabaseAccessor<Database> with _$ProfilesDaoMixin {
     });
 
     this.profiles.setAll(batch, items, deleteFilter: (t) => t.id.isNotIn(ids));
-  }
-}
-
-class StringMapConverter extends TypeConverter<Map<String, String>, String> {
-  const StringMapConverter();
-
-  @override
-  Map<String, String> fromSql(String fromDb) {
-    return Map<String, String>.from(json.decode(fromDb));
-  }
-
-  @override
-  String toSql(Map<String, String> value) {
-    return json.encode(value);
-  }
-}
-
-class StringListConverter extends TypeConverter<List<String>, String> {
-  const StringListConverter();
-
-  @override
-  List<String> fromSql(String fromDb) {
-    return List<String>.from(json.decode(fromDb));
-  }
-
-  @override
-  String toSql(List<String> value) {
-    return json.encode(value);
-  }
-}
-
-class StringSetConverter extends TypeConverter<Set<String>, String> {
-  const StringSetConverter();
-
-  @override
-  Set<String> fromSql(String fromDb) {
-    return Set<String>.from(json.decode(fromDb));
-  }
-
-  @override
-  String toSql(Set<String> value) {
-    return json.encode(value.toList());
   }
 }
 
@@ -202,8 +169,7 @@ class ProfileProxyListConverter
   }
 }
 
-class ProxyGroupListConverter
-    extends TypeConverter<List<ProxyGroup>, String> {
+class ProxyGroupListConverter extends TypeConverter<List<ProxyGroup>, String> {
   const ProxyGroupListConverter();
 
   @override
@@ -250,6 +216,7 @@ extension RawProfilExt on RawProfile {
       customProxyGroups: customProxyGroups,
       customRules: customRules,
       scriptId: scriptId,
+      matchTarget: matchTarget,
       order: order,
     );
   }
@@ -274,6 +241,7 @@ extension ProfilesCompanionExt on Profile {
       customProxyGroups: Value(customProxyGroups),
       customRules: Value(customRules),
       scriptId: Value(scriptId),
+      matchTarget: Value(matchTarget),
       order: Value(order ?? this.order),
     );
   }

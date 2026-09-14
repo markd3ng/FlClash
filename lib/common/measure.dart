@@ -1,6 +1,6 @@
 import 'package:fl_clash/common/common.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class Measure {
   final TextScaler _textScaler;

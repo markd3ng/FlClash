@@ -68,29 +68,39 @@ dependencies {
     implementation(libs.annotation.jvm)
 }
 
-val copyNativeLibs by tasks.register<Copy>("copyNativeLibs") {
-    doFirst {
-        delete("src/main/jniLibs")
-        delete("src/main/cpp/includes")
-    }
-    from("../../libclash/android")
-    into("src/main/jniLibs")
+// Native consumers need the hook outputs before CMake configures or JNI merges.
+// mustRunAfter avoids introducing a cycle through the app Flutter build task.
+val nativeTaskPattern =
+    Regex("^(configureCMake|buildCMake|externalNativeBuild|merge.*(NativeLibs|JniLibFolders)|copy.*JniLibs)")
+val flutterCompileTasks =
+    rootProject.project(":app").tasks.matching { it.name.startsWith("compileFlutterBuild") }
 
-    doLast {
-        val includesDir = file("src/main/jniLibs/includes")
-        val targetDir = file("src/main/cpp/includes")
-        if (includesDir.exists()) {
-            copy {
-                from(includesDir)
-                into(targetDir)
-            }
-            delete(includesDir)
-        }
-    }
+tasks.matching { nativeTaskPattern.containsMatchIn(it.name) }.configureEach {
+    mustRunAfter(flutterCompileTasks)
 }
 
-afterEvaluate {
-    tasks.named("preBuild") {
-        dependsOn(copyNativeLibs)
+gradle.taskGraph.whenReady {
+    val nativeTask =
+        allTasks.firstOrNull {
+            it.path.startsWith("${project.path}:") && nativeTaskPattern.containsMatchIn(it.name)
+        }
+    if (nativeTask == null || allTasks.any { it.path.startsWith(":app:compileFlutterBuild") }) {
+        return@whenReady
     }
+    val missing =
+        android.defaultConfig.ndk.abiFilters
+            .flatMap {
+                listOf(file("src/main/jniLibs/$it/libclash.so"), file("src/main/cpp/includes/$it/libclash.h"))
+            }.filterNot { it.isFile }
+    if (missing.isNotEmpty()) {
+        throw GradleException(
+            "${nativeTask.name} consumes Core artifacts that the setup build hook writes into src/main, " +
+                "and these are absent: ${missing.joinToString { it.relativeTo(projectDir).path }}. " +
+                "Run `dart setup.dart android` once, or build through :app so the hook runs first.",
+        )
+    }
+    logger.warn(
+        ":core: ${nativeTask.name} is running without an :app Flutter compile task, " +
+            "so the Core artifacts under src/main are whatever the last hook run left behind",
+    )
 }

@@ -1,12 +1,11 @@
 import 'package:fl_clash/common/common.dart';
-import 'package:fl_clash/controller.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/plugins/app.dart';
 import 'package:fl_clash/state.dart';
 import 'package:wifi_ssid/wifi_ssid.dart';
 import 'package:fl_clash/widgets/widgets.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -476,6 +475,8 @@ class BlockQuicItem extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, ref) {
+    final setupAction = context.setupAction;
+
     final appLocalizations = context.appLocalizations;
     final blockQuic = ref.watch(
       networkSettingProvider.select((state) => state.blockQuic),
@@ -489,7 +490,7 @@ class BlockQuicItem extends ConsumerWidget {
           ref
               .read(networkSettingProvider.notifier)
               .update((state) => state.copyWith(blockQuic: value));
-          appController.applyProfileDebounce(silence: true);
+          setupAction.applyProfileDebounce(silence: true);
         },
       ),
     );
@@ -501,6 +502,8 @@ class BlockWebRtcItem extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, ref) {
+    final setupAction = context.setupAction;
+
     final appLocalizations = context.appLocalizations;
     final blockWebRtc = ref.watch(
       networkSettingProvider.select((state) => state.blockWebRtc),
@@ -514,7 +517,7 @@ class BlockWebRtcItem extends ConsumerWidget {
           ref
               .read(networkSettingProvider.notifier)
               .update((state) => state.copyWith(blockWebRtc: value));
-          appController.applyProfileDebounce(silence: true);
+          setupAction.applyProfileDebounce(silence: true);
         },
       ),
     );

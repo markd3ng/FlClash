@@ -1,33 +1,21 @@
 PODS:
   - FlutterMacOS (1.0.0)
-  - rust_api (0.0.1):
-    - FlutterMacOS
   - screen_retriever_macos (0.0.1):
-    - FlutterMacOS
-  - window_ext (0.0.1):
     - FlutterMacOS
 
 DEPENDENCIES:
   - FlutterMacOS (from `Flutter/ephemeral`)
-  - rust_api (from `Flutter/ephemeral/.symlinks/plugins/rust_api/macos`)
   - screen_retriever_macos (from `Flutter/ephemeral/.symlinks/plugins/screen_retriever_macos/macos`)
-  - window_ext (from `Flutter/ephemeral/.symlinks/plugins/window_ext/macos`)
 
 EXTERNAL SOURCES:
   FlutterMacOS:
     :path: Flutter/ephemeral
-  rust_api:
-    :path: Flutter/ephemeral/.symlinks/plugins/rust_api/macos
   screen_retriever_macos:
     :path: Flutter/ephemeral/.symlinks/plugins/screen_retriever_macos/macos
-  window_ext:
-    :path: Flutter/ephemeral/.symlinks/plugins/window_ext/macos
 
 SPEC CHECKSUMS:
   FlutterMacOS: d0db08ddef1a9af05a5ec4b724367152bb0500b1
-  rust_api: 1c0531c97581947cdc9c09ffa0c78cc2c2acfc04
   screen_retriever_macos: 452e51764a9e1cdb74b3c541238795849f21557f
-  window_ext: 4afef727fe428b30c68ce800ba92e890fd329f63
 
 PODFILE CHECKSUM: b9facb167d6b7e90fef40306c3fe521e010924ac
 

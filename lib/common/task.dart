@@ -409,9 +409,10 @@ Future<Map<String, dynamic>> _makeRealProfileTask(
     final hasMatchPlaceholder = parsedNewRules.any(
       (item) => item.ruleTarget?.toUpperCase() == 'MATCH',
     );
-    String? replacementTarget;
+    String? replacementTarget = data.matchTarget?.trim();
+    if (replacementTarget?.isEmpty == true) replacementTarget = null;
 
-    if (hasMatchPlaceholder) {
+    if (hasMatchPlaceholder && replacementTarget == null) {
       for (int i = rules.length - 1; i >= 0; i--) {
         final parsed = ParsedRule.parseString(rules[i]);
         if (parsed.ruleAction == RuleAction.MATCH) {
@@ -1123,11 +1124,12 @@ Future<bool> validateBackupDatabase(String path) async {
         .map((row) => row['name'])
         .whereType<String>()
         .toSet();
-    if (const {
+    if ({
       'profiles',
       'scripts',
       'rules',
       'profile_rule_mapping',
+      if (schemaVersion >= 4) ...{'proxy_groups', 'icon_records'},
     }.difference(tables).isNotEmpty) {
       return false;
     }
@@ -1143,10 +1145,42 @@ Future<bool> validateBackupDatabase(String path) async {
         'unfold_set',
         if (schemaVersion >= 2) ...{'proxy_chains', 'profile_proxies'},
         if (schemaVersion >= 3) ...{'custom_proxy_groups', 'custom_rules'},
+        if (schemaVersion >= 4) 'match_target',
       },
       'scripts': {'id', 'label', 'last_update_time'},
-      'rules': {'id', 'value'},
-      'profile_rule_mapping': {'id', 'profile_id', 'rule_id', 'scene', 'order'},
+      'rules': {
+        'id',
+        'value',
+        if (schemaVersion >= 4) ...{
+          'rule_action',
+          'content',
+          'rule_target',
+          'rule_provider',
+          'sub_rule',
+          'no_resolve',
+          'src',
+        },
+      },
+      'profile_rule_mapping': {
+        'id',
+        'profile_id',
+        'rule_id',
+        'scene',
+        'order',
+        if (schemaVersion >= 4) 'source_id',
+      },
+      if (schemaVersion >= 4) ...{
+        'proxy_groups': {
+          'id',
+          'profile_id',
+          'name',
+          'type',
+          'order',
+          'tolerance',
+          'strategy',
+        },
+        'icon_records': {'url', 'last_accessed'},
+      },
     };
     for (final entry in requiredColumns.entries) {
       final columns = backupDatabase

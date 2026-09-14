@@ -466,6 +466,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "excludeType": MessageLookupByLibrary.simpleMessage("除外タイプ"),
     "existsTip": m14,
     "exit": MessageLookupByLibrary.simpleMessage("終了"),
+    "exitFullScreen": MessageLookupByLibrary.simpleMessage("全画面表示を終了"),
     "expand": MessageLookupByLibrary.simpleMessage("標準"),
     "expectedStatus": MessageLookupByLibrary.simpleMessage("期待されるステータス"),
     "expireDate": m15,
@@ -497,6 +498,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "findProcessModeDesc": MessageLookupByLibrary.simpleMessage(
       "有効化するとパフォーマンスが若干低下します",
     ),
+    "followProfile": MessageLookupByLibrary.simpleMessage("プロファイルに従う"),
     "fontFamily": MessageLookupByLibrary.simpleMessage("フォントファミリー"),
     "forceRestartCoreTip": MessageLookupByLibrary.simpleMessage(
       "コアを強制再起動してもよろしいですか？",
@@ -576,6 +578,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "hoursCount": m21,
     "iHavePaid": MessageLookupByLibrary.simpleMessage("支払い済み"),
     "icon": MessageLookupByLibrary.simpleMessage("アイコン"),
+    "iconHistory": MessageLookupByLibrary.simpleMessage("最近使用したアイコン"),
     "iconStyle": MessageLookupByLibrary.simpleMessage("アイコンスタイル"),
     "iconUrl": MessageLookupByLibrary.simpleMessage("アイコンURL"),
     "import": MessageLookupByLibrary.simpleMessage("インポート"),
@@ -670,7 +673,13 @@ class MessageLookup extends MessageLookupByLibrary {
     "mainlandNetworkWarning": MessageLookupByLibrary.simpleMessage(
       "中国本土のネットワークには適さない可能性があります",
     ),
+    "matchTarget": MessageLookupByLibrary.simpleMessage("MATCH-TARGET"),
+    "matchTargetDesc": MessageLookupByLibrary.simpleMessage(
+      "MATCH-TARGET を対象にしたルールの行き先。既定ではこのプロファイル末尾の MATCH ルールのターゲットを使います",
+    ),
+    "matchTargetTitle": MessageLookupByLibrary.simpleMessage("マッチ先"),
     "maxFailedTimes": MessageLookupByLibrary.simpleMessage("最大失敗回数"),
+    "maximize": MessageLookupByLibrary.simpleMessage("最大化"),
     "memberOrderHint": MessageLookupByLibrary.simpleMessage(
       "選択順がフォールバック順になります。選び直すと末尾に移動します",
     ),
@@ -682,6 +691,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "minimalConfigurationDesc": MessageLookupByLibrary.simpleMessage(
       "簡略化したルールセットで小さなプロファイルを生成します",
     ),
+    "minimize": MessageLookupByLibrary.simpleMessage("最小化"),
     "minimizeOnExit": MessageLookupByLibrary.simpleMessage("終了時に最小化"),
     "minimizeOnExitDesc": MessageLookupByLibrary.simpleMessage(
       "システムの終了イベントを変更",
@@ -804,6 +814,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "支払いエンドポイントが不明な形式を返しました",
     ),
     "personalRouting": MessageLookupByLibrary.simpleMessage("個人ルーティング"),
+    "pinWindow": MessageLookupByLibrary.simpleMessage("最前面に固定"),
     "planEnded": MessageLookupByLibrary.simpleMessage("終了"),
     "planInUse": MessageLookupByLibrary.simpleMessage("使用中"),
     "planNotActivated": MessageLookupByLibrary.simpleMessage("有効化待ち"),
@@ -1159,7 +1170,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "unknown": MessageLookupByLibrary.simpleMessage("不明"),
     "unknownNetworkError": MessageLookupByLibrary.simpleMessage("不明なネットワークエラー"),
+    "unmaximize": MessageLookupByLibrary.simpleMessage("元に戻す"),
     "unnamed": MessageLookupByLibrary.simpleMessage("無題"),
+    "unpinWindow": MessageLookupByLibrary.simpleMessage("固定を解除"),
     "update": MessageLookupByLibrary.simpleMessage("更新"),
     "upgradePlan": MessageLookupByLibrary.simpleMessage("プランをアップグレード"),
     "upload": MessageLookupByLibrary.simpleMessage("アップロード"),

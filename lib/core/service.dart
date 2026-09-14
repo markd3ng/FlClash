@@ -53,11 +53,7 @@ class CoreService extends CoreHandlerInterface {
     required CoreRpcChannel rpcClient,
   }) : this._(lifecycle: lifecycle, rpcClient: rpcClient);
 
-  CoreService._({
-    required DesktopCoreLifecycleController lifecycle,
-    required CoreRpcChannel rpcClient,
-  }) : _lifecycle = lifecycle,
-       _rpcClient = rpcClient {
+  CoreService._({required this._lifecycle, required this._rpcClient}) {
     _crashSubscription = _lifecycle.crashEvents.listen((failure) {
       coreEventManager.sendEvent(
         CoreEvent(

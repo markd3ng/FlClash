@@ -12,11 +12,11 @@ import 'package:fl_clash/services/config_recovery.dart';
 import 'package:fl_clash/services/config_reset.dart';
 import 'package:fl_clash/models/profile.dart';
 import 'package:fl_clash/state.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+
 import 'package:rust_api/rust_api.dart';
-import 'package:window_ext/window_ext.dart';
+import 'package:window_manager/window_manager.dart';
 
 import 'application.dart';
 import 'common/common.dart';
@@ -51,7 +51,7 @@ Future<void> main(List<String> arguments) async {
     );
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       try {
-        await window?.show();
+        await window?.showInitFailure();
       } catch (showError, showStack) {
         commonPrint.log(
           'show init error window failed: $showError stack: $showStack',
@@ -77,16 +77,14 @@ Future<Map<String, Object?>?> _loadStartupConfig() async {
       showRecovery: (retry, failure) {
         commonPrint.log('Waiting for local configuration recovery');
         if (system.isDesktop) {
-          windowExtManager.addListener(exitListener);
+          windowManager.addListener(exitListener);
         }
         runApp(
           MaterialApp(
             debugShowCheckedModeBanner: false,
             localizationsDelegates: const [
               AppLocalizations.delegate,
-              GlobalMaterialLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
+              ...GlobalMaterialLocalizations.delegates,
             ],
             supportedLocales: AppLocalizations.delegate.supportedLocales,
             home: ConfigRecoveryScreen(
@@ -102,7 +100,7 @@ Future<Map<String, Object?>?> _loadStartupConfig() async {
         );
         WidgetsBinding.instance.addPostFrameCallback((_) async {
           try {
-            await window?.show();
+            await window?.showInitFailure();
           } catch (error) {
             commonPrint.log(
               'Could not show configuration recovery window: ${error.runtimeType}',
@@ -113,12 +111,12 @@ Future<Map<String, Object?>?> _loadStartupConfig() async {
     );
   } finally {
     if (system.isDesktop) {
-      windowExtManager.removeListener(exitListener);
+      windowManager.removeListener(exitListener);
     }
   }
 }
 
-class _RecoveryExitListener with WindowExtListener {
+class _RecoveryExitListener with WindowListener {
   @override
-  void onShouldTerminate() => exit(0);
+  void onWindowShouldTerminate() => exit(0);
 }

@@ -1,6 +1,6 @@
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import 'app.dart';
@@ -288,6 +288,7 @@ abstract class MakeRealProfileState with _$MakeRealProfileState {
     required List<ProfileProxy> profileProxies,
     required List<ProxyGroup> customProxyGroups,
     required List<Rule> customRules,
+    String? matchTarget,
     required String defaultUA,
     @Default(false) bool dockerMode,
     @Default(false) bool blockQuic,
@@ -319,6 +320,7 @@ abstract class SetupState with _$SetupState {
     required List<ProfileProxy> profileProxies,
     required List<ProxyGroup> customProxyGroups,
     required List<Rule> customRules,
+    String? matchTarget,
     required Script? script,
     required bool overrideDns,
     required Dns dns,
@@ -348,6 +350,11 @@ extension SetupStateExt on SetupState {
       profileProxies,
       lastSetupState.profileProxies,
     )) {
+      return true;
+    }
+    if (matchTarget != lastSetupState.matchTarget &&
+        (overwriteType == OverwriteType.standard ||
+            overwriteType == OverwriteType.merge)) {
       return true;
     }
     final scriptIsChange = script != lastSetupState.script;

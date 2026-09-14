@@ -579,6 +579,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "excludeType": MessageLookupByLibrary.simpleMessage("Exclude type"),
     "existsTip": m14,
     "exit": MessageLookupByLibrary.simpleMessage("Exit"),
+    "exitFullScreen": MessageLookupByLibrary.simpleMessage("Exit full screen"),
     "expand": MessageLookupByLibrary.simpleMessage("Standard"),
     "expectedStatus": MessageLookupByLibrary.simpleMessage("Expected status"),
     "expireDate": m15,
@@ -618,6 +619,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "findProcessModeDesc": MessageLookupByLibrary.simpleMessage(
       "There is a certain performance loss after opening",
     ),
+    "followProfile": MessageLookupByLibrary.simpleMessage("Follow profile"),
     "fontFamily": MessageLookupByLibrary.simpleMessage("FontFamily"),
     "forceRestartCoreTip": MessageLookupByLibrary.simpleMessage(
       "Are you sure you want to force restart the core?",
@@ -713,6 +715,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "hoursCount": m21,
     "iHavePaid": MessageLookupByLibrary.simpleMessage("I have paid"),
     "icon": MessageLookupByLibrary.simpleMessage("Icon"),
+    "iconHistory": MessageLookupByLibrary.simpleMessage("Recent icons"),
     "iconStyle": MessageLookupByLibrary.simpleMessage("Icon style"),
     "iconUrl": MessageLookupByLibrary.simpleMessage("Icon URL"),
     "import": MessageLookupByLibrary.simpleMessage("Import"),
@@ -833,7 +836,13 @@ class MessageLookup extends MessageLookupByLibrary {
     "mainlandNetworkWarning": MessageLookupByLibrary.simpleMessage(
       "May not be suitable for networks in mainland China",
     ),
+    "matchTarget": MessageLookupByLibrary.simpleMessage("MATCH-TARGET"),
+    "matchTargetDesc": MessageLookupByLibrary.simpleMessage(
+      "Where rules targeting MATCH-TARGET go. Defaults to the target of the final MATCH rule in this profile.",
+    ),
+    "matchTargetTitle": MessageLookupByLibrary.simpleMessage("Match target"),
     "maxFailedTimes": MessageLookupByLibrary.simpleMessage("Max failed times"),
+    "maximize": MessageLookupByLibrary.simpleMessage("Maximize"),
     "memberOrderHint": MessageLookupByLibrary.simpleMessage(
       "Selection order is the fallback order. Remove and reselect a member to move it to the end.",
     ),
@@ -849,6 +858,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "minimalConfigurationDesc": MessageLookupByLibrary.simpleMessage(
       "Use a simplified rule set to generate a smaller profile",
     ),
+    "minimize": MessageLookupByLibrary.simpleMessage("Minimize"),
     "minimizeOnExit": MessageLookupByLibrary.simpleMessage("Minimize on exit"),
     "minimizeOnExitDesc": MessageLookupByLibrary.simpleMessage(
       "Modify the default system exit event",
@@ -997,6 +1007,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Payment endpoint returned an unknown format",
     ),
     "personalRouting": MessageLookupByLibrary.simpleMessage("Personal routing"),
+    "pinWindow": MessageLookupByLibrary.simpleMessage("Pin window"),
     "planEnded": MessageLookupByLibrary.simpleMessage("Ended"),
     "planInUse": MessageLookupByLibrary.simpleMessage("In use"),
     "planNotActivated": MessageLookupByLibrary.simpleMessage(
@@ -1446,7 +1457,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "unknownNetworkError": MessageLookupByLibrary.simpleMessage(
       "Unknown network error",
     ),
+    "unmaximize": MessageLookupByLibrary.simpleMessage("Restore down"),
     "unnamed": MessageLookupByLibrary.simpleMessage("Unnamed"),
+    "unpinWindow": MessageLookupByLibrary.simpleMessage("Unpin window"),
     "update": MessageLookupByLibrary.simpleMessage("Update"),
     "upgradePlan": MessageLookupByLibrary.simpleMessage("Upgrade plan"),
     "upload": MessageLookupByLibrary.simpleMessage("Upload"),

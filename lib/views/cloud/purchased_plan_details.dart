@@ -1,7 +1,7 @@
 import 'package:fl_clash/l10n/l10n.dart';
 import 'package:fl_clash/models/cloud_account.dart';
 import 'package:fl_clash/models/store.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:intl/intl.dart';
 
 class PurchasedPlanSummary {

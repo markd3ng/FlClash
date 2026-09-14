@@ -56,12 +56,10 @@ class ProxyAuthenticatedHttpClient implements HttpClient {
   bool _closed = false;
 
   ProxyAuthenticatedHttpClient({
-    required HttpClient Function() create,
-    required ProxyAuthenticationState? Function() read,
-    SecurityContext? securityContext,
-  }) : _securityContext = securityContext,
-       _create = create,
-       _read = read;
+    required this._create,
+    required this._read,
+    this._securityContext,
+  });
 
   static HttpClient wrap(
     HttpClient first,

@@ -1,10 +1,9 @@
 import 'package:fl_clash/common/common.dart';
-import 'package:fl_clash/controller.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/providers/database.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class StartButton extends ConsumerStatefulWidget {
@@ -52,6 +51,8 @@ class _StartButtonState extends ConsumerState<StartButton>
   }
 
   void handleSwitchStart() {
+    final setupAction = context.setupAction;
+
     isStart = !isStart;
     final requestedStart = isStart;
     final generation = ++_toggleGeneration;
@@ -63,7 +64,7 @@ class _StartButtonState extends ConsumerState<StartButton>
         if (statusUpdater != null) {
           await statusUpdater(requestedStart);
         } else {
-          await appController.updateStatus(
+          await setupAction.updateStatus(
             requestedStart,
             isInit: !ref.read(initProvider),
           );
@@ -89,6 +90,8 @@ class _StartButtonState extends ConsumerState<StartButton>
 
   @override
   Widget build(BuildContext context) {
+    final commonAction = context.commonAction;
+
     final hasProfile = ref.watch(
       profilesProvider.select((state) => state.isNotEmpty),
     );
@@ -97,7 +100,7 @@ class _StartButtonState extends ConsumerState<StartButton>
         heroTag: null,
         onPressed: () {
           globalState.showNotifier(appLocalizations.nullProfileDesc);
-          appController.toProfiles();
+          commonAction.toProfiles();
         },
         child: const Icon(Icons.add),
       );

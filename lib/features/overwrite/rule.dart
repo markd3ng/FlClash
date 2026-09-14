@@ -8,7 +8,7 @@ import 'package:fl_clash/widgets/card.dart';
 import 'package:fl_clash/widgets/dialog.dart';
 import 'package:fl_clash/widgets/input.dart';
 import 'package:fl_clash/widgets/list.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class RuleItem extends StatelessWidget {
   final bool isSelected;

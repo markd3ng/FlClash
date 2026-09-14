@@ -4,7 +4,7 @@ import 'dart:math';
 import 'package:fl_clash/common/color.dart';
 import 'package:fl_clash/controller.dart';
 import 'package:fl_clash/widgets/activate_box.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 class ScanPage extends StatefulWidget {
@@ -69,7 +69,12 @@ class _ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    final double sideLength = min(400, MediaQuery.of(context).size.width * 0.67);
+    final profileAction = context.profileAction;
+
+    final double sideLength = min(
+      400,
+      MediaQuery.of(context).size.width * 0.67,
+    );
     final scanWindow = Rect.fromCenter(
       center: MediaQuery.sizeOf(context).center(Offset.zero),
       width: sideLength,
@@ -148,7 +153,7 @@ class _ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
               ),
               padding: const EdgeInsets.all(16),
               iconSize: 32.0,
-              onPressed: appController.addProfileFormQrCode,
+              onPressed: profileAction.addProfileFormQrCode,
               icon: const Icon(Icons.photo_camera_back),
             ),
           ),

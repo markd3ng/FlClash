@@ -62,8 +62,7 @@ final class DirectCoreLease implements CoreProcessLease {
   final Process _process;
   Future<CoreProcessStopResult>? _stopOperation;
 
-  DirectCoreLease({required this.sessionId, required Process process})
-    : _process = process;
+  DirectCoreLease({required this.sessionId, required this._process});
 
   @override
   CoreProcessOwner get owner => CoreProcessOwner.direct;

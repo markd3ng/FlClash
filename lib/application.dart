@@ -8,11 +8,10 @@ import 'package:fl_clash/manager/manager.dart';
 import 'package:fl_clash/plugins/app.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:material_ui/material_ui.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'controller.dart';
 import 'pages/pages.dart';
 
 class Application extends ConsumerStatefulWidget {
@@ -95,7 +94,7 @@ class ApplicationState extends ConsumerState<Application> {
   }
 
   ThemeData _getAppTheme(ThemeData theme) {
-    return theme.copyWith(
+    return theme.withAppShapes.copyWith(
       listTileTheme: const ListTileThemeData(
         mouseCursor: WidgetStatePropertyAll(SystemMouseCursors.click),
       ),
@@ -155,15 +154,22 @@ class ApplicationState extends ConsumerState<Application> {
           navigatorKey: globalState.navigatorKey,
           localizationsDelegates: const [
             AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
+            ...GlobalMaterialLocalizations.delegates,
           ],
-          builder: (_, child) {
-            return AppEnvManager(
-              child: _buildApp(
-                child: _buildPlatformState(
-                  child: _buildState(child: _buildPlatformApp(child: child!)),
+          builder: (context, child) {
+            // Keep legacy package widgets themed while preserving modern icon colors.
+            // ignore: deprecated_member_use
+            return MaterialUiCompatibilityBridge(
+              child: IconTheme(
+                data: Theme.of(context).iconTheme,
+                child: AppEnvManager(
+                  child: _buildApp(
+                    child: _buildPlatformState(
+                      child: _buildState(
+                        child: _buildPlatformApp(child: child!),
+                      ),
+                    ),
+                  ),
                 ),
               ),
             );

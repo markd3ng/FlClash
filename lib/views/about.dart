@@ -6,7 +6,7 @@ import 'package:fl_clash/providers/config.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/widgets/list.dart';
 import 'package:fl_clash/widgets/scaffold.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class AboutView extends StatelessWidget {
@@ -27,6 +27,8 @@ class AboutView extends StatelessWidget {
   }
 
   List<Widget> _buildMoreSection(BuildContext context) {
+    final updateAction = context.updateAction;
+
     final baseDomain = Secrets.primarySiteDomain;
     final spareDomain = Secrets.spareSiteDomain;
     return generateSection(
@@ -36,7 +38,7 @@ class AboutView extends StatelessWidget {
         ListItem(
           title: Text(appLocalizations.checkUpdate),
           onTap: () {
-            appController.checkUpdate(isUser: true);
+            updateAction.checkUpdate(isUser: true);
           },
         ),
         if (baseDomain.isNotEmpty)
