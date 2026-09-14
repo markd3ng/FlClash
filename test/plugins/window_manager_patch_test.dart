@@ -48,29 +48,33 @@ void main() {
       '$patchedDirectory/window_manager.cpp',
     ).readAsString();
     final methods = <String>[];
+    final visibilityMethods = <String>[];
+    const visibilityNames = ['Show', 'Hide', 'Focus', 'IsMinimized', 'Restore'];
     for (final name in [
       'WaitUntilReadyToShow',
       'SetSkipTaskbar',
       'SetProgressBar',
-      'Hide',
+      ...visibilityNames,
     ]) {
       final method = RegExp(
-        '^void WindowManager::$name\\([^;{]*\\) \\{.*?\n\\}',
+        '^(?:void|bool) WindowManager::$name\\([^;{]*\\) \\{.*?\n\\}',
         dotAll: true,
         multiLine: true,
       ).allMatches(source).toList();
       expect(method, hasLength(1), reason: 'Expected one $name definition');
       final definition = method.single.group(0)!;
-      methods.add(definition);
-      if (name == 'Hide') {
-        await File(
-          '${temporaryDirectory.path}/window_manager_hide.inc',
-        ).writeAsString(definition);
+      if (visibilityNames.contains(name)) {
+        visibilityMethods.add(definition);
+      } else {
+        methods.add(definition);
       }
     }
     await File(
       '${temporaryDirectory.path}/window_manager_methods.inc',
     ).writeAsString(methods.join('\n\n'));
+    await File(
+      '${temporaryDirectory.path}/window_manager_visibility.inc',
+    ).writeAsString(visibilityMethods.join('\n\n'));
 
     final fixture = File(
       'test/support/window_manager_taskbar_test.cpp',
@@ -116,8 +120,6 @@ endif()
     'early_visibility',
     'early_progress',
     'repeated_initialization',
-    'hide_already_hidden',
-    'hide_visible',
   ]) {
     test('Windows window manager: $scenario', () async {
       await run(executable, [scenario]);
@@ -125,7 +127,7 @@ endif()
   }
 
   test(
-    'Windows native startup show command cannot reveal a silent launch',
+    'Windows native silent startup and manual opening respect launcher modes',
     () async {
       await run(nativeExecutable, []);
     },

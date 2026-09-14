@@ -17,19 +17,31 @@ class WindowManager {
   explicit WindowManager(HWND window) : window_(window) {}
   HWND GetMainWindow() { return window_; }
   void Hide();
+  void Show();
+  void Focus();
+  bool IsMinimized();
+  void Restore();
 
  private:
   HWND window_;
 };
 
-#include "window_manager_hide.inc"
+#include "window_manager_visibility.inc"
 
-void CheckChild(bool patched) {
+void DrainMessages() {
+  MSG message{};
+  while (PeekMessageW(&message, nullptr, 0, 0, PM_REMOVE)) {
+    TranslateMessage(&message);
+    DispatchMessageW(&message);
+  }
+}
+
+void CheckChild(int show_command) {
   STARTUPINFOW startup{};
   startup.cb = sizeof(startup);
   GetStartupInfoW(&startup);
   Require((startup.dwFlags & STARTF_USESHOWWINDOW) != 0 &&
-              startup.wShowWindow == SW_SHOWNORMAL,
+              startup.wShowWindow == show_command,
           "Missing launcher show command");
 
   WNDCLASSW window_class{};
@@ -44,30 +56,29 @@ void CheckChild(bool patched) {
   Require(window != nullptr, "CreateWindow failed");
   Require(!IsWindowVisible(window), "Window must start hidden");
 
-  if (patched) {
-    WindowManager manager(window);
-    manager.Hide();
-    manager.Hide();
-    Require(!IsWindowVisible(window), "Silent launch became visible");
-    ShowWindow(window, SW_SHOW);
-    Require(IsWindowVisible(window), "Manual opening must still show the window");
-    manager.Hide();
-    Require(!IsWindowVisible(window), "Closing must still hide a visible window");
-  } else {
-    ShowWindow(window, SW_HIDE);
-    Require(IsWindowVisible(window),
-            "Control did not reproduce STARTUPINFO overriding SW_HIDE");
-  }
+  WindowManager manager(window);
+  manager.Hide();
+  manager.Hide();
+  Require(!IsWindowVisible(window), "Silent launch became visible");
+  // Match Window._showWindow and window_manager's Dart show wrapper.
+  if (manager.IsMinimized()) manager.Restore();
+  manager.Show();
+  manager.Focus();
+  DrainMessages();
+  Require(IsWindowVisible(window), "Manual opening must show the window");
+  Require(!IsIconic(window), "Manual opening must not inherit startup minimization");
+  manager.Hide();
+  Require(!IsWindowVisible(window), "Closing must hide a visible window");
   DestroyWindow(window);
   UnregisterClassW(window_class.lpszClassName, window_class.hInstance);
 }
 
-void RunChild(const std::wstring& executable, const wchar_t* mode) {
-  std::wstring command = L"\"" + executable + L"\" " + mode;
+void RunChild(const std::wstring& executable, int show_command) {
+  std::wstring command = L"\"" + executable + L"\" " + std::to_wstring(show_command);
   STARTUPINFOW startup{};
   startup.cb = sizeof(startup);
   startup.dwFlags = STARTF_USESHOWWINDOW | STARTF_USESTDHANDLES;
-  startup.wShowWindow = SW_SHOWNORMAL;
+  startup.wShowWindow = static_cast<WORD>(show_command);
   startup.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
   startup.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
   startup.hStdError = GetStdHandle(STD_ERROR_HANDLE);
@@ -92,15 +103,19 @@ void RunChild(const std::wstring& executable, const wchar_t* mode) {
 int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR command_line, int) {
   const std::wstring mode = command_line;
   if (!mode.empty()) {
-    Require(mode == L"--patched" || mode == L"--control", "Unknown test mode");
-    CheckChild(mode == L"--patched");
+    const int show_command = std::stoi(mode);
+    Require(show_command >= SW_HIDE && show_command <= SW_SHOWMAXIMIZED,
+            "Unknown launcher show command");
+    CheckChild(show_command);
     return EXIT_SUCCESS;
   }
   std::vector<wchar_t> path(32768);
   const DWORD length = GetModuleFileNameW(nullptr, path.data(), path.size());
   Require(length > 0 && length < path.size(), "GetModuleFileName failed");
   const std::wstring executable(path.data(), length);
-  RunChild(executable, L"--control");
-  RunChild(executable, L"--patched");
+  for (const int show_command : {SW_HIDE, SW_SHOWNORMAL, SW_SHOWMINIMIZED,
+                                 SW_SHOWMAXIMIZED}) {
+    RunChild(executable, show_command);
+  }
   return EXIT_SUCCESS;
 }

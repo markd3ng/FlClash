@@ -37,6 +37,11 @@ extension InitControllerExt on AppController {
       enabled: _ref.read(appSettingProvider).silentLaunch,
       arguments: globalState.launchArguments,
     );
+    commonPrint.log(
+      'startup window: automatic=${globalState.launchArguments.contains(silentLaunchArgument)}, '
+      'silentSetting=${_ref.read(appSettingProvider).silentLaunch}, '
+      'silent=$silentLaunch',
+    );
     if (!silentLaunch) {
       await window?.show();
     } else {
