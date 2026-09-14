@@ -64,13 +64,13 @@ void main() {
   test(
     'encrypts all original data and names before reset while preserving the held lock',
     () async {
-      const values = {
+      final values = {
         'config.age': 'encrypted config',
         'flutter_secure_storage.dat': 'protected seed',
         'shared_preferences.json': 'https://dns.example.invalid/dns-query',
         'database.sqlite': 'private-node.example.invalid',
         'database.sqlite-wal': 'wal',
-        'profiles/private-node.yaml': 'node-password-test',
+        p.join('profiles', 'private-node.yaml'): 'node-password-test',
       };
       for (final entry in values.entries) {
         final file = File(p.join(home, entry.key));

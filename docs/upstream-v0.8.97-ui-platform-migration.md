@@ -92,4 +92,4 @@ Flutter 根包及 proxy、wifi_ssid、tray 插件最终全量回归：1437 项�
 本机 Flutter 3.44.7 的 `flutter analyze` 在中文工作区路径下，LSP 发送端以字符串长度而非 UTF-8 字节数写入 Content-Length，导致分析服务解析报文失败；使用 `dart analyze` 完成同一仓库的全量分析，CI 同步使用该入口，没有修改 Flutter SDK
 
 这些属于设备和发布验收，不是尚未接入的代码组；Debug 构建使用公开占位参数，不能作为正式客户端分发
-本次仅作本地提交，没有推送、发布、修改版本号或标签
+以上为移植提交时的验证记录；后续发布审查、弱网改进及版本状态见 [v0.8.97 发布审查](v0.8.97-release-review.md)
