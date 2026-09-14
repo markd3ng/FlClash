@@ -27,6 +27,13 @@ dependencies:
 flutter:
   uses-material-design: true
 "@ | Set-Content -Encoding utf8 (Join-Path $testRoot "pubspec.yaml")
+    # The generated counter app can require a newer Dart language version than
+    # the plugin host. Only a minimal entry point is needed for native tests.
+    @"
+import 'package:flutter/widgets.dart';
+
+void main() => runApp(const SizedBox.shrink());
+"@ | Set-Content -Encoding utf8 (Join-Path $testRoot "lib/main.dart")
     Push-Location $testRoot
     try {
         Invoke-Checked flutter @("pub", "get")
