@@ -50,9 +50,9 @@ final defaultTextScaleFactor =
     WidgetsBinding.instance.platformDispatcher.textScaleFactor;
 const httpTimeoutDuration = Duration(milliseconds: 5000);
 
-/// Keep manual probes below the Core ceiling so radio/DNS/TLS work can progress.
-const maxConcurrentDelayTests = 8;
-const mobileDelayTestConcurrency = 4;
+/// Match the Core ceiling; Android uses fewer simultaneous radio handshakes.
+const maxConcurrentDelayTests = 50;
+const mobileDelayTestConcurrency = 24;
 const delayRetryTimeout = Duration(seconds: 15);
 const animateDuration = Duration(milliseconds: 100);
 const midDuration = Duration(milliseconds: 200);

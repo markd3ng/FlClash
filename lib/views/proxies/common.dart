@@ -92,10 +92,11 @@ Future<void> delayTest(List<Proxy> proxies, [String? testUrl]) async {
     concurrency: system.isAndroid
         ? mobileDelayTestConcurrency
         : maxConcurrentDelayTests,
-    retryConcurrency: 2,
+    retryConcurrency: system.isAndroid ? 4 : 8,
+    retryBudget: delayRetryTimeout,
     probe: (target) => _testDelayTarget(target, generation),
-    retryProbe: (target) =>
-        _testDelayTarget(target, generation, timeout: delayRetryTimeout),
+    retryProbe: (target, timeout) =>
+        _testDelayTarget(target, generation, timeout: timeout),
     isCurrent: () => appController.isCurrentDelayGeneration(generation),
     onResult: (delay) => appController.setDelay(delay, generation: generation),
   );
