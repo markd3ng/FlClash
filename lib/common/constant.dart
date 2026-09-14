@@ -50,8 +50,10 @@ final defaultTextScaleFactor =
     WidgetsBinding.instance.platformDispatcher.textScaleFactor;
 const httpTimeoutDuration = Duration(milliseconds: 5000);
 
-/// Shared by individual and batch probes; matches the Core delay semaphore.
-const maxConcurrentDelayTests = 50;
+/// Keep manual probes below the Core ceiling so radio/DNS/TLS work can progress.
+const maxConcurrentDelayTests = 8;
+const mobileDelayTestConcurrency = 4;
+const delayRetryTimeout = Duration(seconds: 15);
 const animateDuration = Duration(milliseconds: 100);
 const midDuration = Duration(milliseconds: 200);
 const commonDuration = Duration(milliseconds: 300);

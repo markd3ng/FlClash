@@ -29,6 +29,12 @@ import kotlin.coroutines.resume
 
 class RemoteService : Service(),
     CoroutineScope by CoroutineScope(SupervisorJob() + Dispatchers.Default) {
+    private val networkPolicy = NetworkPolicyReconciler(
+        setVpnExcluded = { excluded -> delegate?.useService { it.setNetworkExcluded(excluded) }?.getOrThrow() },
+        setCoreExcluded = ::setCoreNetworkExcluded,
+        onApplied = { State.networkExcluded = it },
+    )
+
     private val ssidMonitor by lazy { WifiSsidMonitor(this) {
         launch {
             runLock.withLock {
@@ -60,13 +66,10 @@ class RemoteService : Service(),
     private suspend fun applyNetworkPolicy(initial: Boolean = false) {
         val ssid = if (State.options?.excludeSSIDs.isNullOrEmpty()) null else ssidMonitor.current()
         val excluded = ssid != null && State.options?.excludeSSIDs.orEmpty().contains(ssid)
-        if (!initial && excluded == State.networkExcluded) return
-        // Release Android's VPN before closing proxy listeners; on resume, open
-        // listeners before restoring the VPN. runLock also owns manual stop.
-        if (excluded) delegate?.useService { it.setNetworkExcluded(true) }?.getOrThrow()
-        setCoreNetworkExcluded(excluded)
-        if (!excluded) delegate?.useService { it.setNetworkExcluded(false) }?.getOrThrow()
-        State.networkExcluded = excluded
+        networkPolicy.apply(excluded, force = initial)
+        // When the list is cleared, keep the existing polling retry alive until
+        // both VPN and Core have resumed successfully.
+        configureSsidMonitor()
     }
 
     private fun handleStopService(result: IResultInterface) {
@@ -281,7 +284,7 @@ class RemoteService : Service(),
                 runLock.withLock {
                     State.options = State.options?.copy(excludeSSIDs = ssids?.toList().orEmpty())
                     if (State.runTime == 0L) return@withLock
-                    configureSsidMonitor()
+                    if (!State.options?.excludeSSIDs.isNullOrEmpty()) configureSsidMonitor()
                     runCatching { applyNetworkPolicy() }.onFailure {
                         GlobalState.log("Wi-Fi policy update failed: ${it.javaClass.simpleName}")
                     }

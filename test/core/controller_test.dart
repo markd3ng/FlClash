@@ -12,6 +12,7 @@ import 'package:mocktail/mocktail.dart';
 final class _MockCoreHandler extends Mock implements CoreHandlerInterface {}
 
 void main() {
+  setUpAll(() => registerFallbackValue(Duration.zero));
   const setupParams = SetupParams(
     selectedMap: {},
     testUrl: 'https://example.com',
@@ -38,9 +39,40 @@ void main() {
     controller = CoreController.forTesting(handler: handler);
   });
 
+  test(
+    'a retry keeps its larger network budget after acquiring a shared slot',
+    () async {
+      when(
+        () => handler.asyncTestDelay(
+          any(),
+          any(),
+          timeout: any(named: 'timeout'),
+        ),
+      ).thenAnswer(
+        (_) async => const Delay(name: 'node', url: 'url', value: 6000),
+      );
+      final delay = await controller.getDelay(
+        'https://example.com',
+        'node',
+        timeout: delayRetryTimeout,
+      );
+      expect(delay.value, 6000);
+      verify(
+        () => handler.asyncTestDelay(
+          'https://example.com',
+          'node',
+          timeout: delayRetryTimeout,
+        ),
+      ).called(1);
+    },
+  );
+
   test('delay RPCs share a budget and release slots after failure', () async {
     final pending = <Completer<Delay>>[];
-    when(() => handler.asyncTestDelay(any(), any())).thenAnswer((_) {
+    when(
+      () =>
+          handler.asyncTestDelay(any(), any(), timeout: any(named: 'timeout')),
+    ).thenAnswer((_) {
       final result = Completer<Delay>();
       pending.add(result);
       return result.future;
@@ -77,7 +109,10 @@ void main() {
 
   test('obsolete queued probes never reach the Core or hold a slot', () async {
     final pending = <Completer<Delay>>[];
-    when(() => handler.asyncTestDelay(any(), any())).thenAnswer((_) {
+    when(
+      () =>
+          handler.asyncTestDelay(any(), any(), timeout: any(named: 'timeout')),
+    ).thenAnswer((_) {
       final result = Completer<Delay>();
       pending.add(result);
       return result.future;
@@ -106,10 +141,34 @@ void main() {
     final skipped = await Future.wait(obsolete);
     await pumpEventQueue();
     expect(skipped.map((delay) => delay.value), everyElement(isNull));
-    verifyNever(() => handler.asyncTestDelay(any(), 'obsolete0'));
-    verifyNever(() => handler.asyncTestDelay(any(), 'obsolete1'));
-    verifyNever(() => handler.asyncTestDelay(any(), 'obsolete2'));
-    verify(() => handler.asyncTestDelay(any(), 'replacement')).called(1);
+    verifyNever(
+      () => handler.asyncTestDelay(
+        any(),
+        'obsolete0',
+        timeout: any(named: 'timeout'),
+      ),
+    );
+    verifyNever(
+      () => handler.asyncTestDelay(
+        any(),
+        'obsolete1',
+        timeout: any(named: 'timeout'),
+      ),
+    );
+    verifyNever(
+      () => handler.asyncTestDelay(
+        any(),
+        'obsolete2',
+        timeout: any(named: 'timeout'),
+      ),
+    );
+    verify(
+      () => handler.asyncTestDelay(
+        any(),
+        'replacement',
+        timeout: any(named: 'timeout'),
+      ),
+    ).called(1);
     expect(pending.length, maxConcurrentDelayTests + 1);
     for (final result in pending.skip(1)) {
       result.complete(

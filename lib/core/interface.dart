@@ -28,7 +28,11 @@ mixin CoreInterface {
 
   Future<Map<String, dynamic>> getConfigFromBytes(String data);
 
-  Future<Delay> asyncTestDelay(String url, String proxyName);
+  Future<Delay> asyncTestDelay(
+    String url,
+    String proxyName, {
+    Duration timeout = httpTimeoutDuration,
+  });
 
   Future<String> updateConfig(UpdateParams updateParams);
 
@@ -362,15 +366,20 @@ abstract class CoreHandlerInterface with CoreInterface {
   }
 
   @override
-  Future<Delay> asyncTestDelay(String url, String proxyName) async {
+  Future<Delay> asyncTestDelay(
+    String url,
+    String proxyName, {
+    Duration timeout = httpTimeoutDuration,
+  }) async {
     final data = await _invokeMethod<Map<String, dynamic>>(
       method: CoreMethod.asyncTestDelay,
       arguments: {
         'proxy-name': proxyName,
-        'timeout': httpTimeoutDuration.inMilliseconds,
+        'timeout': timeout.inMilliseconds,
         'test-url': url,
       },
-      timeout: const Duration(seconds: 6),
+      // The network budget starts in Go; leave room for Android IPC/dispatch.
+      timeout: timeout + const Duration(seconds: 2),
     );
     return data == null
         ? Delay(name: proxyName, value: -1, url: url)

@@ -3,10 +3,14 @@ package main
 import (
 	"context"
 	"errors"
+	"net/http"
+	"net/http/httptest"
 	"sync"
 	"testing"
 	"time"
 
+	"github.com/metacubex/mihomo/adapter"
+	"github.com/metacubex/mihomo/adapter/outbound"
 	"github.com/metacubex/mihomo/common/utils"
 	"github.com/metacubex/mihomo/constant"
 	"github.com/metacubex/mihomo/tunnel"
@@ -137,6 +141,40 @@ func TestHandleAsyncTestDelayPreservesURLForMissingProxy(t *testing.T) {
 			}
 		case <-time.After(time.Second):
 			t.Fatal("missing proxy did not respond")
+		}
+	}
+}
+
+// Exercise the real outbound HTTP probe, not a synthetic returned delay. A slow
+// link must stay failed at its first deadline and recover with the retry budget.
+func TestDelayProbeRetriesSlowHTTPWithItsOwnBudget(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		select {
+		case <-r.Context().Done():
+			return
+		case <-time.After(150 * time.Millisecond):
+			w.WriteHeader(http.StatusNoContent)
+		}
+	}))
+	defer server.Close()
+	previousProxies, previousProviders := tunnel.Proxies(), tunnel.Providers()
+	t.Cleanup(func() { tunnel.UpdateProxies(previousProxies, previousProviders) })
+	tunnel.UpdateProxies(map[string]constant.Proxy{"slow": adapter.NewProxy(outbound.NewDirect())}, nil)
+	for _, timeout := range []int64{30, 2000} {
+		result := make(chan *Delay, 1)
+		handleAsyncTestDelay(&TestDelayParams{
+			ProxyName: "slow", TestUrl: server.URL, Timeout: timeout,
+		}, func(delay *Delay) { result <- delay })
+		select {
+		case delay := <-result:
+			if timeout == 30 && delay.Value != -1 {
+				t.Fatalf("short deadline reported success: %+v", delay)
+			}
+			if timeout == 2000 && delay.Value <= 0 {
+				t.Fatalf("larger retry budget did not recover the slow HTTP probe: %+v", delay)
+			}
+		case <-time.After(3 * time.Second):
+			t.Fatal("probe did not finish within its RPC grace")
 		}
 	}
 }

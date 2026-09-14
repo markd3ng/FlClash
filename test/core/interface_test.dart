@@ -5,6 +5,19 @@ import 'package:fl_clash/models/models.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test(
+    'retry network budget reaches Go and leaves room for Android RPC',
+    () async {
+      final handler = _FakeCoreHandler();
+      await handler.asyncTestDelay(
+        'https://example.com',
+        'node',
+        timeout: const Duration(seconds: 15),
+      );
+      expect((handler.arguments as Map)['timeout'], 15000);
+      expect(handler.timeout, const Duration(seconds: 17));
+    },
+  );
   const setupParams = SetupParams(
     selectedMap: {},
     testUrl: 'https://example.com',
@@ -114,6 +127,8 @@ Matcher _missingResponse(CoreMethod method) {
 
 class _FakeCoreHandler extends CoreHandlerInterface {
   Object? response;
+  Object? arguments;
+  Duration? timeout;
 
   @override
   bool get isConnected => true;
@@ -132,5 +147,9 @@ class _FakeCoreHandler extends CoreHandlerInterface {
     required CoreMethod method,
     Object? arguments,
     Duration? timeout,
-  }) async => response as T?;
+  }) async {
+    this.arguments = arguments;
+    this.timeout = timeout;
+    return response as T?;
+  }
 }

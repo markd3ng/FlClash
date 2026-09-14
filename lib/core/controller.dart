@@ -230,6 +230,7 @@ class CoreController {
     String url,
     String proxyName, {
     bool Function()? isCurrent,
+    Duration timeout = httpTimeoutDuration,
   }) async {
     final testUrl = getDelayTestUrl(proxyName: proxyName, testUrl: url);
     Delay canceled() => Delay(url: testUrl, name: proxyName, value: null);
@@ -246,7 +247,11 @@ class CoreController {
     try {
       // The generation can change while waiting behind in-flight probes.
       if (isCurrent?.call() == false) return canceled();
-      return await _interface.asyncTestDelay(testUrl, proxyName);
+      return await _interface.asyncTestDelay(
+        testUrl,
+        proxyName,
+        timeout: timeout,
+      );
     } finally {
       if (_delayWaiters.isNotEmpty) {
         _delayWaiters.removeFirst().complete();

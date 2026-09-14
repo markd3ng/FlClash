@@ -5,6 +5,69 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test(
+    'a constrained link recovers failed targets with a separate retry budget',
+    () async {
+      var active = 0;
+      var retries = 0;
+      var retryPeak = 0;
+      var initialFinished = 0;
+      final results = <String, int?>{};
+      final targets = List.generate(12, (i) => (name: '$i', url: 'url'));
+      await runDelayTestBatch(
+        targets: targets,
+        concurrency: 4,
+        retryConcurrency: 2,
+        isCurrent: () => true,
+        probe: (target) async {
+          active++;
+          final congested = active > 2;
+          await Future<void>.delayed(Duration.zero);
+          active--;
+          initialFinished++;
+          return Delay(
+            name: target.name,
+            url: target.url,
+            value: congested ? -1 : 2500,
+          );
+        },
+        retryProbe: (target) async {
+          expect(initialFinished, targets.length);
+          active++;
+          retries++;
+          if (active > retryPeak) retryPeak = active;
+          await Future<void>.delayed(Duration.zero);
+          active--;
+          return Delay(name: target.name, url: target.url, value: 6500);
+        },
+        onResult: (delay) => results[delay.name] = delay.value,
+      );
+      expect(retries, greaterThan(0));
+      expect(retryPeak, lessThanOrEqualTo(2));
+      expect(results.length, targets.length);
+      expect(results.values, everyElement(greaterThan(0)));
+      expect(results.values, contains(6500));
+    },
+  );
+
+  test('a long-budget retry keeps a truly unreachable node failed', () async {
+    final results = <Delay>[];
+    var retries = 0;
+    await runDelayTestBatch(
+      targets: [(name: 'offline', url: 'url')],
+      concurrency: 4,
+      isCurrent: () => true,
+      probe: (target) async =>
+          Delay(name: target.name, url: target.url, value: -1),
+      retryProbe: (target) async {
+        retries++;
+        return Delay(name: target.name, url: target.url, value: -1);
+      },
+      onResult: results.add,
+    );
+    expect(retries, 1);
+    expect(results.single.value, -1);
+  });
+  test(
     'failed probes retry once after initial work with serial concurrency',
     () async {
       final attempts = <String, int>{};
