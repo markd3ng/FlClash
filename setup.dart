@@ -415,6 +415,7 @@ class BuildCommand extends Command {
     required Target target,
     required String targets,
     List<String> args = const [],
+    Map<String, String>? environment,
     required String env,
   }) async {
     await Build.getDistributor();
@@ -458,7 +459,7 @@ class BuildCommand extends Command {
       '--flutter-build-args=$flutterBuildArgs',
       ...args,
       ...dartDefines,
-    ]);
+    ], environment: environment);
   }
 
   Future<void> _buildAndroidApkDirect({
@@ -670,6 +671,11 @@ class BuildCommand extends Command {
           target: target,
           targets: 'dmg',
           args: ['--description', archName!],
+          // Flutter release builds otherwise default to a universal app, while
+          // this package contains the Core for the explicitly selected arch.
+          environment: {
+            'FLUTTER_XCODE_ARCHS': arch == Arch.arm64 ? 'arm64' : 'x86_64',
+          },
           env: env,
         );
         return;
