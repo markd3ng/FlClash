@@ -120,7 +120,7 @@ exposure, updates, and troubleshooting.
    git submodule update --init --recursive
    ```
 
-2. Install Flutter 3.44+, Go, and rustup (the Rust API hook pins Rust 1.95.0). Run `flutter pub get` before setup.dart. Core/Helper and Rust now build automatically through Dart hooks; setup.dart remains the packaging entry point. See [native build and migration notes](docs/upstream-v0.8.97-ui-platform-migration.md) for prepared build settings and isolated tests.
+2. Install Flutter 3.44+, Go, and rustup (the Rust API hook pins Rust 1.95.0). Run `flutter pub get` before setup.dart. Core/Helper and Rust now build automatically through Dart hooks; setup.dart remains the packaging entry point.
 
 3. Build Application
 
