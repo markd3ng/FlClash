@@ -139,14 +139,8 @@ jobs:
         working-directory: core/Clash.Meta
         run: |
           go vet -tags with_gvisor ./...
-          # Sudoku's full protocol matrix has a separate required job below.
-          go test -race -tags with_gvisor -p=2 -parallel=2 -timeout=900s -skip '^(TestInboundSudoku|TestInboundVMess_Mekya$)' ./...
-      - name: Validate Mekya under isolated race instrumentation
-        working-directory: core/Clash.Meta
-        run: |
-          # Keep all 128 concurrent transfers, without competing with other
-          # inbound suites and their race-detector allocations on this runner.
-          go test -race -tags with_gvisor -count=1 -timeout=180s -run '^TestInboundVMess_Mekya$' ./listener/inbound
+          # Full Sudoku and MKCP/Mekya matrices have separate required jobs below.
+          go test -race -tags with_gvisor -p=2 -parallel=2 -timeout=900s -skip '^(TestInboundSudoku|TestInboundVMess_(MKCP|Mekya)$)' ./...
 
       - name: Check retained transport dependency fixes
         working-directory: core/Clash.Meta
@@ -188,6 +182,28 @@ jobs:
         run: |
           go test -race tun_callbacks.go tun_callbacks_test.go
           go test -race ownership_unix.go ownership_test.go ownership_stat_linux_test.go
+
+  mkcp-test:
+    name: MKCP and Mekya integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      GOMAXPROCS: '2'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: core/go.sum
+      - name: Validate all MKCP and Mekya variants
+        working-directory: core/Clash.Meta
+        run: |
+          # Retain each variant's 128 concurrent transfers and race detection.
+          # Run variants serially on a dedicated runner to avoid UDP starvation
+          # while other protocol suites or packages are compiling and testing.
+          go test -race -tags with_gvisor -p=1 -parallel=1 -count=2 -timeout=300s -run '^TestInboundVMess_(MKCP|Mekya)$' ./listener/inbound
 
   sudoku-test:
     name: Sudoku inbound integration
@@ -313,7 +329,7 @@ jobs:
 
   build:
     name: "Build ${{ matrix.name }}"
-    needs: [version, test, go-test, sudoku-test, android-core-test, android-test, rust-test, windows-helper-test]
+    needs: [version, test, go-test, mkcp-test, sudoku-test, android-core-test, android-test, rust-test, windows-helper-test]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     strategy:
