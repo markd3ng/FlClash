@@ -20,7 +20,11 @@ void main(List<String> args) async {
       extraCargoBuildArgs: const ['--locked'],
       extraCargoEnvironmentVariables: {
         'RUSTC': rustc,
-        ..._bindgenEnvironment(input),
+        ...bindgenEnvironment(
+          isAndroid: input.config.code.targetOS == OS.android,
+          compiler: input.config.code.cCompiler?.compiler,
+          libclangPath: Platform.environment['LIBCLANG_PATH'],
+        ),
         if (input.config.code.targetOS == OS.macOS)
           'MACOSX_DEPLOYMENT_TARGET': '11.0',
       },
@@ -28,17 +32,19 @@ void main(List<String> args) async {
   });
 }
 
-// rquickjs runs bindgen on Android, which must load the NDK's libclang; Linux
-// NDKs before r26 keep it under lib64, later ones and every macOS NDK under lib.
-Map<String, String> _bindgenEnvironment(BuildInput input) {
-  if (!input.config.buildCodeAssets ||
-      input.config.code.targetOS != OS.android) {
-    return const {};
+// Bindgen is a host tool. Prefer an explicitly configured host libclang, then
+// the NDK copy when present. Some Linux NDK distributions omit it entirely;
+// leave discovery to clang-sys so the installed host libclang can be used.
+Map<String, String> bindgenEnvironment({
+  required bool isAndroid,
+  Uri? compiler,
+  String? libclangPath,
+}) {
+  if (!isAndroid) return const {};
+  if (libclangPath != null && libclangPath.isNotEmpty) {
+    return {'LIBCLANG_PATH': libclangPath};
   }
-  final compiler = input.config.code.cCompiler?.compiler;
-  if (compiler == null) {
-    return const {};
-  }
+  if (compiler == null) return const {};
   final llvmRoot = File.fromUri(compiler).parent.parent;
   for (final name in const ['lib', 'lib64']) {
     final directory = Directory(
@@ -48,10 +54,7 @@ Map<String, String> _bindgenEnvironment(BuildInput input) {
       return {'LIBCLANG_PATH': directory.path};
     }
   }
-  throw StateError(
-    'No libclang under ${llvmRoot.path} (lib or lib64); the NDK Flutter '
-    'passed cannot run bindgen for rquickjs',
-  );
+  return const {};
 }
 
 bool _isLibclang(FileSystemEntity entity) {
