@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:fl_clash/database/database.dart';
+import 'package:fl_clash/common/encoded_icon_cache.dart';
 
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/plugins/app.dart';
@@ -11,21 +11,32 @@ import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:fl_clash/common/icon_file_service.dart';
 
-const _maxDecodedIcons = 64;
+final _decodedIcons = _IconCache();
 
-final _decodedIcons = <String, Uint8List?>{};
+class _IconCache extends EncodedIconCache with WidgetsBindingObserver {
+  _IconCache() {
+    WidgetsBinding.instance.addObserver(this);
+  }
 
-Uint8List? _decodeIcon(String src) {
-  if (!src.contains('base64,')) {
-    return null;
-  }
-  if (_decodedIcons.containsKey(src)) {
-    return _decodedIcons[src] = _decodedIcons.remove(src);
-  }
-  if (_decodedIcons.length >= _maxDecodedIcons) {
-    _decodedIcons.remove(_decodedIcons.keys.first);
-  }
-  return _decodedIcons[src] = src.getBase64;
+  @override
+  void didHaveMemoryPressure() => clear();
+}
+
+ImageProvider _resizeIcon(
+  ImageProvider provider,
+  BuildContext context,
+  double size,
+) {
+  final pixels = (size * MediaQuery.devicePixelRatioOf(context)).ceil().clamp(
+    1,
+    1024,
+  );
+  return ResizeImage(
+    provider,
+    width: pixels,
+    height: pixels,
+    policy: ResizeImagePolicy.fit,
+  );
 }
 
 class CommonTargetIcon extends StatelessWidget {
@@ -38,15 +49,15 @@ class CommonTargetIcon extends StatelessWidget {
     return Icon(IconsExt.target, size: size);
   }
 
-  Widget _buildIcon() {
+  Widget _buildIcon(BuildContext context) {
     if (src.isEmpty) {
       return _defaultIcon();
     }
 
-    final base64 = _decodeIcon(src);
+    final base64 = _decodedIcons.decode(src);
     if (base64 != null) {
-      return Image.memory(
-        base64,
+      return Image(
+        image: _resizeIcon(MemoryImage(base64), context, size),
         gaplessPlayback: true,
         errorBuilder: (_, error, _) {
           return _defaultIcon();
@@ -54,12 +65,16 @@ class CommonTargetIcon extends StatelessWidget {
       );
     }
 
-    return ImageCacheWidget(src: src, defaultWidget: _defaultIcon());
+    return ImageCacheWidget(
+      src: src,
+      size: size,
+      defaultWidget: _defaultIcon(),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(width: size, height: size, child: _buildIcon());
+    return SizedBox(width: size, height: size, child: _buildIcon(context));
   }
 }
 
@@ -69,12 +84,14 @@ final _cacheMange = CacheManager(
 
 class ImageCacheWidget extends StatefulWidget {
   final String src;
+  final double size;
   final Widget defaultWidget;
 
   const ImageCacheWidget({
     super.key,
     required this.src,
     required this.defaultWidget,
+    required this.size,
   });
 
   @override
@@ -158,7 +175,10 @@ class _ImageCacheWidgetState extends State<ImageCacheWidget> {
                 data,
                 errorBuilder: (_, _, _) => widget.defaultWidget,
               )
-            : Image.file(data, errorBuilder: (_, _, _) => widget.defaultWidget);
+            : Image(
+                image: _resizeIcon(FileImage(data), context, widget.size),
+                errorBuilder: (_, _, _) => widget.defaultWidget,
+              );
       },
     );
   }

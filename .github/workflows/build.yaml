@@ -140,7 +140,14 @@ jobs:
         run: |
           go vet -tags with_gvisor ./...
           # Sudoku's full protocol matrix has a separate required job below.
-          go test -race -tags with_gvisor -p=2 -parallel=2 -timeout=900s -skip '^TestInboundSudoku' ./...
+          go test -race -tags with_gvisor -p=2 -parallel=2 -timeout=900s -skip '^(TestInboundSudoku|TestInboundVMess_Mekya$)' ./...
+      - name: Validate Mekya under isolated race instrumentation
+        working-directory: core/Clash.Meta
+        run: |
+          # Keep all 128 concurrent transfers, without competing with other
+          # inbound suites and their race-detector allocations on this runner.
+          go test -race -tags with_gvisor -count=1 -timeout=180s -run '^TestInboundVMess_Mekya$' ./listener/inbound
+
       - name: Check retained transport dependency fixes
         working-directory: core/Clash.Meta
         run: |
