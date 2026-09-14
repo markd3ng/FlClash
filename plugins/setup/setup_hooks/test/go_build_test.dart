@@ -92,13 +92,15 @@ void main() {
     () async {
       final root = Directory.systemTemp.createTempSync('flclash-go-build-');
       addTearDown(() => root.deleteSync(recursive: true));
-      final core = Directory('${root.path}/core')..createSync();
-      File('${root.path}/pubspec.yaml').writeAsStringSync('name: fixture\n');
+      final core = Directory(p.join(root.path, 'core'))..createSync();
       File(
-        '${core.path}/go.mod',
+        p.join(root.path, 'pubspec.yaml'),
+      ).writeAsStringSync('name: fixture\n');
+      File(
+        p.join(core.path, 'go.mod'),
       ).writeAsStringSync('module example.invalid/fixture\n\ngo 1.23\n');
       File(
-        '${core.path}/main.go',
+        p.join(core.path, 'main.go'),
       ).writeAsStringSync('package main\nfunc main() {}\n');
       final request = BuildRequest(
         rootDir: root.path,
@@ -110,9 +112,9 @@ void main() {
       expect(File(first.outputs.single).existsSync(), isTrue);
       expect(first.inputs, contains(core.path));
       expect(first.inputs, isNot(contains(root.path)));
-      expect(first.inputs, isNot(contains('${root.path}/.dart_tool')));
+      expect(first.inputs, isNot(contains(p.join(root.path, '.dart_tool'))));
       expect((await buildPlatform(request)).rebuilt, isFalse);
-      final added = File('${core.path}/extra.go')
+      final added = File(p.join(core.path, 'extra.go'))
         ..writeAsStringSync('package main\nconst extra = 1\n');
       final changed = await buildPlatform(request);
       expect(changed.rebuilt, isTrue);
