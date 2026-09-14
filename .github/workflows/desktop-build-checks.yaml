@@ -24,6 +24,13 @@ jobs:
     runs-on: ${{ inputs.platform == 'macos' && (inputs.arch == 'arm64' && 'macos-latest' || 'macos-15-intel') || (inputs.arch == 'arm64' && 'windows-11-arm' || 'windows-2022') }}
     timeout-minutes: 35
     steps:
+      - name: Install native Windows ARM Rust toolchain
+        if: inputs.platform == 'windows' && inputs.arch == 'arm64'
+        shell: pwsh
+        run: |
+          Invoke-WebRequest -Uri "https://win.rustup.rs/aarch64" -OutFile rustup-init.exe
+          .\rustup-init.exe -y --default-toolchain stable
+          Add-Content $env:GITHUB_PATH "$env:USERPROFILE\.cargo\bin"
       - uses: actions/checkout@v4
         with:
           submodules: recursive
@@ -33,9 +40,11 @@ jobs:
           cache-dependency-path: core/go.sum
       - uses: subosito/flutter-action@v2
         with:
-          channel: stable
+          # Use the same tagged SDK checkout as release builds; this also
+          # supports Windows ARM without a prebuilt stable SDK archive.
+          channel: master
           flutter-version: '3.44.6'
-          cache: true
+          cache: ${{ inputs.platform != 'windows' }}
       - run: flutter pub get
       - name: Prepare isolated Core settings
         shell: bash
