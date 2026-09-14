@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ffi';
 import 'dart:io';
 
@@ -7,6 +8,53 @@ import 'package:fl_clash/widgets/update_download_dialog.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('automatic update prompt keeps a silent launch hidden', () async {
+    var prompted = false;
+    final result = await promptForAppUpdate(
+      isUser: false,
+      showWindow: () async =>
+          fail('background checks must not show the window'),
+      prompt: () async {
+        prompted = true;
+        return true;
+      },
+    );
+    expect(prompted, isTrue);
+    expect(result, isTrue);
+  });
+
+  test('manual update waits for the window before prompting', () async {
+    final shown = Completer<void>();
+    final events = <String>[];
+    final result = promptForAppUpdate(
+      isUser: true,
+      showWindow: () {
+        events.add('show');
+        return shown.future;
+      },
+      prompt: () async {
+        events.add('prompt');
+        return false;
+      },
+    );
+    await Future<void>.delayed(Duration.zero);
+    expect(events, ['show']);
+    shown.complete();
+    expect(await result, isFalse);
+    expect(events, ['show', 'prompt']);
+  });
+
+  test('mobile update prompts without a desktop window', () async {
+    expect(
+      await promptForAppUpdate(
+        isUser: true,
+        showWindow: null,
+        prompt: () async => null,
+      ),
+      isNull,
+    );
+  });
+
   test('update installers match every supported platform and ABI', () {
     const installers = {
       Abi.windowsX64: 'windows-amd64-setup.exe',

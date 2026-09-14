@@ -652,6 +652,16 @@ String getAppUpdateFallbackDownloadUrl(String downloadUrl) {
   ).toString();
 }
 
+/// Background checks leave the prompt in the app without raising its window.
+Future<bool?> promptForAppUpdate({
+  required bool isUser,
+  required Future<void> Function()? showWindow,
+  required Future<bool?> Function() prompt,
+}) async {
+  if (isUser) await showWindow?.call();
+  return prompt();
+}
+
 /// A dismissed download cancels the entire action, including browser fallback.
 Future<void> openAppUpdateDownload({
   required UpdateDownloadResult? result,

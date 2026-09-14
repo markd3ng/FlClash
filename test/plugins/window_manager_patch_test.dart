@@ -6,6 +6,7 @@ import 'package:test/test.dart';
 void main() {
   late Directory temporaryDirectory;
   late String executable;
+  late String nativeExecutable;
 
   Future<ProcessResult> run(String command, List<String> arguments) async {
     final result = await Process.run(command, arguments);
@@ -51,6 +52,7 @@ void main() {
       'WaitUntilReadyToShow',
       'SetSkipTaskbar',
       'SetProgressBar',
+      'Hide',
     ]) {
       final method = RegExp(
         '^void WindowManager::$name\\([^;{]*\\) \\{.*?\n\\}',
@@ -58,7 +60,13 @@ void main() {
         multiLine: true,
       ).allMatches(source).toList();
       expect(method, hasLength(1), reason: 'Expected one $name definition');
-      methods.add(method.single.group(0)!);
+      final definition = method.single.group(0)!;
+      methods.add(definition);
+      if (name == 'Hide') {
+        await File(
+          '${temporaryDirectory.path}/window_manager_hide.inc',
+        ).writeAsString(definition);
+      }
     }
     await File(
       '${temporaryDirectory.path}/window_manager_methods.inc',
@@ -66,6 +74,9 @@ void main() {
 
     final fixture = File(
       'test/support/window_manager_taskbar_test.cpp',
+    ).absolute.path.replaceAll('\\', '/');
+    final nativeFixture = File(
+      'test/support/windows_startup_visibility_test.cpp',
     ).absolute.path.replaceAll('\\', '/');
     await File('${temporaryDirectory.path}/CMakeLists.txt').writeAsString('''
 cmake_minimum_required(VERSION 3.15)
@@ -75,6 +86,12 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG "\${CMAKE_BINARY_DIR}/bin")
 add_executable(taskbar_test "$fixture")
 target_compile_features(taskbar_test PRIVATE cxx_std_17)
 target_include_directories(taskbar_test PRIVATE "\${CMAKE_CURRENT_SOURCE_DIR}")
+if(WIN32)
+  add_executable(startup_visibility_test "$nativeFixture")
+  target_compile_features(startup_visibility_test PRIVATE cxx_std_17)
+  target_include_directories(startup_visibility_test PRIVATE "\${CMAKE_CURRENT_SOURCE_DIR}")
+  target_link_libraries(startup_visibility_test PRIVATE user32)
+endif()
 ''');
     final buildDirectory = '${temporaryDirectory.path}/build';
     await run('cmake', [
@@ -88,6 +105,7 @@ target_include_directories(taskbar_test PRIVATE "\${CMAKE_CURRENT_SOURCE_DIR}")
     executable =
         '$buildDirectory/bin/taskbar_test'
         '${Platform.isWindows ? '.exe' : ''}';
+    nativeExecutable = '$buildDirectory/bin/startup_visibility_test.exe';
   });
 
   for (final scenario in [
@@ -98,9 +116,19 @@ target_include_directories(taskbar_test PRIVATE "\${CMAKE_CURRENT_SOURCE_DIR}")
     'early_visibility',
     'early_progress',
     'repeated_initialization',
+    'hide_already_hidden',
+    'hide_visible',
   ]) {
-    test('Windows taskbar: $scenario', () async {
+    test('Windows window manager: $scenario', () async {
       await run(executable, [scenario]);
     });
   }
+
+  test(
+    'Windows native startup show command cannot reveal a silent launch',
+    () async {
+      await run(nativeExecutable, []);
+    },
+    skip: !Platform.isWindows,
+  );
 }

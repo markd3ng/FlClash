@@ -51,7 +51,23 @@ void WindowManager::WaitUntilReadyToShow() {
   taskbar_->SetProgressState(hWnd, TBPF_INDETERMINATE);
 ]=])
 
-  foreach(patch initialization visibility progress)
+  set(hide_before [=[
+void WindowManager::Hide() {
+  ShowWindow(GetMainWindow(), SW_HIDE);
+}
+]=])
+  set(hide_after [=[
+void WindowManager::Hide() {
+  HWND hWnd = GetMainWindow();
+  // The first ShowWindow call can use STARTUPINFO instead of SW_HIDE.
+  // A silently launched window is already hidden and must stay that way.
+  if (!::IsWindowVisible(hWnd))
+    return;
+  ShowWindow(hWnd, SW_HIDE);
+}
+]=])
+
+  foreach(patch initialization visibility progress hide)
     string(FIND "${source}" "${${patch}_before}" match_position)
     if(match_position EQUAL -1)
       message(FATAL_ERROR

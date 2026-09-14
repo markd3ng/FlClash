@@ -153,11 +153,14 @@ extension InitControllerExt on AppController {
       }
       return;
     }
-    window?.show();
-    final res = await globalState.showMessage(
-      title: appLocalizations.discovery,
-      message: TextSpan(
-        text: updateInfo.releaseNotes ?? appLocalizations.noInfo,
+    final res = await promptForAppUpdate(
+      isUser: isUser,
+      showWindow: window?.show,
+      prompt: () => globalState.showMessage(
+        title: appLocalizations.discovery,
+        message: TextSpan(
+          text: updateInfo!.releaseNotes ?? appLocalizations.noInfo,
+        ),
       ),
     );
     if (res != true) {

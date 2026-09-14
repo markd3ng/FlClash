@@ -13,6 +13,15 @@ constexpr int CLSID_TaskbarList = 1;
 constexpr int CLSCTX_INPROC_SERVER = 1;
 constexpr int TBPF_INDETERMINATE = 1;
 constexpr int TBPF_NOPROGRESS = 0;
+constexpr int SW_HIDE = 0;
+bool window_visible = false;
+int show_window_calls = 0;
+
+bool IsWindowVisible(HWND) { return window_visible; }
+void ShowWindow(HWND, int command) {
+  // Emulate STARTF_USESHOWWINDOW with SW_SHOWNORMAL on the first call.
+  window_visible = show_window_calls++ == 0 || command != SW_HIDE;
+}
 
 bool FAILED(HRESULT result) { return result < 0; }
 #define IID_PPV_ARGS(pointer) pointer
@@ -66,6 +75,7 @@ class WindowManager {
 
   HWND GetMainWindow() { return reinterpret_cast<HWND>(1); }
   void WaitUntilReadyToShow();
+  void Hide();
   void SetSkipTaskbar(const flutter::EncodableMap& args);
   void SetProgressBar(const flutter::EncodableMap& args);
 };
@@ -142,6 +152,17 @@ int main(int argument_count, char** arguments) {
     manager.WaitUntilReadyToShow();
     Require(creation_calls == 1 && taskbar.initialization_calls == 1,
             "Ready interface was initialized more than once");
+  } else if (scenario == "hide_already_hidden") {
+    manager.Hide();
+    manager.Hide();
+    Require(!window_visible, "Silent launch became visible");
+    Require(show_window_calls == 0, "Already hidden window called ShowWindow");
+  } else if (scenario == "hide_visible") {
+    window_visible = true;
+    show_window_calls = 1;
+    manager.Hide();
+    Require(!window_visible, "Visible window was not hidden");
+    Require(show_window_calls == 2, "Visible window did not call ShowWindow");
   } else {
     Require(false, "Unknown test scenario");
   }
