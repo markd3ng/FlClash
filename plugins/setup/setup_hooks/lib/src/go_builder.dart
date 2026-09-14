@@ -14,6 +14,33 @@ import 'util.dart';
 
 final _log = Logger('go_builder');
 
+/// Flutter's hook environment keeps HOME on Windows, but omits USERPROFILE
+/// and LOCALAPPDATA. Give Go explicit cache roots when its own defaults cannot
+/// be resolved, while retaining any available user configuration.
+Map<String, String> goCacheEnvironment({
+  required String rootDir,
+  Map<String, String>? environment,
+  bool? isWindows,
+}) {
+  if (!(isWindows ?? Platform.isWindows)) return const {};
+  final values = {
+    for (final entry in (environment ?? Platform.environment).entries)
+      entry.key.toUpperCase(): entry.value,
+  };
+  bool missing(String key) => values[key]?.isNotEmpty != true;
+  final cacheRoot = p.join(
+    p.absolute(rootDir),
+    '.dart_tool',
+    'setup_build_cache',
+  );
+  return {
+    if (missing('GOCACHE') && missing('LOCALAPPDATA'))
+      'GOCACHE': p.join(cacheRoot, 'go-build'),
+    if (missing('GOPATH') && missing('USERPROFILE'))
+      'GOPATH': p.join(cacheRoot, 'go'),
+  };
+}
+
 class GoBuilder {
   GoBuilder({
     required this.rootDir,
@@ -112,7 +139,11 @@ class GoBuilder {
   }
 
   Map<String, String> _buildEnvironment(Target target) {
-    final env = <String, String>{'GOOS': target.goos, 'GOARCH': target.goarch};
+    final env = <String, String>{
+      ...goCacheEnvironment(rootDir: rootDir),
+      'GOOS': target.goos,
+      'GOARCH': target.goarch,
+    };
     if (target.isLib) {
       env
         ..['CGO_ENABLED'] = '1'

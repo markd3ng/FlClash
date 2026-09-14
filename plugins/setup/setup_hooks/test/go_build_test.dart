@@ -1,5 +1,7 @@
 import 'dart:io';
 import 'package:setup_hooks/src/build.dart';
+import 'package:setup_hooks/src/go_builder.dart';
+import 'package:path/path.dart' as p;
 import 'package:setup_hooks/src/target.dart';
 import 'package:test/test.dart';
 
@@ -10,6 +12,81 @@ void main() {
   } on ProcessException {
     goAvailable = false;
   }
+  test('Windows Go cache fallback retains configured roots', () {
+    final root = Directory.systemTemp.path;
+    for (final environment in [
+      {'GoCache': r'D:\go-cache', 'GoPath': r'E:\go'},
+      {
+        'LocalAppData': r'C:\Users\runner\AppData\Local',
+        'UserProfile': r'C:\Users\runner',
+      },
+    ]) {
+      expect(
+        goCacheEnvironment(
+          rootDir: root,
+          environment: environment,
+          isWindows: true,
+        ),
+        isEmpty,
+      );
+    }
+    expect(
+      goCacheEnvironment(
+        rootDir: root,
+        environment: const {},
+        isWindows: false,
+      ),
+      isEmpty,
+    );
+  });
+
+  test(
+    'Go builds with the stripped Windows hook environment',
+    () {
+      final root = Directory.systemTemp.createTempSync('flclash stripped go ');
+      addTearDown(() => root.deleteSync(recursive: true));
+      File(
+        p.join(root.path, 'go.mod'),
+      ).writeAsStringSync('module example.invalid/fixture\n\ngo 1.23\n');
+      File(
+        p.join(root.path, 'main.go'),
+      ).writeAsStringSync('package main\nfunc main() {}\n');
+      final environment = {
+        for (final entry in Platform.environment.entries)
+          if (const {
+            'PATH',
+            'SYSTEMROOT',
+            'TEMP',
+            'TMP',
+          }.contains(entry.key.toUpperCase()))
+            entry.key: entry.value,
+        ...goCacheEnvironment(
+          rootDir: root.path,
+          environment: const {},
+          isWindows: true,
+        ),
+        'CGO_ENABLED': '0',
+        'GOTOOLCHAIN': 'local',
+        'GOPROXY': 'off',
+      };
+      final output = p.join(
+        root.path,
+        Platform.isWindows ? 'fixture.exe' : 'fixture',
+      );
+      final result = Process.runSync(
+        'go',
+        ['build', '-o', output, '.'],
+        workingDirectory: root.path,
+        environment: environment,
+        includeParentEnvironment: false,
+      );
+      expect(result.exitCode, 0, reason: result.stderr.toString());
+      expect(File(output).existsSync(), isTrue);
+    },
+    skip: !goAvailable,
+    timeout: const Timeout(Duration(minutes: 2)),
+  );
+
   test(
     'real Go build caches, detects new source files and excludes build trees from hook dependencies',
     () async {

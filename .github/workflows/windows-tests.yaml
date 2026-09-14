@@ -39,6 +39,17 @@ jobs:
           flutter-version: ${{ inputs.flutter-version }}
           cache: true
       - run: flutter pub get
+      - name: Setup Go for hook regressions
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26'
+          cache: false
+      - name: Check Windows Go hook and build cache
+        working-directory: plugins/setup/setup_hooks
+        run: |
+          dart pub get
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          dart test test/go_build_test.dart test/windows_cache_test.dart
       - name: Skip native build hooks for Windows unit tests
         run: dart tool/set_native_build_assets.dart false
       - name: Check Windows process liveness and Helper client
