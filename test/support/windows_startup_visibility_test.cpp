@@ -66,11 +66,14 @@ void RunChild(const std::wstring& executable, const wchar_t* mode) {
   std::wstring command = L"\"" + executable + L"\" " + mode;
   STARTUPINFOW startup{};
   startup.cb = sizeof(startup);
-  startup.dwFlags = STARTF_USESHOWWINDOW;
+  startup.dwFlags = STARTF_USESHOWWINDOW | STARTF_USESTDHANDLES;
   startup.wShowWindow = SW_SHOWNORMAL;
+  startup.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
+  startup.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+  startup.hStdError = GetStdHandle(STD_ERROR_HANDLE);
   PROCESS_INFORMATION process{};
   Require(CreateProcessW(executable.c_str(), command.data(), nullptr, nullptr,
-                         FALSE, 0, nullptr, nullptr, &startup, &process),
+                         TRUE, 0, nullptr, nullptr, &startup, &process),
           "CreateProcess failed");
   CloseHandle(process.hThread);
   const DWORD wait = WaitForSingleObject(process.hProcess, 10000);
@@ -86,14 +89,13 @@ void RunChild(const std::wstring& executable, const wchar_t* mode) {
   Require(read_exit_code && exit_code == EXIT_SUCCESS, "Startup fixture failed");
 }
 
-int main(int argument_count, char** arguments) {
-  if (argument_count == 2) {
-    const std::string mode = arguments[1];
-    Require(mode == "--patched" || mode == "--control", "Unknown test mode");
-    CheckChild(mode == "--patched");
+int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR command_line, int) {
+  const std::wstring mode = command_line;
+  if (!mode.empty()) {
+    Require(mode == L"--patched" || mode == L"--control", "Unknown test mode");
+    CheckChild(mode == L"--patched");
     return EXIT_SUCCESS;
   }
-  Require(argument_count == 1, "Unexpected fixture arguments");
   std::vector<wchar_t> path(32768);
   const DWORD length = GetModuleFileNameW(nullptr, path.data(), path.size());
   Require(length > 0 && length < path.size(), "GetModuleFileName failed");
