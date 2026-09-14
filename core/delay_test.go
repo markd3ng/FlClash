@@ -146,8 +146,8 @@ func TestHandleAsyncTestDelayPreservesURLForMissingProxy(t *testing.T) {
 }
 
 // Exercise the real outbound HTTP probe, not a synthetic returned delay. A slow
-// link must stay failed at its first deadline and recover with the retry budget.
-func TestDelayProbeRetriesSlowHTTPWithItsOwnBudget(t *testing.T) {
+// link must fail a short deadline and succeed with its own adequate budget.
+func TestDelayProbeHonorsItsNetworkBudget(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		select {
 		case <-r.Context().Done():
@@ -171,10 +171,77 @@ func TestDelayProbeRetriesSlowHTTPWithItsOwnBudget(t *testing.T) {
 				t.Fatalf("short deadline reported success: %+v", delay)
 			}
 			if timeout == 2000 && delay.Value <= 0 {
-				t.Fatalf("larger retry budget did not recover the slow HTTP probe: %+v", delay)
+				t.Fatalf("adequate budget did not complete the slow HTTP probe: %+v", delay)
 			}
 		case <-time.After(3 * time.Second):
 			t.Fatal("probe did not finish within its RPC grace")
 		}
+	}
+}
+
+// Verify the actual mihomo probe used by the app: HEAD accepts a response
+// without following redirects, and unified delay measures a second request
+// over the same connection instead of the initial setup/first response.
+func TestDelayProbeUsesHTTPHeadAndUnifiedRoundTrip(t *testing.T) {
+	previousProxies, previousProviders := tunnel.Proxies(), tunnel.Providers()
+	previousUnified := adapter.UnifiedDelay.Load()
+	t.Cleanup(func() {
+		tunnel.UpdateProxies(previousProxies, previousProviders)
+		adapter.UnifiedDelay.Store(previousUnified)
+	})
+
+	for _, unified := range []bool{false, true} {
+		name := "first response"
+		if unified {
+			name = "unified round trip"
+		}
+		t.Run(name, func(t *testing.T) {
+			adapter.UnifiedDelay.Store(unified)
+			var mu sync.Mutex
+			var peers []string
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.Method != http.MethodHead || r.URL.Path != "/probe" {
+					t.Errorf("probe request = %s %s", r.Method, r.URL.Path)
+				}
+				mu.Lock()
+				peers = append(peers, r.RemoteAddr)
+				first := len(peers) == 1
+				mu.Unlock()
+				if first {
+					time.Sleep(250 * time.Millisecond)
+				}
+				w.Header().Set("Location", "/must-not-follow")
+				w.WriteHeader(http.StatusFound)
+			}))
+			defer server.Close()
+			tunnel.UpdateProxies(map[string]constant.Proxy{"node": adapter.NewProxy(outbound.NewDirect())}, nil)
+			result := make(chan *Delay, 1)
+			handleAsyncTestDelay(&TestDelayParams{
+				ProxyName: "node", TestUrl: server.URL + "/probe", Timeout: 2000,
+			}, func(delay *Delay) { result <- delay })
+
+			select {
+			case delay := <-result:
+				if delay.Value <= 0 {
+					t.Fatalf("HTTP response reported as failed: %+v", delay)
+				}
+				if unified && delay.Value >= 250 {
+					t.Fatalf("unified delay included the slow first response: %+v", delay)
+				}
+				if !unified && delay.Value < 250 {
+					t.Fatalf("non-unified delay excluded the first response: %+v", delay)
+				}
+			case <-time.After(3 * time.Second):
+				t.Fatal("HEAD probe did not complete")
+			}
+			mu.Lock()
+			defer mu.Unlock()
+			if !unified && len(peers) != 1 {
+				t.Fatalf("non-unified probe made %d requests", len(peers))
+			}
+			if unified && (len(peers) != 2 || peers[0] != peers[1]) {
+				t.Fatalf("unified probe did not reuse its connection: %v", peers)
+			}
+		})
 	}
 }

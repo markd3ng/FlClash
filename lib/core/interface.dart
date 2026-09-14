@@ -31,7 +31,7 @@ mixin CoreInterface {
   Future<Delay> asyncTestDelay(
     String url,
     String proxyName, {
-    Duration timeout = httpTimeoutDuration,
+    Duration timeout = delayTestTimeoutDuration,
   });
 
   Future<String> updateConfig(UpdateParams updateParams);
@@ -369,8 +369,9 @@ abstract class CoreHandlerInterface with CoreInterface {
   Future<Delay> asyncTestDelay(
     String url,
     String proxyName, {
-    Duration timeout = httpTimeoutDuration,
+    Duration timeout = delayTestTimeoutDuration,
   }) async {
+    final minimumGuard = timeout + const Duration(seconds: 2);
     final data = await _invokeMethod<Map<String, dynamic>>(
       method: CoreMethod.asyncTestDelay,
       arguments: {
@@ -378,11 +379,13 @@ abstract class CoreHandlerInterface with CoreInterface {
         'timeout': timeout.inMilliseconds,
         'test-url': url,
       },
-      // The network budget starts in Go; leave room for Android IPC/dispatch.
-      timeout: timeout + const Duration(seconds: 2),
+      // Match upstream's dispatch guard without capping a custom probe budget.
+      timeout: minimumGuard > delayTestGuardDuration
+          ? minimumGuard
+          : delayTestGuardDuration,
     );
     return data == null
-        ? Delay(name: proxyName, value: -1, url: url)
+        ? Delay(name: proxyName, value: null, url: url)
         : Delay.fromJson(data);
   }
 

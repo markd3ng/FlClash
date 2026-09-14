@@ -7,6 +7,7 @@ import 'package:fl_clash/l10n/l10n.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
+import 'package:fl_clash/views/proxies/card.dart';
 import 'package:fl_clash/views/proxies/list.dart';
 import 'package:fl_clash/views/proxies/tab.dart';
 import 'package:material_ui/material_ui.dart';
@@ -15,6 +16,70 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  testWidgets(
+    'node cards distinguish pending, interrupted, failed and measured results',
+    (tester) async {
+      const url = 'https://example.com';
+      final container = ProviderContainer(
+        overrides: [
+          realSelectedProxyStateProvider(
+            'Node',
+          ).overrideWith((_) => const SelectedProxyState(proxyName: 'Node')),
+          getSelectedProxyNameProvider('Group').overrideWith((_) => ''),
+        ],
+      );
+      addTearDown(container.dispose);
+      final delays = container.read(delayDataSourceProvider.notifier);
+      final generation = delays.begin();
+      delays.setDelay(
+        const Delay(name: 'Node', url: url, value: 0),
+        generation: generation,
+      );
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const _TestApp(
+            child: SizedBox(
+              width: 240,
+              height: 100,
+              child: ProxyCard(
+                groupName: 'Group',
+                proxy: Proxy(name: 'Node', type: 'Shadowsocks'),
+                groupType: GroupType.Selector,
+                type: ProxyCardType.min,
+                testUrl: url,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.text('Timeout'), findsNothing);
+
+      for (final value in <int?>[null, -1, 6000]) {
+        delays.setDelay(
+          Delay(name: 'Node', url: url, value: value),
+          generation: generation,
+        );
+        await tester.pumpAndSettle();
+        expect(find.byType(CircularProgressIndicator), findsNothing);
+        expect(
+          find.text('Timeout'),
+          value == -1 ? findsOneWidget : findsNothing,
+        );
+        expect(
+          find.byIcon(Icons.bolt),
+          value == null ? findsOneWidget : findsNothing,
+        );
+        expect(
+          find.text('6000 ms'),
+          value == 6000 ? findsOneWidget : findsNothing,
+        );
+      }
+    },
+  );
+
   testWidgets('delay test button stays locked until the request completes', (
     tester,
   ) async {

@@ -230,7 +230,7 @@ class CoreController {
     String url,
     String proxyName, {
     bool Function()? isCurrent,
-    Duration timeout = httpTimeoutDuration,
+    Duration timeout = delayTestTimeoutDuration,
   }) async {
     final testUrl = getDelayTestUrl(proxyName: proxyName, testUrl: url);
     Delay canceled() => Delay(url: testUrl, name: proxyName, value: null);

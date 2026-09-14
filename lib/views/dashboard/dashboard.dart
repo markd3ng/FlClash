@@ -334,43 +334,18 @@ class _AddDashboardWidgetModal extends StatelessWidget {
   }
 }
 
-class _AddedContainer extends StatefulWidget {
+class _AddedContainer extends StatelessWidget {
   final Widget child;
   final VoidCallback onAdd;
 
   const _AddedContainer({required this.child, required this.onAdd});
 
   @override
-  State<_AddedContainer> createState() => _AddedContainerState();
-}
-
-class _AddedContainerState extends State<_AddedContainer> {
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  void didUpdateWidget(_AddedContainer oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.child != widget.child) {}
-  }
-
-  Future<void> _handleAdd() async {
-    widget.onAdd();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        ActivateBox(child: widget.child),
+        ActivateBox(child: child),
         Positioned(
           top: -8,
           right: -8,
@@ -381,7 +356,7 @@ class _AddedContainerState extends State<_AddedContainer> {
               child: IconButton.filled(
                 iconSize: 20,
                 padding: const EdgeInsets.all(2),
-                onPressed: _handleAdd,
+                onPressed: onAdd,
                 icon: const Icon(Icons.add),
               ),
             ),

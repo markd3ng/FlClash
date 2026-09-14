@@ -22,54 +22,19 @@ double getItemHeight(ProxyCardType proxyCardType) {
   };
 }
 
-Future<Delay> _testDelayTarget(
-  DelayTestTarget target,
-  int generation, {
-  Duration timeout = httpTimeoutDuration,
+Future<void> proxyDelayTest(Proxy proxy, [String? testUrl]) {
+  return _runDelayTests([proxy], testUrl);
+}
+
+Future<void> delayTest(List<Proxy> proxies, [String? testUrl]) {
+  return _runDelayTests(proxies, testUrl, sortResults: true);
+}
+
+Future<void> _runDelayTests(
+  List<Proxy> proxies,
+  String? testUrl, {
+  bool sortResults = false,
 }) async {
-  try {
-    return await coreController.getDelay(
-      target.url,
-      target.name,
-      timeout: timeout,
-      isCurrent: () => appController.isCurrentDelayGeneration(generation),
-    );
-  } catch (_) {
-    return Delay(url: target.url, name: target.name, value: -1);
-  }
-}
-
-Future<void> proxyDelayTest(Proxy proxy, [String? testUrl]) async {
-  final target = computeDelayTestTarget(
-    proxy: proxy,
-    groups: appController.groups,
-    selectedMap: appController.currentProfile?.selectedMap ?? {},
-    defaultTestUrl: appController.getRealTestUrl(testUrl),
-  );
-  if (target == null) {
-    return;
-  }
-  final generation = appController.beginDelayTest();
-  appController.setDelay(
-    Delay(url: target.url, name: target.name, value: 0),
-    generation: generation,
-  );
-  var delay = await _testDelayTarget(target, generation);
-  if ((delay.value ?? -1) <= 0 &&
-      appController.isCurrentDelayGeneration(generation)) {
-    delay = await _testDelayTarget(
-      target,
-      generation,
-      timeout: delayRetryTimeout,
-    );
-  }
-  appController.setDelay(delay, generation: generation);
-  if (appController.isCurrentDelayGeneration(generation)) {
-    appController.updateGroupsDebounce();
-  }
-}
-
-Future<void> delayTest(List<Proxy> proxies, [String? testUrl]) async {
   final delayTargets = computeDelayTestTargets(
     proxies: proxies,
     groups: appController.groups,
@@ -89,19 +54,17 @@ Future<void> delayTest(List<Proxy> proxies, [String? testUrl]) async {
 
   await runDelayTestBatch(
     targets: delayTargets,
-    concurrency: system.isAndroid
-        ? mobileDelayTestConcurrency
-        : maxConcurrentDelayTests,
-    retryConcurrency: system.isAndroid ? 4 : 8,
-    retryBudget: delayRetryTimeout,
-    probe: (target) => _testDelayTarget(target, generation),
-    retryProbe: (target, timeout) =>
-        _testDelayTarget(target, generation, timeout: timeout),
+    concurrency: maxConcurrentDelayTests,
+    probe: (target) => coreController.getDelay(
+      target.url,
+      target.name,
+      isCurrent: () => appController.isCurrentDelayGeneration(generation),
+    ),
     isCurrent: () => appController.isCurrentDelayGeneration(generation),
     onResult: (delay) => appController.setDelay(delay, generation: generation),
   );
   if (appController.isCurrentDelayGeneration(generation)) {
-    appController.addSortNum();
+    if (sortResults) appController.addSortNum();
     appController.updateGroupsDebounce();
   }
 }

@@ -40,7 +40,7 @@ void main() {
   });
 
   test(
-    'a retry keeps its larger network budget after acquiring a shared slot',
+    'a custom probe budget reaches the Core after acquiring a shared slot',
     () async {
       when(
         () => handler.asyncTestDelay(
@@ -54,14 +54,14 @@ void main() {
       final delay = await controller.getDelay(
         'https://example.com',
         'node',
-        timeout: delayRetryTimeout,
+        timeout: const Duration(seconds: 15),
       );
       expect(delay.value, 6000);
       verify(
         () => handler.asyncTestDelay(
           'https://example.com',
           'node',
-          timeout: delayRetryTimeout,
+          timeout: const Duration(seconds: 15),
         ),
       ).called(1);
     },
@@ -105,6 +105,44 @@ void main() {
       const Delay(name: 'last', url: 'https://example.com', value: 40),
     );
     expect((await last).value, 40);
+  });
+
+  testWidgets('time waiting for a shared slot does not shorten a probe', (
+    tester,
+  ) async {
+    final pending = <Completer<Delay>>[];
+    when(
+      () =>
+          handler.asyncTestDelay(any(), any(), timeout: any(named: 'timeout')),
+    ).thenAnswer((_) {
+      final result = Completer<Delay>();
+      pending.add(result);
+      return result.future;
+    });
+    final requests = List.generate(
+      maxConcurrentDelayTests + 1,
+      (i) => controller.getDelay('https://example.com', 'node$i'),
+    );
+    await tester.pump(const Duration(seconds: 20));
+    expect(pending.length, maxConcurrentDelayTests);
+    pending.first.complete(
+      const Delay(name: 'node0', url: 'https://example.com', value: 20),
+    );
+    await tester.pump();
+    expect(pending.length, maxConcurrentDelayTests + 1);
+    verify(
+      () => handler.asyncTestDelay(
+        'https://example.com',
+        'node$maxConcurrentDelayTests',
+        timeout: const Duration(seconds: 8),
+      ),
+    ).called(1);
+    for (final result in pending.skip(1)) {
+      result.complete(
+        const Delay(name: 'node', url: 'https://example.com', value: 20),
+      );
+    }
+    await Future.wait(requests);
   });
 
   test('obsolete queued probes never reach the Core or hold a slot', () async {

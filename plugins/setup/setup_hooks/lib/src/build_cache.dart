@@ -144,10 +144,12 @@ class BuildCache {
       if (rawOutputs is! List || rawOutputs.isEmpty) {
         return 'cached output list is missing';
       }
-      final outputs = rawOutputs
-          .whereType<Map>()
-          .map((entry) => Map<String, dynamic>.from(entry))
-          .toList();
+      // A partially damaged list is not a cache hit: dropping malformed
+      // entries could hide an output that must be regenerated.
+      if (rawOutputs.any((entry) => entry is! Map<String, dynamic>)) {
+        return 'invalid output metadata';
+      }
+      final outputs = rawOutputs.cast<Map<String, dynamic>>();
       final primaryPath = _storedPath(primaryOutput);
       if (!outputs.any((output) => output['path'] == primaryPath)) {
         return 'primary output is not cached';

@@ -50,10 +50,11 @@ final defaultTextScaleFactor =
     WidgetsBinding.instance.platformDispatcher.textScaleFactor;
 const httpTimeoutDuration = Duration(milliseconds: 5000);
 
-/// Match the Core ceiling; Android uses fewer simultaneous radio handshakes.
-const maxConcurrentDelayTests = 50;
-const mobileDelayTestConcurrency = 24;
-const delayRetryTimeout = Duration(seconds: 15);
+/// Match upstream's probe budget and bounded concurrency. Queue time is not
+/// part of a node's network measurement; RPC gets a separate dispatch guard.
+const delayTestTimeoutDuration = Duration(seconds: 8);
+const delayTestGuardDuration = Duration(seconds: 30);
+const maxConcurrentDelayTests = 16;
 const animateDuration = Duration(milliseconds: 100);
 const midDuration = Duration(milliseconds: 200);
 const commonDuration = Duration(milliseconds: 300);

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:setup_hooks/src/build_cache.dart';
@@ -71,6 +72,21 @@ void main() {
     expect((await runBuild()).rebuilt, isTrue);
     expect(buildCount, 3);
   });
+
+  test(
+    'rebuilds instead of accepting a partially corrupt output list',
+    () async {
+      await runBuild();
+      final recordFile = File('${cache.cacheDir}/macos-arm64-core.json');
+      final record =
+          jsonDecode(recordFile.readAsStringSync()) as Map<String, dynamic>;
+      (record['outputs'] as List).add(null);
+      recordFile.writeAsStringSync(jsonEncode(record));
+
+      expect((await runBuild()).rebuilt, isTrue);
+      expect(buildCount, 2);
+    },
+  );
 
   test('does not write a successful record after a failed build', () async {
     final failingBuild = cache.run(

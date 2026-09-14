@@ -26,11 +26,6 @@ class StatusManagerState extends State<StatusManager> {
   bool _isDisplayingMessage = false;
 
   @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
   void dispose() {
     _messagesNotifier.dispose();
     for (final timer in _activeTimers.values) {

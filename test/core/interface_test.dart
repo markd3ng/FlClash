@@ -5,19 +5,47 @@ import 'package:fl_clash/models/models.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test(
-    'retry network budget reaches Go and leaves room for Android RPC',
-    () async {
-      final handler = _FakeCoreHandler();
-      await handler.asyncTestDelay(
+  test('default probe budget and RPC guard match upstream', () async {
+    final handler = _FakeCoreHandler();
+    await handler.asyncTestDelay('https://example.com', 'node');
+    expect(handler.arguments, {
+      'proxy-name': 'node',
+      'timeout': 8000,
+      'test-url': 'https://example.com',
+    });
+    expect(handler.timeout, const Duration(seconds: 30));
+  });
+
+  test('a custom network budget always fits inside the RPC guard', () async {
+    final handler = _FakeCoreHandler();
+    await handler.asyncTestDelay(
+      'https://example.com',
+      'node',
+      timeout: const Duration(seconds: 40),
+    );
+    expect((handler.arguments as Map)['timeout'], 40000);
+    expect(handler.timeout, const Duration(seconds: 42));
+  });
+
+  test('only an actual failed probe produces a failure result', () async {
+    final handler = _FakeCoreHandler();
+    for (final value in [25, -1]) {
+      handler.response = {
+        'name': 'node',
+        'url': 'https://example.com',
+        'value': value,
+      };
+      final result = await handler.asyncTestDelay(
         'https://example.com',
         'node',
-        timeout: const Duration(seconds: 15),
       );
-      expect((handler.arguments as Map)['timeout'], 15000);
-      expect(handler.timeout, const Duration(seconds: 17));
-    },
-  );
+      expect(result.value, value);
+    }
+    handler.response = null;
+    final result = await handler.asyncTestDelay('https://example.com', 'node');
+    expect(result.value, isNull);
+    expect(result.url, 'https://example.com');
+  });
   const setupParams = SetupParams(
     selectedMap: {},
     testUrl: 'https://example.com',
@@ -113,7 +141,7 @@ void main() {
       expect(await handler.getMemory(), 0);
       expect(await handler.getCountryCode('127.0.0.1'), isEmpty);
       final delay = await handler.asyncTestDelay('https://example.com', 'node');
-      expect(delay.value, -1);
+      expect(delay.value, isNull);
       expect(delay.name, 'node');
     },
   );
