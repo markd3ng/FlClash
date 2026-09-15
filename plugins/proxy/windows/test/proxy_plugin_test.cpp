@@ -88,6 +88,53 @@ TEST(ProxyPlugin, StartProxyRejectsInvalidArguments) {
   EXPECT_EQ(error_code, "bad_args");
 }
 
+class DiagnosticProxyPlugin : public ProxyPlugin {
+ public:
+  bool available = true;
+  int restore_attempts = 0;
+ protected:
+  std::optional<flutter::EncodableMap> ReadProxySettings() override {
+    if (!available) return std::nullopt;
+    return EncodableMap{
+      {EncodableValue("flags"), EncodableValue(10)},
+      {EncodableValue("proxyServer"), EncodableValue("127.0.0.1:7890")},
+    };
+  }
+  bool RestoreProxy() override { ++restore_attempts; return true; }
+};
+
+TEST(ProxyPlugin, DiagnosticsReturnFlagsWithoutRestoringProxy) {
+  DiagnosticProxyPlugin plugin;
+  bool received = false;
+  plugin.HandleMethodCall(
+      MethodCall("GetProxySettings", std::make_unique<EncodableValue>()),
+      std::make_unique<MethodResultFunctions<>>(
+          [&received](const EncodableValue* value) {
+            ASSERT_NE(value, nullptr);
+            const auto& data = std::get<EncodableMap>(*value);
+            EXPECT_EQ(std::get<int>(data.at(EncodableValue("flags"))), 10);
+            EXPECT_EQ(data.size(), 2u);
+            received = true;
+          }, nullptr, nullptr));
+  EXPECT_TRUE(received);
+  EXPECT_EQ(plugin.restore_attempts, 0);
+}
+
+TEST(ProxyPlugin, UnavailableDiagnosticsReturnNull) {
+  DiagnosticProxyPlugin plugin;
+  plugin.available = false;
+  bool received = false;
+  plugin.HandleMethodCall(
+      MethodCall("GetProxySettings", std::make_unique<EncodableValue>()),
+      std::make_unique<MethodResultFunctions<>>(
+          [&received](const EncodableValue* value) {
+            EXPECT_TRUE(value == nullptr || std::holds_alternative<std::monostate>(*value));
+            received = true;
+          }, nullptr, nullptr));
+  EXPECT_TRUE(received);
+  EXPECT_EQ(plugin.restore_attempts, 0);
+}
+
 class SessionProxyPlugin : public ProxyPlugin {
  public:
   int restore_attempts = 0;

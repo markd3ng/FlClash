@@ -131,6 +131,11 @@ extension InitControllerExt on AppController {
   }
 
   Future<void> _checkUpdate({required bool isUser}) async {
+    final task = _ref.read(appUpdateDownloadProvider);
+    if (task.hasDownload) {
+      if (isUser) await _showAppUpdateDownload(task);
+      return;
+    }
     AppUpdateInfo? updateInfo;
     try {
       updateInfo = await request.checkForUpdate();
@@ -173,51 +178,90 @@ extension InitControllerExt on AppController {
     }
     final downloadUrl = getAppUpdateDownloadUrl(Abi.current());
     await safeRun<void>(
-      () => _downloadAppUpdate(downloadUrl),
+      () => _downloadAppUpdate(downloadUrl, foreground: isUser),
       title: appLocalizations.checkUpdate,
       silence: !isUser,
     );
   }
 
-  Future<void> _downloadAppUpdate(String? downloadUrl) async {
+  Future<void> _downloadAppUpdate(
+    String? downloadUrl, {
+    required bool foreground,
+  }) async {
     if (downloadUrl == null) {
-      await _openUpdateDownloadUrl('https://dl.dler.io');
+      if (foreground) await _openUpdateDownloadUrl('https://dl.dler.io');
       return;
     }
-    final result = await globalState.showCommonDialog<UpdateDownloadResult>(
-      dismissible: false,
-      child: UpdateDownloadDialog(
-        download: (token, onProgress) async {
-          final client = createAppUpdateDownloadClient();
-          try {
-            return await downloadAppUpdate(
-              client: client,
-              url: downloadUrl,
-              fallbackUrls: [getAppUpdateFallbackDownloadUrl(downloadUrl)],
-              directory: await appPath.tempDir.future,
-              cancelToken: token,
-              onProgress: onProgress,
-            );
-          } finally {
-            client.close(force: true);
-          }
-        },
-      ),
+    final task = _ref.read(appUpdateDownloadProvider);
+    unawaited(
+      task.start((token, onProgress) async {
+        final client = createAppUpdateDownloadClient();
+        try {
+          return await downloadAppUpdate(
+            client: client,
+            url: downloadUrl,
+            fallbackUrls: [getAppUpdateFallbackDownloadUrl(downloadUrl)],
+            directory: await appPath.tempDir.future,
+            cancelToken: token,
+            onProgress: onProgress,
+          );
+        } finally {
+          client.close(force: true);
+        }
+      }, url: downloadUrl),
     );
-    await openAppUpdateDownload(
-      result: result,
-      openFile: (file) => system.isAndroid
-          ? app!.openFile(file.path)
-          : launchUrl(
-              Uri.file(file.path),
-              mode: LaunchMode.externalApplication,
-            ),
-      openBrowser: () => _openUpdateDownloadUrl(downloadUrl),
-      onError: (error) => commonPrint.log(
-        'Built-in update download failed: $error',
-        logLevel: LogLevel.warning,
-      ),
-    );
+    if (foreground) await _showAppUpdateDownload(task);
+  }
+
+  Future<void> _showAppUpdateDownload(AppUpdateDownloadTask task) async {
+    if (_updateDialogOpen) return;
+    _updateDialogOpen = true;
+    UpdateDownloadAction? action;
+    try {
+      await window?.show();
+      action = await globalState.showCommonDialog<UpdateDownloadAction>(
+        dismissible: false,
+        child: UpdateDownloadDialog(task: task),
+      );
+    } finally {
+      _updateDialogOpen = false;
+    }
+    if (action == UpdateDownloadAction.install) {
+      await installAppUpdate();
+    } else if (action == UpdateDownloadAction.browser) {
+      await safeRun(
+        () => _openUpdateDownloadUrl(task.downloadUrl!),
+        title: appLocalizations.checkUpdate,
+      );
+    }
+  }
+
+  Future<void> installAppUpdate() async {
+    final task = _ref.read(appUpdateDownloadProvider);
+    final file = task.value.file;
+    if (file == null || _openingUpdateInstaller) return;
+    _openingUpdateInstaller = true;
+    try {
+      await safeRun(() async {
+        await openAppUpdateDownload(
+          file: file,
+          openFile: (file) => system.isAndroid
+              ? app!.openFile(file.path)
+              : launchUrl(
+                  Uri.file(file.path),
+                  mode: LaunchMode.externalApplication,
+                ),
+          openBrowser: () => _openUpdateDownloadUrl(task.downloadUrl!),
+          onError: (_) => commonPrint.log(
+            'Unable to open downloaded update',
+            logLevel: LogLevel.warning,
+          ),
+        );
+        task.dismissNotice();
+      }, title: appLocalizations.checkUpdate);
+    } finally {
+      _openingUpdateInstaller = false;
+    }
   }
 
   Future<void> _openUpdateDownloadUrl(String downloadUrl) async {

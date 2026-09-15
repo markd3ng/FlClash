@@ -19,6 +19,7 @@ import 'package:path/path.dart' show dirname, join;
 import 'config/advanced.dart';
 import 'developer.dart';
 import 'theme.dart';
+import 'network_diagnostics.dart';
 
 class ToolsView extends ConsumerStatefulWidget {
   const ToolsView({super.key});
@@ -76,6 +77,13 @@ class _ToolViewState extends ConsumerState<ToolsView> {
         if (system.isDesktop) const _HotkeyItem(),
         if (system.isWindows) const _LoopbackItem(),
         if (system.isAndroid) const _AccessItem(),
+        if (system.isWindows || system.isMacOS)
+          ListItem.open(
+            leading: const Icon(Icons.network_check),
+            title: Text(context.appLocalizations.diagTitle),
+            subtitle: Text(context.appLocalizations.diagEntryHint),
+            delegate: const OpenDelegate(widget: NetworkDiagnosticsPage()),
+          ),
         const _ConfigItem(),
         const _AdvancedConfigItem(),
         const _SettingItem(),

@@ -261,6 +261,15 @@ class CoreController {
     }
   }
 
+  Future<Map<String, dynamic>> getNetworkDiagnostics() async {
+    final result = await _interface.invokeMethod<Map<String, dynamic>>(
+      method: CoreMethod.networkDiagnostics,
+      timeout: const Duration(seconds: 8),
+    );
+    if (result == null) throw StateError('No Core diagnostic response');
+    return result;
+  }
+
   Future<Map<String, dynamic>> getConfig(String path) async {
     return normalizeCoreRawConfig(await _interface.getConfig(path));
   }

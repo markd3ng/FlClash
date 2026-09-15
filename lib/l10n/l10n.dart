@@ -6323,6 +6323,866 @@ class AppLocalizations {
   String get minimize {
     return Intl.message('Minimize', name: 'minimize', desc: '', args: []);
   }
+
+  /// `DNS lookup failed`
+  String get cloudApiDnsFailed {
+    return Intl.message(
+      'DNS lookup failed',
+      name: 'cloudApiDnsFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Connection timed out`
+  String get cloudApiConnectTimeout {
+    return Intl.message(
+      'Connection timed out',
+      name: 'cloudApiConnectTimeout',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Sending the request timed out`
+  String get cloudApiSendTimeout {
+    return Intl.message(
+      'Sending the request timed out',
+      name: 'cloudApiSendTimeout',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Waiting for the response timed out`
+  String get cloudApiReceiveTimeout {
+    return Intl.message(
+      'Waiting for the response timed out',
+      name: 'cloudApiReceiveTimeout',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `TLS handshake failed`
+  String get cloudApiTlsFailed {
+    return Intl.message(
+      'TLS handshake failed',
+      name: 'cloudApiTlsFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Connection refused`
+  String get cloudApiConnectionRefused {
+    return Intl.message(
+      'Connection refused',
+      name: 'cloudApiConnectionRefused',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Connection reset`
+  String get cloudApiConnectionReset {
+    return Intl.message(
+      'Connection reset',
+      name: 'cloudApiConnectionReset',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Network unreachable`
+  String get cloudApiNetworkUnreachable {
+    return Intl.message(
+      'Network unreachable',
+      name: 'cloudApiNetworkUnreachable',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Network access denied`
+  String get cloudApiAccessDenied {
+    return Intl.message(
+      'Network access denied',
+      name: 'cloudApiAccessDenied',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Connection failed`
+  String get cloudApiConnectionFailed {
+    return Intl.message(
+      'Connection failed',
+      name: 'cloudApiConnectionFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Proxy connection failed`
+  String get cloudApiProxyFailed {
+    return Intl.message(
+      'Proxy connection failed',
+      name: 'cloudApiProxyFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Proxy authentication failed (HTTP 407)`
+  String get cloudApiProxyAuthFailed {
+    return Intl.message(
+      'Proxy authentication failed (HTTP 407)',
+      name: 'cloudApiProxyAuthFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Server returned HTTP {status}`
+  String cloudApiHttpError(Object status) {
+    return Intl.message(
+      'Server returned HTTP $status',
+      name: 'cloudApiHttpError',
+      desc: '',
+      args: [status],
+    );
+  }
+
+  /// `Invalid server response`
+  String get cloudApiInvalidResponse {
+    return Intl.message(
+      'Invalid server response',
+      name: 'cloudApiInvalidResponse',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Request canceled`
+  String get cloudApiRequestCanceled {
+    return Intl.message(
+      'Request canceled',
+      name: 'cloudApiRequestCanceled',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `System error {code}`
+  String cloudApiSystemError(Object code) {
+    return Intl.message(
+      'System error $code',
+      name: 'cloudApiSystemError',
+      desc: '',
+      args: [code],
+    );
+  }
+
+  /// `Request timed out`
+  String get cloudApiTimeout {
+    return Intl.message(
+      'Request timed out',
+      name: 'cloudApiTimeout',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Direct: {error}`
+  String cloudApiRouteDirect(Object error) {
+    return Intl.message(
+      'Direct: $error',
+      name: 'cloudApiRouteDirect',
+      desc: '',
+      args: [error],
+    );
+  }
+
+  /// `Local proxy: {error}`
+  String cloudApiRouteProxy(Object error) {
+    return Intl.message(
+      'Local proxy: $error',
+      name: 'cloudApiRouteProxy',
+      desc: '',
+      args: [error],
+    );
+  }
+
+  /// `Network self-check`
+  String get diagTitle {
+    return Intl.message(
+      'Network self-check',
+      name: 'diagTitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Check the core, system proxy, TUN and DNS`
+  String get diagEntryHint {
+    return Intl.message(
+      'Check the core, system proxy, TUN and DNS',
+      name: 'diagEntryHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Checks the current connection using a small sample. The system network path may also pass through TUN. Results do not cover every app or node.`
+  String get diagScope {
+    return Intl.message(
+      'Checks the current connection using a small sample. The system network path may also pass through TUN. Results do not cover every app or node.',
+      name: 'diagScope',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Run self-check`
+  String get diagRun {
+    return Intl.message('Run self-check', name: 'diagRun', desc: '', args: []);
+  }
+
+  /// `Copy diagnostic report`
+  String get diagCopy {
+    return Intl.message(
+      'Copy diagnostic report',
+      name: 'diagCopy',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Check canceled; results are incomplete`
+  String get diagCanceled {
+    return Intl.message(
+      'Check canceled; results are incomplete',
+      name: 'diagCanceled',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Passed`
+  String get diagPassed {
+    return Intl.message('Passed', name: 'diagPassed', desc: '', args: []);
+  }
+
+  /// `Needs attention`
+  String get diagWarning {
+    return Intl.message(
+      'Needs attention',
+      name: 'diagWarning',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Failed`
+  String get diagFailed {
+    return Intl.message('Failed', name: 'diagFailed', desc: '', args: []);
+  }
+
+  /// `Could not confirm`
+  String get diagUnknown {
+    return Intl.message(
+      'Could not confirm',
+      name: 'diagUnknown',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Skipped`
+  String get diagSkipped {
+    return Intl.message('Skipped', name: 'diagSkipped', desc: '', args: []);
+  }
+
+  /// `This option is not enabled`
+  String get diagDisabled {
+    return Intl.message(
+      'This option is not enabled',
+      name: 'diagDisabled',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Applied configuration`
+  String get diagProfile {
+    return Intl.message(
+      'Applied configuration',
+      name: 'diagProfile',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The selected configuration has been applied`
+  String get diagProfileReady {
+    return Intl.message(
+      'The selected configuration has been applied',
+      name: 'diagProfileReady',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The selected configuration has not been applied`
+  String get diagProfileMissing {
+    return Intl.message(
+      'The selected configuration has not been applied',
+      name: 'diagProfileMissing',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Select a valid configuration and start the connection before checking again.`
+  String get diagProfileHint {
+    return Intl.message(
+      'Select a valid configuration and start the connection before checking again.',
+      name: 'diagProfileHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Core response`
+  String get diagCore {
+    return Intl.message('Core response', name: 'diagCore', desc: '', args: []);
+  }
+
+  /// `The core responded and reports active listeners`
+  String get diagCoreReady {
+    return Intl.message(
+      'The core responded and reports active listeners',
+      name: 'diagCoreReady',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The core diagnostic response is unavailable or the configuration changed`
+  String get diagCoreUnknown {
+    return Intl.message(
+      'The core diagnostic response is unavailable or the configuration changed',
+      name: 'diagCoreUnknown',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The core reports that traffic forwarding is stopped`
+  String get diagCoreStopped {
+    return Intl.message(
+      'The core reports that traffic forwarding is stopped',
+      name: 'diagCoreStopped',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Traffic forwarding is paused by the current Wi-Fi exclusion setting`
+  String get diagSuspended {
+    return Intl.message(
+      'Traffic forwarding is paused by the current Wi-Fi exclusion setting',
+      name: 'diagSuspended',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Check the connection switch and Wi-Fi exclusions. If the core cannot respond, restart it and use a matching current client/core version.`
+  String get diagCoreHint {
+    return Intl.message(
+      'Check the connection switch and Wi-Fi exclusions. If the core cannot respond, restart it and use a matching current client/core version.',
+      name: 'diagCoreHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Local proxy entry`
+  String get diagListener {
+    return Intl.message(
+      'Local proxy entry',
+      name: 'diagListener',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The expected port responded to the proxy protocol`
+  String get diagListenerReady {
+    return Intl.message(
+      'The expected port responded to the proxy protocol',
+      name: 'diagListenerReady',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The expected proxy port did not respond or differs from the core port`
+  String get diagListenerFailed {
+    return Intl.message(
+      'The expected proxy port did not respond or differs from the core port',
+      name: 'diagListenerFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Check for a port conflict or a stopped listener. Restart the connection; if needed, change the mixed port in network settings.`
+  String get diagListenerHint {
+    return Intl.message(
+      'Check for a port conflict or a stopped listener. Restart the connection; if needed, change the mixed port in network settings.',
+      name: 'diagListenerHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `System proxy settings`
+  String get diagSystemProxy {
+    return Intl.message(
+      'System proxy settings',
+      name: 'diagSystemProxy',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `HTTP and HTTPS proxy settings point to the expected local port`
+  String get diagProxyReady {
+    return Intl.message(
+      'HTTP and HTTPS proxy settings point to the expected local port',
+      name: 'diagProxyReady',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The app requested a system proxy, but the OS reports it disabled`
+  String get diagProxyDisabled {
+    return Intl.message(
+      'The app requested a system proxy, but the OS reports it disabled',
+      name: 'diagProxyDisabled',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The OS proxy does not match the app port`
+  String get diagProxyDifferent {
+    return Intl.message(
+      'The OS proxy does not match the app port',
+      name: 'diagProxyDifferent',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Automatic proxy configuration is present; its effective route was not verified`
+  String get diagProxyAutomatic {
+    return Intl.message(
+      'Automatic proxy configuration is present; its effective route was not verified',
+      name: 'diagProxyAutomatic',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Toggle the system proxy again and check whether another proxy app or an organization policy controls these settings. Some apps use their own proxy settings.`
+  String get diagProxyHint {
+    return Intl.message(
+      'Toggle the system proxy again and check whether another proxy app or an organization policy controls these settings. Some apps use their own proxy settings.',
+      name: 'diagProxyHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `TUN interface and route`
+  String get diagTun {
+    return Intl.message(
+      'TUN interface and route',
+      name: 'diagTun',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The core TUN interface was not found in an active state`
+  String get diagTunMissing {
+    return Intl.message(
+      'The core TUN interface was not found in an active state',
+      name: 'diagTunMissing',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The core TUN interface is active and the sampled IPv4 route uses it`
+  String get diagTunReady {
+    return Intl.message(
+      'The core TUN interface is active and the sampled IPv4 route uses it',
+      name: 'diagTunReady',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `TUN is active, but the sampled IPv4 route uses another interface`
+  String get diagTunRouteMismatch {
+    return Intl.message(
+      'TUN is active, but the sampled IPv4 route uses another interface',
+      name: 'diagTunRouteMismatch',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `TUN is active; its IPv4 route could not be verified`
+  String get diagTunRouteUnknown {
+    return Intl.message(
+      'TUN is active; its IPv4 route could not be verified',
+      name: 'diagTunRouteUnknown',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Turn TUN off and on and complete system authorization. If the route differs, check other VPNs. IPv6, UDP and app-specific exclusions need separate checks.`
+  String get diagTunHint {
+    return Intl.message(
+      'Turn TUN off and on and complete system authorization. If the route differs, check other VPNs. IPv6, UDP and app-specific exclusions need separate checks.',
+      name: 'diagTunHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Traffic capture`
+  String get diagTrafficCapture {
+    return Intl.message(
+      'Traffic capture',
+      name: 'diagTrafficCapture',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Neither system proxy nor TUN is enabled`
+  String get diagNoCapture {
+    return Intl.message(
+      'Neither system proxy nor TUN is enabled',
+      name: 'diagNoCapture',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Enable system proxy or TUN, or configure the affected app to use the local proxy.`
+  String get diagCaptureHint {
+    return Intl.message(
+      'Enable system proxy or TUN, or configure the affected app to use the local proxy.',
+      name: 'diagCaptureHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `System DNS`
+  String get diagSystemDns {
+    return Intl.message(
+      'System DNS',
+      name: 'diagSystemDns',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Core DNS`
+  String get diagCoreDns {
+    return Intl.message('Core DNS', name: 'diagCoreDns', desc: '', args: []);
+  }
+
+  /// `oixCloud signed DNS`
+  String get diagOixDns {
+    return Intl.message(
+      'oixCloud signed DNS',
+      name: 'diagOixDns',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Sampled names resolved successfully`
+  String get diagDnsReady {
+    return Intl.message(
+      'Sampled names resolved successfully',
+      name: 'diagDnsReady',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Only some sampled names resolved`
+  String get diagDnsPartial {
+    return Intl.message(
+      'Only some sampled names resolved',
+      name: 'diagDnsPartial',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No managed node hostname was available for this sample`
+  String get diagOixDnsNoSample {
+    return Intl.message(
+      'No managed node hostname was available for this sample',
+      name: 'diagOixDnsNoSample',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The managed DNS signing function is not ready`
+  String get diagOixDnsAuthMissing {
+    return Intl.message(
+      'The managed DNS signing function is not ready',
+      name: 'diagOixDnsAuthMissing',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `DNS returned no usable address; this alone does not prove an authentication failure`
+  String get diagDnsNoAnswer {
+    return Intl.message(
+      'DNS returned no usable address; this alone does not prove an authentication failure',
+      name: 'diagDnsNoAnswer',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The DNS request was refused`
+  String get diagDnsRefused {
+    return Intl.message(
+      'The DNS request was refused',
+      name: 'diagDnsRefused',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Check DNS overrides and try another network. If system DNS works but core DNS fails, inspect the configuration DNS settings.`
+  String get diagDnsHint {
+    return Intl.message(
+      'Check DNS overrides and try another network. If system DNS works but core DNS fails, inspect the configuration DNS settings.',
+      name: 'diagDnsHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Check the client version and system time, then refresh the subscription. If resolution still fails, share this diagnostic report with support.`
+  String get diagOixDnsHint {
+    return Intl.message(
+      'Check the client version and system time, then refresh the subscription. If resolution still fails, share this diagnostic report with support.',
+      name: 'diagOixDnsHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `System network path`
+  String get diagSystemPath {
+    return Intl.message(
+      'System network path',
+      name: 'diagSystemPath',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Through the local proxy`
+  String get diagProxyPath {
+    return Intl.message(
+      'Through the local proxy',
+      name: 'diagProxyPath',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `{count} of 2 independent HTTPS checks passed`
+  String diagWebResult(Object count) {
+    return Intl.message(
+      '$count of 2 independent HTTPS checks passed',
+      name: 'diagWebResult',
+      desc: '',
+      args: [count],
+    );
+  }
+
+  /// `This path does not explicitly use the app HTTP proxy, but may use TUN. A failed sample may be caused by DNS, filtering or the test site; compare the local proxy result.`
+  String get diagSystemPathHint {
+    return Intl.message(
+      'This path does not explicitly use the app HTTP proxy, but may use TUN. A failed sample may be caused by DNS, filtering or the test site; compare the local proxy result.',
+      name: 'diagSystemPathHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `If the system path works, check the selected node, routing rules and core DNS. Failure at one test site does not mean every node is unusable.`
+  String get diagProxyPathHint {
+    return Intl.message(
+      'If the system path works, check the selected node, routing rules and core DNS. Failure at one test site does not mean every node is unusable.',
+      name: 'diagProxyPathHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `System time comparison`
+  String get diagClock {
+    return Intl.message(
+      'System time comparison',
+      name: 'diagClock',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Not enough uncached HTTPS responses to compare time`
+  String get diagClockUnknown {
+    return Intl.message(
+      'Not enough uncached HTTPS responses to compare time',
+      name: 'diagClockUnknown',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Two independent responses indicate a possible time difference of at least five minutes`
+  String get diagClockSkew {
+    return Intl.message(
+      'Two independent responses indicate a possible time difference of at least five minutes',
+      name: 'diagClockSkew',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No consistent large time difference was found in this sample`
+  String get diagClockReady {
+    return Intl.message(
+      'No consistent large time difference was found in this sample',
+      name: 'diagClockReady',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Enable automatic system date and time, then retry. A clock error can affect certificates and oixCloud DNS signatures.`
+  String get diagClockHint {
+    return Intl.message(
+      'Enable automatic system date and time, then retry. A clock error can affect certificates and oixCloud DNS signatures.',
+      name: 'diagClockHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Every node tested in this group failed. The test URL may also be unreachable. Run a network self-check?`
+  String get diagAllFailed {
+    return Intl.message(
+      'Every node tested in this group failed. The test URL may also be unreachable. Run a network self-check?',
+      name: 'diagAllFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Download in background`
+  String get updateDownloadBackground {
+    return Intl.message(
+      'Download in background',
+      name: 'updateDownloadBackground',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Update ready to install`
+  String get updateReady {
+    return Intl.message(
+      'Update ready to install',
+      name: 'updateReady',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The update has been downloaded. Install when convenient.`
+  String get updateReadyHint {
+    return Intl.message(
+      'The update has been downloaded. Install when convenient.',
+      name: 'updateReadyHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Install update`
+  String get updateInstall {
+    return Intl.message(
+      'Install update',
+      name: 'updateInstall',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Downloading update`
+  String get updateDownloading {
+    return Intl.message(
+      'Downloading update',
+      name: 'updateDownloading',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Update download failed`
+  String get updateDownloadFailed {
+    return Intl.message(
+      'Update download failed',
+      name: 'updateDownloadFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Download in browser`
+  String get updateDownloadBrowser {
+    return Intl.message(
+      'Download in browser',
+      name: 'updateDownloadBrowser',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<AppLocalizations> {

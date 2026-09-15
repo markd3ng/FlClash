@@ -24,6 +24,10 @@ abstract class ProxyPlatform extends PlatformInterface {
     throw UnimplementedError('startProxy() has not been implemented.');
   }
 
+  /// Reads default-connection WinINet flags and proxy address without changing
+  /// settings. Unsupported platforms or unavailable state return null.
+  Future<Map<String, dynamic>?> getProxySettings() async => null;
+
   Future<bool?> stopProxy() {
     throw UnimplementedError('stopProxy() has not been implemented.');
   }

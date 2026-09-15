@@ -20,6 +20,10 @@ class MethodChannelProxy extends ProxyPlatform {
   }
 
   @override
+  Future<Map<String, dynamic>?> getProxySettings() =>
+      methodChannel.invokeMapMethod<String, dynamic>('GetProxySettings');
+
+  @override
   Future<bool?> stopProxy() async {
     return await methodChannel.invokeMethod<bool>("StopProxy");
   }

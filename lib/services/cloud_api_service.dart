@@ -39,6 +39,8 @@ const String cloudSequentialFailoverExtraKey =
 
 @visibleForTesting
 Options buildCloudLoginOptions() => Options(
+  validateStatus: (status) => status != null && status < 400,
+  receiveDataWhenStatusError: false,
   connectTimeout: const Duration(milliseconds: _loginConnectTimeoutMs),
   extra: {
     'skipAuth': true,
@@ -226,8 +228,9 @@ class CloudApiResponse<T> {
 
 class CloudApiException implements Exception {
   final String message;
+  final Object? cause;
 
-  const CloudApiException(this.message);
+  const CloudApiException(this.message, {this.cause});
 
   static bool isHandledUnauthorized(Object error) {
     final cause = error is DioException ? error.error : error;
@@ -252,6 +255,13 @@ class CloudApiException implements Exception {
     if (isHandledUnauthorized(error)) {
       return false;
     }
+    if (error is CloudApiException && error.cause != null) {
+      return isUnauthorized(error.cause!);
+    }
+    if (error is DioException) {
+      return error.response?.statusCode == HttpStatus.unauthorized ||
+          (error.response?.data is Map && error.response?.data['ret'] == 401);
+    }
     final message = clean(error).toLowerCase();
     return message == 'unauthorized' ||
         message.contains('unauthorized') ||
@@ -262,9 +272,10 @@ class CloudApiException implements Exception {
     if (error is DioException) {
       return _cleanDioException(error);
     }
-    if (error is SocketException) {
-      return 'Connection failed';
-    }
+    if (error is SocketException) return _socketError(error);
+    if (error is TlsException) return _transportError(error);
+    if (error is HttpException) return _transportError(error);
+    if (error is TimeoutException) return appLocalizations.cloudApiTimeout;
     if (error is CloudApiException) {
       return _cleanMessage(error.message);
     }
@@ -272,26 +283,111 @@ class CloudApiException implements Exception {
   }
 
   static String _cleanDioException(DioException error) {
-    if (error.error is _CloudSessionUnauthorizedException) {
+    if (error.error is _CloudSessionUnauthorizedException ||
+        error.error is CloudApiUnauthorizedHandledException) {
       return 'Unauthorized';
-    }
-    if (FlClashTemporaryTls.isCertificateVerifyFailed(error)) {
-      return appLocalizations.invalidCertificateTitle;
     }
     if (error.response?.statusCode == HttpStatus.unauthorized ||
         (error.response?.data is Map && error.response?.data['ret'] == 401)) {
       return 'Unauthorized';
     }
-    return switch (error.type) {
-      DioExceptionType.badCertificate =>
-        appLocalizations.invalidCertificateTitle,
-      DioExceptionType.cancel => 'Request canceled',
-      DioExceptionType.unknown => 'Unknown network error',
-      _ => 'Connection failed',
-    };
+    final reason = isCertificateVerifyFailed(error)
+        ? appLocalizations.invalidCertificateTitle
+        : switch (error.type) {
+            DioExceptionType.connectionTimeout =>
+              appLocalizations.cloudApiConnectTimeout,
+            DioExceptionType.sendTimeout =>
+              appLocalizations.cloudApiSendTimeout,
+            DioExceptionType.receiveTimeout =>
+              appLocalizations.cloudApiReceiveTimeout,
+            DioExceptionType.badCertificate =>
+              appLocalizations.invalidCertificateTitle,
+            DioExceptionType.badResponse =>
+              error.response?.statusCode == 407
+                  ? appLocalizations.cloudApiProxyAuthFailed
+                  : appLocalizations.cloudApiHttpError(
+                      error.response?.statusCode ?? '?',
+                    ),
+            DioExceptionType.cancel => appLocalizations.cloudApiRequestCanceled,
+            DioExceptionType.connectionError ||
+            DioExceptionType.unknown => _transportError(
+              error.error,
+              connectionError: error.type == DioExceptionType.connectionError,
+            ),
+          };
+    final route = error.requestOptions.extra[cloudReadRouteExtraKey];
+    if (route == 'DIRECT') return appLocalizations.cloudApiRouteDirect(reason);
+    if (route is String && route.startsWith('PROXY ')) {
+      return appLocalizations.cloudApiRouteProxy(reason);
+    }
+    return reason;
+  }
+
+  // Only emit known categories and numeric codes. Raw transport messages may
+  // contain endpoint addresses, credentials, request data or response content.
+  static String _transportError(Object? error, {bool connectionError = false}) {
+    if (error is SocketException) return _socketError(error);
+    if (isCertificateVerifyFailed(error ?? '')) {
+      return appLocalizations.invalidCertificateTitle;
+    }
+    if (error is TlsException) return appLocalizations.cloudApiTlsFailed;
+    if (error is TimeoutException) return appLocalizations.cloudApiTimeout;
+    if (error is FormatException) {
+      return appLocalizations.cloudApiInvalidResponse;
+    }
+    if (error is HttpException) {
+      final proxyStatus = RegExp(
+        r'Proxy (?:CONNECT failed|failed to establish tunnel)\s*\((\d{3})',
+        caseSensitive: false,
+      ).firstMatch(error.message)?.group(1);
+      if (proxyStatus == '407') return appLocalizations.cloudApiProxyAuthFailed;
+      if (proxyStatus != null) {
+        return '${appLocalizations.cloudApiProxyFailed} (HTTP $proxyStatus)';
+      }
+      return appLocalizations.cloudApiConnectionFailed;
+    }
+    return connectionError
+        ? appLocalizations.cloudApiConnectionFailed
+        : appLocalizations.unknownNetworkError;
+  }
+
+  static String _socketError(SocketException error) {
+    final code = error.osError?.errorCode;
+    final message = error.message.toLowerCase();
+    final String reason;
+    if (const {11001, 11002, 11003, 11004}.contains(code) ||
+        message.contains('failed host lookup') ||
+        message.contains('name or service not known') ||
+        message.contains('nodename nor servname') ||
+        message.contains('no address associated') ||
+        message.contains('name resolution')) {
+      reason = appLocalizations.cloudApiDnsFailed;
+    } else if (code == 10061 || message.contains('connection refused')) {
+      reason = appLocalizations.cloudApiConnectionRefused;
+    } else if (code == 10054 ||
+        message.contains('connection reset') ||
+        message.contains('broken pipe')) {
+      reason = appLocalizations.cloudApiConnectionReset;
+    } else if (code == 10060 || message.contains('timed out')) {
+      reason = appLocalizations.cloudApiConnectTimeout;
+    } else if (const {10050, 10051, 10064, 10065}.contains(code) ||
+        message.contains('network is unreachable') ||
+        message.contains('no route to host')) {
+      reason = appLocalizations.cloudApiNetworkUnreachable;
+    } else if (code == 10013 || message.contains('permission denied')) {
+      reason = appLocalizations.cloudApiAccessDenied;
+    } else {
+      reason = appLocalizations.cloudApiConnectionFailed;
+    }
+    return code == null || code < 0
+        ? reason
+        : '$reason (${appLocalizations.cloudApiSystemError(code)})';
   }
 
   static bool isCertificateVerifyFailed(Object error) {
+    if (error is CloudApiException && error.cause != null) {
+      return isCertificateVerifyFailed(error.cause!);
+    }
     return FlClashTemporaryTls.isCertificateVerifyFailed(error);
   }
 
@@ -563,13 +659,11 @@ class CloudApiService {
     try {
       await _syncRead(
         (token, options) => _client.get(
-          '${_apiRootUrl(Secrets.primaryApiDomain)}/check',
+          Uri.parse(_client.options.baseUrl).replace(path: '/check').toString(),
           cancelToken: token,
-          options: options.copyWith(
-            responseType: ResponseType.plain,
-            extra: {...?options.extra, 'skipAuth': true},
-          ),
+          options: options.copyWith(responseType: ResponseType.plain),
         ),
+        bindToSession: false,
         validate: (response) {
           if (response.statusCode != _httpOk) {
             throw CloudApiException(
@@ -579,30 +673,8 @@ class CloudApiService {
         },
       );
     } on DioException catch (e) {
-      throw CloudApiException(_formatHealthCheckError(e));
+      throw CloudApiException(CloudApiException.clean(e), cause: e);
     }
-  }
-
-  static String _formatHealthCheckError(DioException error) {
-    final fallback = switch (error.type) {
-      DioExceptionType.connectionTimeout => 'Connection timed out',
-      DioExceptionType.sendTimeout => 'Send timed out',
-      DioExceptionType.receiveTimeout => 'Response timed out',
-      DioExceptionType.badCertificate => 'Invalid certificate',
-      DioExceptionType.badResponse =>
-        'Server returned ${error.response?.statusCode ?? 'an error'}',
-      DioExceptionType.cancel => 'Request canceled',
-      DioExceptionType.connectionError => 'Connection failed',
-      DioExceptionType.unknown => 'Unknown network error',
-    };
-    if (error.type != DioExceptionType.unknown) {
-      return fallback;
-    }
-    final message = error.message?.trim();
-    if (message == null || message.isEmpty || message == 'null') {
-      return fallback;
-    }
-    return message;
   }
 
   ({CloudProfile profile, CloudNotification? announcement}) _parseUserInfo(
@@ -733,7 +805,7 @@ class CloudApiService {
         options: buildCloudLoginOptions(),
       );
     } on DioException catch (error) {
-      throw CloudApiException(_formatHealthCheckError(error));
+      throw CloudApiException(CloudApiException.clean(error), cause: error);
     }
 
     final responseDto = CloudApiResponse<Map<dynamic, dynamic>>.fromJson(
@@ -883,11 +955,13 @@ class CloudApiService {
     return dto.data!;
   }
 
-  // Read routes share one deadline and one account revision. Write operations
-  // never call this helper; the adapter also checks the read-only POST allowlist.
+  // Read routes share one deadline. Account reads also share one revision;
+  // public health checks must survive token restoration and account changes.
+  // Writes never call this helper; the adapter checks the read-only POST allowlist.
   Future<Response<T>> _syncRead<T>(
     Future<Response<T>> Function(CancelToken token, Options options) read, {
     FutureOr<void> Function(Response<T> response)? validate,
+    bool bindToSession = true,
   }) async {
     final revision = _sessionRevision;
     final client = _client;
@@ -911,10 +985,10 @@ class CloudApiService {
               await Future<void>.delayed(CloudApiAdapter._hedgeDelay);
             }
             if (token.cancelError case final error?) throw error;
-            if (revision != _sessionRevision) {
+            if (bindToSession && revision != _sessionRevision) {
               throw const CloudApiStaleSessionException();
             }
-            _activeSyncReads[token] = operation;
+            if (bindToSession) _activeSyncReads[token] = operation;
             try {
               final response = await read(
                 token,
@@ -925,6 +999,7 @@ class CloudApiService {
                   receiveDataWhenStatusError: false,
                   extra: {
                     _sessionRevisionKey: revision,
+                    if (!bindToSession) 'skipAuth': true,
                     cloudReadRouteExtraKey: candidate.route,
                     _cloudReadDomainExtraKey: candidate.domain,
                     _cloudReadRaceExtraKey: candidates.length > 1,
@@ -932,7 +1007,7 @@ class CloudApiService {
                 ),
               );
               if (token.cancelError case final error?) throw error;
-              if (revision != _sessionRevision) {
+              if (bindToSession && revision != _sessionRevision) {
                 throw const CloudApiStaleSessionException();
               }
               Object? data = response.data;
@@ -956,7 +1031,7 @@ class CloudApiService {
               }
               await validate?.call(response);
               if (token.cancelError case final error?) throw error;
-              if (revision != _sessionRevision) {
+              if (bindToSession && revision != _sessionRevision) {
                 throw const CloudApiStaleSessionException();
               }
               return response;
@@ -966,17 +1041,18 @@ class CloudApiService {
           },
         ),
         timeout: _syncRequestTimeout,
-        isTerminalError: (error) =>
-            isTerminalHttpReadError(error) ||
-            CloudApiException.isUnauthorized(error) ||
-            CloudApiException.isHandledUnauthorized(error) ||
-            CloudApiException.isStaleSession(error) ||
-            (error is _CloudReadResponseException &&
-                (error.status == 401 || error.status == 403)),
+        isTerminalError: (error) => !bindToSession
+            ? isTerminalPublicHttpReadError(error)
+            : isTerminalHttpReadError(error) ||
+                  CloudApiException.isUnauthorized(error) ||
+                  CloudApiException.isHandledUnauthorized(error) ||
+                  CloudApiException.isStaleSession(error) ||
+                  (error is _CloudReadResponseException &&
+                      (error.status == 401 || error.status == 403)),
       );
       final unauthorized = operation.unauthorizedError;
       if (unauthorized != null) throw unauthorized;
-      if (revision != _sessionRevision) {
+      if (bindToSession && revision != _sessionRevision) {
         throw const CloudApiStaleSessionException();
       }
       return response;
@@ -985,11 +1061,11 @@ class CloudApiService {
       if (unauthorized != null) {
         Error.throwWithStackTrace(unauthorized, stack);
       }
-      if (revision != _sessionRevision) {
+      if (bindToSession && revision != _sessionRevision) {
         throw const CloudApiStaleSessionException();
       }
       if (error is TimeoutException) {
-        throw const CloudApiException('Cloud request timed out');
+        throw CloudApiException(appLocalizations.cloudApiTimeout, cause: error);
       }
       rethrow;
     }
@@ -1134,7 +1210,8 @@ class CloudApiService {
       }
       if (e is DioException) {
         throw CloudApiException(
-          'Unable to get oixCloud config: ${_formatHealthCheckError(e)}',
+          'Unable to get oixCloud config: ${CloudApiException.clean(e)}',
+          cause: e,
         );
       }
       rethrow;

@@ -31,6 +31,7 @@ class ProxyPlugin : public flutter::Plugin {
 
  protected:
   virtual bool RestoreProxy();
+  virtual std::optional<flutter::EncodableMap> ReadProxySettings();
 
  private:
   flutter::PluginRegistrarWindows* registrar_;

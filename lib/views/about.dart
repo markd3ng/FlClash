@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/controller.dart';
 import 'package:fl_clash/providers/config.dart';
+import 'package:fl_clash/providers/update_download.dart';
+import 'package:fl_clash/common/update_download_task.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/widgets/list.dart';
 import 'package:fl_clash/widgets/scaffold.dart';
@@ -35,10 +37,29 @@ class AboutView extends StatelessWidget {
       separated: false,
       title: appLocalizations.more,
       items: [
-        ListItem(
-          title: Text(appLocalizations.checkUpdate),
-          onTap: () {
-            updateAction.checkUpdate(isUser: true);
+        Consumer(
+          builder: (context, ref, _) {
+            final task = ref.watch(appUpdateDownloadProvider);
+            return ValueListenableBuilder(
+              valueListenable: task,
+              builder: (context, state, _) {
+                final l = context.appLocalizations;
+                return ListItem(
+                  title: Text(switch (state.phase) {
+                    AppUpdateDownloadPhase.downloading => l.updateDownloading,
+                    AppUpdateDownloadPhase.ready => l.updateInstall,
+                    AppUpdateDownloadPhase.failed => l.updateDownloadFailed,
+                    _ => l.checkUpdate,
+                  }),
+                  subtitle:
+                      state.phase == AppUpdateDownloadPhase.downloading &&
+                          state.progress != null
+                      ? Text('${(state.progress! * 100).floor()}%')
+                      : null,
+                  onTap: () => updateAction.checkUpdate(isUser: true),
+                );
+              },
+            );
           },
         ),
         if (baseDomain.isNotEmpty)

@@ -103,6 +103,7 @@ const (
 	messageMethod                  CoreMethod = "message"
 	initClashMethod                CoreMethod = "initClash"
 	getIsInitMethod                CoreMethod = "getIsInit"
+	networkDiagnosticsMethod       CoreMethod = "networkDiagnostics"
 	forceGcMethod                  CoreMethod = "forceGc"
 	shutdownMethod                 CoreMethod = "shutdown"
 	validateConfigWithBytesMethod  CoreMethod = "validateConfigWithBytes"

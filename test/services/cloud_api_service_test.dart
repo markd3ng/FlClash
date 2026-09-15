@@ -6,15 +6,124 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:crypto/crypto.dart' as crypto;
 import 'package:fl_clash/common/http.dart';
+import 'package:fl_clash/l10n/l10n.dart';
 import 'package:fl_clash/common/secrets.dart';
 import 'package:fl_clash/core/controller.dart' show ConfigValidationException;
 import 'package:fl_clash/services/cloud_api_service.dart';
 import 'package:fl_clash/services/age_crypto.dart';
+import 'package:flutter/widgets.dart' show Locale;
 import 'package:flutter_test/flutter_test.dart';
 
 import '../support/cloud_api_adapter.dart';
 
 void main() {
+  setUpAll(() => AppLocalizations.load(const Locale('en')));
+  for (final initialToken in [null, 'session']) {
+    test(
+      'public health check survives ${initialToken == null ? 'token restoration' : 'logout'}',
+      () async {
+        final adapter = QueuedCloudAdapter();
+        final service = CloudApiService.forTesting(
+          client: adapter.createClient(),
+        )..setToken(initialToken);
+        final result = service.checkServiceHealth();
+        final completed = expectLater(result, completes);
+        final pending = await adapter.takeRequest();
+        expect(pending.options.uri.toString(), 'https://cloud.test/check');
+        expect(pending.options.headers.containsKey('Authorization'), isFalse);
+        expect(pending.options.responseType, ResponseType.plain);
+        service.setToken(initialToken == null ? 'restored-session' : null);
+        expect(pending.options.cancelToken?.isCancelled, isFalse);
+        pending.respond('Success');
+        await completed;
+      },
+    );
+  }
+
+  test('public health check keeps a usable route after HTTP 403', () async {
+    final adapter = QueuedCloudAdapter();
+    final service = CloudApiService.forTesting(
+      client: adapter.createClient(),
+      readRoutes: const ['DIRECT', 'PROXY localhost:7890'],
+    )..setToken('session');
+    final revision = service.sessionRevision;
+    final result = service.checkServiceHealth();
+    final completed = expectLater(result, completes);
+    final direct = await adapter.takeRequest();
+    final proxy = await adapter.takeRequest();
+    direct.respond('Forbidden', statusCode: 403);
+    await pumpEventQueue();
+    expect(proxy.options.cancelToken?.isCancelled, isFalse);
+    proxy.respond('Success');
+    await completed;
+    expect(service.sessionRevision, revision);
+  });
+
+  test(
+    'an authenticated 401 does not cancel the public health check',
+    () async {
+      final adapter = QueuedCloudAdapter();
+      final service = CloudApiService.forTesting(client: adapter.createClient())
+        ..setToken('session');
+      final health = service.checkServiceHealth();
+      final completed = expectLater(health, completes);
+      final publicRequest = await adapter.takeRequest();
+      final account = expectLater(
+        service.fetchBought(),
+        throwsA(predicate<Object>(CloudApiException.isUnauthorized)),
+      );
+      final privateRequest = await adapter.takeRequest();
+      privateRequest.respond({'ret': 401}, statusCode: 401);
+      await account;
+      expect(publicRequest.options.cancelToken?.isCancelled, isFalse);
+      publicRequest.respond('Success');
+      await completed;
+    },
+  );
+
+  for (final status in [204, 401, 403, 503]) {
+    test(
+      'public health check rejects HTTP $status without clearing the account',
+      () async {
+        final adapter = QueuedCloudAdapter();
+        final service = CloudApiService.forTesting(
+          client: adapter.createClient(),
+          readRoutes: const ['DIRECT', 'PROXY localhost:7890'],
+        )..setToken('session');
+        final revision = service.sessionRevision;
+        final failed = expectLater(
+          service.checkServiceHealth(),
+          throwsA(isA<CloudApiException>()),
+        );
+        final pending = await adapter.takeRequest();
+        final alternate = await adapter.takeRequest();
+        pending.respond('Unavailable', statusCode: status);
+        alternate.respond('Unavailable', statusCode: status);
+        await failed;
+        expect(service.sessionRevision, revision);
+      },
+    );
+  }
+
+  test(
+    'public health check still cancels stalled routes at its deadline',
+    () async {
+      final adapter = QueuedCloudAdapter();
+      final service = CloudApiService.forTesting(
+        client: adapter.createClient(),
+        syncRequestTimeout: const Duration(milliseconds: 50),
+      );
+      final failed = expectLater(
+        service.checkServiceHealth(),
+        throwsA(isA<CloudApiException>()),
+      );
+      final pending = await adapter.takeRequest();
+      await failed;
+      expect(pending.options.cancelToken?.isCancelled, isTrue);
+      pending.respond('Late success');
+    },
+  );
+
   test(
     'sync reads time out, cancel late auth responses and allow retry',
     () async {
@@ -256,6 +365,75 @@ void main() {
       true,
     );
   });
+
+  for (final action in <String, Future<dynamic> Function(CloudApiService)>{
+    'health': (service) => service.checkServiceHealth(),
+    'login': (service) => service.login('person@example.test', 'password'),
+    'managed config': (service) => service.fetchManagedConfig(''),
+  }.entries) {
+    test(
+      '${action.key} preserves Windows DNS diagnosis without exposing secrets',
+      () async {
+        final client =
+            Dio(BaseOptions(baseUrl: 'https://private-api.example/api/v1'))
+              ..httpClientAdapter = _CallbackAdapter((options, _) async {
+                throw DioException.connectionError(
+                  requestOptions: options,
+                  reason:
+                      'https://private-api.example/path?token=private-token',
+                  error: const SocketException(
+                    'sensitive hostname',
+                    osError: OSError('sensitive error', 11001),
+                  ),
+                );
+              });
+        final service = CloudApiService.forTesting(
+          client: client,
+          readRoutes: const ['DIRECT', 'PROXY localhost:7890'],
+        )..setToken('private-token');
+        await expectLater(
+          action.value(service),
+          throwsA(
+            predicate<Object>((error) {
+              final message = CloudApiException.clean(error);
+              expect(message, contains('DNS lookup failed'));
+              expect(message, contains('11001'));
+              expect(message, isNot(contains('private-api')));
+              expect(message, isNot(contains('private-token')));
+              expect(message, isNot(contains('password')));
+              expect(CloudApiException.isUnauthorized(error), isFalse);
+              return true;
+            }),
+          ),
+        );
+      },
+    );
+  }
+
+  test(
+    'login reports an HTTP denial even when its body is not API JSON',
+    () async {
+      final adapter = QueuedCloudAdapter();
+      final service = CloudApiService.forTesting(
+        client: adapter.createClient(),
+      );
+      final failed = expectLater(
+        service.login('person@example.test', 'password'),
+        throwsA(
+          predicate<Object>(
+            (error) =>
+                CloudApiException.clean(error) == 'Server returned HTTP 403',
+          ),
+        ),
+      );
+      (await adapter.takeRequest()).respond(
+        '<html>Forbidden</html>',
+        statusCode: 403,
+      );
+      await failed;
+      expect(adapter.requestCount, 1);
+    },
+  );
 
   test('cloud API connection errors do not expose endpoint details', () {
     final error = DioException(

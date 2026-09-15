@@ -8,6 +8,8 @@ import 'package:dio/dio.dart';
 import 'package:fl_clash/common/geo_recovery.dart';
 import 'package:fl_clash/common/core_launch_error.dart';
 import 'package:fl_clash/common/update_download.dart';
+import 'package:fl_clash/common/update_download_task.dart';
+import 'package:fl_clash/providers/update_download.dart';
 import 'package:fl_clash/core/core.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/l10n/l10n.dart';
@@ -652,27 +654,26 @@ String getAppUpdateFallbackDownloadUrl(String downloadUrl) {
   ).toString();
 }
 
-/// Background checks leave the prompt in the app without raising its window.
+/// Automatic checks start a silent download without opening a prompt.
 Future<bool?> promptForAppUpdate({
   required bool isUser,
   required Future<void> Function()? showWindow,
   required Future<bool?> Function() prompt,
 }) async {
-  if (isUser) await showWindow?.call();
+  if (!isUser) return true;
+  await showWindow?.call();
   return prompt();
 }
 
-/// A dismissed download cancels the entire action, including browser fallback.
+/// Called only after the user explicitly chooses to install a ready update.
 Future<void> openAppUpdateDownload({
-  required UpdateDownloadResult? result,
+  required File file,
   required Future<bool> Function(File file) openFile,
   required Future<void> Function() openBrowser,
   required void Function(Object error) onError,
 }) async {
-  if (result == null) return;
   try {
-    if (result.error != null) throw result.error!;
-    if (await openFile(result.file!)) return;
+    if (await openFile(file)) return;
     throw StateError('Unable to open downloaded update');
   } catch (error) {
     onError(error);
@@ -691,6 +692,8 @@ class AppController {
   final _geoRecoveryLock = AsyncStorageLock();
   final _proxyAuthenticationLock = AsyncStorageLock();
   bool _checkingUpdate = false;
+  bool _updateDialogOpen = false;
+  bool _openingUpdateInstaller = false;
   Future<bool>? _listenerStartFuture;
   int _startIntentGeneration = 0;
   final _coreLifecycleOperations = CoreLifecycleOperations();

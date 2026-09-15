@@ -1,197 +1,212 @@
 import 'dart:async';
 import 'dart:io';
-
 import 'package:dio/dio.dart';
+import 'package:fl_clash/common/update_download_task.dart';
 import 'package:fl_clash/l10n/l10n.dart';
 import 'package:fl_clash/providers/app.dart';
+import 'package:fl_clash/providers/update_download.dart';
 import 'package:fl_clash/widgets/update_download_dialog.dart';
 import 'package:material_ui/material_ui.dart';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('shows progress and returns the local installer', (tester) async {
+  testWidgets('foreground progress becomes an explicit install choice', (
+    tester,
+  ) async {
     final pending = Completer<File>();
     late ProgressCallback progress;
-    UpdateDownloadResult? result;
-    await openDialog(tester, (token, onProgress) {
-      progress = onProgress;
+    UpdateDownloadAction? result;
+    final task = await openDialog(tester, (_, value) {
+      progress = value;
       return pending.future;
     }, (value) => result = value);
     progress(50, 100);
     await tester.pump();
     expect(find.text('50%'), findsOneWidget);
-    final file = File('/tmp/update.apk');
+    final file = File('/tmp/update.exe');
     pending.complete(file);
     await tester.pumpAndSettle();
-    expect(result?.file, file);
-    expect(result?.error, isNull);
+    expect(task.value.file, same(file));
+    expect(find.text('Install update'), findsOneWidget);
+    expect(result, isNull);
+    await tester.tap(find.text('Install update'));
+    await tester.pumpAndSettle();
+    expect(result, UpdateDownloadAction.install);
+    expect(task.value.phase, AppUpdateDownloadPhase.ready);
   });
-
-  testWidgets('cancel aborts download and ignores late completion', (
+  testWidgets(
+    'move to background detaches the dialog and preserves completion',
+    (tester) async {
+      final pending = Completer<File>();
+      late CancelToken token;
+      var returned = false;
+      final task = await openDialog(tester, (value, _) {
+        token = value;
+        return pending.future;
+      }, (_) => returned = true);
+      await tester.tap(find.text('Download in background'));
+      await tester.pumpAndSettle();
+      expect(returned, isTrue);
+      expect(token.isCancelled, isFalse);
+      expect(find.byType(UpdateDownloadDialog), findsNothing);
+      pending.complete(File('/tmp/update.exe'));
+      await tester.pumpAndSettle();
+      expect(task.value.phase, AppUpdateDownloadPhase.ready);
+      expect(task.value.showReadyNotice, isTrue);
+    },
+  );
+  testWidgets('cancel aborts download and deletes a late completion', (
     tester,
   ) async {
     final pending = Completer<File>();
     late CancelToken token;
-    UpdateDownloadResult? result;
-    var returned = false;
-    await openDialog(
-      tester,
-      (value, _) {
-        token = value;
-        return pending.future;
-      },
-      (value) {
-        result = value;
-        returned = true;
-      },
-    );
+    final task = await openDialog(tester, (value, _) {
+      token = value;
+      return pending.future;
+    }, (_) {});
     await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
     expect(token.isCancelled, isTrue);
-    expect(returned, isTrue);
-    expect(result, isNull);
     final file = _DownloadedFile();
     pending.complete(file);
     await tester.pumpAndSettle();
     expect(file.deleted, isTrue);
-    expect(result, isNull);
-    expect(find.text('Open'), findsOneWidget);
+    expect(task.value.phase, AppUpdateDownloadPhase.canceled);
     expect(tester.takeException(), isNull);
   });
-
-  testWidgets('system back cancels and ignores late progress and failure', (
+  testWidgets('system back also backgrounds the application-owned task', (
     tester,
   ) async {
     final pending = Completer<File>();
     late CancelToken token;
-    late ProgressCallback progress;
-    var returned = false;
-    await openDialog(
-      tester,
-      (value, onProgress) {
-        token = value;
-        progress = onProgress;
-        return pending.future;
-      },
-      (result) {
-        returned = true;
-        expect(result, isNull);
-      },
-    );
-
-    await tester.binding.handlePopRoute();
-    expect(token.isCancelled, isTrue);
-    progress(100, 100);
-    pending.completeError(StateError('cancelled transport'));
-    await tester.pumpAndSettle();
-    expect(returned, isTrue);
-    expect(find.text('Open'), findsOneWidget);
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets(
-    'completion removes only its download route beneath another dialog',
-    (tester) async {
-      final pending = Completer<File>();
-      UpdateDownloadResult? result;
-      await openDialog(
-        tester,
-        (_, _) => pending.future,
-        (value) => result = value,
-      );
-      unawaited(
-        showDialog<void>(
-          context: tester.element(find.byType(UpdateDownloadDialog)),
-          builder: (_) => const AlertDialog(title: Text('Another dialog')),
-        ),
-      );
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
-      final file = File('/tmp/update.apk');
-      pending.complete(file);
-      await tester.pumpAndSettle();
-
-      expect(result?.file, same(file));
-      expect(find.text('Another dialog'), findsOneWidget);
-      expect(
-        find.byType(UpdateDownloadDialog, skipOffstage: false),
-        findsNothing,
-      );
-      expect(tester.takeException(), isNull);
-    },
-  );
-
-  testWidgets('indeterminate and out of range progress remain valid', (
-    tester,
-  ) async {
-    final pending = Completer<File>();
-    late ProgressCallback progress;
-    await openDialog(tester, (_, onProgress) {
-      progress = onProgress;
+    final task = await openDialog(tester, (value, _) {
+      token = value;
       return pending.future;
     }, (_) {});
-    progress(12, -1);
-    await tester.pump();
-    expect(
-      tester
-          .widget<LinearProgressIndicator>(find.byType(LinearProgressIndicator))
-          .value,
-      isNull,
-    );
-    progress(120, 100);
-    await tester.pump();
-    expect(find.text('100%'), findsOneWidget);
-    progress(-10, 100);
-    await tester.pump();
-    expect(find.text('0%'), findsOneWidget);
-    pending.complete(File('/tmp/update.apk'));
+    await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
+    expect(token.isCancelled, isFalse);
+    pending.complete(File('/tmp/update.exe'));
+    await tester.pumpAndSettle();
+    expect(task.value.phase, AppUpdateDownloadPhase.ready);
+  });
+  testWidgets('completion never dismisses a different dialog', (tester) async {
+    final pending = Completer<File>();
+    await openDialog(tester, (_, _) => pending.future, (_) {});
+    unawaited(
+      showDialog<void>(
+        context: tester.element(find.byType(UpdateDownloadDialog)),
+        builder: (_) => const AlertDialog(title: Text('Another dialog')),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    pending.complete(File('/tmp/update.exe'));
+    await tester.pumpAndSettle();
+    expect(find.text('Another dialog'), findsOneWidget);
+    expect(
+      find.byType(UpdateDownloadDialog, skipOffstage: false),
+      findsOneWidget,
+    );
     expect(tester.takeException(), isNull);
   });
-
-  testWidgets('failure returns an error for browser fallback', (tester) async {
-    final error = StateError('download failed');
-    UpdateDownloadResult? result;
-    await openDialog(
-      tester,
-      (_, _) async => throw error,
-      (value) => result = value,
-    );
+  testWidgets(
+    'failure offers retry and browser without launching either automatically',
+    (tester) async {
+      var attempts = 0;
+      UpdateDownloadAction? result;
+      final task = await openDialog(tester, (_, _) async {
+        attempts++;
+        throw StateError('private raw failure');
+      }, (value) => result = value);
+      await tester.pumpAndSettle();
+      expect(find.text('Update download failed'), findsOneWidget);
+      expect(find.textContaining('private raw'), findsNothing);
+      expect(result, isNull);
+      await tester.tap(find.text(AppLocalizations.current.configRecoveryRetry));
+      await tester.pumpAndSettle();
+      expect(attempts, 2);
+      expect(task.value.phase, AppUpdateDownloadPhase.failed);
+      await tester.tap(find.text('Download in browser'));
+      await tester.pumpAndSettle();
+      expect(result, UpdateDownloadAction.browser);
+    },
+  );
+  testWidgets(
+    'ready notice persists until dismissed and retains the installer',
+    (tester) async {
+      final task = AppUpdateDownloadTask();
+      addTearDown(task.dispose);
+      await task.start((_, _) async => File('/tmp/update.exe'), url: 'fixture');
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [appUpdateDownloadProvider.overrideWithValue(task)],
+          child: _app(const Scaffold(body: AppUpdateReadyNotice())),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(minutes: 1));
+      expect(find.text('Update ready to install'), findsOneWidget);
+      await tester.tap(find.text(AppLocalizations.current.close));
+      await tester.pumpAndSettle();
+      expect(find.text('Update ready to install'), findsNothing);
+      expect(task.value.file, isNotNull);
+    },
+  );
+  testWidgets('background action and ready notice fit a narrow window', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 740);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final pending = Completer<File>();
+    await openDialog(tester, (_, _) => pending.future, (_) {});
+    expect(find.text('Download in background'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    pending.complete(File('/tmp/update.exe'));
     await tester.pumpAndSettle();
-    expect(result?.error, same(error));
-    expect(result?.file, isNull);
     expect(tester.takeException(), isNull);
   });
 }
 
-Future<void> openDialog(
+Widget _app(Widget home) => MaterialApp(
+  locale: const Locale('en'),
+  localizationsDelegates: const [
+    AppLocalizations.delegate,
+    ...GlobalMaterialLocalizations.delegates,
+  ],
+  supportedLocales: AppLocalizations.delegate.supportedLocales,
+  home: home,
+);
+
+Future<AppUpdateDownloadTask> openDialog(
   WidgetTester tester,
-  Future<File> Function(CancelToken, ProgressCallback) download,
-  void Function(UpdateDownloadResult?) onResult,
+  AppUpdateDownloader download,
+  void Function(UpdateDownloadAction?) onResult,
 ) async {
+  final task = AppUpdateDownloadTask();
+  addTearDown(task.dispose);
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
         viewSizeProvider.overrideWithBuild((_, _) => const Size(800, 600)),
+        appUpdateDownloadProvider.overrideWithValue(task),
       ],
-      child: MaterialApp(
-        locale: const Locale('en'),
-        localizationsDelegates: const [
-          AppLocalizations.delegate,
-          ...GlobalMaterialLocalizations.delegates,
-        ],
-        supportedLocales: AppLocalizations.delegate.supportedLocales,
-        home: Scaffold(
+      child: _app(
+        Scaffold(
           body: Builder(
             builder: (context) => TextButton(
               onPressed: () async {
+                unawaited(
+                  task.start(download, url: 'https://fixture/update.exe'),
+                );
                 onResult(
-                  await showDialog<UpdateDownloadResult>(
+                  await showDialog<UpdateDownloadAction>(
                     context: context,
                     barrierDismissible: false,
-                    builder: (_) => UpdateDownloadDialog(download: download),
+                    builder: (_) => UpdateDownloadDialog(task: task),
                   ),
                 );
               },
@@ -206,11 +221,13 @@ Future<void> openDialog(
   await tester.tap(find.text('Open'));
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 300));
+  return task;
 }
 
 class _DownloadedFile extends Fake implements File {
   bool deleted = false;
-
+  @override
+  Directory get parent => Directory('/tmp');
   @override
   Future<File> delete({bool recursive = false}) async {
     deleted = true;

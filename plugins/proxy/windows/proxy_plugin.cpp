@@ -1210,11 +1210,54 @@ namespace proxy
     return std::nullopt;
   }
 
+  std::optional<flutter::EncodableMap> ProxyPlugin::ReadProxySettings()
+  {
+    ConnectionProxyState state = {};
+    if (!CaptureConnectionState({true, L""}, state))
+    {
+      return std::nullopt;
+    }
+    std::string server;
+    if (!state.proxyServer.empty())
+    {
+      const int size = WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS,
+          state.proxyServer.data(), static_cast<int>(state.proxyServer.size()),
+          nullptr, 0, nullptr, nullptr);
+      if (size <= 0) return std::nullopt;
+      server.resize(size);
+      if (WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS,
+          state.proxyServer.data(), static_cast<int>(state.proxyServer.size()),
+          server.data(), size, nullptr, nullptr) != size)
+      {
+        return std::nullopt;
+      }
+    }
+    // Return no bypass list, saved PAC URL, or connection names. Dart classifies
+    // the flags and address; the diagnostic report contains only that result.
+    return flutter::EncodableMap{
+      {flutter::EncodableValue("flags"),
+       flutter::EncodableValue(static_cast<int32_t>(state.flags))},
+      {flutter::EncodableValue("proxyServer"), flutter::EncodableValue(server)},
+    };
+  }
+
   void ProxyPlugin::HandleMethodCall(
       const flutter::MethodCall<flutter::EncodableValue> &method_call,
       std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result)
   {
-    if (method_call.method_name().compare("StopProxy") == 0)
+    if (method_call.method_name().compare("GetProxySettings") == 0)
+    {
+      const auto settings = ReadProxySettings();
+      if (settings.has_value())
+      {
+        result->Success(flutter::EncodableValue(*settings));
+      }
+      else
+      {
+        result->Success();
+      }
+    }
+    else if (method_call.method_name().compare("StopProxy") == 0)
     {
       result->Success(RestoreProxy());
     }

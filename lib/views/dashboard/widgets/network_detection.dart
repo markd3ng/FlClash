@@ -2,6 +2,7 @@ import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/providers/app.dart';
 import 'package:fl_clash/state.dart';
+import 'package:fl_clash/views/network_diagnostics.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -64,6 +65,17 @@ class NetworkDetection extends ConsumerWidget {
                       ),
                     ),
                   ),
+                  if (system.isWindows || system.isMacOS)
+                    SizedBox(
+                      width: 28,
+                      height: 28,
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        tooltip: appLocalizations.diagTitle,
+                        onPressed: () => showNetworkDiagnostics(context),
+                        icon: const Icon(Icons.troubleshoot, size: 18),
+                      ),
+                    ),
                   const SizedBox(width: 2),
                   AspectRatio(
                     aspectRatio: 1,

@@ -99,6 +99,8 @@ func handleMethodCall(call *MethodCall, response MethodResponse) {
 			return
 		}
 		response.success(handleInitClash(&params))
+	case networkDiagnosticsMethod:
+		response.success(handleNetworkDiagnostics())
 	case getIsInitMethod:
 		response.success(handleGetIsInit())
 	case forceGcMethod:

@@ -16,6 +16,10 @@ import 'cloud_profile_card.dart';
 import 'cloud_register_page.dart';
 import 'store_page.dart';
 
+final cloudServiceHealthCheckProvider = Provider<Future<void> Function()>(
+  (ref) => CloudApiService().checkServiceHealth,
+);
+
 class CloudAccountPage extends ConsumerStatefulWidget {
   const CloudAccountPage({super.key});
 
@@ -25,6 +29,7 @@ class CloudAccountPage extends ConsumerStatefulWidget {
 
 class _CloudAccountPageState extends ConsumerState<CloudAccountPage> {
   var _isCheckingService = false;
+  var _healthCheckPending = false;
   String? _serviceError;
   bool _checkedStatus = false;
 
@@ -38,13 +43,18 @@ class _CloudAccountPageState extends ConsumerState<CloudAccountPage> {
     // If the page comes to view, attempt to refresh profile if logged in
     ref.listenManual(currentPageLabelProvider, (prev, next) {
       if (prev != next && next == PageLabel.oixCloud) {
+        _checkHealth();
         ref.read(cloudAccountProvider.notifier).refreshProfile();
       }
     });
   }
 
   Future<void> _checkHealth() async {
-    if (_isCheckingService) return;
+    if (!mounted) return;
+    if (_isCheckingService) {
+      _healthCheckPending = true;
+      return;
+    }
     setState(() {
       _isCheckingService = true;
       _serviceError = null;
@@ -52,7 +62,7 @@ class _CloudAccountPageState extends ConsumerState<CloudAccountPage> {
 
     String? error;
     try {
-      await CloudApiService().checkServiceHealth();
+      await ref.read(cloudServiceHealthCheckProvider)();
     } catch (e) {
       error = CloudApiException.clean(e);
     }
@@ -63,6 +73,10 @@ class _CloudAccountPageState extends ConsumerState<CloudAccountPage> {
         _serviceError = error;
         _checkedStatus = true;
       });
+      if (_healthCheckPending) {
+        _healthCheckPending = false;
+        await _checkHealth();
+      }
     }
   }
 
@@ -116,9 +130,31 @@ class _CloudAccountPageState extends ConsumerState<CloudAccountPage> {
           ),
         ],
       ],
-      body: accountState.isLoggedIn
-          ? _buildLoggedIn(accountState)
-          : _buildLoggedOut(),
+      body: Column(
+        children: [
+          if (_serviceError case final error?)
+            MaterialBanner(
+              leading: Icon(
+                Icons.error_outline,
+                color: context.colorScheme.error,
+              ),
+              content: Text(
+                '${AppLocalizations.current.serviceCheckFailed}: $error',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: _checkHealth,
+                  child: Text(AppLocalizations.current.checkApi),
+                ),
+              ],
+            ),
+          Expanded(
+            child: accountState.isLoggedIn
+                ? _buildLoggedIn(accountState)
+                : _buildLoggedOut(),
+          ),
+        ],
+      ),
     );
   }
 
@@ -142,7 +178,8 @@ class _CloudAccountPageState extends ConsumerState<CloudAccountPage> {
     } else if (_serviceError == null) {
       tooltip = AppLocalizations.current.apiAvailable;
     } else {
-      tooltip = AppLocalizations.current.serviceCheckFailed;
+      tooltip =
+          '${AppLocalizations.current.serviceCheckFailed}: $_serviceError';
     }
 
     return IconButton(
@@ -153,7 +190,7 @@ class _CloudAccountPageState extends ConsumerState<CloudAccountPage> {
               child: CircularProgressIndicator(strokeWidth: 2),
             )
           : Icon(icon, color: color),
-      onPressed: _checkHealth,
+      onPressed: _isCheckingService ? null : _checkHealth,
       tooltip: tooltip,
     );
   }

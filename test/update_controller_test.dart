@@ -4,24 +4,26 @@ import 'dart:io';
 
 import 'package:fl_clash/common/constant.dart';
 import 'package:fl_clash/controller.dart';
-import 'package:fl_clash/widgets/update_download_dialog.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('automatic update prompt keeps a silent launch hidden', () async {
-    var prompted = false;
-    final result = await promptForAppUpdate(
-      isUser: false,
-      showWindow: () async =>
-          fail('background checks must not show the window'),
-      prompt: () async {
-        prompted = true;
-        return true;
-      },
-    );
-    expect(prompted, isTrue);
-    expect(result, isTrue);
-  });
+  test(
+    'automatic update skips the prompt and keeps a silent launch hidden',
+    () async {
+      var prompted = false;
+      final result = await promptForAppUpdate(
+        isUser: false,
+        showWindow: () async =>
+            fail('background checks must not show the window'),
+        prompt: () async {
+          prompted = true;
+          return true;
+        },
+      );
+      expect(prompted, isFalse);
+      expect(result, isTrue);
+    },
+  );
 
   test('manual update waits for the window before prompting', () async {
     final shown = Completer<void>();
@@ -86,19 +88,10 @@ void main() {
     }
   });
 
-  test('cancelled download never opens a file or browser', () async {
-    await openAppUpdateDownload(
-      result: null,
-      openFile: (_) async => fail('must not open an installer'),
-      openBrowser: () async => fail('must not open the browser'),
-      onError: (_) => fail('cancellation is not a download error'),
-    );
-  });
-
   test('successful installer open does not fall back to browser', () async {
     final file = File('/tmp/update.apk');
     await openAppUpdateDownload(
-      result: UpdateDownloadResult.success(file),
+      file: file,
       openFile: (value) async {
         expect(value, same(file));
         return true;
@@ -108,21 +101,6 @@ void main() {
     );
   });
 
-  test(
-    'failed download falls back without attempting to open a file',
-    () async {
-      final error = StateError('download failed');
-      var browserOpens = 0;
-      await openAppUpdateDownload(
-        result: UpdateDownloadResult.failure(error),
-        openFile: (_) async => fail('must not open an installer'),
-        openBrowser: () async => browserOpens++,
-        onError: (value) => expect(value, same(error)),
-      );
-      expect(browserOpens, 1);
-    },
-  );
-
   for (final throws in [false, true]) {
     test(
       'installer open ${throws ? 'throwing' : 'returning false'} falls back',
@@ -131,7 +109,7 @@ void main() {
         var browserOpens = 0;
         var errors = 0;
         await openAppUpdateDownload(
-          result: UpdateDownloadResult.success(File('/tmp/update.apk')),
+          file: File('/tmp/update.apk'),
           openFile: (_) async {
             if (throws) throw error;
             return false;
@@ -155,8 +133,8 @@ void main() {
       var browserOpens = 0;
       await expectLater(
         openAppUpdateDownload(
-          result: UpdateDownloadResult.failure(StateError('download failed')),
-          openFile: (_) async => fail('must not open an installer'),
+          file: File('/tmp/update.apk'),
+          openFile: (_) async => false,
           openBrowser: () async {
             browserOpens++;
             throw error;
