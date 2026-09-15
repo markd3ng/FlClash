@@ -28,30 +28,19 @@ jobs:
       - name: Generate Version
         id: version
         env:
-          TZ: UTC
+          TZ: Asia/Shanghai
         run: |
-          set -e
+          set -euo pipefail
           VERSION_NUMBER=$(grep -E "^version:" pubspec.yaml | sed -E 's/^version:[[:space:]]*([0-9.]+).*/\1/')
-          
-          UTC_NOW=$(date -u '+%Y-%m-%d %H:%M:%S')
-          BUILD_NUMBER=$(date -u -d "$UTC_NOW 8 hours" '+%Y%m%d%H' 2>/dev/null || date -u -v+8H -j -f '%Y-%m-%d %H:%M:%S' "$UTC_NOW" '+%Y%m%d%H')
-          
-          # Preserve the release's minimum Android versionCode, even if a
-          # previously distributed build used a later clock than this runner.
-          MIN_BUILD_NUMBER=$(sed -nE 's/^version:[^+]+\+([0-9]+)[[:space:]]*$/\1/p' pubspec.yaml)
-          if ! [[ "$MIN_BUILD_NUMBER" =~ ^[0-9]+$ ]]; then
-            echo "pubspec.yaml must contain a numeric build number" >&2
-            exit 1
-          fi
-          if (( BUILD_NUMBER < MIN_BUILD_NUMBER )); then
-            BUILD_NUMBER="$MIN_BUILD_NUMBER"
-          fi
+          # One actual build date for every platform and architecture in this run.
+          # The checked-in suffix is a snapshot, never a minimum build number.
+          BUILD_NUMBER=$(date '+%Y%m%d%H')
 
           FULL_VERSION="${VERSION_NUMBER}+${BUILD_NUMBER}"
           
-          echo "version_number=$VERSION_NUMBER" >> $GITHUB_OUTPUT
-          echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
-          echo "full_version=$FULL_VERSION" >> $GITHUB_OUTPUT
+          echo "version_number=$VERSION_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "build_number=$BUILD_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "full_version=$FULL_VERSION" >> "$GITHUB_OUTPUT"
           
           echo "Generated version: $FULL_VERSION"
           echo "  Version number: $VERSION_NUMBER"

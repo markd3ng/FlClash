@@ -65,7 +65,51 @@ class BuildItem {
   }
 }
 
+/// The release date uses Beijing time regardless of the build host timezone.
+String buildNumberForTime(DateTime instant) {
+  final time = instant.toUtc().add(const Duration(hours: 8));
+  String twoDigits(int value) => value.toString().padLeft(2, '0');
+  return '${time.year.toString().padLeft(4, '0')}'
+      '${twoDigits(time.month)}${twoDigits(time.day)}${twoDigits(time.hour)}';
+}
+
 class Build {
+  /// Stamp once per app build so every architecture and package shares a date.
+  static void prepareAppVersion({
+    File? pubspecFile,
+    DateTime? now,
+    Map<String, String>? environment,
+  }) {
+    final file = pubspecFile ?? File('pubspec.yaml');
+    final content = file.readAsStringSync();
+    final versionLine = RegExp(r'^version:[^\r\n]*', multiLine: true);
+    if (versionLine.allMatches(content).length != 1) {
+      throw const FormatException('pubspec.yaml must contain one version');
+    }
+    final config = loadYaml(content) as YamlMap;
+    final sourceVersion = config['version'] as String?;
+    final env = environment ?? Platform.environment;
+    final version =
+        env['FLUTTER_VERSION_NUMBER'] ?? sourceVersion?.split('+').first;
+    if (version == null ||
+        !RegExp(r'^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$').hasMatch(version)) {
+      throw const FormatException('Invalid app version');
+    }
+    // CI supplies the shared batch timestamp. Local builds always read the
+    // clock; an old or future pubspec suffix must never become a lower bound.
+    final buildNumber =
+        env['FLUTTER_BUILD_NUMBER'] ??
+        buildNumberForTime(now ?? DateTime.now());
+    if (!RegExp(r'^\d{10}$').hasMatch(buildNumber)) {
+      throw const FormatException('Build number must use yyyyMMddHH');
+    }
+    final fullVersion = '$version+$buildNumber';
+    file.writeAsStringSync(
+      content.replaceFirst(versionLine, 'version: $fullVersion'),
+    );
+    print('Updated version to: $fullVersion');
+  }
+
   static List<BuildItem> get buildItems => [
     BuildItem(target: Target.macos, arch: Arch.arm64),
     BuildItem(target: Target.macos, arch: Arch.amd64),
@@ -420,15 +464,6 @@ class BuildCommand extends Command {
   }) async {
     await Build.getDistributor();
 
-    // Get version from environment variables if available
-    final versionNumber = Platform.environment['FLUTTER_VERSION_NUMBER'];
-    final buildNumber = Platform.environment['FLUTTER_BUILD_NUMBER'];
-
-    // Update pubspec.yaml with version from environment if available
-    if (versionNumber != null && buildNumber != null) {
-      await _updatePubspecVersion(versionNumber, buildNumber);
-    }
-
     // Use custom artifact name template to exclude version number and -setup suffix
     const artifactNameTemplate =
         'flclash-{{platform}}{{#description}}-{{description}}{{/description}}.{{ext}}';
@@ -467,13 +502,6 @@ class BuildCommand extends Command {
     required String archName,
     required String env,
   }) async {
-    final versionNumber = Platform.environment['FLUTTER_VERSION_NUMBER'];
-    final buildNumber = Platform.environment['FLUTTER_BUILD_NUMBER'];
-
-    if (versionNumber != null && buildNumber != null) {
-      await _updatePubspecVersion(versionNumber, buildNumber);
-    }
-
     final dartDefines = _buildDartDefines(prefix: '--dart-define', env: env);
 
     await Build.exec(name: name, [
@@ -512,31 +540,6 @@ class BuildCommand extends Command {
     } else {
       throw 'APK file not found: ${sourceApk.path}';
     }
-  }
-
-  Future<void> _updatePubspecVersion(String version, String buildNumber) async {
-    final pubspecPath = join(current, 'pubspec.yaml');
-    final pubspecFile = File(pubspecPath);
-
-    if (!await pubspecFile.exists()) {
-      print('Warning: pubspec.yaml not found');
-      return;
-    }
-
-    final content = await pubspecFile.readAsString();
-    final lines = content.split('\n');
-    final updatedLines = <String>[];
-
-    for (final line in lines) {
-      if (line.startsWith('version:')) {
-        updatedLines.add('version: $version+$buildNumber');
-        print('Updated version to: $version+$buildNumber');
-      } else {
-        updatedLines.add(line);
-      }
-    }
-
-    await pubspecFile.writeAsString(updatedLines.join('\n'));
   }
 
   Future<String?> get systemArch async {
@@ -590,6 +593,7 @@ class BuildCommand extends Command {
         'SPARE_API_DOMAIN',
         'FLCLASH_APP_SECRET',
       ]);
+      Build.prepareAppVersion();
     }
 
     await Build.buildCore(
