@@ -176,8 +176,6 @@ jobs:
     name: MKCP and Mekya integration
     runs-on: ubuntu-latest
     timeout-minutes: 25
-    env:
-      GOMAXPROCS: '2'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -190,9 +188,10 @@ jobs:
         working-directory: core/Clash.Meta
         run: |
           # Retain each variant's 128 concurrent transfers and race detection.
-          # Run variants serially on a dedicated runner to avoid UDP starvation
-          # while other protocol suites or packages are compiling and testing.
-          go test -race -tags with_gvisor -p=1 -parallel=1 -count=2 -timeout=300s -run '^TestInboundVMess_(MKCP|Mekya)$' ./listener/inbound
+          # Serialize variants and packages, but let Go use the runner's available
+          # CPUs: capping GOMAXPROCS can starve UDP/H2 handshakes under -race.
+          echo "Available CPUs: $(nproc)"
+          go test -v -race -tags with_gvisor -p=1 -parallel=1 -count=2 -timeout=300s -run '^TestInboundVMess_(MKCP|Mekya)$' ./listener/inbound
 
   sudoku-test:
     name: Sudoku inbound integration
