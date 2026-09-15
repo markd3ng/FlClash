@@ -1,6 +1,7 @@
 #ifndef FLUTTER_PLUGIN_PROXY_PLUGIN_H_
 #define FLUTTER_PLUGIN_PROXY_PLUGIN_H_
 
+#include <flutter/encodable_value.h>
 #include <flutter/method_channel.h>
 #include <flutter/plugin_registrar_windows.h>
 
